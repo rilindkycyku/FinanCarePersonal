@@ -47,6 +47,9 @@ sa shpenzohet, sa mbetet dhe sa po kursesh.
   kategorive e llogarive, mesatarja ditore dhe 5 shpenzimet më të mëdha, për periudhë të zgjedhur.
 - **Eksporto / Importo** — kopje e plotë JSON (për arkivim ose bartje në pajisje tjetër) dhe eksport
   Excel i të gjitha transaksioneve.
+- **Pasqyrë PDF** — pasqyrë e gatshme për printim a dërgim, për një periudhë (ky muaj, muaji i
+  kaluar, ky vit, gjithë historiku) dhe opsionalisht për një llogari të vetme: bilanci fillestar,
+  hyrjet, daljet dhe bilanci përfundimtar, pastaj çdo lëvizje me datë, kategori dhe vlerë.
 - **Tema e errët / e bardhë**, dizajn responsiv për telefon, dhe monedhë e konfigurueshme.
 
 ## Konfigurimi
