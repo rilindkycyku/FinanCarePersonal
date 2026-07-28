@@ -685,19 +685,39 @@ export async function exportStatementPdf({
         { align: "right" }
       );
 
-      // The figure the whole statement is about, carried onto every page that follows the summary.
-      const etiketa = "Bilanci përfundimtar";
-      setText(7, "bold", CLR.muted);
-      const gjeresiaEtiketes = doc.getTextWidth(etiketa);
-      setText(9, "bold", t.perfundimtar < 0 ? CLR.red : CLR.navy);
-      const gjeresiaVleres = doc.getTextWidth(money(t.perfundimtar));
-      const kutiaW = gjeresiaEtiketes + gjeresiaVleres + 26;
+      // The period's figures, carried onto every page after the summary: what came in, what went
+      // out and what is left — the three numbers someone flips pages looking for.
+      const shifrat = [
+        ["Hyrjet", t.hyrjet, CLR.emerald],
+        ["Shpenzimet", -t.daljet, CLR.red],
+        ["Bilanci", t.perfundimtar, t.perfundimtar < 0 ? CLR.red : CLR.navy],
+      ].map(([label, value, ngjyra]) => {
+        setText(6.5, "bold", CLR.muted);
+        const wLabel = doc.getTextWidth(label);
+        setText(8, "bold", ngjyra);
+        return { label, value, ngjyra, wLabel, wValue: doc.getTextWidth(money(value)) };
+      });
+
+      const kutiaW = shifrat.reduce((sum, s) => sum + s.wLabel + s.wValue + 6, 0) + 12 + 14 * 2;
+      const kutiaX = MARGIN + 106;
       doc.setFillColor(...CLR.panel);
-      doc.roundedRect(MARGIN + 110, MARGIN - 10, kutiaW, 22, 5, 5, "F");
-      setText(7, "bold", CLR.muted);
-      doc.text(etiketa, MARGIN + 120, MARGIN + 3);
-      setText(9, "bold", t.perfundimtar < 0 ? CLR.red : CLR.navy);
-      doc.text(money(t.perfundimtar), MARGIN + 120 + gjeresiaEtiketes + 8, MARGIN + 3);
+      doc.roundedRect(kutiaX, MARGIN - 10, kutiaW, 22, 5, 5, "F");
+
+      let sx = kutiaX + 10;
+      shifrat.forEach((s, i) => {
+        setText(6.5, "bold", CLR.muted);
+        doc.text(s.label, sx, MARGIN + 3);
+        sx += s.wLabel + 6;
+        setText(8, "bold", s.ngjyra);
+        doc.text(money(s.value), sx, MARGIN + 3);
+        sx += s.wValue;
+        if (i < shifrat.length - 1) {
+          doc.setDrawColor(...CLR.line);
+          doc.setLineWidth(0.5);
+          doc.line(sx + 7, MARGIN - 5, sx + 7, MARGIN + 7);
+          sx += 14;
+        }
+      });
 
       doc.setDrawColor(...CLR.line);
       doc.setLineWidth(0.5);
