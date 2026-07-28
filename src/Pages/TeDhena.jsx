@@ -1,14 +1,15 @@
 import { useRef, useState } from "react";
 import { Button, Alert, Row, Col, Card, Form } from "react-bootstrap";
-import { Download, Upload, DatabaseBackup, ShieldCheck, FileText } from "lucide-react";
+import { Download, Upload, DatabaseBackup, ShieldCheck, FileText, Sheet } from "lucide-react";
 import NavBar from "../Components/NavBar";
 import Footer from "../Components/Footer";
 import PageTitle from "../Components/PageTitle";
 import PageLoading from "../Components/PageLoading";
+import Ndaje from "../Components/Ndaje";
 import { useData } from "../Context/DataContext";
 import { useDialog } from "../Context/DialogContext";
 import { exportAllData, importAllData } from "../lib/db";
-import { exportListExcel } from "../lib/exportExcel";
+import { exportListExcel, exportStatementExcel } from "../lib/exportExcel";
 import { exportStatementPdf, statementTitle } from "../lib/exportPdf";
 import { monthBounds, sortByDateDesc, yearBounds } from "../lib/finance";
 import { plainAmount } from "../lib/format";
@@ -117,6 +118,26 @@ function TeDhena() {
     }
   };
 
+  /** The same statement as a workbook: sheets you can sort and total yourself. */
+  const handleStatementExcel = async () => {
+    const { start, end } = periudhaBounds(periudha);
+    try {
+      const emri = await exportStatementExcel({
+        profile,
+        accounts,
+        categories,
+        transactions,
+        recurring,
+        start,
+        end,
+        llogariaId: llogariaPdf || null,
+      });
+      setMessage({ type: "success", text: `Pasqyra u shkarkua: ${emri}` });
+    } catch (err) {
+      setMessage({ type: "danger", text: `Excel-i nuk u krijua: ${err.message}` });
+    }
+  };
+
   const handleImportClick = () => fileInputRef.current?.click();
 
   const handleImportFile = async (e) => {
@@ -198,7 +219,7 @@ function TeDhena() {
             <Card className="profile-card border-0 p-4 h-100">
               <h5 className="fw-bold mb-2">Transaksionet (Excel)</h5>
               <p className="text-muted small">
-                Një fletë e vetme me çdo transaksion — datë, lloj, kategori, llogari dhe vlerë e nënshkruar, me
+                Një fletë e vetme me çdo transaksion - datë, lloj, kategori, llogari dhe vlerë e nënshkruar, me
                 totalet në fund. E njëjta pamje si eksportet nëpër tabelat e aplikacionit.
               </p>
               <div className="mt-auto">
@@ -217,7 +238,8 @@ function TeDhena() {
           </h5>
           <p className="text-muted small">
             Një pasqyrë e gatshme për printim ose dërgim: bilanci fillestar, hyrjet, daljet dhe bilanci
-            përfundimtar i periudhës, pastaj çdo lëvizje me datë, kategori dhe vlerë.
+            përfundimtar i periudhës, pastaj çdo lëvizje me datë, kategori dhe vlerë. Excel-i mban të njëjtat
+            shifra në disa fletë - përmbledhja, kategoritë, transaksionet dhe këstet.
           </p>
           <Row className="g-3 align-items-end">
             <Form.Group as={Col} md={4} controlId="pdf-periudha">
@@ -248,13 +270,18 @@ function TeDhena() {
               </Form.Group>
             )}
 
-            <Col md={4}>
+            <Col md={4} className="d-flex gap-2 flex-wrap">
               <Button className="btn-primary" onClick={handleExportPdf}>
                 <Download size={16} className="me-1" /> Shkarko PDF
+              </Button>
+              <Button variant="outline-light" onClick={handleStatementExcel}>
+                <Sheet size={16} className="me-1" /> Excel
               </Button>
             </Col>
           </Row>
         </Card>
+
+        <Ndaje />
 
         <Card className="profile-card border-0 p-4">
           <h5 className="fw-bold mb-3">

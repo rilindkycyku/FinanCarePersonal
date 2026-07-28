@@ -258,29 +258,73 @@ export function effectiveBudgets(budgets, key) {
 }
 
 /** Budget vs. actual spending for one month, most-used first. */
-export function budgetProgress(budgets, categories, transactions, key) {
+/** What a category cost in the month `key`. */
+function spentInMonth(transactions, kategoriaId, key) {
   const { start, end } = monthKeyBounds(key);
-  const monthTx = filterByRange(transactions, start, end);
+  return filterByRange(transactions, start, end)
+    .filter((tx) => tx.lloji === "shpenzim" && tx.kategoriaId === kategoriaId)
+    .reduce((sum, tx) => sum + toNumber(tx.vlera), 0);
+}
+
+/** The month before `key`, as a key. */
+export function previousMonthKey(key) {
+  const [viti, muaji] = String(key).split("-").map(Number);
+  return muaji > 1
+    ? `${viti}-${String(muaji - 1).padStart(2, "0")}`
+    : `${viti - 1}-12`;
+}
+
+/**
+ * What is left of a budget that rolls over, counting back through the months it was under.
+ *
+ * A budget marked `rimbart` lends this month whatever the months before it did not spend, which is
+ * how a "200 a month for clothes" budget survives a quiet month followed by a coat. The walk stops
+ * at the first month that was over budget, and the total is capped at one month's budget: a
+ * standing budget applies to every past month, so without the cap a category left alone would
+ * arrive carrying a year of unused allowance.
+ */
+export function rolloverAmount(budget, budgets, transactions, key, maxMonths = 12) {
+  if (!budget?.rimbart) return 0;
+  let carry = 0;
+  let muaji = previousMonthKey(key);
+  for (let i = 0; i < maxMonths; i += 1) {
+    const paraardhes = effectiveBudgets(budgets, muaji).find((b) => b.kategoriaId === budget.kategoriaId);
+    if (!paraardhes) break;
+    const mbetur = toNumber(paraardhes.vlera) - spentInMonth(transactions, budget.kategoriaId, muaji);
+    if (mbetur <= 0) break;
+    carry += mbetur;
+    muaji = previousMonthKey(muaji);
+  }
+  return Math.min(carry, toNumber(budget.vlera));
+}
+
+export function budgetProgress(budgets, categories, transactions, key) {
   const byId = new Map(categories.map((c) => [c.id, c]));
 
   return effectiveBudgets(budgets, key)
     .map((budget) => {
       const kategoria = byId.get(budget.kategoriaId);
-      const buxheti = toNumber(budget.vlera);
-      const shpenzuar = monthTx
-        .filter((tx) => tx.lloji === "shpenzim" && tx.kategoriaId === budget.kategoriaId)
-        .reduce((sum, tx) => sum + toNumber(tx.vlera), 0);
+      const bazë = toNumber(budget.vlera);
+      const rimbartur = rolloverAmount(budget, budgets, transactions, key);
+      const buxheti = bazë + rimbartur;
+      const shpenzuar = spentInMonth(transactions, budget.kategoriaId, key);
       const perqindja = buxheti > 0 ? (shpenzuar / buxheti) * 100 : 0;
+      // Last month's spending on the same category, for the trend shown beside the bar.
+      const muajiKaluar = spentInMonth(transactions, budget.kategoriaId, previousMonthKey(key));
       return {
         ...budget,
         emri: kategoria?.emri || "Kategori e fshirë",
         ngjyra: kategoria?.ngjyra || "#94a3b8",
         ikona: kategoria?.ikona || "MoreHorizontal",
+        buxhetiBaze: bazë,
+        rimbartur,
         buxheti,
         shpenzuar,
         mbetur: buxheti - shpenzuar,
         perqindja,
         tepruar: shpenzuar > buxheti,
+        muajiKaluar,
+        ndryshimi: muajiKaluar > 0 ? ((shpenzuar - muajiKaluar) / muajiKaluar) * 100 : null,
       };
     })
     .sort((a, b) => b.perqindja - a.perqindja);

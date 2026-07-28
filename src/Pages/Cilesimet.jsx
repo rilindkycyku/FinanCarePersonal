@@ -111,12 +111,12 @@ function Cilesimet() {
                 <Form.Select value={form.monedha} onChange={(e) => setField("monedha", e.target.value)}>
                   {CURRENCIES.map((c) => (
                     <option key={c.code} value={c.code}>
-                      {c.label} — {c.symbol}
+                      {c.label} - {c.symbol}
                     </option>
                   ))}
                 </Form.Select>
                 <div className="fcp-row-sub mt-1">
-                  Ndryshimi i monedhës ndryshon vetëm simbolin e shfaqur — vlerat e ruajtura nuk konvertohen.
+                  Ndryshimi i monedhës ndryshon vetëm simbolin e shfaqur - vlerat e ruajtura nuk konvertohen.
                 </div>
               </Form.Group>
 
@@ -171,7 +171,7 @@ function Cilesimet() {
         <Card className="profile-card border-0 p-4">
           <h5 className="fw-bold mb-3">Të Dhënat</h5>
           <p className="text-muted small mb-3">
-            Të dhënat ruhen vetëm në IndexedDB të këtij shfletuesi — asnjë server, asnjë llogari. Pastrimi i të
+            Të dhënat ruhen vetëm në IndexedDB të këtij shfletuesi - asnjë server, asnjë llogari. Pastrimi i të
             dhënave të faqes i fshin ato, pra mbani një kopje JSON te faqja <strong>Eksporto / Importo</strong>.
             Aktualisht ruhen {transactions.length} transaksione, {accounts.length} llogari dhe{" "}
             {categories.length} kategori.

@@ -4,6 +4,7 @@ import ReactDOM from "react-dom/client";
 import { Analytics } from "@vercel/analytics/react";
 import "./index.css";
 import App from "./App";
+import ImportoNgaLinku from "./Components/ImportoNgaLinku";
 import { BrowserRouter } from "react-router-dom";
 import { ThemeProvider } from "./Context/ThemeContext";
 import { DialogProvider } from "./Context/DialogContext";
@@ -17,7 +18,9 @@ root.render(
       <DialogProvider>
         <DataProvider>
           <App />
-          {/* Page views only — no financial data leaves the browser, since every figure lives in
+          {/* A transfer that arrived as a link is offered as soon as the app opens. */}
+          <ImportoNgaLinku />
+          {/* Page views only - no financial data leaves the browser, since every figure lives in
               IndexedDB and none of it is passed to the tracker. Inside the router so client-side
               navigations between the pages are counted too. */}
           <Analytics />

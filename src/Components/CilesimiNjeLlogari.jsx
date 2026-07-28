@@ -56,12 +56,12 @@ function CilesimiNjeLlogari({ onMessage }) {
           ? `${nrTjera} ${nrTjera === 1 ? "llogari tjetër fshihet" : "llogari të tjera fshihen"} dhe bilancet e tyre fillestare mblidhen në një të vetëm (${money(plan.account.bilanciFillestar)}).`
           : "",
         plan.transactions.length > 0
-          ? `${plan.transactions.length} ${plan.transactions.length === 1 ? "transaksion kalon" : "transaksione kalojnë"} te kjo llogari — bilanci total mbetet i njëjti.`
+          ? `${plan.transactions.length} ${plan.transactions.length === 1 ? "transaksion kalon" : "transaksione kalojnë"} te kjo llogari - bilanci total mbetet i njëjti.`
           : "",
         plan.nrTransfereve > 0
           ? `${plan.nrTransfereve} ${plan.nrTransfereve === 1 ? "transfer mes llogarive tuaja mbetet" : "transfere mes llogarive tuaja mbeten"} në historik, por nuk e ndryshojnë më bilancin sepse paratë nuk dalin nga llogaria.`
           : "",
-        "Ky veprim nuk kthehet mbrapa — ruani një kopje JSON te faqja Eksporto / Importo para se të vazhdoni.",
+        "Ky veprim nuk kthehet mbrapa - ruani një kopje JSON te faqja Eksporto / Importo para se të vazhdoni.",
       ]
         .filter(Boolean)
         .join(" "),
@@ -82,12 +82,12 @@ function CilesimiNjeLlogari({ onMessage }) {
       return;
     }
     await saveProfile({ ...profile, njeLlogari: true, llogariaKryesoreId: target.id });
-    onMessage?.(`Modaliteti me një llogari u aktivizua — gjithçka regjistrohet te "${target.emri}".`);
+    onMessage?.(`Modaliteti me një llogari u aktivizua - gjithçka regjistrohet te "${target.emri}".`);
   };
 
   const disable = async () => {
     await saveProfile({ ...profile, njeLlogari: false });
-    onMessage?.("Modaliteti me një llogari u çaktivizua — mund të shtoni sërish llogari të veçanta.");
+    onMessage?.("Modaliteti me një llogari u çaktivizua - mund të shtoni sërish llogari të veçanta.");
   };
 
   const run = async (fn) => {
@@ -125,7 +125,7 @@ function CilesimiNjeLlogari({ onMessage }) {
         onChange={(e) => run(e.target.checked ? enable : disable)}
       />
       <div className="fcp-row-sub mt-1 mb-3">
-        Kesh, bankë dhe kartelë nuk ndahen — çdo transaksion, pagesë e përsëritur dhe kontribut shkon te një
+        Kesh, bankë dhe kartelë nuk ndahen - çdo transaksion, pagesë e përsëritur dhe kontribut shkon te një
         llogari e vetme dhe formularët nuk pyesin më për llogarinë.
       </div>
 

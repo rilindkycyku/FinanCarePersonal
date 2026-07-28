@@ -5,6 +5,8 @@
  */
 
 import { DEFAULT_CATEGORIES, DEFAULT_ACCOUNTS } from "./options";
+import { generateDueTransactions } from "./finance";
+import { todayISO } from "./format";
 
 const DB_NAME = "financarepersonal";
 const DB_VERSION = 1;
@@ -138,6 +140,31 @@ export async function ensureDefaultCategories() {
   if (munguara.length === 0) return false;
   await Promise.all(munguara.map((c) => put(STORES.categories, c)));
   return true;
+}
+
+/**
+ * Books whatever the "regjistroje vetë" schedules owe, at their planned value.
+ *
+ * Only schedules the user explicitly marked automatic are touched; everything else keeps waiting
+ * for the confirmation dialog, where the amount can still be corrected. Run once at startup, so a
+ * month away from the app catches up in one go.
+ */
+export async function bookAutomaticRecurring(todayStr = todayISO()) {
+  const recurring = await getAll(STORES.recurring);
+  const automatike = recurring.filter((r) => r.automatike && r.aktiv !== false);
+  if (automatike.length === 0) return 0;
+
+  let numri = 0;
+  for (const rec of automatike) {
+    const { transactions, updated, changed } = generateDueTransactions(rec, todayStr, makeId);
+    if (!changed) continue;
+    await Promise.all([
+      ...transactions.map((tx) => put(STORES.transactions, { ...tx, automatike: true })),
+      put(STORES.recurring, updated),
+    ]);
+    numri += transactions.length;
+  }
+  return numri;
 }
 
 /** Loads everything the dashboard/statistics pages need in one round trip. */

@@ -684,3 +684,13 @@ body.light-mode .fcp-tracked,
 body.light-mode .fcp-month-nav {
   background: #ffffff;
 }
+
+/* Month-on-month movement beside a budget's remaining figure. */
+.fcp-trend {
+  margin-left: 0.5rem;
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.fcp-trend.up { color: var(--sp-red); }
+.fcp-trend.down { color: var(--sp-emerald); }

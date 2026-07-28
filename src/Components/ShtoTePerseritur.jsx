@@ -20,6 +20,7 @@ const BLANK = {
   dataETjetres: todayISO(),
   dataFundit: "",
   nrKesteve: "",
+  automatike: false,
   monedhaOrigjinale: "",
   kursi: "",
   aktiv: true,
@@ -117,6 +118,7 @@ function ShtoTePerseritur({ show, onHide, initial }) {
       nrKesteve: Math.floor(toNumber(rec.nrKesteve)) || null,
       dataEFundit: rec.dataEFundit || null,
       aktiv: Boolean(rec.aktiv),
+      automatike: Boolean(rec.automatike),
     });
 
     if (monedhat.monedhaOrigjinale) {
@@ -264,7 +266,7 @@ function ShtoTePerseritur({ show, onHide, initial }) {
               />
               <div className="fcp-modal-hint">
                 Për një blerje me këste (p.sh. me Bonus Card): shkruani sa këste janë dhe data e përfundimit
-                llogaritet vetë — pagesa ndalet pas kësti të fundit.
+                llogaritet vetë - pagesa ndalet pas kësti të fundit.
               </div>
             </Form.Group>
 
@@ -289,9 +291,18 @@ function ShtoTePerseritur({ show, onHide, initial }) {
                 checked={Boolean(rec.aktiv)}
                 onChange={(e) => setField("aktiv", e.target.checked)}
               />
+              <Form.Check
+                type="switch"
+                id="rec-automatike"
+                className="mt-2"
+                label="Regjistroje vetë kur vjen data"
+                checked={Boolean(rec.automatike)}
+                onChange={(e) => setField("automatike", e.target.checked)}
+              />
               <div className="fcp-modal-hint">
-                Pagesat e përsëritura nuk regjistrohen vetë — kur vjen data, ju e konfirmoni me një klikim dhe
-                krijohet transaksioni.
+                Pa këtë, pagesa pret konfirmimin tuaj dhe vlera mund të rregullohet para se të regjistrohet. Me të,
+                transaksioni krijohet vetë me vlerën e planifikuar sapo hapet aplikacioni pas datës - i përshtatshëm
+                për qira ose abonime me vlerë fikse.
               </div>
             </Col>
           </Row>

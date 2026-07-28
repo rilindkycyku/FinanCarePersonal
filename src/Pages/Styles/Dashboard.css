@@ -451,3 +451,132 @@ body.light-mode .data-label {
 body.light-mode .data-value {
   color: #0f172a;
 }
+
+/* Secondary hero action — the statement download beside "Transaksion i Ri". */
+.hero-cta.ghost {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow: none;
+  color: #fff;
+}
+
+.hero-cta.ghost:hover {
+  background: rgba(255, 255, 255, 0.2);
+  filter: none;
+}
+
+.hero-cta:disabled {
+  opacity: 0.65;
+  cursor: progress;
+  transform: none;
+}
+
+body.light-mode .hero-cta.ghost {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(0, 0, 0, 0.08);
+  color: var(--sp-text);
+}
+
+@keyframes fcp-spin {
+  to { transform: rotate(360deg); }
+}
+
+.fcp-spin {
+  animation: fcp-spin 0.9s linear infinite;
+}
+
+/* Share card: the QR beside the link, stacking on a phone. */
+.fcp-share {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.fcp-share-qr {
+  width: 132px;
+  height: 132px;
+  border-radius: 12px;
+  background: #fff;
+  padding: 6px;
+  flex-shrink: 0;
+}
+
+.fcp-share-qr-bosh {
+  background: var(--sp-surface-2);
+  border: 1px dashed var(--sp-border);
+}
+
+.fcp-share-main {
+  flex: 1 1 260px;
+  min-width: 0;
+}
+
+@media (max-width: 640px) {
+  .fcp-share {
+    justify-content: center;
+    text-align: center;
+  }
+}
+
+/* Device-to-device transfer: the code (or the camera) beside its progress. */
+.fcp-transfer {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
+}
+
+.fcp-transfer-qr,
+.fcp-transfer-video {
+  width: 220px;
+  height: 220px;
+  border-radius: 14px;
+  background: #fff;
+  padding: 8px;
+  flex-shrink: 0;
+  object-fit: cover;
+}
+
+.fcp-transfer-video {
+  background: #000;
+  padding: 0;
+  border: 1px solid var(--sp-border);
+}
+
+.fcp-transfer-side {
+  flex: 1 1 240px;
+  min-width: 0;
+}
+
+@media (max-width: 640px) {
+  .fcp-transfer {
+    justify-content: center;
+  }
+}
+
+/* Stand-in for the QR when the link is too long to encode. */
+.fcp-transfer-gjate {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  background: var(--sp-surface-2);
+  border: 1px dashed var(--sp-border);
+  color: var(--sp-text-muted);
+  text-align: center;
+  padding: 1rem;
+}
+
+.fcp-transfer-gjate span {
+  font-size: 1.1rem;
+  font-weight: 900;
+  color: var(--sp-text);
+}
+
+.fcp-transfer-gjate small {
+  font-size: 0.68rem;
+  line-height: 1.3;
+}
