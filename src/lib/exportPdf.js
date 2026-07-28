@@ -1,8 +1,11 @@
 /**
- * Account statement as a real PDF, laid out the way a bank statement is: a main column split into
- * sections by what the money did (payments in, purchases, instalments, transfers), each with its
- * own total, and a sidebar carrying the account details, the period summary and a gauge of how
- * much of what came in was spent.
+ * Account statement as a real PDF, laid out the way a bank statement is: a summary band across the
+ * top of the first page (who it covers, the period's figures ending in the closing balance, and a
+ * ring of where the money went), then the movements split into sections by what the money did —
+ * payments in, purchases, instalments, transfers — each with its own total.
+ *
+ * The band spans the full width rather than sitting in a sidebar, so the tables below it can use
+ * the whole page and a continuation page never shows an empty column where a sidebar used to be.
  *
  * jsPDF and its table plugin are loaded on demand inside `exportStatementPdf`, so the ~600 KB they
  * weigh never lands in the initial bundle.
@@ -26,11 +29,8 @@ const CLR = {
   white: [255, 255, 255],
 };
 
-// A4 in points: 595 × 842. The main column holds the sections, the sidebar the summary.
+// A4 in points: 595 × 842. Everything below the summary band uses the full content width.
 const MARGIN = 36;
-const KRYESORE_W = 330;
-const ANESORE_X = MARGIN + KRYESORE_W + 24;
-const ANESORE_W = 595 - ANESORE_X - MARGIN;
 const FONT = { emri: "Quicksand", fallback: "helvetica" };
 
 const chunkedBase64 = (buffer) => {
@@ -220,6 +220,7 @@ export async function exportStatementPdf({
   };
 
   // ── Masthead ──────────────────────────────────────────────
+  const CW = W - MARGIN * 2;
   let vizatuar = false;
   if (logo) {
     try {
@@ -237,82 +238,88 @@ export async function exportStatementPdf({
   setText(7, "bold", CLR.emerald);
   doc.text("PERSONAL", MARGIN + (vizatuar ? 130 : 76), MARGIN + 12);
 
-  setText(10.5, "bold", CLR.navy);
-  doc.text("PËRMBLEDHJA E LLOGARISË PËR KËTË PERIUDHË", MARGIN, MARGIN + 52);
+  setText(11, "bold", CLR.navy);
+  doc.text("PËRMBLEDHJA E LLOGARISË PËR KËTË PERIUDHË", W - MARGIN, MARGIN + 4, { align: "right" });
   setText(8.5, "normal", CLR.muted);
   doc.text(
     `${formatDate(start)} - ${formatDate(end)}${periudhaLabel ? ` · ${periudhaLabel}` : ""}`,
-    MARGIN,
-    MARGIN + 66
+    W - MARGIN,
+    MARGIN + 18,
+    { align: "right" }
   );
 
-  // ── Sidebar: account details ──────────────────────────────
-  let sy = MARGIN;
-  setText(9.5, "bold", CLR.navy);
-  doc.text(llogaria ? "Të dhënat e llogarisë" : "Të dhënat e pasqyrës", ANESORE_X, sy + 8);
-  sy += 22;
+  // ── Summary band: details · figures · where it went ───────
+  // Full width, so every page below it can use the whole page and a continuation page never shows
+  // an empty column where a sidebar used to be.
+  const bandY = MARGIN + 36;
+  const bandH = 136;
+  const gap = 12;
+  // The details panel holds short values, so the ring panel gets the room its legend needs.
+  const wA = 148;
+  const wC = 182;
+  const wB = CW - wA - wC - gap * 2;
+  const xA = MARGIN;
+  const xB = xA + wA + gap;
+  const xC = xB + wB + gap;
 
-  const detajet = [
+  const panel = (x, w, titull) => {
+    doc.setFillColor(...CLR.panel);
+    doc.roundedRect(x, bandY, w, bandH, 8, 8, "F");
+    setText(7.5, "bold", CLR.muted);
+    doc.text(titull.toUpperCase(), x + 12, bandY + 18);
+  };
+
+  // A — who and what this statement covers
+  panel(xA, wA, "Të dhënat e pasqyrës");
+  let ay = bandY + 36;
+  [
     ["Emri", profile.emri || "Përdorues"],
     ["Llogaria", llogaria ? llogaria.emri : "Të gjitha llogaritë"],
     ["Monedha", `${monedha} (${simboli})`],
-    ["Periudha", `${formatDate(start)} - ${formatDate(end)}`],
     ["Gjeneruar më", formatDate(new Date().toISOString().slice(0, 10))],
-  ];
-  detajet.forEach(([label, value]) => {
-    setText(7, "normal", CLR.muted);
-    doc.text(label, ANESORE_X, sy);
+  ].forEach(([label, value]) => {
+    setText(6.8, "normal", CLR.muted);
+    doc.text(label, xA + 12, ay);
     setText(8.5, "bold", CLR.text);
-    doc.splitTextToSize(value, ANESORE_W).slice(0, 2).forEach((line, i) => {
-      doc.text(line, ANESORE_X, sy + 11 + i * 10);
-    });
-    sy += 26;
+    doc.text(doc.splitTextToSize(value, wA - 24)[0], xA + 12, ay + 11);
+    ay += 25;
   });
 
-  // ── Sidebar: period summary, closing balance highlighted ──
-  sy += 6;
-  doc.setFillColor(...CLR.emerald);
-  doc.rect(ANESORE_X, sy, ANESORE_W, 30, "F");
-  setText(8.5, "bold", CLR.white);
-  doc.splitTextToSize("Përmbledhja e llogarisë për këtë periudhë", ANESORE_W - 16).forEach((line, i) => {
-    doc.text(line, ANESORE_X + 8, sy + 12 + i * 10);
-  });
-  sy += 40;
-
-  const permbledhja = [
-    ["Bilanci paraprak", t.fillestar],
-    ["Hyrjet në këtë periudhë", t.hyrjet],
-    ["Shpenzimet në këtë periudhë", -t.daljet],
-    ["Rezultati i periudhës", t.neto],
-  ];
-  permbledhja.forEach(([label, value]) => {
+  // B — the figures, ending in the closing balance
+  panel(xB, wB, "Përmbledhja e periudhës");
+  let by = bandY + 36;
+  [
+    ["Bilanci paraprak", t.fillestar, CLR.text],
+    ["Hyrjet", t.hyrjet, CLR.emerald],
+    ["Shpenzimet", -t.daljet, CLR.red],
+    ["Rezultati i periudhës", t.neto, t.neto < 0 ? CLR.red : CLR.emerald],
+  ].forEach(([label, value, ngjyra]) => {
     setText(7.5, "normal", CLR.muted);
-    doc.splitTextToSize(label, ANESORE_W).forEach((line, i) => doc.text(line, ANESORE_X, sy + i * 9));
-    setText(9.5, "bold", value < 0 ? CLR.red : CLR.text);
-    doc.text(money(value), ANESORE_X, sy + 22);
+    doc.text(label, xB + 12, by);
+    setText(9, "bold", ngjyra);
+    doc.text(money(value), xB + wB - 12, by, { align: "right" });
     doc.setDrawColor(...CLR.line);
     doc.setLineWidth(0.5);
-    doc.line(ANESORE_X, sy + 30, ANESORE_X + ANESORE_W, sy + 30);
-    sy += 40;
+    doc.line(xB + 12, by + 6, xB + wB - 12, by + 6);
+    by += 21;
   });
 
-  doc.setFillColor(...CLR.panel);
-  doc.rect(ANESORE_X, sy - 4, ANESORE_W, 40, "F");
-  setText(7.5, "bold", CLR.muted);
-  doc.text("Bilanci i gjendjes përfundimtare", ANESORE_X + 8, sy + 10);
-  setText(12, "bold", t.perfundimtar < 0 ? CLR.red : CLR.navy);
-  doc.text(money(t.perfundimtar), ANESORE_X + 8, sy + 28);
-  sy += 54;
+  doc.setFillColor(...(t.perfundimtar < 0 ? CLR.red : CLR.navy));
+  doc.roundedRect(xB + 12, by - 4, wB - 24, 30, 6, 6, "F");
+  setText(7, "bold", [203, 213, 225]);
+  doc.text("BILANCI I GJENDJES PËRFUNDIMTARE", xB + 20, by + 8);
+  setText(11, "bold", CLR.white);
+  doc.text(money(t.perfundimtar), xB + wB - 20, by + 20, { align: "right" });
 
-  // ── Sidebar: where the money went ─────────────────────────
+  // C — where the money went, as a ring that survives a long tail of categories
+  panel(xC, wC, "Ku shkuan paratë");
+
   const hexToRgb = (hex) => {
     const m = /^#?([\da-f]{2})([\da-f]{2})([\da-f]{2})$/i.exec(String(hex || ""));
     return m ? [parseInt(m[1], 16), parseInt(m[2], 16), parseInt(m[3], 16)] : CLR.muted;
   };
 
-  // The largest few categories keep their own colour from the app; everything after them is one
-  // slice, so the ring stays readable whether the period holds three categories or forty.
-  const MAX_FETA = 5;
+  const MAX_FETA = 4;
   const kryesoret = t.kategorite.slice(0, MAX_FETA);
   const bishti = t.kategorite.slice(MAX_FETA).reduce((sum, k) => sum + k.vlera, 0);
   const feta = [
@@ -324,19 +331,14 @@ export async function exportStatementPdf({
   const totaliFetave = feta.reduce((sum, f) => sum + f.vlera, 0);
 
   if (totaliFetave > 0) {
-    setText(9.5, "bold", CLR.navy);
-    doc.text("Ku shkuan paratë", ANESORE_X, sy + 6);
-    sy += 20;
-
-    const qendraX = ANESORE_X + ANESORE_W / 2;
-    const rrezja = 34;
-    const qendraY = sy + rrezja + 4;
-    const trashesia = 15;
+    const qendraX = xC + 40;
+    const qendraY = bandY + 66;
+    const rrezja = 23;
 
     /** A ring segment, approximated with short thick strokes — jsPDF has no arc primitive. */
     const segment = (nga, deri, ngjyra) => {
       doc.setDrawColor(...ngjyra);
-      doc.setLineWidth(trashesia);
+      doc.setLineWidth(12);
       doc.setLineCap("butt");
       const hapa = Math.max(Math.round(Math.abs(deri - nga) / 0.05), 2);
       for (let i = 0; i < hapa; i += 1) {
@@ -358,45 +360,34 @@ export async function exportStatementPdf({
       kendi -= hapesira;
     });
 
-    setText(10.5, "bold", CLR.navy);
-    doc.text(plainAmount(totaliFetave), qendraX, qendraY - 1, { align: "center" });
-    setText(6.5, "normal", CLR.muted);
+    setText(8, "bold", CLR.navy);
+    doc.text(plainAmount(totaliFetave), qendraX, qendraY + 1, { align: "center" });
+    setText(5.5, "normal", CLR.muted);
     doc.text("SHPENZIME", qendraX, qendraY + 9, { align: "center" });
 
-    sy = qendraY + rrezja + 18;
-
+    let cy = bandY + 36;
     feta.forEach((f) => {
       doc.setFillColor(...f.ngjyra);
-      doc.roundedRect(ANESORE_X, sy - 5, 6, 6, 1.5, 1.5, "F");
-      setText(7.2, "normal", CLR.text);
-      doc.text(doc.splitTextToSize(f.emri, ANESORE_W - 52)[0], ANESORE_X + 11, sy);
-      setText(7.2, "bold", CLR.text);
-      doc.text(`${Math.round((f.vlera / totaliFetave) * 100)}%`, ANESORE_X + ANESORE_W, sy, {
-        align: "right",
-      });
-      sy += 13;
+      doc.roundedRect(xC + 74, cy - 5, 5, 5, 1.5, 1.5, "F");
+      setText(6.4, "normal", CLR.text);
+      doc.text(doc.splitTextToSize(f.emri, wC - 108)[0], xC + 83, cy);
+      setText(6.4, "bold", CLR.text);
+      doc.text(`${Math.round((f.vlera / totaliFetave) * 100)}%`, xC + wC - 12, cy, { align: "right" });
+      cy += 12;
     });
 
-    sy += 8;
+    if (t.mbeturKeste > 0) {
+      setText(6.8, "normal", CLR.muted);
+      doc.text("Mbetur me këste", xC + 12, bandY + bandH - 16);
+      setText(9, "bold", CLR.navy);
+      doc.text(money(t.mbeturKeste), xC + wC - 12, bandY + bandH - 16, { align: "right" });
+    }
+  } else {
+    setText(7.5, "normal", CLR.muted);
+    doc.text("Nuk ka shpenzime në këtë periudhë.", xC + 12, bandY + 44);
   }
 
-  // ── Sidebar: the period in three figures ──────────────────
-  [
-    ["Hyrjet", t.hyrjet, CLR.emerald],
-    ["Shpenzimet", t.daljet, CLR.red],
-    ...(t.mbeturKeste > 0 ? [["Mbetur me këste", t.mbeturKeste, CLR.navy]] : []),
-  ].forEach(([label, value, ngjyra]) => {
-    doc.setDrawColor(...CLR.line);
-    doc.setLineWidth(0.5);
-    doc.line(ANESORE_X, sy - 12, ANESORE_X + ANESORE_W, sy - 12);
-    setText(7, "normal", CLR.muted);
-    doc.text(label, ANESORE_X, sy);
-    setText(8.5, "bold", ngjyra);
-    doc.text(money(value), ANESORE_X + ANESORE_W, sy, { align: "right" });
-    sy += 20;
-  });
-
-  // ── Main column: one table per kind of movement ───────────
+  // ── Sections, full width on every page ────────────────────
   const seksionet = [
     { titull: "Hyrjet dhe pagesat e marra", rows: t.seksionet.hyrjet },
     { titull: "Blerjet dhe shpenzimet", rows: t.seksionet.blerjet },
@@ -408,18 +399,27 @@ export async function exportStatementPdf({
     },
   ].filter((s) => s.rows.length > 0);
 
-  let y = MARGIN + 86;
+  let y = bandY + bandH + 26;
 
   const seksioniTabele = (seksioni) => {
-    setText(9.5, "bold", CLR.navy);
-    doc.text(seksioni.titull, MARGIN, y);
-    y += 8;
-
     const shuma = (r) => (seksioni.transfer ? r.shfaq : r.vlera);
     const totali = seksioni.rows.reduce((sum, r) => sum + shuma(r), 0);
+
+    setText(10, "bold", CLR.navy);
+    doc.text(seksioni.titull, MARGIN, y);
+    setText(7.5, "normal", CLR.muted);
+    doc.text(
+      `${seksioni.rows.length} ${seksioni.rows.length === 1 ? "rresht" : "rreshta"}`,
+      W - MARGIN,
+      y,
+      { align: "right" }
+    );
+    y += 10;
+
     const head = seksioni.keste
-      ? [["Data", "Përshkrimi i transaksionit", "Kësti", `Shuma (${simboli})`]]
-      : [["Data", "Përshkrimi i transaksionit", `Shuma (${simboli})`]];
+      ? [["Data", "Përshkrimi i transaksionit", "Kategoria", "Kësti", `Shuma (${simboli})`]]
+      : [["Data", "Përshkrimi i transaksionit", "Kategoria", `Shuma (${simboli})`]];
+    const kolonaVlera = head[0].length - 1;
 
     autoTable(doc, {
       startY: y,
@@ -427,19 +427,19 @@ export async function exportStatementPdf({
       head,
       body: seksioni.rows.map((r) =>
         seksioni.keste
-          ? [formatDate(r.data), r.pershkrimi, r.kesti, plainAmount(shuma(r))]
-          : [formatDate(r.data), r.pershkrimi, plainAmount(shuma(r))]
+          ? [formatDate(r.data), r.pershkrimi, r.kategoria, r.kesti, plainAmount(shuma(r))]
+          : [formatDate(r.data), r.pershkrimi, r.kategoria, plainAmount(shuma(r))]
       ),
       foot: [
         [
-          { content: "Totali:", colSpan: seksioni.keste ? 3 : 2, styles: { halign: "right" } },
+          { content: "Totali:", colSpan: kolonaVlera, styles: { halign: "right" } },
           plainAmount(totali),
         ],
       ],
       styles: {
         font,
-        fontSize: 7.5,
-        cellPadding: { top: 4.5, right: 5, bottom: 4.5, left: 5 },
+        fontSize: 8,
+        cellPadding: { top: 4.5, right: 6, bottom: 4.5, left: 6 },
         textColor: CLR.text,
         lineWidth: 0,
         overflow: "linebreak",
@@ -450,12 +450,12 @@ export async function exportStatementPdf({
         fontSize: 7.5,
         fillColor: CLR.emerald,
         textColor: CLR.white,
-        cellPadding: { top: 5, right: 5, bottom: 5, left: 5 },
+        cellPadding: { top: 5, right: 6, bottom: 5, left: 6 },
       },
       footStyles: {
         font,
         fontStyle: "bold",
-        fontSize: 8,
+        fontSize: 8.5,
         fillColor: CLR.white,
         textColor: totali < 0 ? CLR.red : CLR.navy,
         lineWidth: { top: 0.7 },
@@ -464,29 +464,29 @@ export async function exportStatementPdf({
       alternateRowStyles: { fillColor: CLR.panel },
       columnStyles: seksioni.keste
         ? {
-            0: { cellWidth: 52, textColor: CLR.muted },
-            2: { cellWidth: 32, halign: "center", textColor: CLR.muted },
-            3: { cellWidth: 62, halign: "right", fontStyle: "bold" },
+            0: { cellWidth: 62, textColor: CLR.muted },
+            2: { cellWidth: 120, textColor: CLR.muted },
+            3: { cellWidth: 40, halign: "center", textColor: CLR.muted },
+            4: { cellWidth: 82, halign: "right", fontStyle: "bold" },
           }
         : {
-            0: { cellWidth: 52, textColor: CLR.muted },
-            2: { cellWidth: 72, halign: "right", fontStyle: "bold" },
+            0: { cellWidth: 62, textColor: CLR.muted },
+            2: { cellWidth: 120, textColor: CLR.muted },
+            3: { cellWidth: 82, halign: "right", fontStyle: "bold" },
           },
       // The total belongs to the section, not to each page it happens to span.
       showFoot: "lastPage",
       showHead: "everyPage",
-      tableWidth: KRYESORE_W,
-      margin: { left: MARGIN, right: W - MARGIN - KRYESORE_W, bottom: 62, top: MARGIN + 20 },
+      margin: { left: MARGIN, right: MARGIN, bottom: 58, top: MARGIN + 22 },
       // A section of sixty rows runs onto the next page; the column header repeats on its own, and
       // this puts the section's name back above it so the page is readable in isolation.
       didDrawPage: (data) => {
         if (data.pageNumber > 1) {
-          setText(9.5, "bold", CLR.navy);
-          doc.text(`${seksioni.titull} (vazhdim)`, MARGIN, MARGIN + 8);
+          setText(10, "bold", CLR.navy);
+          doc.text(`${seksioni.titull} (vazhdim)`, MARGIN, MARGIN + 10);
         }
       },
       didParseCell: (data) => {
-        const kolonaVlera = seksioni.keste ? 3 : 2;
         if (data.section === "body" && data.column.index === kolonaVlera) {
           const v = toNumber(data.cell.raw);
           data.cell.styles.textColor = seksioni.transfer
@@ -500,7 +500,7 @@ export async function exportStatementPdf({
       },
     });
 
-    y = doc.lastAutoTable.finalY + 24;
+    y = doc.lastAutoTable.finalY + 26;
   };
 
   if (seksionet.length === 0) {
@@ -516,17 +516,15 @@ export async function exportStatementPdf({
     doc.setPage(f);
     doc.setDrawColor(...CLR.line);
     doc.setLineWidth(0.5);
-    doc.line(MARGIN, H - 46, W - MARGIN, H - 46);
+    doc.line(MARGIN, H - 44, W - MARGIN, H - 44);
     setText(6.8, "normal", CLR.muted);
     doc.text(
-      doc.splitTextToSize(
-        "Kjo pasqyrë është gjeneruar nga FinanCarePersonal mbi të dhënat e ruajtura në shfletuesin tuaj — asnjë e dhënë nuk kalon në ndonjë server. Vlerat në monedhë tjetër janë konvertuar me kursin e ditës së regjistrimit.",
-        W - MARGIN * 2 - 60
-      ),
+      "Gjeneruar nga FinanCarePersonal mbi të dhënat e ruajtura në shfletuesin tuaj — asnjë e dhënë nuk kalon në ndonjë server.",
       MARGIN,
-      H - 34
+      H - 31
     );
-    doc.text(`${f}/${faqet}`, W - MARGIN, H - 28, { align: "right" });
+    setText(6.8, "bold", CLR.muted);
+    doc.text(`Faqja ${f} / ${faqet}`, W - MARGIN, H - 31, { align: "right" });
   }
 
   const emri = filename || `financarepersonal-pasqyre-${start}-${end}.pdf`;
