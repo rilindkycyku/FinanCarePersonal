@@ -1,0 +1,679 @@
+/* ══════════════════════════════════════════════════════════════
+   FINANCAREPERSONAL — shared page widgets
+   KPI tiles, panels, progress bars and list rows, all built on the
+   --sp-* tokens from PremiumTheme.css so both themes come for free.
+   ══════════════════════════════════════════════════════════════ */
+
+.fcp-page {
+  background-color: var(--sp-bg);
+  min-height: 100vh;
+}
+
+.fcp-page-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.fcp-page-head h2 {
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  font-size: 1.5rem;
+  margin-bottom: 0.25rem;
+  color: var(--sp-text);
+}
+
+.fcp-page-head p {
+  color: var(--sp-text-muted);
+  font-size: 0.85rem;
+  margin-bottom: 0;
+}
+
+/* ── KPI tiles ─────────────────────────────────────────────── */
+.fcp-kpi-col {
+  margin-bottom: 1rem;
+}
+
+.fcp-kpi {
+  background: var(--sp-surface-2);
+  border: 1px solid var(--sp-border);
+  border-top: 3px solid var(--sp-border);
+  border-radius: 16px;
+  padding: 1.25rem;
+  height: 100%;
+  transition: all 0.2s ease;
+}
+
+.fcp-kpi:hover {
+  border-color: var(--sp-emerald);
+}
+
+.fcp-kpi-emerald { border-top-color: var(--sp-emerald); }
+.fcp-kpi-cyan    { border-top-color: var(--sp-cyan); }
+.fcp-kpi-danger  { border-top-color: var(--sp-red); }
+.fcp-kpi-amber   { border-top-color: #f59e0b; }
+.fcp-kpi-violet  { border-top-color: #8b5cf6; }
+
+.fcp-kpi-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.75rem;
+  background: var(--sp-surface-3);
+  color: var(--sp-emerald);
+}
+
+.fcp-kpi-cyan .fcp-kpi-icon   { color: var(--sp-cyan); }
+.fcp-kpi-danger .fcp-kpi-icon { color: var(--sp-red); }
+.fcp-kpi-amber .fcp-kpi-icon  { color: #f59e0b; }
+.fcp-kpi-violet .fcp-kpi-icon { color: #8b5cf6; }
+
+.fcp-kpi-label {
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--sp-text-muted);
+  margin-bottom: 0.35rem;
+}
+
+.fcp-kpi-value {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--sp-text);
+  letter-spacing: -0.02em;
+  word-break: break-word;
+}
+
+.fcp-kpi-sub {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--sp-text-muted);
+  margin-top: 0.3rem;
+}
+
+/* ── Panels ───────────────────────────────────────────────── */
+.fcp-panel {
+  background: var(--sp-surface-2);
+  border: 1px solid var(--sp-border);
+  border-radius: 16px;
+  overflow: hidden;
+  height: 100%;
+}
+
+.fcp-panel-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0.9rem 1.15rem;
+  background: var(--sp-surface-3);
+  border-bottom: 1px solid var(--sp-border);
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: var(--sp-text);
+}
+
+.fcp-panel-header .fcp-panel-header-action {
+  margin-left: auto;
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--sp-emerald);
+  text-decoration: none;
+}
+
+.fcp-panel-body {
+  padding: 1.15rem;
+}
+
+.fcp-empty {
+  color: var(--sp-text-muted);
+  font-size: 0.82rem;
+  text-align: center;
+  padding: 1.75rem 0.5rem;
+}
+
+/* ── Progress bars ────────────────────────────────────────── */
+.fcp-progress {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--sp-surface-3);
+  overflow: hidden;
+}
+
+.fcp-progress-sm {
+  height: 5px;
+}
+
+.fcp-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--sp-emerald);
+  transition: width 0.3s ease;
+}
+
+.fcp-progress-fill.over {
+  background: var(--sp-red);
+}
+
+/* ── List rows (recent transactions, category breakdowns…) ── */
+.fcp-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid var(--sp-border);
+}
+
+.fcp-row:last-child {
+  border-bottom: none;
+}
+
+.fcp-row-icon {
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--sp-surface-3);
+}
+
+.fcp-row-main {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.fcp-row-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--sp-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fcp-row-sub {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--sp-text-muted);
+}
+
+.fcp-row-value {
+  font-size: 0.88rem;
+  font-weight: 800;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.fcp-row-bar {
+  min-width: 70px;
+  flex: 0 0 70px;
+}
+
+/* ── Amount colours (also used inside table cells) ────────── */
+.fcp-pos { color: var(--sp-emerald) !important; }
+.fcp-neg { color: var(--sp-red) !important; }
+.fcp-neutral { color: var(--sp-cyan) !important; }
+
+/* ── Pills / badges ───────────────────────────────────────── */
+.fcp-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.16rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  border: 1px solid currentColor;
+  white-space: nowrap;
+}
+
+.fcp-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+/* ── Account cards ────────────────────────────────────────── */
+.fcp-account-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 0.75rem;
+}
+
+.fcp-account-card {
+  background: var(--sp-surface-2);
+  border: 1px solid var(--sp-border);
+  border-left: 4px solid var(--sp-emerald);
+  border-radius: 14px;
+  padding: 1rem;
+  transition: all 0.2s ease;
+}
+
+.fcp-account-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--sp-emerald);
+}
+
+.fcp-account-card.archived {
+  opacity: 0.6;
+}
+
+.fcp-account-top {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.75rem;
+}
+
+.fcp-account-name {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--sp-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fcp-account-type {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--sp-text-muted);
+}
+
+.fcp-account-balance {
+  font-size: 1.25rem;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+
+/* ── Simple bar chart (income vs expense per month) ───────── */
+.fcp-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+  height: 190px;
+  padding-top: 0.5rem;
+}
+
+.fcp-chart-col {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  height: 100%;
+  min-width: 0;
+}
+
+.fcp-chart-bars {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 3px;
+  width: 100%;
+}
+
+.fcp-chart-bar {
+  width: 42%;
+  max-width: 22px;
+  min-height: 2px;
+  border-radius: 4px 4px 0 0;
+  transition: height 0.3s ease;
+}
+
+.fcp-chart-bar.hyrje { background: var(--sp-emerald); }
+.fcp-chart-bar.shpenzim { background: var(--sp-red); }
+
+.fcp-chart-label {
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: var(--sp-text-muted);
+  text-transform: uppercase;
+}
+
+.fcp-legend {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--sp-text-muted);
+}
+
+.fcp-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.fcp-legend-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+}
+
+/* ── Section headings inside pages ────────────────────────── */
+.fcp-section-title {
+  font-weight: 900;
+  font-size: 0.95rem;
+  color: var(--sp-text);
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* ── Mobile ───────────────────────────────────────────────── */
+@media (max-width: 575.98px) {
+  .fcp-page-head h2 { font-size: 1.15rem; }
+  .fcp-page-head p { font-size: 0.75rem; }
+  .fcp-kpi-col { margin-bottom: 0.5rem; }
+  .fcp-kpi {
+    padding: 0.65rem 0.7rem;
+    border-radius: 12px;
+    border-top-width: 2px;
+  }
+  .fcp-kpi-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 7px;
+    margin-bottom: 0.4rem;
+  }
+  .fcp-kpi-icon svg { width: 13px; height: 13px; }
+  .fcp-kpi-label { font-size: 0.53rem; margin-bottom: 0.15rem; }
+  .fcp-kpi-value { font-size: 0.92rem; }
+  .fcp-kpi-sub { font-size: 0.6rem; }
+
+  .fcp-panel { border-radius: 12px; }
+  .fcp-panel-header {
+    padding: 0.6rem 0.75rem;
+    gap: 7px;
+    font-size: 0.72rem;
+  }
+  .fcp-panel-header svg { width: 14px; height: 14px; }
+  .fcp-panel-body { padding: 0.75rem; }
+
+  .fcp-row { gap: 0.5rem; padding: 0.5rem 0; }
+  .fcp-row-icon { width: 28px; height: 28px; border-radius: 8px; }
+  .fcp-row-icon svg { width: 14px; height: 14px; }
+  .fcp-row-title { font-size: 0.78rem; }
+  .fcp-row-sub { font-size: 0.63rem; }
+  .fcp-row-value { font-size: 0.78rem; }
+  .fcp-row-bar { min-width: 46px; flex-basis: 46px; }
+
+  .fcp-account-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 0.5rem; }
+  .fcp-account-card { padding: 0.7rem; border-radius: 12px; }
+  .fcp-account-balance { font-size: 1rem; }
+  .fcp-account-name { font-size: 0.78rem; }
+
+  .fcp-chart { height: 150px; gap: 0.25rem; }
+  .fcp-chart-label { font-size: 0.55rem; }
+  .fcp-section-title { font-size: 0.82rem; }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   LIGHT MODE
+   ══════════════════════════════════════════════════════════════ */
+
+body.light-mode .fcp-page { background-color: var(--sp-bg); }
+
+body.light-mode .fcp-kpi,
+body.light-mode .fcp-panel,
+body.light-mode .fcp-account-card {
+  background: #ffffff;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+body.light-mode .fcp-panel-header {
+  background: #f8fafc;
+}
+
+body.light-mode .fcp-kpi-icon,
+body.light-mode .fcp-row-icon,
+body.light-mode .fcp-progress {
+  background: #eef2f7;
+}
+
+/* The dashboard CTA is a <button> here (it opens the transaction modal instead of navigating),
+   so it needs the border/appearance reset that an <a> doesn't. */
+button.hero-cta {
+  border: none;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+/* Per-card action row on the accounts / goals cards. */
+.fcp-card-actions {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 0.85rem;
+  padding-top: 0.7rem;
+  border-top: 1px solid var(--sp-border);
+}
+
+.fcp-icon-action {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--sp-surface-3);
+  color: var(--sp-text-muted);
+  transition: all 0.2s ease;
+}
+
+.fcp-icon-action:hover {
+  transform: translateY(-2px);
+  color: var(--sp-text);
+}
+
+.fcp-icon-action.edit:hover { color: #f59e0b; }
+.fcp-icon-action.delete:hover { color: var(--sp-red); }
+.fcp-icon-action.add:hover { color: var(--sp-emerald); }
+
+.fcp-card-actions .fcp-icon-action-label {
+  margin-left: auto;
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--sp-text-muted);
+  align-self: center;
+}
+
+/* Category grid — compact cards, since there are many of them. */
+.fcp-cat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 0.6rem;
+}
+
+.fcp-cat-card {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: var(--sp-surface-2);
+  border: 1px solid var(--sp-border);
+  border-radius: 12px;
+  padding: 0.7rem 0.8rem;
+  transition: all 0.2s ease;
+}
+
+.fcp-cat-card:hover {
+  border-color: var(--sp-emerald);
+  transform: translateY(-2px);
+}
+
+.fcp-cat-main {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.fcp-cat-name {
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: var(--sp-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fcp-cat-sub {
+  font-size: 0.66rem;
+  font-weight: 600;
+  color: var(--sp-text-muted);
+}
+
+.fcp-cat-actions {
+  display: flex;
+  gap: 0.25rem;
+  flex-shrink: 0;
+}
+
+@media (max-width: 575.98px) {
+  .fcp-cat-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 0.45rem; }
+  .fcp-cat-card { padding: 0.5rem 0.55rem; gap: 0.45rem; }
+  .fcp-cat-name { font-size: 0.74rem; }
+  .fcp-cat-sub { font-size: 0.6rem; }
+}
+
+body.light-mode .fcp-cat-card {
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+/* Month stepper used by the budgets and statistics pages. */
+.fcp-month-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--sp-surface-2);
+  border: 1px solid var(--sp-border);
+  border-radius: 12px;
+  padding: 0.3rem 0.4rem;
+}
+
+.fcp-month-nav button {
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--sp-text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.fcp-month-nav button:hover:not(:disabled) {
+  background: var(--sp-surface-3);
+  color: var(--sp-emerald);
+}
+
+.fcp-month-nav button:disabled {
+  opacity: 0.35;
+}
+
+.fcp-month-nav-label {
+  min-width: 130px;
+  text-align: center;
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: var(--sp-text);
+}
+
+/* One budget / goal row: header line, bar, footer line. */
+.fcp-tracked {
+  background: var(--sp-surface-2);
+  border: 1px solid var(--sp-border);
+  border-radius: 14px;
+  padding: 0.9rem 1rem;
+  margin-bottom: 0.6rem;
+}
+
+.fcp-tracked.over {
+  border-color: var(--sp-red);
+}
+
+.fcp-tracked-head {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.6rem;
+}
+
+.fcp-tracked-actions {
+  display: flex;
+  gap: 0.3rem;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.fcp-tracked-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.45rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--sp-text-muted);
+}
+
+.fcp-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  border: 1px dashed var(--sp-border);
+  background: transparent;
+  color: var(--sp-text-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  transition: all 0.15s ease;
+}
+
+.fcp-chip:hover {
+  border-style: solid;
+  border-color: var(--sp-emerald);
+  color: var(--sp-emerald);
+}
+
+.fcp-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+@media (max-width: 575.98px) {
+  .fcp-tracked { padding: 0.7rem 0.75rem; border-radius: 12px; }
+  .fcp-month-nav-label { min-width: 100px; font-size: 0.72rem; }
+}
+
+body.light-mode .fcp-tracked,
+body.light-mode .fcp-month-nav {
+  background: #ffffff;
+}

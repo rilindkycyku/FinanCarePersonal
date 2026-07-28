@@ -1,0 +1,400 @@
+import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
+import { Container, Row, Col, Button, Alert } from "react-bootstrap";
+import {
+  LayoutDashboard, Wallet, TrendingUp, TrendingDown, PiggyBank, Percent, PlusCircle,
+  ArrowRightLeft, Tags, Target, Repeat, BarChart3, Settings, DatabaseBackup, CalendarClock,
+} from "lucide-react";
+import NavBar from "../Components/NavBar";
+import PageTitle from "../Components/PageTitle";
+import PageLoading from "../Components/PageLoading";
+import Footer from "../Components/Footer";
+import ShtoTransaksionin from "../Components/ShtoTransaksionin";
+import { Kpi, Panel, ProgressBar, Empty } from "../Components/Ui";
+import { useData } from "../Context/DataContext";
+import { getIcon } from "../lib/icons";
+import {
+  accountsWithBalances, budgetProgress, cashflow, dueRecurring, filterByRange, goalProgress,
+  monthBounds, sortByDateDesc, totalBalance, totalsByCategory, upcomingRecurring,
+} from "../lib/finance";
+import { formatDate, formatPercent, monthKey, monthLabel, todayISO } from "../lib/format";
+import { accountTypeMeta, DAYS_LONG, MONTHS_LONG } from "../lib/options";
+import "./Styles/PremiumTheme.css";
+import "./Styles/DizajniPergjithshem.css";
+import "./Styles/Dashboard.css";
+import "./Styles/Personal.css";
+
+const QUICK_ACTIONS = [
+  { to: "/transaksionet", label: "Transaksionet", icon: ArrowRightLeft },
+  { to: "/llogarite", label: "Llogaritë", icon: Wallet },
+  { to: "/kategorite", label: "Kategoritë", icon: Tags },
+  { to: "/buxhetet", label: "Buxhetet", icon: PiggyBank },
+  { to: "/qellimet", label: "Qëllimet e Kursimit", icon: Target },
+  { to: "/te-perseritura", label: "Pagesat e Përsëritura", icon: Repeat },
+  { to: "/statistikat", label: "Statistikat", icon: BarChart3 },
+  { to: "/cilesimet", label: "Cilësimet", icon: Settings },
+  { to: "/te-dhena", label: "Eksporto / Importo", icon: DatabaseBackup },
+];
+
+function Dashboard() {
+  const { profile, accounts, categories, transactions, budgets, goals, recurring, loading, error, money, signedMoney } =
+    useData();
+  const [showTx, setShowTx] = useState(false);
+
+  const today = todayISO();
+  const muajiKey = monthKey();
+
+  const stats = useMemo(() => {
+    const { start, end } = monthBounds();
+    const monthTx = filterByRange(transactions, start, end);
+    return {
+      bilanci: totalBalance(accounts, transactions),
+      muaji: cashflow(monthTx),
+      llogarite: accountsWithBalances(accounts, transactions).filter((a) => !a.arkivuar),
+      kategorite: totalsByCategory(monthTx, categories, "shpenzim").slice(0, 5),
+      buxhetet: budgetProgress(budgets, categories, transactions, muajiKey).slice(0, 5),
+      qellimet: goals.map((g) => goalProgress(g, transactions)).slice(0, 3),
+      teFundit: sortByDateDesc(transactions).slice(0, 6),
+      dueTani: dueRecurring(recurring, today),
+      neVijim: upcomingRecurring(recurring, today, 14),
+    };
+  }, [accounts, categories, transactions, budgets, goals, recurring, muajiKey, today]);
+
+  const pershendetja = profile.emri || "përdorues";
+  // Both are optional targets set in Cilësimet; when unset the KPIs fall back to plain figures.
+  const planifikuar = Number(profile.teArdhuratMujore) || 0;
+  const objektivi = Number(profile.objektiviKursimit) || 0;
+
+  const dataAktuale = useMemo(() => {
+    const d = new Date();
+    return `${DAYS_LONG[d.getDay()]}, ${d.getDate()} ${MONTHS_LONG[d.getMonth()].toLowerCase()} ${d.getFullYear()}`;
+  }, []);
+
+  const kategoriMax = stats.kategorite[0]?.vlera || 1;
+
+  const nameOf = (list, id, fallback = "-") => list.find((x) => x.id === id)?.emri || fallback;
+
+  if (loading) return <PageLoading title="Paneli" />;
+
+  return (
+    <div className="dashboard-wrapper">
+      <PageTitle title="Paneli" />
+      <NavBar />
+
+      <div className="welcome-hero">
+        <Container>
+          <Row className="align-items-center justify-content-between g-3">
+            <Col xs="auto">
+              <h1 className="fw-bold mb-2">Mirësevini, {pershendetja} 👋</h1>
+              <p className="opacity-75 mb-0">{dataAktuale}.</p>
+            </Col>
+            <Col xs="auto">
+              <button type="button" className="hero-cta" onClick={() => setShowTx(true)}>
+                <PlusCircle size={18} /> Transaksion i Re
+              </button>
+            </Col>
+          </Row>
+        </Container>
+      </div>
+
+      <Container>
+        {error && (
+          <Alert variant="danger" className="mb-4">
+            {error}
+          </Alert>
+        )}
+
+        {stats.dueTani.length > 0 && (
+          <Alert variant="warning" className="d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <span>
+              <CalendarClock size={16} className="me-2" />
+              Ka <strong>{stats.dueTani.length}</strong>{" "}
+              {stats.dueTani.length === 1 ? "pagesë të përsëritur" : "pagesa të përsëritura"} që kanë arritur datën
+              dhe presin konfirmim.
+            </span>
+            <Link to="/te-perseritura" className="btn btn-warning btn-sm">
+              Shiko dhe konfirmo
+            </Link>
+          </Alert>
+        )}
+
+        <Row className="g-2 g-md-4">
+          <Kpi
+            label="Bilanci Total"
+            value={money(stats.bilanci)}
+            sub={`${stats.llogarite.length} llogari aktive`}
+            icon={Wallet}
+            color={stats.bilanci < 0 ? "danger" : "emerald"}
+            lg={3}
+          />
+          <Kpi
+            label={`Hyrjet — ${monthLabel(muajiKey)}`}
+            value={money(stats.muaji.hyrjet)}
+            sub={
+              planifikuar > 0
+                ? `${formatPercent((stats.muaji.hyrjet / planifikuar) * 100)} e ${money(planifikuar)} të planifikuara`
+                : undefined
+            }
+            icon={TrendingUp}
+            color="emerald"
+            lg={3}
+          />
+          <Kpi
+            label={`Shpenzimet — ${monthLabel(muajiKey)}`}
+            value={money(stats.muaji.shpenzimet)}
+            icon={TrendingDown}
+            color="danger"
+            lg={3}
+          />
+          <Kpi
+            label="Kursimi i Muajit"
+            value={signedMoney(stats.muaji.neto)}
+            sub={
+              objektivi > 0
+                ? `Norma ${formatPercent(stats.muaji.normaKursimit, 1)} nga objektivi ${formatPercent(objektivi)}`
+                : `Norma e kursimit: ${formatPercent(stats.muaji.normaKursimit, 1)}`
+            }
+            icon={Percent}
+            color={
+              objektivi > 0 && stats.muaji.normaKursimit < objektivi
+                ? "amber"
+                : stats.muaji.neto >= 0
+                  ? "cyan"
+                  : "danger"
+            }
+            lg={3}
+          />
+        </Row>
+
+        <section className="mt-2 mb-4">
+          <h4 className="fcp-section-title">
+            <Wallet size={20} className="text-primary" />
+            Llogaritë
+          </h4>
+          {stats.llogarite.length === 0 ? (
+            <Empty>
+              Nuk ka llogari aktive. <Link to="/llogarite">Shtoni një llogari</Link> për të filluar.
+            </Empty>
+          ) : (
+            <div className="fcp-account-grid">
+              {stats.llogarite.map((a) => {
+                const tipi = accountTypeMeta(a.lloji);
+                const Icon = getIcon(tipi.icon);
+                return (
+                  <Link to="/llogarite" key={a.id} className="text-decoration-none">
+                    <div className="fcp-account-card" style={{ borderLeftColor: a.ngjyra }}>
+                      <div className="fcp-account-top">
+                        <div className="fcp-row-icon" style={{ color: a.ngjyra }}>
+                          <Icon size={17} />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="fcp-account-name">{a.emri}</div>
+                          <div className="fcp-account-type">{tipi.short}</div>
+                        </div>
+                      </div>
+                      <div className={`fcp-account-balance ${a.bilanci < 0 ? "fcp-neg" : "fcp-pos"}`}>
+                        {money(a.bilanci)}
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
+        </section>
+
+        <Row className="g-3 g-md-4">
+          <Col xl={6}>
+            <Panel title="Transaksionet e Fundit" icon={ArrowRightLeft} action="Të gjitha" actionTo="/transaksionet">
+              {stats.teFundit.length === 0 ? (
+                <Empty>Nuk ka transaksione ende.</Empty>
+              ) : (
+                stats.teFundit.map((tx) => {
+                  const kategoria = categories.find((c) => c.id === tx.kategoriaId);
+                  const qellimi = goals.find((g) => g.id === tx.qellimiId);
+                  const Icon = getIcon(tx.lloji === "transfer" ? "ArrowRightLeft" : kategoria?.ikona);
+                  const ngjyra = tx.lloji === "transfer" ? "var(--sp-cyan)" : kategoria?.ngjyra || "#94a3b8";
+                  const shenja = tx.lloji === "hyrje" ? 1 : tx.lloji === "shpenzim" ? -1 : 0;
+                  return (
+                    <div className="fcp-row" key={tx.id}>
+                      <div className="fcp-row-icon" style={{ color: ngjyra }}>
+                        <Icon size={16} />
+                      </div>
+                      <div className="fcp-row-main">
+                        <div className="fcp-row-title">
+                          {tx.pershkrimi ||
+                            kategoria?.emri ||
+                            (qellimi ? `Kontribut: ${qellimi.emri}` : "Transfer")}
+                        </div>
+                        <div className="fcp-row-sub">
+                          {formatDate(tx.data)} ·{" "}
+                          {tx.lloji === "transfer"
+                            ? `${nameOf(accounts, tx.llogariaId)} → ${nameOf(accounts, tx.llogariaDestinacionId)}`
+                            : `${kategoria?.emri || "Pa kategori"} · ${nameOf(accounts, tx.llogariaId)}`}
+                        </div>
+                      </div>
+                      <div
+                        className={`fcp-row-value ${shenja > 0 ? "fcp-pos" : shenja < 0 ? "fcp-neg" : "fcp-neutral"}`}
+                      >
+                        {shenja === 0 ? money(tx.vlera) : signedMoney(shenja * tx.vlera)}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </Panel>
+          </Col>
+
+          <Col xl={6}>
+            <Panel title={`Buxhetet — ${monthLabel(muajiKey)}`} icon={PiggyBank} action="Të gjitha" actionTo="/buxhetet">
+              {stats.buxhetet.length === 0 ? (
+                <Empty>
+                  Nuk ka buxhete. <Link to="/buxhetet">Caktoni një kufi mujor</Link> për kategoritë tuaja.
+                </Empty>
+              ) : (
+                stats.buxhetet.map((b) => (
+                  <div className="mb-3" key={b.id}>
+                    <div className="d-flex justify-content-between align-items-center mb-1">
+                      <span className="fcp-row-title">{b.emri}</span>
+                      <span className={`fcp-row-sub ${b.tepruar ? "fcp-neg" : ""}`}>
+                        {money(b.shpenzuar)} / {money(b.buxheti)}
+                      </span>
+                    </div>
+                    <ProgressBar value={b.perqindja} color={b.ngjyra} over={b.tepruar} />
+                    <div className={`fcp-row-sub mt-1 ${b.tepruar ? "fcp-neg" : ""}`}>
+                      {b.tepruar
+                        ? `Tepruar me ${money(Math.abs(b.mbetur))}`
+                        : `Mbeten ${money(b.mbetur)} · ${formatPercent(b.perqindja)}`}
+                    </div>
+                  </div>
+                ))
+              )}
+            </Panel>
+          </Col>
+
+          <Col xl={6}>
+            <Panel
+              title={`Shpenzimet sipas Kategorisë — ${monthLabel(muajiKey)}`}
+              icon={Tags}
+              action="Statistikat"
+              actionTo="/statistikat"
+            >
+              {stats.kategorite.length === 0 ? (
+                <Empty>Nuk ka shpenzime këtë muaj.</Empty>
+              ) : (
+                stats.kategorite.map((k) => {
+                  const Icon = getIcon(k.ikona);
+                  return (
+                    <div className="fcp-row" key={k.id}>
+                      <div className="fcp-row-icon" style={{ color: k.ngjyra }}>
+                        <Icon size={16} />
+                      </div>
+                      <div className="fcp-row-main">
+                        <div className="fcp-row-title">{k.emri}</div>
+                        <div className="fcp-row-sub">
+                          {k.numri} {k.numri === 1 ? "transaksion" : "transaksione"} · {formatPercent(k.perqindja, 1)}
+                        </div>
+                      </div>
+                      <div className="fcp-row-bar">
+                        <ProgressBar value={(k.vlera / kategoriMax) * 100} color={k.ngjyra} small />
+                      </div>
+                      <div className="fcp-row-value fcp-neg">{money(k.vlera)}</div>
+                    </div>
+                  );
+                })
+              )}
+            </Panel>
+          </Col>
+
+          <Col xl={6}>
+            <Panel title="Qëllimet e Kursimit" icon={Target} action="Të gjitha" actionTo="/qellimet">
+              {stats.qellimet.length === 0 ? (
+                <Empty>
+                  Nuk ka qëllime kursimi. <Link to="/qellimet">Caktoni një qëllim</Link> dhe ndiqni ecurinë.
+                </Empty>
+              ) : (
+                stats.qellimet.map((g) => (
+                  <div className="mb-3" key={g.id}>
+                    <div className="d-flex justify-content-between align-items-center mb-1">
+                      <span className="fcp-row-title">{g.emri}</span>
+                      <span className="fcp-row-sub">
+                        {money(g.kursyer)} / {money(g.synimi)}
+                      </span>
+                    </div>
+                    <ProgressBar value={g.perqindja} color={g.ngjyra} />
+                    <div className="fcp-row-sub mt-1">
+                      {g.perfunduar
+                        ? "Qëllimi u arrit 🎉"
+                        : `Mbeten ${money(g.mbetur)}${g.dataSynim ? ` · afati ${formatDate(g.dataSynim)}` : ""}`}
+                    </div>
+                  </div>
+                ))
+              )}
+            </Panel>
+          </Col>
+
+          {stats.neVijim.length > 0 && (
+            <Col xl={6}>
+              <Panel title="Pagesat në Vijim (14 ditë)" icon={CalendarClock} action="Të gjitha" actionTo="/te-perseritura">
+                {stats.neVijim.map((rec) => (
+                  <div className="fcp-row" key={rec.id}>
+                    <div className="fcp-row-icon" style={{ color: rec.lloji === "hyrje" ? "var(--sp-emerald)" : "var(--sp-red)" }}>
+                      <Repeat size={16} />
+                    </div>
+                    <div className="fcp-row-main">
+                      <div className="fcp-row-title">{rec.emri}</div>
+                      <div className="fcp-row-sub">
+                        {formatDate(rec.dataETjetres)} · {nameOf(accounts, rec.llogariaId)}
+                      </div>
+                    </div>
+                    <div className={`fcp-row-value ${rec.lloji === "hyrje" ? "fcp-pos" : "fcp-neg"}`}>
+                      {signedMoney((rec.lloji === "hyrje" ? 1 : -1) * rec.vlera)}
+                    </div>
+                  </div>
+                ))}
+              </Panel>
+            </Col>
+          )}
+        </Row>
+
+        <section className="my-4">
+          <h4 className="fcp-section-title">
+            <LayoutDashboard size={20} className="text-primary" />
+            Veprimet e Shpejta
+          </h4>
+          <div className="quick-actions-grid">
+            {QUICK_ACTIONS.map((action) => {
+              const Icon = action.icon;
+              return (
+                <Link to={action.to} className="quick-action-card" key={action.to}>
+                  <div className="icon-wrapper">
+                    <Icon size={22} />
+                  </div>
+                  <span>{action.label}</span>
+                </Link>
+              );
+            })}
+          </div>
+        </section>
+
+        {transactions.length === 0 && (
+          <Alert variant="info" className="d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <span>
+              Filloni duke caktuar emrin e monedhës te <strong>Cilësimet</strong>, rregulloni llogaritë dhe shtoni
+              transaksionin e parë. Të dhënat ruhen vetëm në këtë shfletues.
+            </span>
+            <Button size="sm" className="btn-primary" onClick={() => setShowTx(true)}>
+              Shto transaksionin e parë
+            </Button>
+          </Alert>
+        )}
+      </Container>
+
+      <ShtoTransaksionin show={showTx} onHide={() => setShowTx(false)} />
+
+      <Footer />
+    </div>
+  );
+}
+
+export default Dashboard;
