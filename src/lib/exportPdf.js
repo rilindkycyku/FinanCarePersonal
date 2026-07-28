@@ -15,7 +15,27 @@ import {
   accountBalance, filterByRange, sortByDateDesc, totalBalance, totalsByCategory, txSignForAccount,
 } from "./finance";
 import { currencySymbol, formatDate, plainAmount, toNumber } from "./format";
-import { accountTypeMeta, DEFAULT_CURRENCY } from "./options";
+import { accountTypeMeta, DEFAULT_CURRENCY, MONTHS_GENITIVE } from "./options";
+
+/**
+ * What to call this statement. A personal statement is remembered by its month — "Pasqyra e
+ * korrikut 2026" — so a reference number is only produced for a range that is not a whole month or
+ * year.
+ */
+export function statementTitle(start, end) {
+  const [vitiA, muajiA, ditaA] = start.split("-").map(Number);
+  const [vitiB, muajiB, ditaB] = end.split("-").map(Number);
+  const ditetEMuajit = new Date(vitiB, muajiB, 0).getDate();
+
+  if (vitiA === vitiB && muajiA === muajiB && ditaA === 1 && ditaB >= ditetEMuajit) {
+    return `Pasqyra e ${MONTHS_GENITIVE[muajiA - 1]} ${vitiA}`;
+  }
+  if (vitiA === vitiB && muajiA === 1 && ditaA === 1 && muajiB === 12 && ditaB >= 31) {
+    return `Pasqyra e vitit ${vitiA}`;
+  }
+  if (vitiA <= 1 && vitiB >= 9999) return "Pasqyra e gjithë historikut";
+  return "Pasqyra e periudhës";
+}
 
 const CLR = {
   navy: [13, 33, 55],
@@ -196,7 +216,6 @@ export async function exportStatementPdf({
   start,
   end,
   llogariaId = null,
-  periudhaLabel = "",
   filename,
 }) {
   const [{ jsPDF }, autoTableModule] = await Promise.all([import("jspdf"), import("jspdf-autotable")]);
@@ -238,28 +257,19 @@ export async function exportStatementPdf({
   setText(7, "bold", CLR.emerald);
   doc.text("PERSONAL", MARGIN + (vizatuar ? 130 : 76), MARGIN + 12);
 
-  // A statement is filed and referred back to, so it carries its own reference and the moment it
-  // was produced, not just the period it covers.
   const tani = new Date();
   const dyShifra = (n) => String(n).padStart(2, "0");
-  const nrPasqyres = `PSQ-${start.replace(/-/g, "")}-${end.replace(/-/g, "")}${
-    llogaria ? `-${llogaria.id.slice(-4).toUpperCase()}` : ""
-  }`;
+  const titulli = statementTitle(start, end);
 
-  setText(11, "bold", CLR.navy);
-  doc.text("PËRMBLEDHJA E LLOGARISË PËR KËTË PERIUDHË", W - MARGIN, MARGIN + 2, { align: "right" });
+  setText(12, "bold", CLR.navy);
+  doc.text(titulli.toUpperCase(), W - MARGIN, MARGIN + 2, { align: "right" });
   setText(8.5, "normal", CLR.muted);
-  doc.text(
-    `${formatDate(start)} - ${formatDate(end)}${periudhaLabel ? ` · ${periudhaLabel}` : ""}`,
-    W - MARGIN,
-    MARGIN + 15,
-    { align: "right" }
-  );
+  doc.text(`${formatDate(start)} - ${formatDate(end)}`, W - MARGIN, MARGIN + 15, { align: "right" });
   setText(7, "normal", CLR.muted);
   doc.text(
-    `Nr. ${nrPasqyres} · lëshuar më ${formatDate(tani.toISOString().slice(0, 10))} ${dyShifra(
-      tani.getHours()
-    )}:${dyShifra(tani.getMinutes())}`,
+    `Lëshuar më ${formatDate(tani.toISOString().slice(0, 10))} ${dyShifra(tani.getHours())}:${dyShifra(
+      tani.getMinutes()
+    )}${llogaria ? ` · ${llogaria.emri}` : ""}`,
     W - MARGIN,
     MARGIN + 26,
     { align: "right" }
@@ -666,7 +676,7 @@ export async function exportStatementPdf({
         doc.text("FinanCare", MARGIN, MARGIN + 6);
       }
       setText(8, "bold", CLR.navy);
-      doc.text("PËRMBLEDHJA E LLOGARISË", W - MARGIN, MARGIN, { align: "right" });
+      doc.text(titulli, W - MARGIN, MARGIN, { align: "right" });
       setText(7, "normal", CLR.muted);
       doc.text(
         `${llogaria ? `${llogaria.emri} · ` : ""}${formatDate(start)} - ${formatDate(end)}`,
@@ -692,7 +702,12 @@ export async function exportStatementPdf({
     doc.text(`Faqja ${f} / ${faqet}`, W - MARGIN, H - 31, { align: "right" });
   }
 
-  const emri = filename || `financarepersonal-pasqyre-${start}-${end}.pdf`;
+  const emri =
+    filename ||
+    `financarepersonal-${titulli
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "")}.pdf`;
   doc.save(emri);
   return emri;
 }

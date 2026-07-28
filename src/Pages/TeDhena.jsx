@@ -9,9 +9,9 @@ import { useData } from "../Context/DataContext";
 import { useDialog } from "../Context/DialogContext";
 import { exportAllData, importAllData } from "../lib/db";
 import { exportListExcel } from "../lib/exportExcel";
-import { exportStatementPdf } from "../lib/exportPdf";
+import { exportStatementPdf, statementTitle } from "../lib/exportPdf";
 import { monthBounds, sortByDateDesc, yearBounds } from "../lib/finance";
-import { monthKey, monthLabel, plainAmount } from "../lib/format";
+import { plainAmount } from "../lib/format";
 import { TRANSACTION_TYPE_LABELS } from "../lib/options";
 import { subMonths } from "date-fns";
 import "./Styles/PremiumTheme.css";
@@ -21,13 +21,10 @@ import "./Styles/Personal.css";
 
 /** The periods a statement can cover, each resolved to the day range it means. */
 function periudhaBounds(value) {
-  if (value === "muaji") return { ...monthBounds(), label: monthLabel(monthKey()) };
-  if (value === "kaluar") {
-    const d = subMonths(new Date(), 1);
-    return { ...monthBounds(d), label: monthLabel(monthKey(d)) };
-  }
-  if (value === "viti") return { ...yearBounds(), label: String(new Date().getFullYear()) };
-  return { start: "0000-01-01", end: "9999-12-31", label: "Gjithë historiku" };
+  if (value === "muaji") return monthBounds();
+  if (value === "kaluar") return monthBounds(subMonths(new Date(), 1));
+  if (value === "viti") return yearBounds();
+  return { start: "0000-01-01", end: "9999-12-31" };
 }
 
 const PERIUDHAT = [
@@ -90,7 +87,7 @@ function TeDhena() {
 
   /** A statement for a period (and optionally one account): summary plus every movement, as PDF. */
   const handleExportPdf = async () => {
-    const { start, end, label } = periudhaBounds(periudha);
+    const { start, end } = periudhaBounds(periudha);
     try {
       const emri = await exportStatementPdf({
         profile,
@@ -101,19 +98,18 @@ function TeDhena() {
         start,
         end,
         llogariaId: llogariaPdf || null,
-        periudhaLabel: label,
-        filename: [
-          "financarepersonal-pasqyre",
-          periudha === "gjithcka" ? "gjithcka" : start,
-          // Keeps two statements for the same month apart when they cover different accounts.
-          accounts
-            .find((a) => a.id === llogariaPdf)
-            ?.emri.toLowerCase()
-            .replace(/[^a-z0-9]+/g, "-")
-            .replace(/^-|-$/g, ""),
+        // Named after the statement itself — "pasqyra-e-korrikut-2026" — with the account appended
+        // so two statements for the same month do not overwrite each other.
+        filename: `${[
+          "financarepersonal",
+          statementTitle(start, end),
+          accounts.find((a) => a.id === llogariaPdf)?.emri,
         ]
           .filter(Boolean)
-          .join("-") + ".pdf",
+          .join("-")
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/^-|-$/g, "")}.pdf`,
       });
       setMessage({ type: "success", text: `Pasqyra u shkarkua: ${emri}` });
     } catch (err) {

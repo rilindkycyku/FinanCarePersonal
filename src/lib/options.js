@@ -138,4 +138,10 @@ export const MONTHS_LONG = [
   "Korrik", "Gusht", "Shtator", "Tetor", "Nëntor", "Dhjetor",
 ];
 
+/** Genitive forms, for phrases like "Pasqyra e korrikut 2026". */
+export const MONTHS_GENITIVE = [
+  "janarit", "shkurtit", "marsit", "prillit", "majit", "qershorit",
+  "korrikut", "gushtit", "shtatorit", "tetorit", "nëntorit", "dhjetorit",
+];
+
 export const DAYS_LONG = ["e diel", "e hënë", "e martë", "e mërkurë", "e enjte", "e premte", "e shtunë"];
