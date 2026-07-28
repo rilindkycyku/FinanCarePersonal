@@ -97,6 +97,7 @@ function TeDhena() {
         accounts,
         categories,
         transactions,
+        recurring,
         start,
         end,
         llogariaId: llogariaPdf || null,
