@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Button, Alert, ProgressBar } from "react-bootstrap";
-import { QrCode, Camera, ChevronLeft, ChevronRight, Play, Pause, X, Link2, Copy, Check, Share2 } from "lucide-react";
+import { QrCode, Camera, ChevronLeft, ChevronRight, Play, Pause, X, Link2, Copy, Check, Share2, Gauge } from "lucide-react";
 import { useData } from "../Context/DataContext";
 import { useDialog } from "../Context/DialogContext";
 import { exportAllData, importAllData } from "../lib/db";
@@ -11,9 +12,25 @@ import "../Pages/Styles/Dashboard.css";
  * Device-to-device transfer of the whole database by QR: one side plays the codes, the other
  * scans them with its camera. Nothing is uploaded - the data goes across as light.
  *
+ * Both halves take over the screen while they run. A code shown in a 220 px box on a phone is a
+ * grid of modules barely a pixel wide, which is why sweeping the other phone across it used to miss
+ * most of them; full screen, the same code is several pixels per module and reads at arm's length.
+ *
  * Scanning uses the browser's own BarcodeDetector where it exists (Android Chrome, Edge); where it
  * does not, the JSON backup above does the same job through a file.
  */
+
+/** How long each code stays up. Slower is easier to catch; faster gets through a long set sooner. */
+const SHPEJTESITE = [
+  { ms: 1900, emri: "Ngadalë" },
+  { ms: 1300, emri: "Normal" },
+  { ms: 850, emri: "Shpejt" },
+];
+
+/** An SVG code stays sharp at any size - a bitmap blown up to fill the screen does not, and a
+ * blurred module edge is exactly what a camera cannot resolve. */
+const svgUrl = (svg) => `data:image/svg+xml;base64,${btoa(svg)}`;
+
 function TransferoQr() {
   const { reload } = useData();
   const dialog = useDialog();
@@ -28,20 +45,39 @@ function TransferoQr() {
   const [duke, setDuke] = useState("");
   const [linku, setLinku] = useState(null);
   const [kopjuar, setKopjuar] = useState(false);
+  const [shpejtesia, setShpejtesia] = useState(1);
+  const [linkuPlote, setLinkuPlote] = useState(false);
 
   const videoRef = useRef(null);
   const streamRef = useRef(null);
+  const wakeRef = useRef(null);
 
   // Sending: the codes cycle on their own, so the other phone can just be held up to the screen.
   useEffect(() => {
     if (modaliteti !== "dergo" || !luaj || imazhet.length < 2) return undefined;
-    const id = setInterval(() => setAktivi((i) => (i + 1) % imazhet.length), 1300);
+    const id = setInterval(() => setAktivi((i) => (i + 1) % imazhet.length), SHPEJTESITE[shpejtesia].ms);
     return () => clearInterval(id);
-  }, [modaliteti, luaj, imazhet.length]);
+  }, [modaliteti, luaj, imazhet.length, shpejtesia]);
+
+  /** A transfer takes minutes of the screen just sitting there; without this the phone dims halfway
+   * through and the other camera loses the code. */
+  const mbajEkranin = async () => {
+    try {
+      wakeRef.current = await navigator.wakeLock?.request("screen");
+    } catch {
+      /* unsupported or refused - the transfer still works, the screen just sleeps on its own */
+    }
+  };
+
+  const leshoEkranin = () => {
+    wakeRef.current?.release?.().catch(() => undefined);
+    wakeRef.current = null;
+  };
 
   const mbyll = () => {
     streamRef.current?.getTracks().forEach((t) => t.stop());
     streamRef.current = null;
+    leshoEkranin();
     setModaliteti("");
     setKodet([]);
     setImazhet([]);
@@ -49,9 +85,47 @@ function TransferoQr() {
     setGabimi("");
     setAktivi(0);
     setLinku(null);
+    setLinkuPlote(false);
   };
 
-  useEffect(() => () => streamRef.current?.getTracks().forEach((t) => t.stop()), []);
+  /** The single link code, blown up to the screen and back. The other phone reads it with its own
+   * camera app, so the same rule applies as to the played codes: small on screen is unreadable. */
+  const hapLinkunPlote = () => {
+    setLinkuPlote(true);
+    mbajEkranin();
+  };
+
+  const mbyllLinkunPlote = () => {
+    setLinkuPlote(false);
+    leshoEkranin();
+  };
+
+  useEffect(
+    () => () => {
+      streamRef.current?.getTracks().forEach((t) => t.stop());
+      wakeRef.current?.release?.().catch(() => undefined);
+    },
+    []
+  );
+
+  // Escape closes the full-screen halves, the way any other overlay in the app behaves, and the
+  // page underneath stays put instead of scrolling away behind them.
+  useEffect(() => {
+    if (modaliteti !== "dergo" && modaliteti !== "prano" && !linkuPlote) return undefined;
+    const onKey = (e) => {
+      if (e.key !== "Escape") return;
+      if (linkuPlote) mbyllLinkunPlote();
+      else mbyll();
+    };
+    const meParë = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = meParë;
+      window.removeEventListener("keydown", onKey);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [modaliteti, linkuPlote]);
 
   const filloDergimin = async () => {
     setDuke("qr");
@@ -63,13 +137,17 @@ function TransferoQr() {
       const imgs = [];
       for (const chunk of chunks) {
         imgs.push(
-          // eslint-disable-next-line no-await-in-loop
-          await QRCode.toDataURL(chunk, {
-            width: 420,
-            margin: 1,
-            errorCorrectionLevel: "L",
-            color: { dark: "#0d2137", light: "#ffffff" },
-          })
+          svgUrl(
+            // eslint-disable-next-line no-await-in-loop
+            await QRCode.toString(chunk, {
+              type: "svg",
+              margin: 2,
+              // A code read off a lit screen picks up glare and moiré; the middle level recovers
+              // from both, and at this chunk size it costs no extra code.
+              errorCorrectionLevel: "M",
+              color: { dark: "#000000", light: "#ffffff" },
+            })
+          )
         );
       }
       setKodet(chunks);
@@ -77,6 +155,7 @@ function TransferoQr() {
       setAktivi(0);
       setLuaj(true);
       setModaliteti("dergo");
+      mbajEkranin();
     } catch (err) {
       setGabimi(`Kodet nuk u krijuan: ${err.message}`);
     } finally {
@@ -98,12 +177,14 @@ function TransferoQr() {
       let img = null;
       if (mundet) {
         const QRCode = await import("qrcode").then((m) => m.default || m);
-        img = await QRCode.toDataURL(url, {
-          width: 420,
-          margin: 1,
-          errorCorrectionLevel: "L",
-          color: { dark: "#0d2137", light: "#ffffff" },
-        });
+        img = svgUrl(
+          await QRCode.toString(url, {
+            type: "svg",
+            margin: 2,
+            errorCorrectionLevel: "L",
+            color: { dark: "#000000", light: "#ffffff" },
+          })
+        );
       }
       setLinku({ url, img, mundet });
       setModaliteti("link");
@@ -146,6 +227,7 @@ function TransferoQr() {
       streamRef.current = stream;
       setMbledhur([]);
       setModaliteti("prano");
+      mbajEkranin();
       // The element only exists once the mode is set, so the stream is attached on the next frame.
       requestAnimationFrame(() => {
         if (videoRef.current) {
@@ -181,7 +263,8 @@ function TransferoQr() {
           /* a frame that could not be read is simply skipped */
         }
       }
-      setTimeout(lexo, 220);
+      // Often enough that even the fastest cycle gets several looks at every code.
+      setTimeout(lexo, 140);
     };
 
     lexo();
@@ -252,50 +335,80 @@ function TransferoQr() {
         </>
       )}
 
-      {modaliteti === "dergo" && (
-        <div className="fcp-transfer">
-          <img src={imazhet[aktivi]} alt={`Kodi ${aktivi + 1} nga ${imazhet.length}`} className="fcp-transfer-qr" />
-          <div className="fcp-transfer-side">
-            <div className="fcp-row-title mb-1">
-              Kodi {aktivi + 1} nga {imazhet.length}
+      {modaliteti === "dergo" &&
+        createPortal(
+          <div className="fcp-qr-plote" role="dialog" aria-modal="true" aria-label="Dërgo me QR">
+            <div className="fcp-qr-plote-koka">
+              <div>
+                <strong>
+                  Kodi {aktivi + 1} / {imazhet.length}
+                </strong>
+                <span>
+                  {imazhet.length > 1
+                    ? "Kodet ndërrohen vetë - mbajeni kamerën e pajisjes tjetër para ekranit derisa t'i lexojë të gjitha."
+                    : "Skanojeni këtë kod me pajisjen tjetër."}
+                </span>
+              </div>
+              <button type="button" onClick={mbyll} aria-label="Mbyll">
+                <X size={20} />
+              </button>
             </div>
-            <div className="fcp-row-sub mb-2">
-              {imazhet.length > 1
-                ? "Kodet ndërrohen vetë - mbajeni kamerën para ekranit derisa pajisja tjetër t'i lexojë të gjitha."
-                : "Skanojeni këtë kod me pajisjen tjetër."}
+
+            <div className="fcp-qr-plote-kodi">
+              <img src={imazhet[aktivi]} alt={`Kodi ${aktivi + 1} nga ${imazhet.length}`} />
             </div>
-            <ProgressBar now={((aktivi + 1) / imazhet.length) * 100} className="mb-3" style={{ height: 6 }} />
-            <div className="d-flex gap-2 flex-wrap">
-              {imazhet.length > 1 && (
-                <>
-                  <Button
-                    size="sm"
-                    variant="outline-light"
-                    onClick={() => setAktivi((i) => (i - 1 + imazhet.length) % imazhet.length)}
-                  >
-                    <ChevronLeft size={14} />
-                  </Button>
-                  <Button size="sm" variant="outline-light" onClick={() => setLuaj((v) => !v)}>
-                    {luaj ? <Pause size={14} /> : <Play size={14} />}
-                  </Button>
-                  <Button size="sm" variant="outline-light" onClick={() => setAktivi((i) => (i + 1) % imazhet.length)}>
-                    <ChevronRight size={14} />
-                  </Button>
-                </>
-              )}
-              <Button size="sm" variant="outline-light" onClick={mbyll}>
-                <X size={14} className="me-1" /> Mbyll
-              </Button>
+
+            <div className="fcp-qr-plote-fundi">
+              <ProgressBar now={((aktivi + 1) / imazhet.length) * 100} style={{ height: 6 }} />
+              <div className="fcp-qr-plote-butonat">
+                {imazhet.length > 1 && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => setAktivi((i) => (i - 1 + imazhet.length) % imazhet.length)}
+                      aria-label="Kodi i mëparshëm"
+                    >
+                      <ChevronLeft size={18} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setLuaj((v) => !v)}
+                      aria-label={luaj ? "Ndalo ndërrimin" : "Vazhdo ndërrimin"}
+                    >
+                      {luaj ? <Pause size={18} /> : <Play size={18} />}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setAktivi((i) => (i + 1) % imazhet.length)}
+                      aria-label="Kodi tjetër"
+                    >
+                      <ChevronRight size={18} />
+                    </button>
+                    {/* A set that will not read is usually going past too quickly - and a short set
+                        is quicker to get through when it is not. */}
+                    <button
+                      type="button"
+                      className="fcp-qr-plote-shpejtesia"
+                      onClick={() => setShpejtesia((i) => (i + 1) % SHPEJTESITE.length)}
+                    >
+                      <Gauge size={16} /> {SHPEJTESITE[shpejtesia].emri}
+                    </button>
+                  </>
+                )}
+              </div>
+              <span className="fcp-qr-plote-fusnote">{kodet.length} kode gjithsej · Esc për ta mbyllur</span>
             </div>
-            <div className="fcp-row-sub mt-2">{kodet.length} kode gjithsej</div>
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body
+        )}
 
       {modaliteti === "link" && linku && (
         <div className="fcp-transfer">
           {linku.img ? (
-            <img src={linku.img} alt="Kodi QR i transferit" className="fcp-transfer-qr" />
+            <button type="button" className="fcp-transfer-qr-buton" onClick={hapLinkunPlote}>
+              <img src={linku.img} alt="Kodi QR i transferit" className="fcp-transfer-qr" />
+              <span>Prekni për ekran të plotë</span>
+            </button>
           ) : (
             <div className="fcp-transfer-qr fcp-transfer-gjate">
               <Link2 size={28} />
@@ -334,25 +447,66 @@ function TransferoQr() {
         </div>
       )}
 
-      {modaliteti === "prano" && (
-        <div className="fcp-transfer">
-          <video ref={videoRef} className="fcp-transfer-video" playsInline muted aria-label="Kamera" />
-          <div className="fcp-transfer-side">
-            <div className="fcp-row-title mb-1">
-              {total ? `Lexuar ${mbledhur.length} nga ${total} kode` : "Duke kërkuar kodin..."}
+      {linkuPlote &&
+        linku?.img &&
+        createPortal(
+          <div className="fcp-qr-plote" role="dialog" aria-modal="true" aria-label="Kodi i transferit">
+            <div className="fcp-qr-plote-koka">
+              <div>
+                <strong>Një kod, të gjitha të dhënat</strong>
+                <span>Skanojeni me kamerën e zakonshme të pajisjes tjetër.</span>
+              </div>
+              <button type="button" onClick={mbyllLinkunPlote} aria-label="Mbyll">
+                <X size={20} />
+              </button>
             </div>
-            <div className="fcp-row-sub mb-2">
-              Mbajeni kamerën para ekranit të pajisjes tjetër. Kodet mund të lexohen në çfarëdo radhe.
+            <div className="fcp-qr-plote-kodi">
+              <img src={linku.img} alt="Kodi QR i transferit" />
             </div>
-            {total > 0 && (
-              <ProgressBar now={(mbledhur.length / total) * 100} className="mb-3" style={{ height: 6 }} />
-            )}
-            <Button size="sm" variant="outline-light" onClick={mbyll}>
-              <X size={14} className="me-1" /> Ndalo
-            </Button>
-          </div>
-        </div>
-      )}
+            <div className="fcp-qr-plote-fundi">
+              <span className="fcp-qr-plote-fusnote">
+                {Math.round(linku.url.length / 1024)} kB · Esc për ta mbyllur
+              </span>
+            </div>
+          </div>,
+          document.body
+        )}
+
+      {modaliteti === "prano" &&
+        createPortal(
+          <div className="fcp-qr-plote errej" role="dialog" aria-modal="true" aria-label="Prano me kamerë">
+            <div className="fcp-qr-plote-koka">
+              <div>
+                <strong>{total ? `Lexuar ${mbledhur.length} / ${total} kode` : "Duke kërkuar kodin..."}</strong>
+                <span>Mbajeni kamerën para ekranit të pajisjes tjetër. Kodet lexohen në çfarëdo radhe.</span>
+              </div>
+              <button type="button" onClick={mbyll} aria-label="Ndalo">
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="fcp-qr-plote-kodi">
+              <video ref={videoRef} playsInline muted aria-label="Kamera" />
+            </div>
+
+            <div className="fcp-qr-plote-fundi">
+              {total > 0 && (
+                <>
+                  <ProgressBar now={(mbledhur.length / total) * 100} style={{ height: 6 }} />
+                  {/* Which ones are still missing: the sender cycles endlessly, so seeing four gaps
+                      left is the difference between waiting one more sweep and giving up. */}
+                  <div className="fcp-qr-plote-pikat">
+                    {Array.from({ length: total }, (_, i) => (
+                      <span key={i} className={mbledhur.some((c) => c.index === i + 1) ? "ka" : ""} />
+                    ))}
+                  </div>
+                </>
+              )}
+              <span className="fcp-qr-plote-fusnote">Esc për ta ndalur</span>
+            </div>
+          </div>,
+          document.body
+        )}
     </>
   );
 }

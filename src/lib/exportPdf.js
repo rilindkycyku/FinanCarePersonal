@@ -431,36 +431,51 @@ export async function exportStatementPdf({
   const totaliFetave = feta.reduce((sum, f) => sum + f.vlera, 0);
 
   if (totaliFetave > 0) {
-    const qendraX = xC + 42;
+    // The ring sits flush with the panel's left padding and stops well short of the legend: at its
+    // old size the band ran right up to the swatches, and the two read as one smudged block.
+    const trashesia = 8;
+    const rrezja = 22;
+    const qendraX = xC + 12 + rrezja + trashesia / 2;
     const qendraY = bandY + 66;
-    // A wider ring with a thinner band leaves a hole the total actually fits inside; the caption
-    // that used to sit under it collided with the band on both sides, and the panel's own title
-    // already says what the figure is.
-    const rrezja = 27;
-    const trashesia = 10;
+    // Where the legend starts: clear of the band, with the same air on both sides of the gap.
+    const xLegjenda = qendraX + rrezja + trashesia / 2 + 8;
 
-    /** A ring segment, approximated with short thick strokes — jsPDF has no arc primitive. */
+    /**
+     * A ring segment as one filled band — jsPDF has no arc primitive, so both edges of the band are
+     * walked as short straight steps and the whole shape is filled in a single path.
+     *
+     * Drawing the segment as a row of short thick strokes instead left the ring visibly combed: a
+     * stroke is a chord, so its square ends fall inside the ring's curve, and every joint showed as
+     * a pale stripe across the colour — worst on the widest slices, which are the ones being read.
+     */
     const segment = (nga, deri, ngjyra) => {
-      doc.setDrawColor(...ngjyra);
-      doc.setLineWidth(trashesia);
-      doc.setLineCap("butt");
-      const hapa = Math.max(Math.round(Math.abs(deri - nga) / 0.05), 2);
-      for (let i = 0; i < hapa; i += 1) {
-        const a1 = nga + ((deri - nga) * i) / hapa;
-        const a2 = nga + ((deri - nga) * (i + 1)) / hapa;
-        doc.line(
-          qendraX + rrezja * Math.cos(a1),
-          qendraY - rrezja * Math.sin(a1),
-          qendraX + rrezja * Math.cos(a2),
-          qendraY - rrezja * Math.sin(a2)
-        );
-      }
+      const jashtem = rrezja + trashesia / 2;
+      const brendshem = rrezja - trashesia / 2;
+      // ~3° steps: the flat of a step sits 0.03 pt inside the true curve, well under a printed dot.
+      const hapa = Math.max(Math.ceil(Math.abs(deri - nga) / 0.05), 2);
+      const neKend = (kendi, rreze) => [qendraX + rreze * Math.cos(kendi), qendraY - rreze * Math.sin(kendi)];
+      const pika = [];
+      for (let i = 0; i <= hapa; i += 1) pika.push(neKend(nga + ((deri - nga) * i) / hapa, jashtem));
+      for (let i = hapa; i >= 0; i -= 1) pika.push(neKend(nga + ((deri - nga) * i) / hapa, brendshem));
+
+      doc.setFillColor(...ngjyra);
+      // `lines` walks in steps from the point before it, so the path is handed over as deltas.
+      doc.lines(
+        pika.slice(1).map((p, i) => [p[0] - pika[i][0], p[1] - pika[i][1]]),
+        pika[0][0],
+        pika[0][1],
+        [1, 1],
+        "F",
+        true
+      );
     };
 
     let kendi = Math.PI / 2; // starts at twelve o'clock and runs clockwise
     feta.forEach((f) => {
       const hapesira = (f.vlera / totaliFetave) * Math.PI * 2;
-      segment(kendi, kendi - hapesira, f.ngjyra);
+      // Each slice starts a whisker inside the one before it: two fills that merely touch leave a
+      // hairline of paper between them once the page is rasterized.
+      segment(kendi + 0.006, kendi - hapesira, f.ngjyra);
       kendi -= hapesira;
     });
 
@@ -475,13 +490,16 @@ export async function exportStatementPdf({
     doc.text(plainAmount(totaliFetave), qendraX, qendraY + madhesia / 3, { align: "center" });
 
     let cy = bandY + 36;
+    // The share is right-aligned to the panel's edge; the name gets what is left between the two.
+    const xPerqindja = xC + wC - 12;
+    const emriW = xPerqindja - 20 - (xLegjenda + 9);
     feta.forEach((f) => {
       doc.setFillColor(...f.ngjyra);
-      doc.roundedRect(xC + 74, cy - 5, 5, 5, 1.5, 1.5, "F");
+      doc.roundedRect(xLegjenda, cy - 5, 5, 5, 1.5, 1.5, "F");
       setText(6.4, "normal", CLR.text);
-      doc.text(doc.splitTextToSize(f.emri, wC - 108)[0], xC + 83, cy);
+      doc.text(doc.splitTextToSize(f.emri, emriW)[0], xLegjenda + 9, cy);
       setText(6.4, "bold", CLR.text);
-      doc.text(`${Math.round((f.vlera / totaliFetave) * 100)}%`, xC + wC - 12, cy, { align: "right" });
+      doc.text(`${Math.round((f.vlera / totaliFetave) * 100)}%`, xPerqindja, cy, { align: "right" });
       cy += 12;
     });
 

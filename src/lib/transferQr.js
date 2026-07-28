@@ -45,8 +45,13 @@ const toBase64Url = (bytes) => toBase64(bytes).replace(/\+/g, "-").replace(/\//g
 /**
  * The codes to show, in order. `maxChars` keeps each QR sparse enough for a phone camera to read
  * off a screen - denser codes fit more but start needing a steady hand.
+ *
+ * 400 base64 characters land around a 73x73 code: shown full screen that is roughly five screen
+ * pixels per module, which a camera reads at arm's length. Twice that fits in half as many codes,
+ * but each one is a grid so fine that a phone has to be held still and square to catch it - the
+ * sweep is quicker in codes and slower in practice.
  */
-export async function encodeTransfer(data, maxChars = 800) {
+export async function encodeTransfer(data, maxChars = 400) {
   const bytes = new TextEncoder().encode(JSON.stringify(data));
   const { bytes: payload, ngjeshur } = await compress(bytes);
   const b64 = toBase64(payload);
