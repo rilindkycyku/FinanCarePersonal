@@ -217,6 +217,9 @@ export async function exportStatementPdf({
   end,
   llogariaId = null,
   filename,
+  // When set, the caller gets the file back instead of the browser downloading it - what the
+  // share sheet needs.
+  kthejBlob = false,
 }) {
   const [{ jsPDF }, autoTableModule] = await Promise.all([import("jspdf"), import("jspdf-autotable")]);
   const autoTable = autoTableModule.default || autoTableModule.autoTable;
@@ -752,6 +755,7 @@ export async function exportStatementPdf({
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-|-$/g, "")}.pdf`;
+  if (kthejBlob) return { blob: doc.output("blob"), filename: emri };
   doc.save(emri);
   return emri;
 }

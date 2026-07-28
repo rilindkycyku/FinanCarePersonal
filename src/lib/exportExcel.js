@@ -313,6 +313,7 @@ export async function exportStatementExcel({
   end,
   llogariaId = null,
   filename,
+  kthejBlob = false,
 }) {
   // Same computation the PDF uses, so the two exports can never disagree.
   const [ExcelJS, { statementRows, statementTitle }] = await Promise.all([
@@ -409,9 +410,10 @@ export async function exportStatementExcel({
   const emri =
     filename ||
     `financarepersonal-${titulli.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}.xlsx`;
-  saveAs(
-    new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }),
-    emri
-  );
+  const blob = new Blob([buffer], {
+    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  });
+  if (kthejBlob) return { blob, filename: emri };
+  saveAs(blob, emri);
   return emri;
 }

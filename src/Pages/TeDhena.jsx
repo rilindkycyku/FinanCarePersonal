@@ -5,7 +5,7 @@ import NavBar from "../Components/NavBar";
 import Footer from "../Components/Footer";
 import PageTitle from "../Components/PageTitle";
 import PageLoading from "../Components/PageLoading";
-import NdaniAplikacionin from "../Components/NdaniAplikacionin";
+import Ndaje from "../Components/Ndaje";
 import { useData } from "../Context/DataContext";
 import { useDialog } from "../Context/DialogContext";
 import { exportAllData, importAllData } from "../lib/db";
@@ -281,7 +281,7 @@ function TeDhena() {
           </Row>
         </Card>
 
-        <NdaniAplikacionin />
+        <Ndaje />
 
         <Card className="profile-card border-0 p-4">
           <h5 className="fw-bold mb-3">
