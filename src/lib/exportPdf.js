@@ -15,7 +15,7 @@ import {
   accountBalance, filterByRange, sortByDateDesc, totalBalance, totalsByCategory, txSignForAccount,
 } from "./finance";
 import { currencySymbol, formatDate, plainAmount, toNumber } from "./format";
-import { DEFAULT_CURRENCY } from "./options";
+import { accountTypeMeta, DEFAULT_CURRENCY } from "./options";
 
 const CLR = {
   navy: [13, 33, 55],
@@ -238,13 +238,30 @@ export async function exportStatementPdf({
   setText(7, "bold", CLR.emerald);
   doc.text("PERSONAL", MARGIN + (vizatuar ? 130 : 76), MARGIN + 12);
 
+  // A statement is filed and referred back to, so it carries its own reference and the moment it
+  // was produced, not just the period it covers.
+  const tani = new Date();
+  const dyShifra = (n) => String(n).padStart(2, "0");
+  const nrPasqyres = `PSQ-${start.replace(/-/g, "")}-${end.replace(/-/g, "")}${
+    llogaria ? `-${llogaria.id.slice(-4).toUpperCase()}` : ""
+  }`;
+
   setText(11, "bold", CLR.navy);
-  doc.text("PËRMBLEDHJA E LLOGARISË PËR KËTË PERIUDHË", W - MARGIN, MARGIN + 4, { align: "right" });
+  doc.text("PËRMBLEDHJA E LLOGARISË PËR KËTË PERIUDHË", W - MARGIN, MARGIN + 2, { align: "right" });
   setText(8.5, "normal", CLR.muted);
   doc.text(
     `${formatDate(start)} - ${formatDate(end)}${periudhaLabel ? ` · ${periudhaLabel}` : ""}`,
     W - MARGIN,
-    MARGIN + 18,
+    MARGIN + 15,
+    { align: "right" }
+  );
+  setText(7, "normal", CLR.muted);
+  doc.text(
+    `Nr. ${nrPasqyres} · lëshuar më ${formatDate(tani.toISOString().slice(0, 10))} ${dyShifra(
+      tani.getHours()
+    )}:${dyShifra(tani.getMinutes())}`,
+    W - MARGIN,
+    MARGIN + 26,
     { align: "right" }
   );
 
@@ -252,7 +269,7 @@ export async function exportStatementPdf({
   // Full width, so every page below it can use the whole page and a continuation page never shows
   // an empty column where a sidebar used to be.
   const bandY = MARGIN + 36;
-  const bandH = 128;
+  const bandH = 134;
   const gap = 12;
   // The details panel holds short values, so the ring panel gets the room its legend needs.
   const wA = 148;
@@ -269,20 +286,27 @@ export async function exportStatementPdf({
     doc.text(titull.toUpperCase(), x + 12, bandY + 18);
   };
 
-  // A — who and what this statement covers
+  // A — who and what this statement covers. Label left, value right, so the panel holds everything
+  // that identifies the document rather than just a name and a currency.
   panel(xA, wA, "Të dhënat e pasqyrës");
-  let ay = bandY + 36;
+  let ay = bandY + 34;
+  const llogariteAktive = accounts.filter((a) => !a.arkivuar).length;
   [
     ["Emri", profile.emri || "Përdorues"],
-    ["Llogaria", llogaria ? llogaria.emri : "Të gjitha llogaritë"],
+    ["Llogaria", llogaria ? llogaria.emri : `Të gjitha (${llogariteAktive})`],
+    ["Lloji", llogaria ? accountTypeMeta(llogaria.lloji).short : "Përmbledhëse"],
+    // Short form: the panel is 148 pt wide and the full range does not fit beside its label.
+    ["Periudha", `${formatDate(start).slice(0, 5)} - ${formatDate(end)}`],
     ["Monedha", `${monedha} (${simboli})`],
-    ["Gjeneruar më", formatDate(new Date().toISOString().slice(0, 10))],
+    ["Transaksione", String(t.nrRreshtave)],
+    // The reference number and issue time are in the masthead, where there is room for them.
+    ["Gjeneruar më", formatDate(tani.toISOString().slice(0, 10))],
   ].forEach(([label, value]) => {
-    setText(6.8, "normal", CLR.muted);
+    setText(6.6, "normal", CLR.muted);
     doc.text(label, xA + 12, ay);
-    setText(8.5, "bold", CLR.text);
-    doc.text(doc.splitTextToSize(value, wA - 24)[0], xA + 12, ay + 11);
-    ay += 25;
+    setText(7.4, "bold", CLR.text);
+    doc.text(doc.splitTextToSize(value, wA - 60)[0], xA + wA - 12, ay, { align: "right" });
+    ay += 13;
   });
 
   // B — the figures, ending in the closing balance
@@ -387,55 +411,116 @@ export async function exportStatementPdf({
     doc.text("Nuk ka shpenzime në këtë periudhë.", xC + 12, bandY + 44);
   }
 
-  // ── Sections, full width on every page ────────────────────
-  const seksionet = [
+  // ── Sections ──────────────────────────────────────────────
+  // Two columns while everything fits on the first page: the purchases — always the longest list —
+  // run down the right, everything else down the left. Once the purchases outrun the page they
+  // carry on across the full width, since by then the left column has nothing left to hold.
+  const seksioniShpenzimeve = {
+    titull: "Blerjet dhe shpenzimet",
+    rows: t.seksionet.blerjet,
+  };
+  const seksionetMajtas = [
     { titull: "Hyrjet dhe pagesat e marra", rows: t.seksionet.hyrjet },
-    { titull: "Blerjet dhe shpenzimet", rows: t.seksionet.blerjet },
     { titull: "Blerjet me këste", rows: t.seksionet.keste, keste: true },
     {
       titull: llogariaId ? "Transferet" : "Transferet mes llogarive (nuk ndryshojnë bilancin)",
+      // A narrow column cannot hold the long form without running into the row count beside it.
+      titullNgushte: "Transferet mes llogarive",
       rows: t.seksionet.transferet,
       transfer: !llogariaId,
     },
   ].filter((s) => s.rows.length > 0);
 
-  let y = bandY + bandH + 22;
+  const shuma = (seksioni, r) => (seksioni.transfer ? r.shfaq : r.vlera);
+  const totaliI = (seksioni) => seksioni.rows.reduce((sum, r) => sum + shuma(seksioni, r), 0);
 
-  const seksioniTabele = (seksioni) => {
-    const shuma = (r) => (seksioni.transfer ? r.shfaq : r.vlera);
-    const totali = seksioni.rows.reduce((sum, r) => sum + shuma(r), 0);
+  const GAP = 16;
+  const KOLONA_W = (CW - GAP) / 2;
+  const X_DJATHTAS = MARGIN + KOLONA_W + GAP;
+  const FUNDI = H - 58;
+
+  /** Column widths per layout, so a table reads the same narrow or wide. */
+  const kolonat = (gjeresi, keste) => {
+    // 54 pt is what "01/07/2026" needs at 7.2 pt with the cell's padding — anything less wraps the
+    // date onto a second line.
+    const data = gjeresi < 300 ? 54 : 52;
+    const vlera = gjeresi < 300 ? 58 : 70;
+    const kesti = keste ? (gjeresi < 300 ? 30 : 34) : 0;
+    const kategoria = gjeresi < 300 ? 0 : 112;
+    return { data, vlera, kesti, kategoria, pershkrimi: gjeresi - data - vlera - kesti - kategoria };
+  };
+
+  // autoTable's own metrics, mirrored so a table can be measured before it is drawn.
+  const RRESHTI_PADDING = 5.2;
+  const LINE_H = 7.2 * 1.15;
+  const KOKA_H = 7 + 6.8 * 1.15;
+  const FUNDI_H = 7 + 7.6 * 1.15;
+  const TITULLI_H = 18;
+
+  const lartesiaERreshtit = (seksioni, r, k) => {
+    const rreshta = [
+      doc.splitTextToSize(r.pershkrimi, k.pershkrimi - 12).length,
+      k.kategoria ? doc.splitTextToSize(r.kategoria, k.kategoria - 12).length : 1,
+    ];
+    return RRESHTI_PADDING + Math.max(...rreshta, 1) * LINE_H;
+  };
+
+  const lartesiaESeksionit = (seksioni, gjeresi) => {
+    const k = kolonat(gjeresi, seksioni.keste);
+    return (
+      TITULLI_H +
+      KOKA_H +
+      FUNDI_H +
+      seksioni.rows.reduce((sum, r) => sum + lartesiaERreshtit(seksioni, r, k), 0)
+    );
+  };
+
+  /** Draws one section (or a slice of one) and returns the y it ended at. */
+  const vizatoSeksion = (seksioni, { x, gjeresi, y0, rows, titull, shfaqFund = true }) => {
+    const k = kolonat(gjeresi, seksioni.keste);
+    const totali = totaliI(seksioni);
 
     setText(9, "bold", CLR.navy);
-    doc.text(seksioni.titull, MARGIN, y);
+    doc.text(titull ?? (gjeresi < 300 && seksioni.titullNgushte) ?? seksioni.titull, x, y0);
     setText(7, "normal", CLR.muted);
     doc.text(
       `${seksioni.rows.length} ${seksioni.rows.length === 1 ? "rresht" : "rreshta"}`,
-      W - MARGIN,
-      y,
+      x + gjeresi,
+      y0,
       { align: "right" }
     );
-    y += 8;
 
-    const head = seksioni.keste
-      ? [["Data", "Përshkrimi i transaksionit", "Kategoria", "Kësti", `Shuma (${simboli})`]]
-      : [["Data", "Përshkrimi i transaksionit", "Kategoria", `Shuma (${simboli})`]];
+    const head = [
+      [
+        "Data",
+        "Përshkrimi i transaksionit",
+        ...(k.kategoria ? ["Kategoria"] : []),
+        ...(seksioni.keste ? ["Kësti"] : []),
+        `Shuma (${simboli})`,
+      ],
+    ];
     const kolonaVlera = head[0].length - 1;
 
+    const columnStyles = { 0: { cellWidth: k.data, textColor: CLR.muted } };
+    let idx = 2;
+    if (k.kategoria) columnStyles[idx++] = { cellWidth: k.kategoria, textColor: CLR.muted };
+    if (seksioni.keste) columnStyles[idx++] = { cellWidth: k.kesti, halign: "center", textColor: CLR.muted };
+    columnStyles[kolonaVlera] = { cellWidth: k.vlera, halign: "right", fontStyle: "bold" };
+
     autoTable(doc, {
-      startY: y,
+      startY: y0 + 8,
       theme: "plain",
       head,
-      body: seksioni.rows.map((r) =>
-        seksioni.keste
-          ? [formatDate(r.data), r.pershkrimi, r.kategoria, r.kesti, plainAmount(shuma(r))]
-          : [formatDate(r.data), r.pershkrimi, r.kategoria, plainAmount(shuma(r))]
-      ),
-      foot: [
-        [
-          { content: "Totali:", colSpan: kolonaVlera, styles: { halign: "right" } },
-          plainAmount(totali),
-        ],
-      ],
+      body: rows.map((r) => [
+        formatDate(r.data),
+        r.pershkrimi,
+        ...(k.kategoria ? [r.kategoria] : []),
+        ...(seksioni.keste ? [r.kesti] : []),
+        plainAmount(shuma(seksioni, r)),
+      ]),
+      foot: shfaqFund
+        ? [[{ content: "Totali:", colSpan: kolonaVlera, styles: { halign: "right" } }, plainAmount(totali)]]
+        : undefined,
       // Statement density: a compact row keeps a long month to as few pages as possible while
       // staying legible on paper (banks print these around 7 pt).
       styles: {
@@ -465,29 +550,16 @@ export async function exportStatementPdf({
         lineColor: CLR.navy,
       },
       alternateRowStyles: { fillColor: CLR.panel },
-      columnStyles: seksioni.keste
-        ? {
-            0: { cellWidth: 52, textColor: CLR.muted },
-            2: { cellWidth: 112, textColor: CLR.muted },
-            3: { cellWidth: 34, halign: "center", textColor: CLR.muted },
-            4: { cellWidth: 70, halign: "right", fontStyle: "bold" },
-          }
-        : {
-            0: { cellWidth: 52, textColor: CLR.muted },
-            2: { cellWidth: 112, textColor: CLR.muted },
-            3: { cellWidth: 70, halign: "right", fontStyle: "bold" },
-          },
-      // The total belongs to the section, not to each page it happens to span.
+      columnStyles,
       showFoot: "lastPage",
       showHead: "everyPage",
+      tableWidth: gjeresi,
       // Room at the top of continuation pages for the repeated header and the section's own title.
-      margin: { left: MARGIN, right: MARGIN, bottom: 58, top: MARGIN + 52 },
-      // A section of sixty rows runs onto the next page; the column header repeats on its own, and
-      // this puts the section's name back above it so the page is readable in isolation.
+      margin: { left: x, right: W - x - gjeresi, bottom: 58, top: MARGIN + 52 },
       didDrawPage: (data) => {
         if (data.pageNumber > 1) {
           setText(9, "bold", CLR.navy);
-          doc.text(`${seksioni.titull} (vazhdim)`, MARGIN, MARGIN + 42);
+          doc.text(`${seksioni.titull} (vazhdim)`, x, MARGIN + 42);
         }
       },
       didParseCell: (data) => {
@@ -504,14 +576,75 @@ export async function exportStatementPdf({
       },
     });
 
-    y = doc.lastAutoTable.finalY + 18;
+    return doc.lastAutoTable.finalY;
   };
 
-  if (seksionet.length === 0) {
+  const yTop = bandY + bandH + 22;
+  const lartesiaMajtas = seksionetMajtas.reduce(
+    (sum, s) => sum + lartesiaESeksionit(s, KOLONA_W) + 18,
+    0
+  );
+  // Two columns only when the left-hand stack fits beside the purchases on this page; otherwise
+  // the old single-column flow is both simpler and more readable.
+  const dyKolona =
+    seksioniShpenzimeve.rows.length > 0 &&
+    seksionetMajtas.length > 0 &&
+    yTop + lartesiaMajtas <= FUNDI;
+
+  if (seksioniShpenzimeve.rows.length === 0 && seksionetMajtas.length === 0) {
     setText(9, "normal", CLR.muted);
-    doc.text("Nuk ka lëvizje në këtë periudhë.", MARGIN, y);
+    doc.text("Nuk ka lëvizje në këtë periudhë.", MARGIN, yTop);
+  } else if (dyKolona) {
+    let yMajtas = yTop;
+    seksionetMajtas.forEach((s) => {
+      yMajtas = vizatoSeksion(s, { x: MARGIN, gjeresi: KOLONA_W, y0: yMajtas, rows: s.rows }) + 18;
+    });
+
+    // The purchases fill the right column down to the foot of the page; whatever is left of them
+    // continues on the next page across the full width.
+    const k = kolonat(KOLONA_W, false);
+    const hapesira = FUNDI - (yTop + 8) - KOKA_H;
+    let perdorur = 0;
+    let ndarja = 0;
+    while (ndarja < seksioniShpenzimeve.rows.length) {
+      const h = lartesiaERreshtit(seksioniShpenzimeve, seksioniShpenzimeve.rows[ndarja], k);
+      // The last slice has to leave room for the total underneath it.
+      const nevoja = ndarja === seksioniShpenzimeve.rows.length - 1 ? h + FUNDI_H : h;
+      if (perdorur + nevoja > hapesira) break;
+      perdorur += h;
+      ndarja += 1;
+    }
+
+    const neFaqe = seksioniShpenzimeve.rows.slice(0, ndarja);
+    const mbeten = seksioniShpenzimeve.rows.slice(ndarja);
+
+    if (neFaqe.length > 0) {
+      vizatoSeksion(seksioniShpenzimeve, {
+        x: X_DJATHTAS,
+        gjeresi: KOLONA_W,
+        y0: yTop,
+        rows: neFaqe,
+        shfaqFund: mbeten.length === 0,
+      });
+    }
+
+    if (mbeten.length > 0) {
+      doc.addPage();
+      vizatoSeksion(seksioniShpenzimeve, {
+        x: MARGIN,
+        gjeresi: CW,
+        y0: MARGIN + 42,
+        rows: mbeten,
+        titull: `${seksioniShpenzimeve.titull}${neFaqe.length > 0 ? " (vazhdim)" : ""}`,
+      });
+    }
   } else {
-    seksionet.forEach(seksioniTabele);
+    let y = yTop;
+    [seksioniShpenzimeve, ...seksionetMajtas]
+      .filter((s) => s.rows.length > 0)
+      .forEach((s) => {
+        y = vizatoSeksion(s, { x: MARGIN, gjeresi: CW, y0: y, rows: s.rows }) + 18;
+      });
   }
 
   // ── Header and footer on every page ───────────────────────
