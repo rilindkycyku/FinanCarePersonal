@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Every route is client-side rendered from the same index.html, so each one is listed on its own
+     for crawlers that follow links but do not execute the router. -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://personal.financare.rilindkycyku.dev/</loc><priority>1.0</priority></url>
+  <url><loc>https://personal.financare.rilindkycyku.dev/transaksionet</loc><priority>0.8</priority></url>
+  <url><loc>https://personal.financare.rilindkycyku.dev/llogarite</loc><priority>0.8</priority></url>
+  <url><loc>https://personal.financare.rilindkycyku.dev/kategorite</loc><priority>0.6</priority></url>
+  <url><loc>https://personal.financare.rilindkycyku.dev/buxhetet</loc><priority>0.8</priority></url>
+  <url><loc>https://personal.financare.rilindkycyku.dev/qellimet</loc><priority>0.8</priority></url>
+  <url><loc>https://personal.financare.rilindkycyku.dev/te-perseritura</loc><priority>0.8</priority></url>
+  <url><loc>https://personal.financare.rilindkycyku.dev/statistikat</loc><priority>0.7</priority></url>
+  <url><loc>https://personal.financare.rilindkycyku.dev/cilesimet</loc><priority>0.4</priority></url>
+  <url><loc>https://personal.financare.rilindkycyku.dev/te-dhena</loc><priority>0.4</priority></url>
+</urlset>
