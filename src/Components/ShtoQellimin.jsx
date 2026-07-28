@@ -19,7 +19,7 @@ const BLANK = {
 /** Add/edit a savings goal. Progress is `vleraFillestare` plus every transaction tagged with the
  * goal, so the goal itself stores no running total that could drift out of sync. */
 function ShtoQellimin({ show, onHide, initial }) {
-  const { accounts, save, simboli } = useData();
+  const { accounts, save, simboli, njeLlogari, llogariaKryesore } = useData();
   const [goal, setGoal] = useState(BLANK);
   const [error, setError] = useState("");
 
@@ -53,7 +53,8 @@ function ShtoQellimin({ show, onHide, initial }) {
       vleraSynim: toNumber(goal.vleraSynim),
       vleraFillestare: toNumber(goal.vleraFillestare),
       dataSynim: goal.dataSynim || null,
-      llogariaId: goal.llogariaId || null,
+      // Single-account mode hides the picker — every goal is held in the one account there is.
+      llogariaId: (njeLlogari ? llogariaKryesore?.id : goal.llogariaId) || null,
       ngjyra: goal.ngjyra,
       pershkrimi: goal.pershkrimi.trim(),
     });
@@ -128,20 +129,22 @@ function ShtoQellimin({ show, onHide, initial }) {
               />
             </Form.Group>
 
-            <Form.Group as={Col} md={6} controlId="goal-llogariaid">
-              <Form.Label>Llogaria e Kursimit (opsional)</Form.Label>
-              <Form.Select value={goal.llogariaId} onChange={(e) => setField("llogariaId", e.target.value)}>
-                <option value="">Pa llogari të caktuar</option>
-                {accounts
-                  .filter((a) => !a.arkivuar)
-                  .map((a) => (
-                    <option key={a.id} value={a.id}>
-                      {a.emri}
-                    </option>
-                  ))}
-              </Form.Select>
-              <div className="fcp-modal-hint">Përdoret si destinacion i parazgjedhur kur shtoni kontribut.</div>
-            </Form.Group>
+            {!njeLlogari && (
+              <Form.Group as={Col} md={6} controlId="goal-llogariaid">
+                <Form.Label>Llogaria e Kursimit (opsional)</Form.Label>
+                <Form.Select value={goal.llogariaId} onChange={(e) => setField("llogariaId", e.target.value)}>
+                  <option value="">Pa llogari të caktuar</option>
+                  {accounts
+                    .filter((a) => !a.arkivuar)
+                    .map((a) => (
+                      <option key={a.id} value={a.id}>
+                        {a.emri}
+                      </option>
+                    ))}
+                </Form.Select>
+                <div className="fcp-modal-hint">Përdoret si destinacion i parazgjedhur kur shtoni kontribut.</div>
+              </Form.Group>
+            )}
 
             <Col md={12}>
               <ColorPicker value={goal.ngjyra} onChange={(c) => setField("ngjyra", c)} />

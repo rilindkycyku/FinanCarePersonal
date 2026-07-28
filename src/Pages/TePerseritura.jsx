@@ -25,7 +25,7 @@ import "./Styles/Personal.css";
 const PER_MONTH = { ditore: 30, javore: 4.33, dyjavore: 2.17, mujore: 1, tremujore: 1 / 3, gjashtemujore: 1 / 6, vjetore: 1 / 12 };
 
 function TePerseritura() {
-  const { accounts, categories, recurring, save, saveMany, destroy, money, simboli, loading } = useData();
+  const { accounts, categories, recurring, save, saveMany, destroy, money, simboli, loading, njeLlogari } = useData();
   const dialog = useDialog();
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState(null);
@@ -120,7 +120,7 @@ function TePerseritura() {
     Frekuenca: frequencyLabel(r.frekuenca),
     "Data e Radhës": r.dataETjetres,
     Kategoria: nameOf(categories, r.kategoriaId),
-    Llogaria: nameOf(accounts, r.llogariaId),
+    ...(njeLlogari ? {} : { Llogaria: nameOf(accounts, r.llogariaId) }),
     Statusi: !r.aktiv ? "Joaktive" : isRecurringDue(r, today) ? "Ka arritur" : "Aktive",
     [`Vlera (${simboli})`]: `<span class="${r.lloji === "hyrje" ? "fcp-pos" : "fcp-neg"}">${plainAmount(
       r.lloji === "hyrje" ? r.vlera : -r.vlera
@@ -192,8 +192,14 @@ function TePerseritura() {
                     <div className="fcp-row-main">
                       <div className="fcp-row-title">{r.emri}</div>
                       <div className="fcp-row-sub">
-                        {frequencyLabel(r.frekuenca)} · {nameOf(accounts, r.llogariaId)} ·{" "}
-                        {kategoria?.emri || "Pa kategori"}
+                        {[
+                          frequencyLabel(r.frekuenca),
+                          r.nrKesteve ? `${r.nrKesteve} këste` : null,
+                          njeLlogari ? null : nameOf(accounts, r.llogariaId),
+                          kategoria?.emri || "Pa kategori",
+                        ]
+                          .filter(Boolean)
+                          .join(" · ")}
                       </div>
                     </div>
                     <div className={`fcp-row-value ${r.lloji === "hyrje" ? "fcp-pos" : "fcp-neg"} me-2`}>

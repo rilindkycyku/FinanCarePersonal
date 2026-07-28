@@ -43,7 +43,7 @@ function ShtoTransaksionin({
   qellimiFiksuar,
   destinacioniFillestar,
 }) {
-  const { accounts, categories, goals, transactions, save, simboli } = useData();
+  const { accounts, categories, goals, transactions, save, simboli, njeLlogari, llogariaKryesore } = useData();
   const [tx, setTx] = useState(blank(llojiFillestar));
   const [error, setError] = useState("");
 
@@ -51,11 +51,16 @@ function ShtoTransaksionin({
     if (!show) return;
     setError("");
     if (initial) {
+      // In single-account mode the pickers are hidden, so an id pointing at an account that no
+      // longer exists could never be corrected by hand — it falls back to the main account.
+      const exists = (id) => accounts.some((a) => a.id === id);
+      const fixed = (id) => (njeLlogari && id && !exists(id) ? llogariaKryesore?.id || "" : id);
       setTx({
         ...blank(initial.lloji),
         ...initial,
         vlera: String(initial.vlera ?? ""),
-        llogariaDestinacionId: initial.llogariaDestinacionId || "",
+        llogariaId: fixed(initial.llogariaId),
+        llogariaDestinacionId: fixed(initial.llogariaDestinacionId || ""),
         kategoriaId: initial.kategoriaId || "",
         qellimiId: initial.qellimiId || "",
         pershkrimi: initial.pershkrimi || "",
@@ -66,6 +71,18 @@ function ShtoTransaksionin({
     // New transaction: preselect the first usable account (and the goal, when contributing) so
     // the common case is one amount away from being saved.
     const aktive = accounts.filter((a) => !a.arkivuar);
+    if (njeLlogari) {
+      // One account holds everything, so a contribution to a savings goal stays inside it: the
+      // transfer is booked with the same account on both ends and moves no money (finance.js).
+      const kryesore = llogariaKryesore?.id || "";
+      setTx({
+        ...blank(llojiFillestar),
+        llogariaId: kryesore,
+        llogariaDestinacionId: llojiFillestar === "transfer" ? kryesore : "",
+        qellimiId: qellimiFiksuar || "",
+      });
+      return;
+    }
     const destinacioni =
       llojiFillestar === "transfer"
         ? destinacioniFillestar || aktive.find((a) => a.id !== aktive[0]?.id)?.id || ""
@@ -78,7 +95,7 @@ function ShtoTransaksionin({
       llogariaDestinacionId: destinacioni,
       qellimiId: qellimiFiksuar || "",
     });
-  }, [show, initial, llojiFillestar, qellimiFiksuar, destinacioniFillestar, accounts]);
+  }, [show, initial, llojiFillestar, qellimiFiksuar, destinacioniFillestar, accounts, njeLlogari, llogariaKryesore]);
 
   const aktive = useMemo(() => accounts.filter((a) => !a.arkivuar), [accounts]);
 
@@ -98,6 +115,13 @@ function ShtoTransaksionin({
   );
 
   const isTransfer = tx.lloji === "transfer";
+
+  // With a single account there is nowhere to transfer to, so the type is dropped from the toggle
+  // (the savings-goal contribution still opens as a transfer, with the type locked).
+  const llojet = useMemo(
+    () => (njeLlogari ? TYPE_BUTTONS.filter((t) => t.value !== "transfer") : TYPE_BUTTONS),
+    [njeLlogari]
+  );
 
   const setField = (name, value) => setTx((prev) => ({ ...prev, [name]: value }));
 
@@ -128,7 +152,9 @@ function ShtoTransaksionin({
     if (!(vlera > 0)) return setError("Vlera duhet të jetë një numër më i madh se zero.");
     if (!tx.llogariaId) return setError(isTransfer ? "Zgjidhni llogarinë burim." : "Zgjidhni llogarinë.");
     if (isTransfer && !tx.llogariaDestinacionId) return setError("Zgjidhni llogarinë e destinacionit.");
-    if (isTransfer && tx.llogariaDestinacionId === tx.llogariaId) {
+    // Same account on both ends is a no-op transfer — rejected, except in single-account mode where
+    // it is exactly how a goal contribution is earmarked without the money leaving the account.
+    if (isTransfer && !njeLlogari && tx.llogariaDestinacionId === tx.llogariaId) {
       return setError("Llogaria e destinacionit duhet të jetë e ndryshme nga burimi.");
     }
     if (!isTransfer && !tx.kategoriaId) return setError("Zgjidhni kategorinë.");
@@ -188,8 +214,11 @@ function ShtoTransaksionin({
           )}
 
           {!fikseLloji && (
-            <div className="fcp-type-toggle">
-              {TYPE_BUTTONS.map((t) => {
+            <div
+              className="fcp-type-toggle"
+              style={llojet.length < TYPE_BUTTONS.length ? { gridTemplateColumns: `repeat(${llojet.length}, 1fr)` } : undefined}
+            >
+              {llojet.map((t) => {
                 const Icon = t.icon;
                 return (
                   <button
@@ -234,42 +263,55 @@ function ShtoTransaksionin({
               <Form.Control type="date" value={tx.data} onChange={(e) => setField("data", e.target.value)} required />
             </Form.Group>
 
-            <Form.Group as={Col} md={6} controlId="tx-llogariaid">
-              <Form.Label>
-                {isTransfer ? "Nga llogaria" : "Llogaria"} <span className="text-danger">*</span>
-              </Form.Label>
-              <Form.Select value={tx.llogariaId} onChange={(e) => setField("llogariaId", e.target.value)} required>
-                <option value="">Zgjidh llogarinë...</option>
-                {aktive.map((a) => (
-                  <option key={a.id} value={a.id}>
-                    {a.emri}
-                  </option>
-                ))}
-              </Form.Select>
-            </Form.Group>
-
-            {isTransfer ? (
-              <Form.Group as={Col} md={6} controlId="tx-llogariadestinacionid">
+            {/* Single-account mode books everything into the main account, so the pickers are
+                replaced by a plain line telling the user where the money is going. */}
+            {njeLlogari ? (
+              <Col md={12}>
+                <div className="fcp-modal-hint">
+                  Llogaria: <strong>{llogariaKryesore?.emri || "Llogaria kryesore"}</strong>
+                  {isTransfer && " — kontributi mbetet brenda saj, bilanci nuk ndryshon."}
+                </div>
+              </Col>
+            ) : (
+              <Form.Group as={Col} md={6} controlId="tx-llogariaid">
                 <Form.Label>
-                  Në llogarinë <span className="text-danger">*</span>
+                  {isTransfer ? "Nga llogaria" : "Llogaria"} <span className="text-danger">*</span>
                 </Form.Label>
-                <Form.Select
-                  value={tx.llogariaDestinacionId}
-                  onChange={(e) => setField("llogariaDestinacionId", e.target.value)}
-                  required
-                >
+                <Form.Select value={tx.llogariaId} onChange={(e) => setField("llogariaId", e.target.value)} required>
                   <option value="">Zgjidh llogarinë...</option>
-                  {aktive
-                    .filter((a) => a.id !== tx.llogariaId)
-                    .map((a) => (
-                      <option key={a.id} value={a.id}>
-                        {a.emri}
-                      </option>
-                    ))}
+                  {aktive.map((a) => (
+                    <option key={a.id} value={a.id}>
+                      {a.emri}
+                    </option>
+                  ))}
                 </Form.Select>
               </Form.Group>
+            )}
+
+            {isTransfer ? (
+              !njeLlogari && (
+                <Form.Group as={Col} md={6} controlId="tx-llogariadestinacionid">
+                  <Form.Label>
+                    Në llogarinë <span className="text-danger">*</span>
+                  </Form.Label>
+                  <Form.Select
+                    value={tx.llogariaDestinacionId}
+                    onChange={(e) => setField("llogariaDestinacionId", e.target.value)}
+                    required
+                  >
+                    <option value="">Zgjidh llogarinë...</option>
+                    {aktive
+                      .filter((a) => a.id !== tx.llogariaId)
+                      .map((a) => (
+                        <option key={a.id} value={a.id}>
+                          {a.emri}
+                        </option>
+                      ))}
+                  </Form.Select>
+                </Form.Group>
+              )
             ) : (
-              <Form.Group as={Col} md={6} controlId="tx-kategoriaid">
+              <Form.Group as={Col} md={njeLlogari ? 12 : 6} controlId="tx-kategoriaid">
                 <Form.Label>
                   Kategoria <span className="text-danger">*</span>
                 </Form.Label>

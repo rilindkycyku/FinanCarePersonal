@@ -5,6 +5,7 @@ import NavBar from "../Components/NavBar";
 import Footer from "../Components/Footer";
 import PageTitle from "../Components/PageTitle";
 import PageLoading from "../Components/PageLoading";
+import CilesimiNjeLlogari from "../Components/CilesimiNjeLlogari";
 import { useData } from "../Context/DataContext";
 import { useDialog } from "../Context/DialogContext";
 import { useTheme } from "../Context/ThemeContext";
@@ -17,7 +18,7 @@ import "./Styles/Dashboard.css";
 import "./Styles/Personal.css";
 
 function Cilesimet() {
-  const { profile, transactions, accounts, categories, saveProfile, reload, loading } = useData();
+  const { profile, transactions, accounts, categories, saveProfile, reload, loading, njeLlogari } = useData();
   const dialog = useDialog();
   const { theme, toggleTheme } = useTheme();
   const [form, setForm] = useState({ emri: "", monedha: DEFAULT_CURRENCY, teArdhuratMujore: "", objektiviKursimit: "" });
@@ -59,11 +60,13 @@ function Cilesimet() {
 
   const handleReseed = async () => {
     const ok = await dialog.confirm(
-      "Kjo shton përsëri llogaritë dhe kategoritë e parazgjedhura që mungojnë. Të dhënat ekzistuese nuk fshihen, por një kategori e parazgjedhur që e kishit ndryshuar do të kthehet në emrin fillestar. Vazhdo?",
+      njeLlogari
+        ? "Kjo shton përsëri kategoritë e parazgjedhura që mungojnë. Llogaritë nuk preken sepse jeni në modalitetin me një llogari. Një kategori e parazgjedhur që e kishit ndryshuar kthehet në emrin fillestar. Vazhdo?"
+        : "Kjo shton përsëri llogaritë dhe kategoritë e parazgjedhura që mungojnë. Të dhënat ekzistuese nuk fshihen, por një kategori e parazgjedhur që e kishit ndryshuar do të kthehet në emrin fillestar. Vazhdo?",
       { title: "Kthe Listat e Parazgjedhura" }
     );
     if (!ok) return;
-    await seedDefaults();
+    await seedDefaults({ perfshiLlogarite: !njeLlogari });
     await reload();
     setMessage({ type: "success", text: "Listat e parazgjedhura u kthyen." });
   };
@@ -150,6 +153,8 @@ function Cilesimet() {
             </Row>
           </Form>
         </Card>
+
+        <CilesimiNjeLlogari onMessage={(text) => setMessage({ type: "success", text })} />
 
         <Card className="profile-card border-0 p-4 mb-4">
           <h5 className="fw-bold mb-3">Pamja</h5>

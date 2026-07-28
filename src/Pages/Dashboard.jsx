@@ -37,8 +37,8 @@ const QUICK_ACTIONS = [
 ];
 
 function Dashboard() {
-  const { profile, accounts, categories, transactions, budgets, goals, recurring, loading, error, money, signedMoney } =
-    useData();
+  const { profile, accounts, categories, transactions, budgets, goals, recurring, loading, error, money, signedMoney,
+    njeLlogari, llogariaKryesore } = useData();
   const [showTx, setShowTx] = useState(false);
 
   const today = todayISO();
@@ -122,7 +122,11 @@ function Dashboard() {
           <Kpi
             label="Bilanci Total"
             value={money(stats.bilanci)}
-            sub={`${stats.llogarite.length} llogari aktive`}
+            sub={
+              njeLlogari && stats.llogarite.length <= 1
+                ? llogariaKryesore?.emri || "Një llogari"
+                : `${stats.llogarite.length} llogari aktive`
+            }
             icon={Wallet}
             color={stats.bilanci < 0 ? "danger" : "emerald"}
             lg={3}
@@ -166,6 +170,9 @@ function Dashboard() {
           />
         </Row>
 
+        {/* With a single account the grid would only repeat the "Bilanci Total" tile above it, so
+            the section appears when there is more than one balance to compare. */}
+        {!(njeLlogari && stats.llogarite.length <= 1) && (
         <section className="mt-2 mb-4">
           <h4 className="fcp-section-title">
             <Wallet size={20} className="text-primary" />
@@ -202,6 +209,7 @@ function Dashboard() {
             </div>
           )}
         </section>
+        )}
 
         <Row className="g-3 g-md-4">
           <Col xl={6}>
@@ -229,8 +237,12 @@ function Dashboard() {
                         <div className="fcp-row-sub">
                           {formatDate(tx.data)} ·{" "}
                           {tx.lloji === "transfer"
-                            ? `${nameOf(accounts, tx.llogariaId)} → ${nameOf(accounts, tx.llogariaDestinacionId)}`
-                            : `${kategoria?.emri || "Pa kategori"} · ${nameOf(accounts, tx.llogariaId)}`}
+                            ? njeLlogari
+                              ? "Kursim brenda llogarisë"
+                              : `${nameOf(accounts, tx.llogariaId)} → ${nameOf(accounts, tx.llogariaDestinacionId)}`
+                            : [kategoria?.emri || "Pa kategori", njeLlogari ? null : nameOf(accounts, tx.llogariaId)]
+                                .filter(Boolean)
+                                .join(" · ")}
                         </div>
                       </div>
                       <div
@@ -344,7 +356,8 @@ function Dashboard() {
                     <div className="fcp-row-main">
                       <div className="fcp-row-title">{rec.emri}</div>
                       <div className="fcp-row-sub">
-                        {formatDate(rec.dataETjetres)} · {nameOf(accounts, rec.llogariaId)}
+                        {formatDate(rec.dataETjetres)}
+                        {!njeLlogari && ` · ${nameOf(accounts, rec.llogariaId)}`}
                       </div>
                     </div>
                     <div className={`fcp-row-value ${rec.lloji === "hyrje" ? "fcp-pos" : "fcp-neg"}`}>

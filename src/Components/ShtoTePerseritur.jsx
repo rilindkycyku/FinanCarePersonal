@@ -4,7 +4,9 @@ import { TrendingUp, TrendingDown } from "lucide-react";
 import { useData } from "../Context/DataContext";
 import { makeId, STORES } from "../lib/db";
 import { toNumber, todayISO } from "../lib/format";
+import { lastInstallmentDate } from "../lib/finance";
 import { FREQUENCIES } from "../lib/options";
+import { formatDate } from "../lib/format";
 import "./ModalForms.css";
 
 const BLANK = {
@@ -16,6 +18,7 @@ const BLANK = {
   frekuenca: "mujore",
   dataETjetres: todayISO(),
   dataFundit: "",
+  nrKesteve: "",
   aktiv: true,
 };
 
@@ -26,7 +29,7 @@ const BLANK = {
  * which is what advances the date.
  */
 function ShtoTePerseritur({ show, onHide, initial }) {
-  const { accounts, categories, save, simboli } = useData();
+  const { accounts, categories, save, simboli, njeLlogari, llogariaKryesore } = useData();
   const [rec, setRec] = useState(BLANK);
   const [error, setError] = useState("");
 
@@ -34,24 +37,41 @@ function ShtoTePerseritur({ show, onHide, initial }) {
     if (!show) return;
     setError("");
     if (initial) {
+      // The picker is hidden in single-account mode, so a schedule pointing at a deleted account
+      // is repaired here rather than failing validation on a field the user cannot see.
+      const gjendet = accounts.some((a) => a.id === initial.llogariaId);
       setRec({
         ...BLANK,
         ...initial,
+        llogariaId: njeLlogari && !gjendet ? llogariaKryesore?.id || "" : initial.llogariaId,
         vlera: String(initial.vlera ?? ""),
         dataFundit: initial.dataFundit || "",
+        nrKesteve: initial.nrKesteve ? String(initial.nrKesteve) : "",
       });
       return;
     }
     const aktive = accounts.filter((a) => !a.arkivuar);
-    setRec({ ...BLANK, llogariaId: aktive[0]?.id || "" });
-  }, [show, initial, accounts]);
+    setRec({ ...BLANK, llogariaId: (njeLlogari ? llogariaKryesore : aktive[0])?.id || "" });
+  }, [show, initial, accounts, njeLlogari, llogariaKryesore]);
+
+  const kesteFundi = lastInstallmentDate(rec.dataETjetres, rec.frekuenca, rec.nrKesteve);
 
   const kategoriteERelevante = useMemo(
     () => categories.filter((c) => c.lloji === rec.lloji).sort((a, b) => a.emri.localeCompare(b.emri)),
     [categories, rec.lloji]
   );
 
-  const setField = (name, value) => setRec((prev) => ({ ...prev, [name]: value }));
+  /** With an instalment count the end date is derived, so a card purchase split over N months
+   * stops on its own — the user never has to remember to switch it off. */
+  const setField = (name, value) =>
+    setRec((prev) => {
+      const next = { ...prev, [name]: value };
+      if (["nrKesteve", "frekuenca", "dataETjetres"].includes(name)) {
+        const fundi = lastInstallmentDate(next.dataETjetres, next.frekuenca, next.nrKesteve);
+        next.dataFundit = fundi || (name === "nrKesteve" ? "" : next.dataFundit);
+      }
+      return next;
+    });
 
   const changeType = (lloji) =>
     setRec((prev) => {
@@ -81,6 +101,7 @@ function ShtoTePerseritur({ show, onHide, initial }) {
       frekuenca: rec.frekuenca,
       dataETjetres: rec.dataETjetres,
       dataFundit: rec.dataFundit || null,
+      nrKesteve: Math.floor(toNumber(rec.nrKesteve)) || null,
       dataEFundit: rec.dataEFundit || null,
       aktiv: Boolean(rec.aktiv),
     });
@@ -159,21 +180,23 @@ function ShtoTePerseritur({ show, onHide, initial }) {
               </Form.Select>
             </Form.Group>
 
-            <Form.Group as={Col} md={6} controlId="rec-llogariaid">
-              <Form.Label>
-                Llogaria <span className="text-danger">*</span>
-              </Form.Label>
-              <Form.Select value={rec.llogariaId} onChange={(e) => setField("llogariaId", e.target.value)} required>
-                <option value="">Zgjidh llogarinë...</option>
-                {accounts
-                  .filter((a) => !a.arkivuar)
-                  .map((a) => (
-                    <option key={a.id} value={a.id}>
-                      {a.emri}
-                    </option>
-                  ))}
-              </Form.Select>
-            </Form.Group>
+            {!njeLlogari && (
+              <Form.Group as={Col} md={6} controlId="rec-llogariaid">
+                <Form.Label>
+                  Llogaria <span className="text-danger">*</span>
+                </Form.Label>
+                <Form.Select value={rec.llogariaId} onChange={(e) => setField("llogariaId", e.target.value)} required>
+                  <option value="">Zgjidh llogarinë...</option>
+                  {accounts
+                    .filter((a) => !a.arkivuar)
+                    .map((a) => (
+                      <option key={a.id} value={a.id}>
+                        {a.emri}
+                      </option>
+                    ))}
+                </Form.Select>
+              </Form.Group>
+            )}
 
             <Form.Group as={Col} md={6} controlId="rec-kategoriaid">
               <Form.Label>
@@ -201,13 +224,33 @@ function ShtoTePerseritur({ show, onHide, initial }) {
               />
             </Form.Group>
 
+            <Form.Group as={Col} md={6} controlId="rec-nrkesteve">
+              <Form.Label>Numri i Kësteve (opsional)</Form.Label>
+              <Form.Control
+                type="number"
+                min="1"
+                step="1"
+                placeholder="p.sh. 6"
+                value={rec.nrKesteve}
+                onChange={(e) => setField("nrKesteve", e.target.value)}
+              />
+              <div className="fcp-modal-hint">
+                Për një blerje me këste (p.sh. me Bonus Card): shkruani sa këste janë dhe data e përfundimit
+                llogaritet vetë — pagesa ndalet pas kësti të fundit.
+              </div>
+            </Form.Group>
+
             <Form.Group as={Col} md={6} controlId="rec-datafundit">
               <Form.Label>Përfundon më (opsional)</Form.Label>
               <Form.Control
                 type="date"
                 value={rec.dataFundit}
+                disabled={Boolean(kesteFundi)}
                 onChange={(e) => setField("dataFundit", e.target.value)}
               />
+              {kesteFundi && (
+                <div className="fcp-modal-hint">Kësti i fundit: {formatDate(kesteFundi)}.</div>
+              )}
             </Form.Group>
 
             <Col md={12}>

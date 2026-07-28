@@ -44,7 +44,7 @@ function periodLabel(period) {
 }
 
 function Statistika() {
-  const { accounts, categories, transactions, loading, money, signedMoney } = useData();
+  const { accounts, categories, transactions, loading, money, signedMoney, njeLlogari } = useData();
   const [period, setPeriod] = useState("muaji");
 
   const stats = useMemo(() => {
@@ -167,7 +167,8 @@ function Statistika() {
             icon={Tags}
             color="danger"
           />
-          <Kpi label="Transfere" value={stats.transferet.length} icon={ArrowRightLeft} color="cyan" />
+          {/* Transfers only exist between two accounts, so the tile is dropped in single-account mode. */}
+          {!njeLlogari && <Kpi label="Transfere" value={stats.transferet.length} icon={ArrowRightLeft} color="cyan" />}
           <Kpi
             label="Bilanci Aktual"
             value={money(
@@ -256,6 +257,7 @@ function Statistika() {
             </Panel>
           </Col>
 
+          {!(njeLlogari && stats.llogarite.length <= 1) && (
           <Col xl={6}>
             <Panel title="Aktiviteti sipas Llogarive" icon={Wallet}>
               {stats.llogarite.length === 0 ? (
@@ -282,6 +284,7 @@ function Statistika() {
               )}
             </Panel>
           </Col>
+          )}
 
           <Col xl={6}>
             <Panel title="5 Shpenzimet më të Mëdha" icon={TrendingDown}>
@@ -301,7 +304,8 @@ function Statistika() {
                           {tx.pershkrimi || kategoria?.emri || "Shpenzim"}
                         </div>
                         <div className="fcp-row-sub">
-                          {formatDate(tx.data)} · {nameOf(accounts, tx.llogariaId)}
+                          {formatDate(tx.data)}
+                          {!njeLlogari && ` · ${nameOf(accounts, tx.llogariaId)}`}
                         </div>
                       </div>
                       <div className="fcp-row-value fcp-neg">{money(tx.vlera)}</div>

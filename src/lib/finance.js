@@ -22,6 +22,10 @@ import { toNumber } from "./format";
 /** How a single transaction moves one account's balance: +1, -1 or 0 (unrelated). */
 export function txSignForAccount(tx, accountId) {
   if (tx.lloji === "transfer") {
+    // Both ends on the same account moves no money: it is either a savings-goal contribution
+    // booked in single-account mode, or an old transfer whose two accounts were later merged.
+    // Without this the source branch below would subtract it from the account it never left.
+    if (tx.llogariaId === tx.llogariaDestinacionId) return 0;
     if (tx.llogariaId === accountId) return -1;
     if (tx.llogariaDestinacionId === accountId) return 1;
     return 0;
@@ -46,6 +50,46 @@ export function totalBalance(accounts, transactions) {
 
 export function accountsWithBalances(accounts, transactions) {
   return accounts.map((account) => ({ ...account, bilanci: accountBalance(account, transactions) }));
+}
+
+/**
+ * Everything needed to fold every account into the one with id `targetId` — what single-account
+ * mode does so cash, bank and card stop being tracked separately.
+ *
+ * Pure: it only computes the records, the caller persists them. Opening balances are summed into
+ * the target and every transaction / recurring schedule / savings goal is repointed at it,
+ * including any that referenced an account already deleted, so nothing is left stranded. Old
+ * transfers survive as records with both ends on the target account, where `txSignForAccount`
+ * reads them as the no-ops they have become.
+ */
+export function consolidateAccounts({ accounts, transactions, recurring = [], goals = [], targetId, lloji }) {
+  const target = accounts.find((a) => a.id === targetId);
+  if (!target) return null;
+
+  const touchesOther = (tx) =>
+    tx.llogariaId !== targetId || (tx.llogariaDestinacionId && tx.llogariaDestinacionId !== targetId);
+
+  return {
+    account: {
+      ...target,
+      lloji: lloji || target.lloji,
+      bilanciFillestar: accounts.reduce((sum, a) => sum + toNumber(a.bilanciFillestar), 0),
+      arkivuar: false,
+    },
+    transactions: transactions.filter(touchesOther).map((tx) => ({
+      ...tx,
+      llogariaId: targetId,
+      llogariaDestinacionId: tx.llogariaDestinacionId ? targetId : null,
+    })),
+    recurring: recurring.filter((r) => r.llogariaId !== targetId).map((r) => ({ ...r, llogariaId: targetId })),
+    goals: goals.filter((g) => g.llogariaId && g.llogariaId !== targetId).map((g) => ({ ...g, llogariaId: targetId })),
+    removeIds: accounts.filter((a) => a.id !== targetId).map((a) => a.id),
+    // Transfers between two accounts that are about to become one — reported to the user because
+    // they stop moving money once merged.
+    nrTransfereve: transactions.filter(
+      (tx) => tx.lloji === "transfer" && tx.llogariaId !== tx.llogariaDestinacionId
+    ).length,
+  };
 }
 
 // ── Date ranges ─────────────────────────────────────────────────────────────
@@ -260,6 +304,20 @@ export function nextOccurrence(dateStr, frekuenca) {
           ? addMonths(date, freq.step)
           : addYears(date, freq.step);
   return format(stepped, "yyyy-MM-dd");
+}
+
+/**
+ * Last due date of an instalment plan of `nrKesteve` payments starting on `dateStr` — a card
+ * purchase split over N months is a normal recurring payment that simply has to stop by itself,
+ * which it does once this date is stored as `dataFundit`.
+ */
+export function lastInstallmentDate(dateStr, frekuenca, nrKesteve) {
+  const n = Math.floor(toNumber(nrKesteve));
+  if (!dateStr || !(n > 0)) return null;
+  let date = dateStr;
+  // The cap keeps a mistyped "1000 këste" from spinning; no real plan runs that long.
+  for (let i = 1; i < Math.min(n, 600); i += 1) date = nextOccurrence(date, frekuenca);
+  return date;
 }
 
 export function isRecurringDue(rec, todayStr) {

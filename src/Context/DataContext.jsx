@@ -92,6 +92,16 @@ export function DataProvider({ children }) {
 
   const monedha = data.profile?.monedha || DEFAULT_CURRENCY;
 
+  // Single-account mode: everything is booked into one account, so no page or form asks which one.
+  // The main account is resolved here (never trusting the stored id blindly) so a profile pointing
+  // at an account that was since deleted still lands on a usable one.
+  const njeLlogari = Boolean(data.profile?.njeLlogari);
+  const llogariaKryesore =
+    data.accounts.find((a) => a.id === data.profile?.llogariaKryesoreId) ||
+    data.accounts.find((a) => !a.arkivuar) ||
+    data.accounts[0] ||
+    null;
+
   const value = useMemo(
     () => ({
       ...data,
@@ -103,12 +113,17 @@ export function DataProvider({ children }) {
       destroy,
       destroyMany,
       saveProfile,
+      njeLlogari,
+      llogariaKryesore,
       monedha,
       simboli: currencySymbol(monedha),
       money: (v) => formatMoney(v, monedha),
       signedMoney: (v) => formatSignedMoney(v, monedha),
     }),
-    [data, loading, error, reload, save, saveMany, destroy, destroyMany, saveProfile, monedha]
+    [
+      data, loading, error, reload, save, saveMany, destroy, destroyMany, saveProfile,
+      njeLlogari, llogariaKryesore, monedha,
+    ]
   );
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;
