@@ -1,0 +1,111 @@
+/* The in-app PDF preview: a scrolling stack of rasterized pages on a neutral backdrop, so the
+   sheet reads like paper regardless of the app's theme. */
+
+.fcp-pdf-modal .modal-body {
+  background: var(--sp-bg);
+  padding: 0.75rem;
+  max-height: 78vh;
+  overflow: auto;
+}
+
+.fcp-pdf-zoom {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: fit-content;
+  margin: 0 auto 0.5rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid var(--sp-border);
+  background: var(--sp-surface-2);
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: var(--sp-text-muted);
+}
+
+.fcp-pdf-zoom button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1px solid var(--sp-border);
+  background: var(--sp-surface);
+  color: var(--sp-text);
+  cursor: pointer;
+}
+
+.fcp-pdf-zoom button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.fcp-pdf-pages {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* A centred flex child that is wider than its container cannot be scrolled back to its left edge,
+   so a zoomed page is laid out from the start edge instead and panned from there. */
+.fcp-pdf-pages.zoomuar {
+  align-items: flex-start;
+}
+
+/* Zoomed pages grow past the dialog and are panned; at 100% they simply fit its width. */
+.fcp-pdf-page {
+  width: calc(100% * var(--fcp-pdf-zoom, 1));
+  max-width: calc(900px * var(--fcp-pdf-zoom, 1));
+  height: auto;
+  border-radius: 6px;
+  border: 1px solid var(--sp-border);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  background: #fff;
+}
+
+.fcp-pdf-loading,
+.fcp-pdf-error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5rem 1rem;
+  color: var(--sp-text-muted);
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.fcp-pdf-error {
+  color: var(--sp-red);
+}
+
+.fcp-pdf-footer .btn {
+  display: inline-flex;
+  align-items: center;
+}
+
+@media (max-width: 575.98px) {
+  .fcp-pdf-modal .modal-body {
+    padding: 0.5rem;
+    max-height: none;
+  }
+
+  .fcp-pdf-pages {
+    gap: 0.5rem;
+  }
+
+  /* Three buttons plus the filename never fit one phone row; the name gets its own line. */
+  .fcp-pdf-footer {
+    flex-wrap: wrap;
+  }
+
+  .fcp-pdf-footer .fcp-row-sub {
+    width: 100%;
+    margin-bottom: 0.35rem;
+  }
+}
