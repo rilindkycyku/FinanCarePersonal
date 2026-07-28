@@ -345,6 +345,26 @@ export function lastInstallmentDate(dateStr, frekuenca, nrKesteve) {
   return date;
 }
 
+/**
+ * How far a schedule has got: what has already been booked from it and, for a plan with a fixed
+ * number of instalments, how many (and roughly how much) are still to come. `tanime` counts
+ * occurrences that are about to be booked but are not in `transactions` yet.
+ */
+export function recurringProgress(rec, transactions, tanime = 0) {
+  const paguara = transactions.filter((tx) => tx.perseritjaId === rec.id);
+  const gjithsej = Math.floor(toNumber(rec.nrKesteve)) || null;
+  const paguar = paguara.length + tanime;
+  const mbetur = gjithsej === null ? null : Math.max(gjithsej - paguar, 0);
+  return {
+    gjithsej,
+    paguar,
+    shumaPaguar: paguara.reduce((sum, tx) => sum + toNumber(tx.vlera), 0),
+    mbetur,
+    // An estimate: later instalments are booked at whatever they actually cost that month.
+    shumaMbetur: mbetur === null ? null : mbetur * toNumber(rec.vlera),
+  };
+}
+
 export function isRecurringDue(rec, todayStr) {
   if (!rec.aktiv) return false;
   if (!rec.dataETjetres) return false;

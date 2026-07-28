@@ -33,8 +33,10 @@ sa shpenzohet, sa mbetet dhe sa po kursesh.
 - **Pagesat e Përsëritura** — qira, abonime, rroga dhe blerjet me këste. Skedulimi nuk regjistron
   vetë asgjë: kur vjen data, ju e konfirmoni dhe krijohet transaksioni (duke kapërcyer edhe rastet e
   mbetura pas). Për një blerje me këste mjafton numri i kësteve — data e përfundimit llogaritet vetë
-  dhe pagesa ndalet pas kësti të fundit. Në konfirmim mund të ndryshoni vlerën e asaj pagese (bonuse
-  të zbritura nga pagesa minimale, tarifë vjetore e kartelës, kurs tjetër i muajit) pa e prishur
+  dhe pagesa ndalet pas kësti të fundit. Konfirmimi hap një dritare që tregon sa kanë kushtuar
+  pagesat e përsëritura këtë muaj, një tabelë me ecurinë e planit (sa këste janë paguar, sa po
+  paguhen tani, sa mbeten) dhe një fushë <em>Shto / Zbrit</em> për atë pagesë — p.sh. −7.50 kur
+  bonuset zbriten nga pagesa minimale ose +25 kur bie tarifa vjetore e kartelës — pa e prishur
   vlerën e planifikuar të skedulës.
 - **Monedhë tjetër për një shpenzim** — një abonim që faturohet në $ ndërsa profili juaj është në €:
   shkruani vlerën e faturës, monedhën dhe kursin — ruhet vlera e kthyer në monedhën tuaj (vlera

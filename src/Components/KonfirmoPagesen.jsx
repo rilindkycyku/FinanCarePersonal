@@ -1,22 +1,24 @@
 import { useEffect, useState } from "react";
-import { Modal, Button, Form, Row, Col, Alert } from "react-bootstrap";
+import { Modal, Button, Form, Row, Col, Alert, Table } from "react-bootstrap";
 import { useData } from "../Context/DataContext";
 import { makeId, STORES } from "../lib/db";
-import { convertedAmount, generateDueTransactions } from "../lib/finance";
-import { currencySymbol, formatDate, formatMoney, toNumber, todayISO } from "../lib/format";
+import {
+  convertedAmount, filterByRange, generateDueTransactions, monthBounds, recurringProgress,
+} from "../lib/finance";
+import { currencySymbol, formatDate, formatMoney, monthLabel, monthKey, toNumber, todayISO } from "../lib/format";
 import "./ModalForms.css";
 
 /**
  * Confirmation step for a recurring payment that has come due.
  *
- * The planned amount is only ever a plan: a card instalment can drop when collected bonus points
- * are taken off the minimum payment, rise when the yearly card fee lands on the same statement, and
- * a $-billed subscription lands at a different rate every month. So each due occurrence is shown
- * with an editable amount (and rate) before anything is written, and the schedule itself keeps its
- * planned figures unless "ruaj për muajt e ardhshëm" is ticked.
+ * The planned amount is only ever a plan: a card instalment drops when collected bonus points are
+ * taken off the minimum payment, rises when the yearly card fee lands on the same statement, and a
+ * $-billed subscription lands at a different rate every month. So the dialog shows what this month
+ * already costs, where the plan stands (paid / left), and takes a plus-or-minus adjustment for this
+ * payment only — the schedule keeps its planned figures unless told otherwise.
  */
 function KonfirmoPagesen({ show, rec, onHide }) {
-  const { saveMany, saveProfile, profile, monedha, simboli } = useData();
+  const { saveMany, saveProfile, profile, transactions, monedha, money, simboli } = useData();
   const [rreshtat, setRreshtat] = useState([]);
   const [ruajVleren, setRuajVleren] = useState(false);
   const [error, setError] = useState("");
@@ -29,12 +31,14 @@ function KonfirmoPagesen({ show, rec, onHide }) {
     if (!show || !rec) return;
     setError("");
     setRuajVleren(false);
-    const { transactions } = generateDueTransactions(rec, today, makeId);
+    const { transactions: gjeneruara } = generateDueTransactions(rec, today, makeId);
     setRreshtat(
-      transactions.map((tx) => ({
+      gjeneruara.map((tx) => ({
         id: tx.id,
         data: tx.data,
-        vlera: String(monedhaRec ? tx.vleraOrigjinale ?? "" : tx.vlera ?? ""),
+        // The planned amount stays as typed on the schedule; the adjustment is what varies.
+        planifikuar: monedhaRec ? toNumber(tx.vleraOrigjinale) : toNumber(tx.vlera),
+        rregullim: "",
         kursi: monedhaRec ? String(tx.kursi ?? "") : "",
         pershkrimi: tx.pershkrimi || "",
       }))
@@ -44,18 +48,37 @@ function KonfirmoPagesen({ show, rec, onHide }) {
   const setField = (id, name, value) =>
     setRreshtat((prev) => prev.map((r) => (r.id === id ? { ...r, [name]: value } : r)));
 
+  /** What will be charged in the billing currency (planned ± adjustment). */
+  const paguhet = (rresht) => rresht.planifikuar + toNumber(rresht.rregullim);
+
+  /** The same amount in the profile currency, which is what gets stored. */
   const bazaE = (rresht) =>
-    monedhaRec ? convertedAmount(rresht.vlera, rresht.kursi) : toNumber(rresht.vlera);
+    monedhaRec ? convertedAmount(paguhet(rresht), rresht.kursi) : paguhet(rresht);
 
   const gjithsej = rreshtat.reduce((sum, r) => sum + bazaE(r), 0);
+
+  const ecuria = rec ? recurringProgress(rec, transactions, rreshtat.length) : null;
+
+  // What every schedule has already cost this month, plus the occurrences about to be booked into
+  // it — the "so what does this month actually come to" figure.
+  const muajiKey = monthKey();
+  const { start, end } = monthBounds();
+  const perseriturKeteMuaj = filterByRange(transactions, start, end)
+    .filter((tx) => tx.perseritjaId && tx.lloji === "shpenzim")
+    .reduce((sum, tx) => sum + toNumber(tx.vlera), 0);
+  const totaliMuajit =
+    perseriturKeteMuaj +
+    rreshtat
+      .filter((r) => r.data >= start && r.data <= end && rec?.lloji === "shpenzim")
+      .reduce((sum, r) => sum + bazaE(r), 0);
 
   const handleSave = async (e) => {
     e.preventDefault();
     if (rreshtat.some((r) => !(bazaE(r) > 0))) {
       return setError(
         monedhaRec
-          ? "Çdo pagesë duhet të ketë vlerë dhe kurs më të mëdha se zero."
-          : "Çdo pagesë duhet të ketë vlerë më të madhe se zero."
+          ? "Çdo pagesë duhet të mbetet me vlerë dhe kurs më të mëdha se zero pas rregullimit."
+          : "Çdo pagesë duhet të mbetet me vlerë më të madhe se zero pas rregullimit."
       );
     }
     setError("");
@@ -63,36 +86,36 @@ function KonfirmoPagesen({ show, rec, onHide }) {
     // The occurrences and the advanced schedule come from the same pure helper the bulk action
     // uses; only the amounts the user just corrected are laid on top. Rows are matched by position
     // (this generation mints fresh ids), which is exact because both runs walk the same dates.
-    const { transactions, updated } = generateDueTransactions(rec, today, makeId);
+    const { transactions: gjeneruara, updated } = generateDueTransactions(rec, today, makeId);
 
-    const gjeneruara = transactions.map((tx, i) => {
+    const perRuajtje = gjeneruara.map((tx, i) => {
       const rresht = rreshtat[i];
       if (!rresht || rresht.data !== tx.data) return tx;
       return {
         ...tx,
         vlera: bazaE(rresht),
-        vleraOrigjinale: monedhaRec ? toNumber(rresht.vlera) : null,
+        vleraOrigjinale: monedhaRec ? paguhet(rresht) : null,
         kursi: monedhaRec ? toNumber(rresht.kursi) : null,
         pershkrimi: rresht.pershkrimi.trim() || tx.pershkrimi,
       };
     });
 
-    const i_fundit = rreshtat[rreshtat.length - 1];
+    const iFundit = rreshtat[rreshtat.length - 1];
     const skedula =
-      ruajVleren && i_fundit
+      ruajVleren && iFundit
         ? {
             ...updated,
-            vlera: bazaE(i_fundit),
-            vleraOrigjinale: monedhaRec ? toNumber(i_fundit.vlera) : null,
-            kursi: monedhaRec ? toNumber(i_fundit.kursi) : null,
+            vlera: bazaE(iFundit),
+            vleraOrigjinale: monedhaRec ? paguhet(iFundit) : null,
+            kursi: monedhaRec ? toNumber(iFundit.kursi) : null,
           }
         : updated;
 
-    await saveMany([...gjeneruara.map((tx) => [STORES.transactions, tx]), [STORES.recurring, skedula]]);
+    await saveMany([...perRuajtje.map((tx) => [STORES.transactions, tx]), [STORES.recurring, skedula]]);
 
     // The rate typed here is the freshest one the user has seen, so it becomes the default for the
     // next record in that currency.
-    const kursiFundit = toNumber(i_fundit?.kursi);
+    const kursiFundit = toNumber(iFundit?.kursi);
     if (monedhaRec && kursiFundit > 0) {
       await saveProfile({
         ...profile,
@@ -119,35 +142,78 @@ function KonfirmoPagesen({ show, rec, onHide }) {
             </Alert>
           )}
 
-          <p className="fcp-row-sub mb-3">
-            <strong className="fcp-row-title">{rec.emri}</strong> — {rreshtat.length}{" "}
-            {rreshtat.length === 1 ? "pagesë ka arritur datën" : "pagesa kanë arritur datën"}. Ndryshoni vlerën nëse
-            këtë muaj paguani më shumë ose më pak (bonuse të zbritura, tarifë vjetore e kartelës, kurs tjetër).
-          </p>
+          <div className="fcp-confirm-total">
+            <div>
+              <div className="fcp-row-sub">Pagesat e përsëritura — {monthLabel(muajiKey)}</div>
+              <div className="fcp-confirm-total-value">{money(totaliMuajit)}</div>
+            </div>
+            <div className="text-end">
+              <div className="fcp-row-sub">Kjo pagesë</div>
+              <div className="fcp-confirm-total-value">{money(gjithsej)}</div>
+            </div>
+          </div>
+
+          <Table size="sm" responsive className="fcp-modal-table">
+            <thead>
+              <tr>
+                <th>{rec.emri}</th>
+                <th className="text-end">Pagesa</th>
+                <th className="text-end">Vlera</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Paguar deri tani</td>
+                <td className="text-end">
+                  {ecuria.paguar - rreshtat.length}
+                  {ecuria.gjithsej ? ` / ${ecuria.gjithsej}` : ""}
+                </td>
+                <td className="text-end">{money(ecuria.shumaPaguar)}</td>
+              </tr>
+              <tr>
+                <td>Tani</td>
+                <td className="text-end">{rreshtat.length}</td>
+                <td className="text-end fcp-neg">{money(gjithsej)}</td>
+              </tr>
+              <tr>
+                <td>Mbetet pas kësaj</td>
+                <td className="text-end">{ecuria.mbetur === null ? "pa afat" : ecuria.mbetur}</td>
+                <td className="text-end">
+                  {ecuria.shumaMbetur === null ? "—" : money(ecuria.shumaMbetur)}
+                </td>
+              </tr>
+            </tbody>
+          </Table>
+          {rec.dataFundit && (
+            <div className="fcp-modal-hint mb-3">
+              {ecuria.mbetur === 0
+                ? `Kjo është pagesa e fundit — plani mbyllet më ${formatDate(rec.dataFundit)}.`
+                : `Pagesa e fundit e planifikuar: ${formatDate(rec.dataFundit)}.`}
+            </div>
+          )}
 
           {rreshtat.map((rresht) => (
-            <Row className="g-3 mb-3" key={rresht.id}>
+            <Row className="g-3 mb-2" key={rresht.id}>
               <Col md={12}>
-                <div className="fcp-row-title">{formatDate(rresht.data)}</div>
+                <div className="fcp-row-title">
+                  {formatDate(rresht.data)} · e planifikuar {formatMoney(rresht.planifikuar, monedhaRec || monedha)}
+                </div>
               </Col>
 
-              <Form.Group as={Col} md={monedhaRec ? 4 : 6}>
-                <Form.Label>
-                  Vlera ({simboliRec}) <span className="text-danger">*</span>
-                </Form.Label>
+              <Form.Group as={Col} md={monedhaRec ? 3 : 4}>
+                <Form.Label>Shto / Zbrit ({simboliRec})</Form.Label>
                 <Form.Control
                   type="number"
                   step="0.01"
-                  min="0"
                   inputMode="decimal"
-                  value={rresht.vlera}
-                  onChange={(e) => setField(rresht.id, "vlera", e.target.value)}
-                  required
+                  placeholder="0.00"
+                  value={rresht.rregullim}
+                  onChange={(e) => setField(rresht.id, "rregullim", e.target.value)}
                 />
               </Form.Group>
 
               {monedhaRec && (
-                <Form.Group as={Col} md={4}>
+                <Form.Group as={Col} md={3}>
                   <Form.Label>
                     Kursi (1 {simboliRec} = ? {simboli}) <span className="text-danger">*</span>
                   </Form.Label>
@@ -163,7 +229,7 @@ function KonfirmoPagesen({ show, rec, onHide }) {
                 </Form.Group>
               )}
 
-              <Form.Group as={Col} md={monedhaRec ? 4 : 6}>
+              <Form.Group as={Col} md={monedhaRec ? 4 : 5}>
                 <Form.Label>Përshkrimi</Form.Label>
                 <Form.Control
                   value={rresht.pershkrimi}
@@ -172,15 +238,22 @@ function KonfirmoPagesen({ show, rec, onHide }) {
                 />
               </Form.Group>
 
-              {monedhaRec && (
-                <Col md={12}>
-                  <div className="fcp-modal-hint">
-                    Regjistrohet si {formatMoney(bazaE(rresht), monedha)}.
-                  </div>
-                </Col>
-              )}
+              <Col md={3} className="d-flex align-items-end">
+                <div className="fcp-confirm-line">
+                  <span className="fcp-row-sub">Për t&apos;u paguar</span>
+                  <span className={`fcp-row-value ${bazaE(rresht) > 0 ? "" : "fcp-neg"}`}>
+                    {formatMoney(paguhet(rresht), monedhaRec || monedha)}
+                  </span>
+                  {monedhaRec && <span className="fcp-row-sub">= {money(bazaE(rresht))}</span>}
+                </div>
+              </Col>
             </Row>
           ))}
+
+          <div className="fcp-modal-hint mb-3">
+            Rregullimi vlen vetëm për pagesën përkatëse: p.sh. <strong>-7.50</strong> kur bonuset zbriten nga
+            pagesa minimale, ose <strong>+25</strong> kur bie tarifa vjetore e kartelës.
+          </div>
 
           <Form.Check
             type="switch"
@@ -195,7 +268,7 @@ function KonfirmoPagesen({ show, rec, onHide }) {
         </Modal.Body>
 
         <Modal.Footer>
-          <span className="fcp-row-sub me-auto">Gjithsej: {formatMoney(gjithsej, monedha)}</span>
+          <span className="fcp-row-sub me-auto">Gjithsej: {money(gjithsej)}</span>
           <Button variant="secondary" onClick={onHide}>
             Anulo
           </Button>

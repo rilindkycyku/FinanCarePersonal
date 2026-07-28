@@ -134,3 +134,58 @@
   color: var(--sp-text-muted);
   margin-top: 0.35rem;
 }
+
+/* ── Confirming a due recurring payment ───────────────────────
+   The month's running cost and the plan's paid/left standing are shown before the amount fields,
+   so the adjustment is made with the whole picture in view. */
+.fcp-confirm-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  background: var(--sp-surface-2);
+  border: 1px solid var(--sp-border);
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+}
+
+.fcp-confirm-total-value {
+  font-size: 1.15rem;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  color: var(--sp-text);
+}
+
+.fcp-modal-table {
+  font-size: 0.82rem;
+  color: var(--sp-text);
+  margin-bottom: 0.5rem;
+}
+
+.fcp-modal-table th {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--sp-text-muted);
+  font-weight: 700;
+  border-bottom: 1px solid var(--sp-border) !important;
+}
+
+.fcp-modal-table td {
+  border-bottom: 1px solid var(--sp-border) !important;
+  color: var(--sp-text);
+  vertical-align: middle;
+}
+
+.fcp-modal-table tr:last-child td {
+  border-bottom: none !important;
+}
+
+.fcp-confirm-line {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  width: 100%;
+  padding-bottom: 0.35rem;
+}
