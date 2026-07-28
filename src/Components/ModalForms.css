@@ -157,29 +157,59 @@
   color: var(--sp-text);
 }
 
+/* Same look as the Tabela on the pages behind the dialog, so the payment list reads as the app's
+   familiar table rather than a second style of grid. */
 .fcp-modal-table {
-  font-size: 0.82rem;
   color: var(--sp-text);
   margin-bottom: 0.5rem;
+  border-collapse: collapse;
+  border-radius: 12px;
+  overflow: hidden;
 }
 
 .fcp-modal-table th {
-  font-size: 0.7rem;
+  padding: 0.6rem 0.8rem !important;
+  background: var(--sp-surface-2) !important;
+  color: var(--sp-text-muted) !important;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--sp-text-muted);
-  font-weight: 700;
-  border-bottom: 1px solid var(--sp-border) !important;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  border: none !important;
+  white-space: nowrap;
 }
 
 .fcp-modal-table td {
-  border-bottom: 1px solid var(--sp-border) !important;
-  color: var(--sp-text);
+  padding: 0.55rem 0.8rem !important;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--sp-text) !important;
+  background: var(--sp-surface) !important;
+  border-top: 1px solid var(--sp-border) !important;
+  border-bottom: none !important;
   vertical-align: middle;
+  white-space: nowrap;
 }
 
-.fcp-modal-table tr:last-child td {
-  border-bottom: none !important;
+.fcp-modal-table tfoot td {
+  background: var(--sp-surface-2) !important;
+  font-weight: 800;
+}
+
+.fcp-date-badge {
+  background: var(--sp-surface-3);
+  color: var(--sp-emerald);
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  border: 1px solid var(--sp-border);
+  white-space: nowrap;
+}
+
+.fcp-status-tani {
+  color: var(--sp-emerald);
+  font-weight: 800;
 }
 
 .fcp-confirm-line {

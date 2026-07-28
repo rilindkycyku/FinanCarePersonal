@@ -6,7 +6,9 @@ import {
   convertedAmount, filterByRange, generateDueTransactions, monthBounds, monthlyRecurringBreakdown,
   recurringProgress,
 } from "../lib/finance";
-import { currencySymbol, formatDate, formatMoney, monthLabel, monthKey, toNumber, todayISO } from "../lib/format";
+import {
+  currencySymbol, formatDate, formatMoney, monthLabel, monthKey, plainAmount, toNumber, todayISO,
+} from "../lib/format";
 import "./ModalForms.css";
 
 /**
@@ -75,18 +77,35 @@ function KonfirmoPagesen({ show, rec, onHide }) {
    * once, so the month's real obligation is the list, not a single figure — the schedule being
    * confirmed shows the amount typed below rather than its plan.
    */
-  const zerat = monthlyRecurringBreakdown(recurring, transactions, start, end).map((z) => {
-    if (z.id !== rec?.id) return z;
-    const mbetura = z.datat.filter((d) => !datatTani.has(d));
-    return {
-      ...z,
-      tani: true,
-      shumaTani,
-      datat: mbetura,
-      shumaPritur: mbetura.length * toNumber(rec.vlera),
-      gjithsej: z.shumaPaguar + shumaTani + mbetura.length * toNumber(rec.vlera),
-    };
-  });
+  const zerat = monthlyRecurringBreakdown(recurring, transactions, start, end)
+    .map((z) => {
+      if (z.id !== rec?.id) return z;
+      const mbetura = z.datat.filter((d) => !datatTani.has(d));
+      return {
+        ...z,
+        tani: true,
+        shumaTani,
+        datat: mbetura,
+        shumaPritur: mbetura.length * toNumber(rec.vlera),
+        gjithsej: z.shumaPaguar + shumaTani + mbetura.length * toNumber(rec.vlera),
+      };
+    })
+    .map((z) => {
+      // One date and one status per row, the way the tables on the pages read.
+      const dataMuajit = z.tani
+        ? rreshtatKeteMuaj[0]?.data || z.datat[0] || z.datatPaguara[0]
+        : z.datatPaguara[0] || z.datat[0];
+      const statusi = z.tani
+        ? "Tani"
+        : z.datat.length === 0
+          ? "Paguar"
+          : z.nrPaguara > 0
+            ? "Paguar · pritet"
+            : z.datat[0] <= today
+              ? "Ka arritur"
+              : "Pritet";
+      return { ...z, dataMuajit, statusi };
+    });
 
   // Grouped the way the user actually tracks a card. When the payment comes off an account that is
   // itself a card or a loan, that account *is* the card, so everything charged to it belongs
@@ -194,36 +213,34 @@ function KonfirmoPagesen({ show, rec, onHide }) {
           <Table size="sm" responsive className="fcp-modal-table">
             <thead>
               <tr>
-                <th>Pagesat e muajit — {emriGrupit}</th>
+                <th>Emri</th>
+                <th>Data</th>
+                <th>Kategoria</th>
                 <th>Statusi</th>
-                <th className="text-end">Vlera</th>
+                <th className="text-end">Vlera ({simboli})</th>
               </tr>
             </thead>
             <tbody>
               {grupi.map((z) => (
                 <tr key={z.id} className={z.tani ? "fcp-row-tani" : undefined}>
                   <td>{z.emri}</td>
-                  <td className="fcp-row-sub">
-                    {[
-                      z.nrPaguara > 0 ? `${z.nrPaguara} paguar` : null,
-                      z.tani ? `${rreshtatKeteMuaj.length} tani` : null,
-                      z.datat.length > 0 ? `${z.datat.length} pritet (${formatDate(z.datat[0])})` : null,
-                    ]
-                      .filter(Boolean)
-                      .join(" · ")}
+                  <td>
+                    <span className="fcp-date-badge">{formatDate(z.dataMuajit)}</span>
                   </td>
-                  <td className="text-end">{money(z.gjithsej)}</td>
+                  <td>{categories.find((c) => c.id === z.kategoriaId)?.emri || "—"}</td>
+                  <td className={z.tani ? "fcp-status-tani" : undefined}>{z.statusi}</td>
+                  <td className={`text-end ${z.lloji === "hyrje" ? "fcp-pos" : "fcp-neg"}`}>
+                    {plainAmount(z.lloji === "hyrje" ? z.gjithsej : -z.gjithsej)}
+                  </td>
                 </tr>
               ))}
-              <tr>
-                <td colSpan={2}>
-                  <strong>Gjithsej për këtë muaj</strong>
-                </td>
-                <td className="text-end">
-                  <strong>{money(totaliGrupit)}</strong>
-                </td>
-              </tr>
             </tbody>
+            <tfoot>
+              <tr>
+                <td colSpan={4}>Gjithsej për këtë muaj</td>
+                <td className="text-end fcp-neg">{plainAmount(-totaliGrupit)}</td>
+              </tr>
+            </tfoot>
           </Table>
           <div className="fcp-modal-hint mb-3">
             Të gjitha pagesat e përsëritura këtë muaj: {money(totaliMuajit)}
@@ -233,9 +250,9 @@ function KonfirmoPagesen({ show, rec, onHide }) {
           <Table size="sm" responsive className="fcp-modal-table">
             <thead>
               <tr>
-                <th>{rec.emri}</th>
+                <th>Ecuria — {rec.emri}</th>
                 <th className="text-end">Pagesa</th>
-                <th className="text-end">Vlera</th>
+                <th className="text-end">Vlera ({simboli})</th>
               </tr>
             </thead>
             <tbody>
@@ -245,18 +262,18 @@ function KonfirmoPagesen({ show, rec, onHide }) {
                   {ecuria.paguar - rreshtat.length}
                   {ecuria.gjithsej ? ` / ${ecuria.gjithsej}` : ""}
                 </td>
-                <td className="text-end">{money(ecuria.shumaPaguar)}</td>
+                <td className="text-end">{plainAmount(ecuria.shumaPaguar)}</td>
               </tr>
-              <tr>
+              <tr className="fcp-row-tani">
                 <td>Tani</td>
                 <td className="text-end">{rreshtat.length}</td>
-                <td className="text-end fcp-neg">{money(gjithsej)}</td>
+                <td className="text-end">{plainAmount(gjithsej)}</td>
               </tr>
               <tr>
                 <td>Mbetet pas kësaj</td>
                 <td className="text-end">{ecuria.mbetur === null ? "pa afat" : ecuria.mbetur}</td>
                 <td className="text-end">
-                  {ecuria.shumaMbetur === null ? "—" : money(ecuria.shumaMbetur)}
+                  {ecuria.shumaMbetur === null ? "—" : plainAmount(ecuria.shumaMbetur)}
                 </td>
               </tr>
             </tbody>

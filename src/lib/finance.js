@@ -402,6 +402,7 @@ export function monthlyRecurringBreakdown(recurring, transactions, start, end) {
         llogariaId: rec.llogariaId,
         kategoriaId: rec.kategoriaId,
         nrPaguara: paguara.length,
+        datatPaguara: paguara.map((tx) => tx.data).sort(),
         shumaPaguar,
         datat,
         shumaPritur,
