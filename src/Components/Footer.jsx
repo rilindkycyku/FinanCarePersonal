@@ -15,7 +15,7 @@ function Footer() {
 
       <span className="fcp-footer-text">
         &copy; 2023 - {new Date().getFullYear()} FinanCarePersonal - Ndjekësi i Financave Personale i FinanCare nga{" "}
-        <a href="https://rilindkycyku.com" target="_blank" rel="noopener noreferrer">
+        <a href="https://rilindkycyku.dev" target="_blank" rel="noopener noreferrer">
           Rilind Kyçyku
         </a>
       </span>
