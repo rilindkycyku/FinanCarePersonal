@@ -10,31 +10,15 @@ import { useData } from "../Context/DataContext";
 import { useDialog } from "../Context/DialogContext";
 import { exportAllData, importAllData } from "../lib/db";
 import { exportListExcel, exportStatementExcel } from "../lib/exportExcel";
-import { exportStatementPdf, statementTitle } from "../lib/exportPdf";
+import { exportStatementPdf, statementFilename } from "../lib/exportPdf";
 import PdfViewerModal from "../Components/PdfViewerModal";
-import { monthBounds, sortByDateDesc, yearBounds } from "../lib/finance";
+import { periodBounds, sortByDateDesc } from "../lib/finance";
 import { plainAmount } from "../lib/format";
-import { TRANSACTION_TYPE_LABELS } from "../lib/options";
-import { subMonths } from "date-fns";
+import { STATEMENT_PERIODS, TRANSACTION_TYPE_LABELS } from "../lib/options";
 import "./Styles/PremiumTheme.css";
 import "./Styles/DizajniPergjithshem.css";
 import "./Styles/Dashboard.css";
 import "./Styles/Personal.css";
-
-/** The periods a statement can cover, each resolved to the day range it means. */
-function periudhaBounds(value) {
-  if (value === "muaji") return monthBounds();
-  if (value === "kaluar") return monthBounds(subMonths(new Date(), 1));
-  if (value === "viti") return yearBounds();
-  return { start: "0000-01-01", end: "9999-12-31" };
-}
-
-const PERIUDHAT = [
-  { value: "muaji", label: "Ky muaj" },
-  { value: "kaluar", label: "Muaji i kaluar" },
-  { value: "viti", label: "Ky vit" },
-  { value: "gjithcka", label: "Gjithë historiku" },
-];
 
 function TeDhena() {
   const { profile, accounts, categories, transactions, budgets, goals, recurring, reload, simboli, loading, njeLlogari } =
@@ -120,7 +104,7 @@ function TeDhena() {
   const handleExportPdf = async () => {
     if (duke) return;
     setDuke("pdf");
-    const { start, end } = periudhaBounds(periudha);
+    const { start, end } = periodBounds(periudha);
     try {
       const pasqyra = await exportStatementPdf({
         kthejBlob: true,
@@ -132,18 +116,7 @@ function TeDhena() {
         start,
         end,
         llogariaId: llogariaPdf || null,
-        // Named after the statement itself — "pasqyra-e-korrikut-2026" — with the account appended
-        // so two statements for the same month do not overwrite each other.
-        filename: `${[
-          "financarepersonal",
-          statementTitle(start, end),
-          accounts.find((a) => a.id === llogariaPdf)?.emri,
-        ]
-          .filter(Boolean)
-          .join("-")
-          .toLowerCase()
-          .replace(/[^a-z0-9]+/g, "-")
-          .replace(/^-|-$/g, "")}.pdf`,
+        filename: statementFilename(start, end, accounts.find((a) => a.id === llogariaPdf)?.emri),
       });
       setPdf(pasqyra);
     } catch (err) {
@@ -157,7 +130,7 @@ function TeDhena() {
   const handleStatementExcel = async () => {
     if (duke) return;
     setDuke("excel");
-    const { start, end } = periudhaBounds(periudha);
+    const { start, end } = periodBounds(periudha);
     try {
       const emri = await exportStatementExcel({
         profile,
@@ -288,7 +261,7 @@ function TeDhena() {
             <Form.Group as={Col} md={4} controlId="pdf-periudha">
               <Form.Label>Periudha</Form.Label>
               <Form.Select value={periudha} onChange={(e) => setPeriudha(e.target.value)}>
-                {PERIUDHAT.map((p) => (
+                {STATEMENT_PERIODS.map((p) => (
                   <option key={p.value} value={p.value}>
                     {p.label}
                   </option>

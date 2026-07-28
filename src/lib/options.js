@@ -70,6 +70,14 @@ export const FREQUENCIES = [
   { value: "vjetore", label: "Vjetore", unit: "year", step: 1 },
 ];
 
+/** The periods a statement can cover. `periodBounds()` in finance.js turns each into real dates. */
+export const STATEMENT_PERIODS = [
+  { value: "muaji", label: "Ky muaj" },
+  { value: "kaluar", label: "Muaji i kaluar" },
+  { value: "viti", label: "Ky vit" },
+  { value: "gjithcka", label: "Gjithë historiku" },
+];
+
 export const CATEGORY_COLORS = [
   "#10b981", "#06b6d4", "#8b5cf6", "#f59e0b", "#f43f5e",
   "#ec4899", "#84cc16", "#3b82f6", "#14b8a6", "#a855f7",
