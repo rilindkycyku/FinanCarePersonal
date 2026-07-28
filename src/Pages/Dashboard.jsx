@@ -111,8 +111,11 @@ function Dashboard() {
             <span>
               <CalendarClock size={16} className="me-2" />
               Ka <strong>{stats.dueTani.length}</strong>{" "}
-              {stats.dueTani.length === 1 ? "pagesë të përsëritur" : "pagesa të përsëritura"} që kanë arritur datën
-              dhe presin konfirmim.
+              {/* The verbs agree with the count too — "1 pagesë ... kanë arritur ... presin" reads
+                  as broken Albanian, so the whole tail is inflected, not just the noun. */}
+              {stats.dueTani.length === 1
+                ? "pagesë të përsëritur që ka arritur datën dhe pret konfirmim."
+                : "pagesa të përsëritura që kanë arritur datën dhe presin konfirmim."}
             </span>
             <Link to="/te-perseritura" className="btn btn-warning btn-sm">
               Shiko dhe konfirmo

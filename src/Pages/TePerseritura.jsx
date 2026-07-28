@@ -128,8 +128,11 @@ function TePerseritura() {
           <Alert variant="warning" className="d-flex align-items-center justify-content-between flex-wrap gap-2">
             <span>
               <CalendarClock size={16} className="me-2" />
-              <strong>{stats.due.length}</strong> {stats.due.length === 1 ? "pagesë" : "pagesa"} kanë arritur datën
-              dhe presin konfirmim.
+              <strong>{stats.due.length}</strong>{" "}
+              {/* Verbs inflected with the count as well, not just the noun. */}
+              {stats.due.length === 1
+                ? "pagesë ka arritur datën dhe pret konfirmim."
+                : "pagesa kanë arritur datën dhe presin konfirmim."}
             </span>
             <Button size="sm" variant="warning" onClick={confirmAll}>
               <CheckCircle2 size={14} className="me-1" /> Regjistro të gjitha
