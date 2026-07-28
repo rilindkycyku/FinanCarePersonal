@@ -759,3 +759,168 @@ export async function exportStatementPdf({
   doc.save(emri);
   return emri;
 }
+
+/* ── The table exports ─────────────────────────────────────────
+   Any list page's own rows as a printable sheet, next to the Excel export. Same jsPDF/autoTable
+   pair the statement uses — a second PDF engine for a plain table would be hard to justify — and
+   the same rule as the Excel export for which columns get a total, so the two agree. */
+
+/** Cells may carry the table's coloured markup; print the text only. */
+const stripTags = (value) => String(value ?? "").replace(/<[^>]*>/g, "").trim();
+
+// Columns holding identifiers or dates: never summed, even though they parse as numbers.
+const PA_TOTAL = /^(id|data|dita|muaji|viti|numri|nr\.?|afati|frekuenca|përqindja|perqindja|%)/i;
+
+const numriIQelizes = (value) => {
+  const text = stripTags(value);
+  if (text === "" || text === "-") return null;
+  const n = Number(text.replace(/\s/g, "").replace(",", "."));
+  return Number.isFinite(n) ? n : null;
+};
+
+/**
+ * Builds a list as a PDF and hands back the blob — the caller shows it in the viewer and saves it
+ * only if asked. Portrait up to six columns, landscape beyond, where portrait A4 stops being
+ * readable.
+ */
+export async function buildListPdfBlob({ titulli, headers, rows, profile = {} }) {
+  const [{ jsPDF }, autoTableModule] = await Promise.all([import("jspdf"), import("jspdf-autotable")]);
+  const autoTable = autoTableModule.default || autoTableModule.autoTable;
+
+  const gjeresiFaqes = headers.length > 6 ? "landscape" : "portrait";
+  const doc = new jsPDF({ unit: "pt", format: "a4", orientation: gjeresiFaqes });
+  const [font, logo] = await Promise.all([embedFonts(doc), loadLogo()]);
+  const W = doc.internal.pageSize.getWidth();
+  const H = doc.internal.pageSize.getHeight();
+
+  const setText = (size, style, color) => {
+    doc.setFont(font, style);
+    doc.setFontSize(size);
+    doc.setTextColor(...color);
+  };
+
+  const sot = formatDate(new Date().toISOString().slice(0, 10));
+  const monedha = profile.monedha || DEFAULT_CURRENCY;
+  const pronari = profile.emri || "FinanCarePersonal";
+
+  // Totals for every column that holds nothing but numbers — the same ones the Excel export sums.
+  const totalet = {};
+  headers.forEach((h) => {
+    if (PA_TOTAL.test(h)) return;
+    let sum = 0;
+    let seen = 0;
+    let vetemNumra = true;
+    rows.forEach((r) => {
+      const raw = stripTags(r[h]);
+      if (raw === "" || raw === "-") return;
+      const n = numriIQelizes(r[h]);
+      if (n === null) {
+        vetemNumra = false;
+        return;
+      }
+      sum += n;
+      seen += 1;
+    });
+    if (vetemNumra && seen > 0) totalet[h] = sum;
+  });
+  const kaTotale = Object.keys(totalet).length > 0 && rows.length > 0;
+
+  const kokaFaqes = () => {
+    if (logo) {
+      try {
+        doc.addImage(logo, "PNG", MARGIN, MARGIN - 6, 26, 26);
+      } catch {
+        /* a logo that will not decode simply does not print */
+      }
+    }
+    setText(13, "bold", CLR.navy);
+    doc.text("FinanCarePersonal", MARGIN + (logo ? 32 : 0), MARGIN + 8);
+    setText(7.5, "normal", CLR.muted);
+    doc.text(pronari, MARGIN + (logo ? 32 : 0), MARGIN + 18);
+
+    setText(11, "bold", CLR.navy);
+    doc.text(titulli.toUpperCase(), W - MARGIN, MARGIN + 8, { align: "right" });
+    setText(7.5, "normal", CLR.muted);
+    doc.text(`${sot} · ${monedha} (${currencySymbol(monedha)}) · ${rows.length} rreshta`, W - MARGIN, MARGIN + 18, {
+      align: "right",
+    });
+
+    doc.setDrawColor(...CLR.emerald);
+    doc.setLineWidth(1.2);
+    doc.line(MARGIN, MARGIN + 26, W - MARGIN, MARGIN + 26);
+  };
+
+  const kolonatNumerike = new Set(
+    headers.filter((h) => !PA_TOTAL.test(h) && rows.some((r) => numriIQelizes(r[h]) !== null))
+  );
+
+  autoTable(doc, {
+    startY: MARGIN + 38,
+    theme: "plain",
+    head: [headers],
+    body: rows.map((r) => headers.map((h) => stripTags(r[h]) || "-")),
+    foot: kaTotale
+      ? [headers.map((h, i) => (totalet[h] !== undefined ? plainAmount(totalet[h]) : i === 0 ? "TOTALI" : ""))]
+      : undefined,
+    styles: {
+      font,
+      fontSize: 7.2,
+      cellPadding: { top: 2.8, right: 6, bottom: 2.8, left: 6 },
+      textColor: CLR.text,
+      lineWidth: 0,
+      overflow: "linebreak",
+    },
+    headStyles: {
+      font,
+      fontStyle: "bold",
+      fontSize: 6.8,
+      fillColor: CLR.emerald,
+      textColor: CLR.white,
+      cellPadding: { top: 3.5, right: 6, bottom: 3.5, left: 6 },
+    },
+    footStyles: {
+      font,
+      fontStyle: "bold",
+      fontSize: 7.6,
+      fillColor: CLR.white,
+      textColor: CLR.navy,
+      cellPadding: { top: 3.5, right: 6, bottom: 3.5, left: 6 },
+      lineWidth: { top: 0.7 },
+      lineColor: CLR.navy,
+    },
+    alternateRowStyles: { fillColor: CLR.panel },
+    columnStyles: Object.fromEntries(
+      headers.map((h, i) => [i, kolonatNumerike.has(h) ? { halign: "right" } : {}])
+    ),
+    showFoot: "lastPage",
+    showHead: "everyPage",
+    margin: { left: MARGIN, right: MARGIN, top: MARGIN + 38, bottom: 46 },
+    didParseCell: (data) => {
+      if (data.section !== "head" && kolonatNumerike.has(headers[data.column.index])) {
+        const v = numriIQelizes(data.cell.raw);
+        if (v !== null && v < 0) data.cell.styles.textColor = CLR.red;
+      }
+    },
+    didDrawPage: kokaFaqes,
+  });
+
+  const faqet = doc.getNumberOfPages();
+  for (let f = 1; f <= faqet; f++) {
+    doc.setPage(f);
+    doc.setDrawColor(...CLR.line);
+    doc.setLineWidth(0.5);
+    doc.line(MARGIN, H - 34, W - MARGIN, H - 34);
+    setText(6.8, "normal", CLR.muted);
+    doc.text(`© 2023 - ${new Date().getFullYear()} FinanCarePersonal · ${titulli} · ${sot}`, MARGIN, H - 22);
+    setText(6.8, "bold", CLR.muted);
+    doc.text(`Faqja ${f} / ${faqet}`, W - MARGIN, H - 22, { align: "right" });
+  }
+
+  const emri = `${["financarepersonal", titulli]
+    .join("-")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")}-${new Date().toISOString().slice(0, 10)}.pdf`;
+
+  return { blob: doc.output("blob"), filename: emri };
+}
