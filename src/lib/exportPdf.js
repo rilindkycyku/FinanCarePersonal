@@ -480,13 +480,14 @@ export async function exportStatementPdf({
       // The total belongs to the section, not to each page it happens to span.
       showFoot: "lastPage",
       showHead: "everyPage",
-      margin: { left: MARGIN, right: MARGIN, bottom: 58, top: MARGIN + 22 },
+      // Room at the top of continuation pages for the repeated header and the section's own title.
+      margin: { left: MARGIN, right: MARGIN, bottom: 58, top: MARGIN + 52 },
       // A section of sixty rows runs onto the next page; the column header repeats on its own, and
       // this puts the section's name back above it so the page is readable in isolation.
       didDrawPage: (data) => {
         if (data.pageNumber > 1) {
-          setText(10, "bold", CLR.navy);
-          doc.text(`${seksioni.titull} (vazhdim)`, MARGIN, MARGIN + 10);
+          setText(9, "bold", CLR.navy);
+          doc.text(`${seksioni.titull} (vazhdim)`, MARGIN, MARGIN + 42);
         }
       },
       didParseCell: (data) => {
@@ -513,10 +514,38 @@ export async function exportStatementPdf({
     seksionet.forEach(seksioniTabele);
   }
 
-  // ── Footer note on every page ─────────────────────────────
+  // ── Header and footer on every page ───────────────────────
+  // Statement pages get handed around one at a time, so each one has to say what it is: the mark,
+  // whose account it covers and for which period, and where it sits in the run.
   const faqet = doc.internal.getNumberOfPages();
   for (let f = 1; f <= faqet; f += 1) {
     doc.setPage(f);
+
+    if (f > 1) {
+      if (logo) {
+        try {
+          doc.addImage(logo, "PNG", MARGIN, MARGIN - 6, 96, 18);
+        } catch {
+          /* an unreadable image must not cost the whole statement */
+        }
+      } else {
+        setText(11, "bold", CLR.navy);
+        doc.text("FinanCare", MARGIN, MARGIN + 6);
+      }
+      setText(8, "bold", CLR.navy);
+      doc.text("PËRMBLEDHJA E LLOGARISË", W - MARGIN, MARGIN, { align: "right" });
+      setText(7, "normal", CLR.muted);
+      doc.text(
+        `${llogaria ? `${llogaria.emri} · ` : ""}${formatDate(start)} - ${formatDate(end)}`,
+        W - MARGIN,
+        MARGIN + 11,
+        { align: "right" }
+      );
+      doc.setDrawColor(...CLR.line);
+      doc.setLineWidth(0.5);
+      doc.line(MARGIN, MARGIN + 22, W - MARGIN, MARGIN + 22);
+    }
+
     doc.setDrawColor(...CLR.line);
     doc.setLineWidth(0.5);
     doc.line(MARGIN, H - 44, W - MARGIN, H - 44);
