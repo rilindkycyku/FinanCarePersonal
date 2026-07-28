@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Card, Form, Row, Col, Button, Alert } from "react-bootstrap";
-import { Settings, Save, Trash2, RotateCcw, Sun, Moon } from "lucide-react";
+import { Settings, Save, Trash2, RotateCcw, Sun, Moon, AlertTriangle } from "lucide-react";
 import NavBar from "../Components/NavBar";
 import Footer from "../Components/Footer";
 import PageTitle from "../Components/PageTitle";
@@ -18,7 +18,8 @@ import "./Styles/Dashboard.css";
 import "./Styles/Personal.css";
 
 function Cilesimet() {
-  const { profile, transactions, accounts, categories, saveProfile, reload, loading, njeLlogari } = useData();
+  const { profile, transactions, accounts, categories, budgets, goals, recurring, saveProfile, reload, loading, njeLlogari } =
+    useData();
   const dialog = useDialog();
   const { theme, toggleTheme } = useTheme();
   const [form, setForm] = useState({ emri: "", monedha: DEFAULT_CURRENCY, teArdhuratMujore: "", objektiviKursimit: "" });
@@ -35,6 +36,17 @@ function Cilesimet() {
 
   const setField = (name, value) => setForm((prev) => ({ ...prev, [name]: value }));
 
+  /** What the wipe would take with it, itemised — a warning is only worth reading if it names the
+   * actual numbers rather than "të gjitha të dhënat". Empty stores are left out. */
+  const perNumerim = [
+    ["Transaksione", transactions.length],
+    ["Llogari", accounts.length],
+    ["Kategori", categories.length],
+    ["Buxhete", budgets.length],
+    ["Qëllime", goals.length],
+    ["Pagesa të përsëritura", recurring.length],
+  ].filter(([, value]) => value > 0);
+
   const handleSave = async (e) => {
     e.preventDefault();
     await saveProfile({
@@ -47,15 +59,51 @@ function Cilesimet() {
     setMessage({ type: "success", text: "Cilësimet u ruajtën." });
   };
 
+  /**
+   * Wipes the database behind two deliberately different gates: the first spells out exactly what
+   * disappears, the second only unlocks once the word is typed. A stray double-tap on a phone can
+   * dismiss one dialog, never both — and there is no undo and no server copy behind this.
+   */
   const handleWipe = async () => {
+    const vazhdo = await dialog.confirm(
+      <>
+        Kjo fshin <strong>përgjithmonë</strong> gjithçka që ruhet në këtë shfletues:
+        <ul className="text-start mt-2 mb-2 ps-4">
+          {perNumerim.map(([label, value]) => (
+            <li key={label}>
+              {label}: <strong>{value}</strong>
+            </li>
+          ))}
+          <li>profili juaj (emri, monedha, objektivat)</li>
+        </ul>
+        Nuk ka kopje në ndonjë server dhe veprimi nuk mund të zhbëhet. Nëse nuk keni një kopje JSON
+        te faqja <strong>Eksporto / Importo</strong>, anuloni dhe merreni së pari.
+      </>,
+      { title: "Fshi Të Gjitha Të Dhënat", confirmLabel: "E kuptoj, vazhdo", variant: "danger" }
+    );
+    if (!vazhdo) return;
+
     const ok = await dialog.confirm(
-      `Kjo fshin PËRGJITHMONË të gjitha të dhënat në këtë shfletues: ${transactions.length} transaksione, ${accounts.length} llogari, ${categories.length} kategori, buxhetet, qëllimet dhe pagesat e përsëritura. Eksportoni një kopje JSON para se të vazhdoni. Ta fshij gjithçka?`,
-      { title: "Fshi Të Gjitha Të Dhënat", confirmLabel: "Fshi gjithçka" }
+      <>
+        Hapi i fundit. Pas kësaj {transactions.length === 1 ? "1 transaksion" : `${transactions.length} transaksione`}{" "}
+        dhe çdo e dhënë tjetër humbin pa mundësi kthimi.
+      </>,
+      {
+        title: "Konfirmimi i Fundit",
+        confirmLabel: "Fshi gjithçka",
+        cancelLabel: "Hiq dorë",
+        variant: "danger",
+        requireText: "FSHI",
+      }
     );
     if (!ok) return;
+
     await wipeAllData();
     await reload();
-    setMessage({ type: "success", text: "Të gjitha të dhënat u fshinë." });
+    setMessage({
+      type: "success",
+      text: "Të gjitha të dhënat u fshinë. Përdorni \"Kthe listat e parazgjedhura\" për të nisur me llogaritë dhe kategoritë fillestare.",
+    });
   };
 
   const handleReseed = async () => {
@@ -168,7 +216,7 @@ function Cilesimet() {
           </Button>
         </Card>
 
-        <Card className="profile-card border-0 p-4">
+        <Card className="profile-card border-0 p-4 mb-4">
           <h5 className="fw-bold mb-3">Të Dhënat</h5>
           <p className="text-muted small mb-3">
             Të dhënat ruhen vetëm në IndexedDB të këtij shfletuesi - asnjë server, asnjë llogari. Pastrimi i të
@@ -176,12 +224,28 @@ function Cilesimet() {
             Aktualisht ruhen {transactions.length} transaksione, {accounts.length} llogari dhe{" "}
             {categories.length} kategori.
           </p>
-          <div className="d-flex gap-2 flex-wrap">
+          <div>
             <Button variant="outline-light" onClick={handleReseed}>
               <RotateCcw size={16} className="me-1" /> Kthe listat e parazgjedhura
             </Button>
+          </div>
+        </Card>
+
+        {/* The one irreversible action in the app, kept apart from the settings you can change back
+            so it is never the button next to the one you meant to press. */}
+        <Card className="profile-card fcp-zona-rrezik border-0 p-4">
+          <h5 className="fw-bold mb-2">
+            <AlertTriangle size={18} className="me-2 fcp-neg" />
+            Zona e Rrezikut
+          </h5>
+          <p className="text-muted small mb-3">
+            Pastrimi fshin çdo transaksion, llogari, kategori, buxhet, qëllim, pagesë të përsëritur dhe vetë
+            profilin - gjithçka nga ky shfletues. Nuk ka kopje diku tjetër dhe nuk zhbëhet dot: merrni një kopje
+            JSON te <strong>Eksporto / Importo</strong> para se ta prekni. Do t&apos;ju kërkohen dy konfirmime.
+          </p>
+          <div>
             <Button variant="danger" onClick={handleWipe}>
-              <Trash2 size={16} className="me-1" /> Fshi të gjitha të dhënat
+              <Trash2 size={16} className="me-1" /> Pastro të gjitha të dhënat
             </Button>
           </div>
         </Card>

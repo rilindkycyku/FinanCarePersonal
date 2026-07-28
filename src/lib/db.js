@@ -239,11 +239,16 @@ export async function importAllData(data) {
   ]);
 }
 
-/** Wipes every store (used by "Fshi të gjitha të dhënat" in Cilësimet). Defaults are seeded on
+/** Wipes every store (used by "Pastro të gjitha të dhënat" in Cilësimet). Defaults are seeded on
  * store *creation* only, so after this the user starts from a genuinely empty database — the
  * caller re-seeds accounts/categories if it wants the starter lists back. */
 export async function wipeAllData() {
   await Promise.all(Object.values(STORES).map((store) => clearStore(store)));
+  // `ensureDefaultCategories()` runs at every startup, so without this the 25 starter categories
+  // would quietly reappear on the next reload and a wipe the user confirmed twice would look like
+  // it had only half worked. Recording them as removed uses the same marker a manually deleted
+  // default leaves behind, and "Kthe listat e parazgjedhura" still brings them all back on demand.
+  await putProfile({ kategoriTeHequra: DEFAULT_CATEGORIES.map((c) => c.id) });
 }
 
 /** `perfshiLlogarite: false` restores only the categories — single-account mode has one account on
@@ -253,4 +258,8 @@ export async function seedDefaults({ perfshiLlogarite = true } = {}) {
     ...(perfshiLlogarite ? DEFAULT_ACCOUNTS.map((a) => put(STORES.accounts, a)) : []),
     ...DEFAULT_CATEGORIES.map((c) => put(STORES.categories, c)),
   ]);
+  // Asking for the default lists back also withdraws every "I threw this one away" marker — the
+  // whole set is on the screen again, so nothing is left recorded as removed.
+  const profile = await getProfile();
+  if (profile?.kategoriTeHequra?.length) await putProfile({ ...profile, kategoriTeHequra: [] });
 }

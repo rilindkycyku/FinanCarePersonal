@@ -694,3 +694,28 @@ body.light-mode .fcp-month-nav {
 
 .fcp-trend.up { color: var(--sp-red); }
 .fcp-trend.down { color: var(--sp-emerald); }
+
+/* ── The danger zone in Cilësimet ─────────────────────────────
+   The card that wipes the database is tinted and outlined in red so it never reads as one more
+   settings panel: the eye should catch it before the finger does. Both `.profile-card` and
+   `.containerDashboardP .card` paint this element with !important and either stylesheet can land
+   after this one, so the selectors are stacked to win on specificity rather than on import order. */
+.card.profile-card.fcp-zona-rrezik {
+  border-color: rgba(239, 68, 68, 0.4) !important;
+  background: linear-gradient(180deg, rgba(239, 68, 68, 0.09), var(--sp-surface) 55%) !important;
+}
+
+/* Without this the shared card hover would paint the border emerald — the one colour this card
+   should never go. */
+.card.profile-card.fcp-zona-rrezik:hover {
+  border-color: rgba(239, 68, 68, 0.6) !important;
+}
+
+body.light-mode .card.profile-card.fcp-zona-rrezik {
+  border-color: rgba(239, 68, 68, 0.32) !important;
+  background: linear-gradient(180deg, rgba(239, 68, 68, 0.07), #ffffff 55%) !important;
+}
+
+body.light-mode .card.profile-card.fcp-zona-rrezik:hover {
+  border-color: rgba(239, 68, 68, 0.5) !important;
+}

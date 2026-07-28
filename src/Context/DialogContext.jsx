@@ -39,6 +39,9 @@ export function DialogProvider({ children }) {
         confirmLabel: opts.confirmLabel ?? "Vazhdo",
         cancelLabel: opts.cancelLabel ?? "Anulo",
         variant: opts.variant ?? "warning",
+        // A word the user has to type before the confirm button unlocks, for the handful of
+        // actions where a mistaken tap costs data that cannot be recovered.
+        requireText: opts.requireText ?? "",
       });
     });
   }, []);
@@ -54,6 +57,7 @@ export function DialogProvider({ children }) {
           confirmLabel={dialog.confirmLabel}
           cancelLabel={dialog.cancelLabel}
           variant={dialog.variant}
+          requireText={dialog.requireText}
           hideCancel={dialog.mode === "alert"}
           onConfirm={() => close(true)}
           onCancel={() => close(false)}
