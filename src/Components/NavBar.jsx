@@ -6,6 +6,7 @@ import {
   BarChart3, Settings, DatabaseBackup, Sun, Moon, ChevronDown, Menu, X,
 } from "lucide-react";
 import { useTheme } from "../Context/ThemeContext";
+import ButonPasqyra from "./ButonPasqyra";
 import "./NavBar.css";
 
 // "Paneli" stays a standalone link; the rest is grouped into three dropdown categories instead
@@ -113,6 +114,8 @@ function NavBar() {
           );
         })}
 
+        <ButonPasqyra variant="icon" />
+
         <button
           type="button"
           className="fcp-theme-toggle"
@@ -125,6 +128,7 @@ function NavBar() {
       </div>
 
       <div className="fcp-navbar-mobile-controls">
+        <ButonPasqyra variant="icon" />
         <button
           type="button"
           className="fcp-theme-toggle"

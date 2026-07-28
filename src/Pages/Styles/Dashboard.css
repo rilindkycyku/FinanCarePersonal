@@ -451,3 +451,36 @@ body.light-mode .data-label {
 body.light-mode .data-value {
   color: #0f172a;
 }
+
+/* Secondary hero action — the statement download beside "Transaksion i Ri". */
+.hero-cta.ghost {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow: none;
+  color: #fff;
+}
+
+.hero-cta.ghost:hover {
+  background: rgba(255, 255, 255, 0.2);
+  filter: none;
+}
+
+.hero-cta:disabled {
+  opacity: 0.65;
+  cursor: progress;
+  transform: none;
+}
+
+body.light-mode .hero-cta.ghost {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(0, 0, 0, 0.08);
+  color: var(--sp-text);
+}
+
+@keyframes fcp-spin {
+  to { transform: rotate(360deg); }
+}
+
+.fcp-spin {
+  animation: fcp-spin 0.9s linear infinite;
+}

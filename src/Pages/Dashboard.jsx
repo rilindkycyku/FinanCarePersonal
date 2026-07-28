@@ -10,6 +10,7 @@ import PageTitle from "../Components/PageTitle";
 import PageLoading from "../Components/PageLoading";
 import Footer from "../Components/Footer";
 import ShtoTransaksionin from "../Components/ShtoTransaksionin";
+import ButonPasqyra from "../Components/ButonPasqyra";
 import { Kpi, Panel, ProgressBar, Empty } from "../Components/Ui";
 import { useData } from "../Context/DataContext";
 import { getIcon } from "../lib/icons";
@@ -88,10 +89,11 @@ function Dashboard() {
               <h1 className="fw-bold mb-2">Mirësevini, {pershendetja} 👋</h1>
               <p className="opacity-75 mb-0">{dataAktuale}.</p>
             </Col>
-            <Col xs="auto">
+            <Col xs="auto" className="d-flex flex-wrap gap-2">
               <button type="button" className="hero-cta" onClick={() => setShowTx(true)}>
-                <PlusCircle size={18} /> Transaksion i Re
+                <PlusCircle size={18} /> Transaksion i Ri
               </button>
+              <ButonPasqyra />
             </Col>
           </Row>
         </Container>

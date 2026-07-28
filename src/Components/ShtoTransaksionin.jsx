@@ -224,7 +224,7 @@ function ShtoTransaksionin({
   return (
     <Modal show={show} onHide={onHide} centered size="lg" className="sp-modal">
       <Modal.Header closeButton>
-        <Modal.Title>{initial ? "Ndrysho Transaksionin" : "Transaksion i Re"}</Modal.Title>
+        <Modal.Title>{initial ? "Ndrysho Transaksionin" : "Transaksion i Ri"}</Modal.Title>
       </Modal.Header>
 
       <Form onSubmit={handleSave}>

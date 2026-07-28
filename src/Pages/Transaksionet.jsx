@@ -131,7 +131,7 @@ function Transaksionet() {
         data={rows}
         tableName="Transaksionet"
         kaButona
-        etiketaButonitShto="Transaksion i Re"
+        etiketaButonitShto="Transaksion i Ri"
         funksionButonShto={() => {
           setEditing(null);
           setShowModal(true);
