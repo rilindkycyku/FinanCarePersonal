@@ -1,12 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
 import { Modal, Button, Form, Row, Col, Alert, Table } from "react-bootstrap";
+import { Pencil, X } from "lucide-react";
 import { useData } from "../Context/DataContext";
 import { makeId, STORES } from "../lib/db";
 import {
   convertedAmount, generateDueTransactions, monthBounds, monthlyRecurringBreakdown,
   recurringProgress, scheduledOccurrences,
 } from "../lib/finance";
-import { formatDate, formatMoney, monthLabel, monthKey, plainAmount, toNumber, todayISO } from "../lib/format";
+import {
+  formatDate, formatMoney, formatSignedMoney, monthLabel, monthKey, plainAmount, toNumber, todayISO,
+} from "../lib/format";
 import "./ModalForms.css";
 
 /**
@@ -21,6 +24,10 @@ import "./ModalForms.css";
  * yearly card fee lands on the same statement, a $-billed line converts at that day's rate), so
  * each row takes a plus-or-minus adjustment. The schedules keep their planned figures unless
  * "ruaj për muajt e ardhshëm" is ticked.
+ *
+ * The list itself stays read-only — a card's instalment is a fixed figure and is read, not typed.
+ * The adjustment fields live in their own section behind an edit button, so on a phone they are
+ * reachable without scrolling the table sideways.
  */
 function KonfirmoPagesen({ show, rec, onHide }) {
   const {
@@ -31,6 +38,7 @@ function KonfirmoPagesen({ show, rec, onHide }) {
   const [ndryshimet, setNdryshimet] = useState({});
   const [shenimi, setShenimi] = useState("");
   const [ruajVlerat, setRuajVlerat] = useState(false);
+  const [rregulloHapur, setRregulloHapur] = useState(false);
   const [error, setError] = useState("");
 
   // Grouped the way the user actually pays. When the payment comes off an account that is itself a
@@ -50,6 +58,7 @@ function KonfirmoPagesen({ show, rec, onHide }) {
     setRuajVlerat(false);
     setShenimi("");
     setNdryshimet({});
+    setRregulloHapur(false);
     setDataPageses(todayISO());
   }, [show, rec]);
 
@@ -99,6 +108,14 @@ function KonfirmoPagesen({ show, rec, onHide }) {
   const perfshira = rreshtat.filter((r) => r.perfshi);
   const gjithsej = perfshira.reduce((sum, r) => sum + bazaE(r), 0);
 
+  const rregullimeAktive = perfshira.filter((r) => toNumber(r.rregullim) !== 0).length;
+  // A foreign-currency row cannot be booked without a rate, so the editor opens itself rather than
+  // leaving the field hidden behind the button.
+  const kursiMungon = perfshira.some((r) => r.fx && !(toNumber(r.kursi) > 0));
+  useEffect(() => {
+    if (kursiMungon) setRregulloHapur(true);
+  }, [kursiMungon]);
+
   const muajiKey = monthKey();
   const { start, end } = monthBounds();
   const totaliMuajit = monthlyRecurringBreakdown(recurring, transactions, start, end).reduce(
@@ -122,10 +139,13 @@ function KonfirmoPagesen({ show, rec, onHide }) {
     e.preventDefault();
     if (perfshira.length === 0) return setError("Zgjidhni së paku një pagesë për ta regjistruar.");
     if (!dataPageses) return setError("Data e pagesës është e detyrueshme.");
+    // Both of these are fixed in the adjustment section, so it is opened with the message.
     if (perfshira.some((r) => r.fx && !(toNumber(r.kursi) > 0))) {
+      setRregulloHapur(true);
       return setError("Shkruani kursin e këmbimit për pagesat në monedhë tjetër.");
     }
     if (perfshira.some((r) => !(bazaE(r) > 0))) {
+      setRregulloHapur(true);
       return setError("Çdo pagesë duhet të mbetet me vlerë më të madhe se zero pas rregullimit.");
     }
     setError("");
@@ -226,15 +246,13 @@ function KonfirmoPagesen({ show, rec, onHide }) {
                 <th>Emri</th>
                 <th>Këstet</th>
                 <th className="text-end">Planifikuar</th>
-                <th style={{ width: 120 }}>Shto / Zbrit</th>
-                {rreshtat.some((r) => r.fx) && <th style={{ width: 110 }}>Kursi</th>}
                 <th className="text-end">Paguhet ({simboli})</th>
               </tr>
             </thead>
             <tbody>
               {rreshtat.map((r) => (
                 <tr key={r.id} className={r.perfshi ? undefined : "fcp-row-jashte"}>
-                  <td>
+                  <td className="fcp-cell-check">
                     <Form.Check
                       type="checkbox"
                       aria-label={`Përfshi ${r.emri}`}
@@ -242,64 +260,125 @@ function KonfirmoPagesen({ show, rec, onHide }) {
                       onChange={(e) => setField(r.id, "perfshi", e.target.checked)}
                     />
                   </td>
-                  <td>
+                  <td className="fcp-cell-name">
                     {r.emri}
                     <div className="fcp-row-sub">
                       {r.datat.length > 1
                         ? `${r.datat.length} pagesa të pakonfirmuara`
                         : formatDate(r.datat[0])}
+                      {r.fx && ` · ${r.fx} @ ${r.kursi || "—"}`}
                     </div>
+                    {toNumber(r.rregullim) !== 0 && (
+                      <span className="fcp-adjust-badge">
+                        {formatSignedMoney(toNumber(r.rregullim), r.fx || monedha)}
+                      </span>
+                    )}
                   </td>
-                  <td>
+                  <td className="fcp-cell-keste">
                     {r.ecuria.gjithsej ? `${r.ecuria.paguar} / ${r.ecuria.gjithsej}` : "—"}
                   </td>
-                  <td className="text-end">{formatMoney(r.planifikuar, r.fx || monedha)}</td>
-                  <td>
-                    <Form.Control
-                      type="number"
-                      step="0.01"
-                      inputMode="decimal"
-                      placeholder="0.00"
-                      size="sm"
-                      value={r.rregullim}
-                      onChange={(e) => setField(r.id, "rregullim", e.target.value)}
-                    />
+                  <td className="text-end fcp-cell-plan">{formatMoney(r.planifikuar, r.fx || monedha)}</td>
+                  <td className="text-end fcp-neg fcp-cell-paguhet">
+                    {r.perfshi ? plainAmount(-bazaE(r)) : "—"}
                   </td>
-                  {rreshtat.some((x) => x.fx) && (
-                    <td>
-                      {r.fx ? (
-                        <Form.Control
-                          type="number"
-                          step="0.0001"
-                          min="0"
-                          inputMode="decimal"
-                          size="sm"
-                          value={r.kursi}
-                          onChange={(e) => setField(r.id, "kursi", e.target.value)}
-                        />
-                      ) : (
-                        "—"
-                      )}
-                    </td>
-                  )}
-                  <td className="text-end fcp-neg">{r.perfshi ? plainAmount(-bazaE(r)) : "—"}</td>
                 </tr>
               ))}
             </tbody>
             <tfoot>
               <tr>
-                <td colSpan={rreshtat.some((r) => r.fx) ? 6 : 5}>Gjithsej që paguhet</td>
+                <td colSpan={4}>Gjithsej që paguhet</td>
                 <td className="text-end fcp-neg">{plainAmount(-gjithsej)}</td>
               </tr>
             </tfoot>
           </Table>
 
-          <div className="fcp-modal-hint mb-3">
-            Rregullimi vlen vetëm për këtë pagesë: p.sh. <strong>-7.50</strong> kur bonuset zbriten nga pagesa
-            minimale, ose <strong>+25</strong> kur bie tarifa vjetore e kartelës. Zgjeroni datën e pagesës për të
-            përfshirë edhe këstet që bien më vonë këtë muaj.
-            {mbetenKeteMuaj > 0.004 && ` Pas kësaj, ${emriGrupit} ka edhe ${money(mbetenKeteMuaj)} këtë muaj.`}
+          {/* The planned figure of a card instalment is fixed — it is only ever nudged for this one
+              statement, so the fields for that live here rather than inside the list. */}
+          <div className={`fcp-adjust${rregulloHapur ? " hapur" : ""}`}>
+            <div className="fcp-adjust-head">
+              <div>
+                <div className="fcp-adjust-title">Shto / Zbrit për këtë pagesë</div>
+                <div className="fcp-row-sub">
+                  {rregullimeAktive === 0
+                    ? "Vlerat e planifikuara — pa rregullime"
+                    : `${rregullimeAktive} ${rregullimeAktive === 1 ? "rregullim" : "rregullime"} në këtë pagesë`}
+                </div>
+              </div>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline-secondary"
+                className="fcp-adjust-btn"
+                aria-expanded={rregulloHapur}
+                onClick={() => setRregulloHapur((v) => !v)}
+              >
+                {rregulloHapur ? <X size={14} /> : <Pencil size={14} />}
+                {rregulloHapur ? "Mbyll" : "Ndrysho"}
+              </Button>
+            </div>
+
+            {rregulloHapur && (
+              <div className="fcp-adjust-body">
+                {perfshira.length === 0 && (
+                  <div className="fcp-modal-hint">Zgjidhni së paku një pagesë për ta rregulluar.</div>
+                )}
+                {perfshira.map((r) => (
+                  <div className="fcp-adjust-row" key={r.id}>
+                    <div className="fcp-adjust-name">
+                      {r.emri}
+                      <div className="fcp-row-sub">
+                        Planifikuar {formatMoney(r.planifikuar, r.fx || monedha)}
+                      </div>
+                    </div>
+                    <div className="fcp-adjust-fields">
+                      <Form.Group controlId={`rregullim-${r.id}`}>
+                        <Form.Label>Shto / Zbrit ({r.fx || simboli})</Form.Label>
+                        <Form.Control
+                          type="number"
+                          step="0.01"
+                          inputMode="decimal"
+                          placeholder="0.00"
+                          size="sm"
+                          value={r.rregullim}
+                          onChange={(e) => setField(r.id, "rregullim", e.target.value)}
+                        />
+                      </Form.Group>
+                      {r.fx && (
+                        <Form.Group controlId={`kursi-${r.id}`}>
+                          <Form.Label>Kursi ({r.fx})</Form.Label>
+                          <Form.Control
+                            type="number"
+                            step="0.0001"
+                            min="0"
+                            inputMode="decimal"
+                            size="sm"
+                            value={r.kursi}
+                            onChange={(e) => setField(r.id, "kursi", e.target.value)}
+                          />
+                        </Form.Group>
+                      )}
+                      <div className="fcp-adjust-out">
+                        <span className="fcp-row-sub">Paguhet</span>
+                        <strong className="fcp-neg">{formatMoney(bazaE(r), monedha)}</strong>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+
+                <div className="fcp-modal-hint">
+                  Rregullimi vlen vetëm për këtë pagesë: p.sh. <strong>-7.50</strong> kur bonuset zbriten nga
+                  pagesa minimale, ose <strong>+25</strong> kur bie tarifa vjetore e kartelës. Zgjeroni datën e
+                  pagesës për të përfshirë edhe këstet që bien më vonë këtë muaj.
+                </div>
+              </div>
+            )}
           </div>
+
+          {mbetenKeteMuaj > 0.004 && (
+            <div className="fcp-modal-hint mb-3">
+              Pas kësaj, {emriGrupit} ka edhe {money(mbetenKeteMuaj)} këtë muaj.
+            </div>
+          )}
 
           <Row className="g-3">
             <Form.Group as={Col} md={12} controlId="konfirmo-shenimi">
