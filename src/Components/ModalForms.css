@@ -343,11 +343,15 @@
    Every dialog is read on a phone far more often than on a desk, so the whole shell tightens up:
    less chrome, smaller type, and the total block stacked instead of squeezed side by side. */
 @media (max-width: 575.98px) {
-  .sp-modal .modal-dialog {
+  /* A `fullscreen` dialog is already sized to the viewport by Bootstrap (`width: 100vw`), so the
+     inset below would push it a full rem wider than the screen: the whole dialog sat shifted, with
+     its close button and its last footer action cut off past the right edge. Those dialogs keep
+     Bootstrap's edge-to-edge sizing and square corners; every other dialog floats as before. */
+  .sp-modal .modal-dialog:not([class*="modal-fullscreen"]) {
     margin: 0.5rem;
   }
 
-  .sp-modal .modal-content {
+  .sp-modal .modal-dialog:not([class*="modal-fullscreen"]) .modal-content {
     border-radius: 14px;
   }
 

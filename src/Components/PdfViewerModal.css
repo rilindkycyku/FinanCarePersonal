@@ -79,13 +79,34 @@
     max-height: none;
   }
 
-  /* Three buttons plus the filename never fit one phone row; the name gets its own line. */
+  /* Three buttons plus the filename never fit one phone row; the name gets its own line. It is
+     sized by flex rather than `width: 100%`, so the row margins Bootstrap puts on footer children
+     can't make the footer wider than the dialog it sits in. */
   .fcp-pdf-footer {
     flex-wrap: wrap;
   }
 
   .fcp-pdf-footer .fcp-row-sub {
-    width: 100%;
-    margin-bottom: 0.35rem;
+    flex: 1 0 100%;
+    min-width: 0;
+    margin: 0 0 0.35rem !important;
+  }
+
+  /* The three actions then share the row instead of overflowing it on narrow phones. They grow
+     from their natural widths rather than to three equal ones, so the longest label ("Shkarko
+     PDF") isn't the one squeezed. */
+  .fcp-pdf-footer .btn {
+    flex: 1 1 auto;
+    min-width: 0;
+    justify-content: center;
+    white-space: nowrap;
+    padding-left: 0.4rem !important;
+    padding-right: 0.4rem !important;
+  }
+
+  /* The button is a flex container, so without this its icon is what gives way when the label is
+     wide — the action loses its icon instead of the row losing a few pixels. */
+  .fcp-pdf-footer .btn svg {
+    flex-shrink: 0;
   }
 }
