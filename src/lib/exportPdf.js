@@ -502,8 +502,16 @@ export async function exportStatementPdf({
     const k = kolonat(gjeresi, seksioni.keste);
     const totali = totaliI(seksioni);
 
+    // `??` passes `false` straight through — it only steps aside for null/undefined — so the
+    // shorter `gjeresi < 300 && …` form handed jsPDF a literal `false` for every section drawn at
+    // full width without an explicit title, and the whole statement died on "Type of text must be
+    // string or Array". Full width is what the year and full-history statements use, which is why
+    // only those two were affected.
+    const kryeTitulli =
+      titull ?? (gjeresi < 300 && seksioni.titullNgushte ? seksioni.titullNgushte : seksioni.titull);
+
     setText(9, "bold", CLR.navy);
-    doc.text(titull ?? (gjeresi < 300 && seksioni.titullNgushte) ?? seksioni.titull, x, y0);
+    doc.text(kryeTitulli, x, y0);
     setText(7, "normal", CLR.muted);
     doc.text(
       `${seksioni.rows.length} ${seksioni.rows.length === 1 ? "rresht" : "rreshta"}`,

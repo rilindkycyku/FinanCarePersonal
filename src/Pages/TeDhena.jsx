@@ -1,5 +1,5 @@
-import { useRef, useState } from "react";
-import { Button, Alert, Row, Col, Card, Form } from "react-bootstrap";
+import { useEffect, useRef, useState } from "react";
+import { Button, Alert, Row, Col, Card, Form, Spinner } from "react-bootstrap";
 import { Download, Upload, DatabaseBackup, ShieldCheck, FileText, Sheet } from "lucide-react";
 import NavBar from "../Components/NavBar";
 import Footer from "../Components/Footer";
@@ -44,26 +44,47 @@ function TeDhena() {
   const [periudha, setPeriudha] = useState("muaji");
   const [llogariaPdf, setLlogariaPdf] = useState("");
   const [pdf, setPdf] = useState(null);
+  // Which export is running, if any. Building a statement pulls in jsPDF and its fonts and then
+  // lays out every movement, which on a phone is seconds of nothing — long enough that the button
+  // looks broken and gets tapped again, starting the whole thing a second time.
+  const [duke, setDuke] = useState(null);
   const fileInputRef = useRef(null);
+  const messageRef = useRef(null);
+
+  // The message renders at the top of a long page; the buttons that produce it are far below, so
+  // without this a failure is reported entirely off-screen and the export just looks dead.
+  useEffect(() => {
+    if (message) messageRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [message]);
 
   const handleExportJson = async () => {
-    const data = await exportAllData();
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `financarepersonal-backup-${new Date().toISOString().slice(0, 10)}.json`;
-    link.click();
-    URL.revokeObjectURL(url);
+    if (duke) return;
+    setDuke("json");
+    try {
+      const data = await exportAllData();
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `financarepersonal-backup-${new Date().toISOString().slice(0, 10)}.json`;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      setMessage({ type: "danger", text: `Kopja nuk u krijua: ${err.message}` });
+    } finally {
+      setDuke(null);
+    }
   };
 
   /** One flat sheet of every transaction — the format worth handing to a spreadsheet or an
    * accountant, as opposed to the JSON backup which is meant for re-importing here. */
   const handleExportExcel = async () => {
+    if (duke) return;
     if (transactions.length === 0) {
       setMessage({ type: "info", text: "Nuk ka transaksione për t'u eksportuar." });
       return;
     }
+    setDuke("txExcel");
     const nameOf = (list, id) => list.find((x) => x.id === id)?.emri || "";
     const rows = sortByDateDesc(transactions).map((tx) => ({
       Data: tx.data,
@@ -80,17 +101,25 @@ function TeDhena() {
       Kursi: tx.monedhaOrigjinale ? String(tx.kursi ?? "") : "",
       [`Vlera (${simboli})`]: plainAmount(tx.lloji === "shpenzim" ? -tx.vlera : tx.vlera),
     }));
-    await exportListExcel(
-      "Transaksionet",
-      Object.keys(rows[0]),
-      rows,
-      `financarepersonal-transaksionet-${new Date().toISOString().slice(0, 10)}.xlsx`
-    );
+    try {
+      await exportListExcel(
+        "Transaksionet",
+        Object.keys(rows[0]),
+        rows,
+        `financarepersonal-transaksionet-${new Date().toISOString().slice(0, 10)}.xlsx`
+      );
+    } catch (err) {
+      setMessage({ type: "danger", text: `Excel-i nuk u krijua: ${err.message}` });
+    } finally {
+      setDuke(null);
+    }
   };
 
   /** A statement for a period (and optionally one account): summary plus every movement, as PDF.
    * It opens in the viewer first — saving it is a button inside that. */
   const handleExportPdf = async () => {
+    if (duke) return;
+    setDuke("pdf");
     const { start, end } = periudhaBounds(periudha);
     try {
       const pasqyra = await exportStatementPdf({
@@ -119,11 +148,15 @@ function TeDhena() {
       setPdf(pasqyra);
     } catch (err) {
       setMessage({ type: "danger", text: `PDF-ja nuk u krijua: ${err.message}` });
+    } finally {
+      setDuke(null);
     }
   };
 
   /** The same statement as a workbook: sheets you can sort and total yourself. */
   const handleStatementExcel = async () => {
+    if (duke) return;
+    setDuke("excel");
     const { start, end } = periudhaBounds(periudha);
     try {
       const emri = await exportStatementExcel({
@@ -139,6 +172,8 @@ function TeDhena() {
       setMessage({ type: "success", text: `Pasqyra u shkarkua: ${emri}` });
     } catch (err) {
       setMessage({ type: "danger", text: `Excel-i nuk u krijua: ${err.message}` });
+    } finally {
+      setDuke(null);
     }
   };
 
@@ -193,11 +228,13 @@ function TeDhena() {
           bartur në një shfletues/pajisje tjetër, dhe një skedar Excel kur doni t&apos;i analizoni jashtë aplikacionit.
         </p>
 
-        {message && (
-          <Alert variant={message.type} onClose={() => setMessage(null)} dismissible>
-            {message.text}
-          </Alert>
-        )}
+        <div ref={messageRef}>
+          {message && (
+            <Alert variant={message.type} onClose={() => setMessage(null)} dismissible>
+              {message.text}
+            </Alert>
+          )}
+        </div>
 
         <Row className="g-3 mb-4">
           <Col md={6}>
@@ -208,10 +245,11 @@ function TeDhena() {
                 përsëritura. Ky është skedari që importohet përsëri këtu.
               </p>
               <div className="d-flex gap-2 flex-wrap mt-auto">
-                <Button className="btn-primary" onClick={handleExportJson}>
-                  <Download size={16} className="me-1" /> Eksporto JSON
+                <Button className="btn-primary" onClick={handleExportJson} disabled={Boolean(duke)}>
+                  {duke === "json" ? <Spinner as="span" animation="border" size="sm" className="me-1" /> : <Download size={16} className="me-1" />}
+                  {duke === "json" ? "Duke përgatitur..." : "Eksporto JSON"}
                 </Button>
-                <Button variant="outline-light" onClick={handleImportClick}>
+                <Button variant="outline-light" onClick={handleImportClick} disabled={Boolean(duke)}>
                   <Upload size={16} className="me-1" /> Importo JSON
                 </Button>
                 <input ref={fileInputRef} type="file" accept="application/json" hidden onChange={handleImportFile} />
@@ -227,8 +265,9 @@ function TeDhena() {
                 totalet në fund. E njëjta pamje si eksportet nëpër tabelat e aplikacionit.
               </p>
               <div className="mt-auto">
-                <Button className="btn-primary" onClick={handleExportExcel}>
-                  <Download size={16} className="me-1" /> Eksporto Excel
+                <Button className="btn-primary" onClick={handleExportExcel} disabled={Boolean(duke)}>
+                  {duke === "txExcel" ? <Spinner as="span" animation="border" size="sm" className="me-1" /> : <Download size={16} className="me-1" />}
+                  {duke === "txExcel" ? "Duke eksportuar..." : "Eksporto Excel"}
                 </Button>
               </div>
             </Card>
@@ -275,11 +314,13 @@ function TeDhena() {
             )}
 
             <Col md={4} className="d-flex gap-2 flex-wrap">
-              <Button className="btn-primary" onClick={handleExportPdf}>
-                <FileText size={16} className="me-1" /> Shiko PDF
+              <Button className="btn-primary" onClick={handleExportPdf} disabled={Boolean(duke)}>
+                {duke === "pdf" ? <Spinner as="span" animation="border" size="sm" className="me-1" /> : <FileText size={16} className="me-1" />}
+                {duke === "pdf" ? "Duke përgatitur..." : "Shiko PDF"}
               </Button>
-              <Button variant="outline-light" onClick={handleStatementExcel}>
-                <Sheet size={16} className="me-1" /> Excel
+              <Button variant="outline-light" onClick={handleStatementExcel} disabled={Boolean(duke)}>
+                {duke === "excel" ? <Spinner as="span" animation="border" size="sm" className="me-1" /> : <Sheet size={16} className="me-1" />}
+                {duke === "excel" ? "Duke përgatitur..." : "Excel"}
               </Button>
             </Col>
           </Row>
