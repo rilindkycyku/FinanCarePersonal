@@ -201,9 +201,11 @@ export async function wipeAllData() {
   await Promise.all(Object.values(STORES).map((store) => clearStore(store)));
 }
 
-export async function seedDefaults() {
+/** `perfshiLlogarite: false` restores only the categories — single-account mode has one account on
+ * purpose, and re-adding "Kesh" / "Llogaria Bankare" would split the ledger again. */
+export async function seedDefaults({ perfshiLlogarite = true } = {}) {
   await Promise.all([
-    ...DEFAULT_ACCOUNTS.map((a) => put(STORES.accounts, a)),
+    ...(perfshiLlogarite ? DEFAULT_ACCOUNTS.map((a) => put(STORES.accounts, a)) : []),
     ...DEFAULT_CATEGORIES.map((c) => put(STORES.categories, c)),
   ]);
 }

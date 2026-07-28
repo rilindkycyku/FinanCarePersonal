@@ -13,7 +13,7 @@ import { useData } from "../Context/DataContext";
 import { useDialog } from "../Context/DialogContext";
 import { STORES } from "../lib/db";
 import { cashflow, sortByDateDesc } from "../lib/finance";
-import { formatPercent, plainAmount } from "../lib/format";
+import { formatMoney, formatPercent, plainAmount } from "../lib/format";
 import { TRANSACTION_TYPE_LABELS } from "../lib/options";
 import "./Styles/PremiumTheme.css";
 import "./Styles/DizajniPergjithshem.css";
@@ -22,7 +22,7 @@ import "./Styles/Personal.css";
 const TYPE_PILL_COLORS = { hyrje: "var(--sp-emerald)", shpenzim: "var(--sp-red)", transfer: "var(--sp-cyan)" };
 
 function Transaksionet() {
-  const { accounts, categories, goals, transactions, destroy, simboli, money, loading } = useData();
+  const { accounts, categories, goals, transactions, destroy, simboli, money, loading, njeLlogari } = useData();
   const dialog = useDialog();
   const [searchParams, setSearchParams] = useSearchParams();
   const [showModal, setShowModal] = useState(false);
@@ -60,15 +60,28 @@ function Transaksionet() {
           TRANSACTION_TYPE_LABELS[tx.lloji] || tx.lloji
         }</span>`,
         Kategoria: tx.lloji === "transfer" ? "—" : kat?.emri || "Pa kategori",
-        Llogaria:
-          tx.lloji === "transfer"
-            ? `${accountName(tx.llogariaId)} → ${accountName(tx.llogariaDestinacionId)}`
-            : accountName(tx.llogariaId),
-        Përshkrimi: [tx.pershkrimi, qellimi ? `(qëllim: ${qellimi})` : ""].filter(Boolean).join(" ") || "-",
+        // With one account for everything the column would repeat the same name on every row.
+        ...(njeLlogari
+          ? {}
+          : {
+              Llogaria:
+                tx.lloji === "transfer"
+                  ? `${accountName(tx.llogariaId)} → ${accountName(tx.llogariaDestinacionId)}`
+                  : accountName(tx.llogariaId),
+            }),
+        Përshkrimi:
+          [
+            tx.pershkrimi,
+            qellimi ? `(qëllim: ${qellimi})` : "",
+            // What was actually billed, when that was in another currency.
+            tx.monedhaOrigjinale ? `· ${formatMoney(tx.vleraOrigjinale, tx.monedhaOrigjinale)}` : "",
+          ]
+            .filter(Boolean)
+            .join(" ") || "-",
         [`Vlera (${simboli})`]: `<span class="${klasa}">${plainAmount(shenja === 0 ? tx.vlera : shenja * tx.vlera)}</span>`,
       };
     });
-  }, [transactions, accounts, categories, goals, simboli]);
+  }, [transactions, accounts, categories, goals, simboli, njeLlogari]);
 
   const onEdit = (id) => {
     setEditing(transactions.find((t) => t.id === id) || null);

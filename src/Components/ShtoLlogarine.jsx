@@ -18,7 +18,10 @@ const BLANK = {
 /** Add/edit one account (cash, bank, card, savings…). `bilanciFillestar` is the balance the
  * account already had when it was added — every transaction is applied on top of it. */
 function ShtoLlogarine({ show, onHide, initial }) {
-  const { save, simboli } = useData();
+  const { save, simboli, njeLlogari, llogariaKryesore } = useData();
+  // Archiving the account everything is booked into would leave the app with nowhere to write, so
+  // the switch is dropped while single-account mode is on.
+  const eshteKryesorja = njeLlogari && initial?.id && initial.id === llogariaKryesore?.id;
   const [account, setAccount] = useState(BLANK);
   const [error, setError] = useState("");
 
@@ -120,7 +123,7 @@ function ShtoLlogarine({ show, onHide, initial }) {
               />
             </Form.Group>
 
-            <Col md={12}>
+            <Col md={12} className={eshteKryesorja ? "d-none" : undefined}>
               <Form.Check
                 type="switch"
                 id="acc-arkivuar"

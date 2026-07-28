@@ -22,6 +22,10 @@ import { toNumber } from "./format";
 /** How a single transaction moves one account's balance: +1, -1 or 0 (unrelated). */
 export function txSignForAccount(tx, accountId) {
   if (tx.lloji === "transfer") {
+    // Both ends on the same account moves no money: it is either a savings-goal contribution
+    // booked in single-account mode, or an old transfer whose two accounts were later merged.
+    // Without this the source branch below would subtract it from the account it never left.
+    if (tx.llogariaId === tx.llogariaDestinacionId) return 0;
     if (tx.llogariaId === accountId) return -1;
     if (tx.llogariaDestinacionId === accountId) return 1;
     return 0;
@@ -46,6 +50,71 @@ export function totalBalance(accounts, transactions) {
 
 export function accountsWithBalances(accounts, transactions) {
   return accounts.map((account) => ({ ...account, bilanci: accountBalance(account, transactions) }));
+}
+
+/**
+ * Everything needed to fold every account into the one with id `targetId` — what single-account
+ * mode does so cash, bank and card stop being tracked separately.
+ *
+ * Pure: it only computes the records, the caller persists them. Opening balances are summed into
+ * the target and every transaction / recurring schedule / savings goal is repointed at it,
+ * including any that referenced an account already deleted, so nothing is left stranded. Old
+ * transfers survive as records with both ends on the target account, where `txSignForAccount`
+ * reads them as the no-ops they have become.
+ */
+export function consolidateAccounts({ accounts, transactions, recurring = [], goals = [], targetId, lloji }) {
+  const target = accounts.find((a) => a.id === targetId);
+  if (!target) return null;
+
+  const touchesOther = (tx) =>
+    tx.llogariaId !== targetId || (tx.llogariaDestinacionId && tx.llogariaDestinacionId !== targetId);
+
+  return {
+    account: {
+      ...target,
+      lloji: lloji || target.lloji,
+      bilanciFillestar: accounts.reduce((sum, a) => sum + toNumber(a.bilanciFillestar), 0),
+      arkivuar: false,
+    },
+    transactions: transactions.filter(touchesOther).map((tx) => ({
+      ...tx,
+      llogariaId: targetId,
+      llogariaDestinacionId: tx.llogariaDestinacionId ? targetId : null,
+    })),
+    recurring: recurring.filter((r) => r.llogariaId !== targetId).map((r) => ({ ...r, llogariaId: targetId })),
+    goals: goals.filter((g) => g.llogariaId && g.llogariaId !== targetId).map((g) => ({ ...g, llogariaId: targetId })),
+    removeIds: accounts.filter((a) => a.id !== targetId).map((a) => a.id),
+    // Transfers between two accounts that are about to become one — reported to the user because
+    // they stop moving money once merged.
+    nrTransfereve: transactions.filter(
+      (tx) => tx.lloji === "transfer" && tx.llogariaId !== tx.llogariaDestinacionId
+    ).length,
+  };
+}
+
+// ── Currencies ──────────────────────────────────────────────────────────────
+
+/**
+ * A record entered in another currency (a subscription billed in $ while the profile is in €)
+ * stores `vlera` already converted, so every balance, budget and chart keeps working on one
+ * currency. `kursi` is what one unit of the foreign currency is worth in the profile currency,
+ * and the original amount is kept alongside only so the row can still show what was billed.
+ */
+export function convertedAmount(vleraOrigjinale, kursi) {
+  return Math.round(toNumber(vleraOrigjinale) * toNumber(kursi) * 100) / 100;
+}
+
+/** The currency fields of a transaction/schedule, normalised: `null` everywhere when the amount
+ * was entered in the profile currency. */
+export function currencyFields({ monedhaOrigjinale, vleraOrigjinale, kursi }, monedhaBaze) {
+  if (!monedhaOrigjinale || monedhaOrigjinale === monedhaBaze) {
+    return { monedhaOrigjinale: null, vleraOrigjinale: null, kursi: null };
+  }
+  return {
+    monedhaOrigjinale,
+    vleraOrigjinale: toNumber(vleraOrigjinale),
+    kursi: toNumber(kursi),
+  };
 }
 
 // ── Date ranges ─────────────────────────────────────────────────────────────
@@ -262,6 +331,87 @@ export function nextOccurrence(dateStr, frekuenca) {
   return format(stepped, "yyyy-MM-dd");
 }
 
+/**
+ * Last due date of an instalment plan of `nrKesteve` payments starting on `dateStr` — a card
+ * purchase split over N months is a normal recurring payment that simply has to stop by itself,
+ * which it does once this date is stored as `dataFundit`.
+ */
+export function lastInstallmentDate(dateStr, frekuenca, nrKesteve) {
+  const n = Math.floor(toNumber(nrKesteve));
+  if (!dateStr || !(n > 0)) return null;
+  let date = dateStr;
+  // The cap keeps a mistyped "1000 këste" from spinning; no real plan runs that long.
+  for (let i = 1; i < Math.min(n, 600); i += 1) date = nextOccurrence(date, frekuenca);
+  return date;
+}
+
+/**
+ * How far a schedule has got: what has already been booked from it and, for a plan with a fixed
+ * number of instalments, how many (and roughly how much) are still to come. `tanime` counts
+ * occurrences that are about to be booked but are not in `transactions` yet.
+ */
+export function recurringProgress(rec, transactions, tanime = 0) {
+  const paguara = transactions.filter((tx) => tx.perseritjaId === rec.id);
+  const gjithsej = Math.floor(toNumber(rec.nrKesteve)) || null;
+  const paguar = paguara.length + tanime;
+  const mbetur = gjithsej === null ? null : Math.max(gjithsej - paguar, 0);
+  return {
+    gjithsej,
+    paguar,
+    shumaPaguar: paguara.reduce((sum, tx) => sum + toNumber(tx.vlera), 0),
+    mbetur,
+    // An estimate: later instalments are booked at whatever they actually cost that month.
+    shumaMbetur: mbetur === null ? null : mbetur * toNumber(rec.vlera),
+  };
+}
+
+/** The dates a schedule still falls on inside `[start, end]`, from where it stands right now. */
+export function scheduledOccurrences(rec, start, end) {
+  const datat = [];
+  let date = rec?.dataETjetres;
+  if (!date) return datat;
+  // A schedule left unconfirmed for months starts before the window, so it is stepped forward
+  // until it reaches it; the cap is the same safety valve `generateDueTransactions` uses.
+  for (let i = 0; i < 400 && date <= end; i += 1) {
+    if (rec.dataFundit && date > rec.dataFundit) break;
+    if (date >= start) datat.push(date);
+    date = nextOccurrence(date, rec.frekuenca);
+  }
+  return datat;
+}
+
+/**
+ * What every recurring payment costs in one month, itemised: what has already been booked from it
+ * and what it is still expected to cost. This is the "so what does this card actually come to this
+ * month" view — several instalment plans on the same card each carry their own monthly payment,
+ * and only the sum of them is the month's real obligation.
+ */
+export function monthlyRecurringBreakdown(recurring, transactions, start, end) {
+  return recurring
+    .map((rec) => {
+      const paguara = transactions.filter(
+        (tx) => tx.perseritjaId === rec.id && tx.data >= start && tx.data <= end
+      );
+      const datat = rec.aktiv === false ? [] : scheduledOccurrences(rec, start, end);
+      const shumaPaguar = paguara.reduce((sum, tx) => sum + toNumber(tx.vlera), 0);
+      const shumaPritur = datat.length * toNumber(rec.vlera);
+      return {
+        id: rec.id,
+        emri: rec.emri,
+        lloji: rec.lloji,
+        llogariaId: rec.llogariaId,
+        kategoriaId: rec.kategoriaId,
+        nrPaguara: paguara.length,
+        datatPaguara: paguara.map((tx) => tx.data).sort(),
+        shumaPaguar,
+        datat,
+        shumaPritur,
+        gjithsej: shumaPaguar + shumaPritur,
+      };
+    })
+    .filter((r) => r.nrPaguara > 0 || r.datat.length > 0);
+}
+
 export function isRecurringDue(rec, todayStr) {
   if (!rec.aktiv) return false;
   if (!rec.dataETjetres) return false;
@@ -308,6 +458,11 @@ export function generateDueTransactions(rec, todayStr, makeIdFn, maxCatchUp = 60
       shenim: `Krijuar automatikisht nga pagesa e përsëritur "${updated.emri}".`,
       qellimiId: null,
       perseritjaId: updated.id,
+      // Carried over so a $-billed subscription still shows what was charged; the confirmation
+      // dialog is where the month's real rate (and amount) can be corrected.
+      monedhaOrigjinale: updated.monedhaOrigjinale || null,
+      vleraOrigjinale: updated.monedhaOrigjinale ? toNumber(updated.vleraOrigjinale) : null,
+      kursi: updated.monedhaOrigjinale ? toNumber(updated.kursi) : null,
     });
     updated = {
       ...updated,

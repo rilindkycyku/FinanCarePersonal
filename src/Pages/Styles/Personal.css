@@ -140,6 +140,13 @@
   padding: 1.75rem 0.5rem;
 }
 
+/* A settings block rendered outside the settings page (the single-account switch also lives on
+   Llogaritë), where `.containerDashboardP .card` does not apply and Bootstrap's dark default text
+   colour would otherwise wash it out. */
+.fcp-settings-card {
+  color: var(--sp-text);
+}
+
 /* ── Progress bars ────────────────────────────────────────── */
 .fcp-progress {
   height: 8px;

@@ -51,6 +51,10 @@ function TeDhena() {
       Përshkrimi: tx.pershkrimi || "",
       Qëllimi: nameOf(goals, tx.qellimiId),
       Shënim: tx.shenim || "",
+      // Kept next to the converted figure so a $-billed row can be reconciled against the statement.
+      "Monedha e Faturës": tx.monedhaOrigjinale || "",
+      "Vlera në Faturë": tx.monedhaOrigjinale ? plainAmount(tx.vleraOrigjinale) : "",
+      Kursi: tx.monedhaOrigjinale ? String(tx.kursi ?? "") : "",
       [`Vlera (${simboli})`]: plainAmount(tx.lloji === "shpenzim" ? -tx.vlera : tx.vlera),
     }));
     await exportListExcel(

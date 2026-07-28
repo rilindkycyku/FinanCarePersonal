@@ -21,9 +21,12 @@ export const CURRENCIES = [
 export const DEFAULT_CURRENCY = "EUR";
 
 /** Account kinds. `negativeIsNormal` marks accounts where a negative balance is expected
- * (credit cards / loans), so the UI shows the debt in red without treating it as an error. */
+ * (credit cards / loans), so the UI shows the debt in red without treating it as an error.
+ * `kryesore` is the all-in-one account used by single-account mode (Cilësimet → Llogaritë): cash,
+ * bank and everything else are kept together in it instead of being split per account. */
 export const ACCOUNT_TYPES = [
-  { value: "kesh", label: "Kesh (Para në dorë)", short: "Kesh", icon: "Wallet", negativeIsNormal: false },
+  { value: "kryesore", label: "Llogari Kryesore (të gjitha bashkë)", short: "Kryesore", icon: "Wallet", negativeIsNormal: false },
+  { value: "kesh", label: "Kesh (Para në dorë)", short: "Kesh", icon: "Banknote", negativeIsNormal: false },
   { value: "bank", label: "Llogari Bankare", short: "Bankë", icon: "Landmark", negativeIsNormal: false },
   { value: "karte", label: "Kartelë Krediti", short: "Kartelë", icon: "CreditCard", negativeIsNormal: true },
   { value: "kursim", label: "Kursim", short: "Kursim", icon: "PiggyBank", negativeIsNormal: false },
@@ -100,6 +103,7 @@ export const DEFAULT_CATEGORIES = [
   { id: "cat_default_sport", emri: "Sport & Fitnes", lloji: "shpenzim", ngjyra: "#10b981", ikona: "Dumbbell" },
   { id: "cat_default_dhurata", emri: "Dhurata", lloji: "shpenzim", ngjyra: "#ef4444", ikona: "Gift" },
   { id: "cat_default_kredi", emri: "Kredi & Kamata", lloji: "shpenzim", ngjyra: "#64748b", ikona: "CreditCard" },
+  { id: "cat_default_keste", emri: "Këste të Kartelës (Bonus)", lloji: "shpenzim", ngjyra: "#3b82f6", ikona: "Receipt" },
   { id: "cat_default_tjera_shp", emri: "Shpenzime të Tjera", lloji: "shpenzim", ngjyra: "#94a3b8", ikona: "MoreHorizontal" },
 
   // ── Hyrjet ──────────────────────────────────────────────────
@@ -116,6 +120,16 @@ export const DEFAULT_ACCOUNTS = [
   { id: "acc_default_kesh", emri: "Kesh", lloji: "kesh", bilanciFillestar: 0, ngjyra: "#10b981", shenim: "", arkivuar: false },
   { id: "acc_default_bank", emri: "Llogaria Bankare", lloji: "bank", bilanciFillestar: 0, ngjyra: "#06b6d4", shenim: "", arkivuar: false },
 ];
+
+/** The account single-account mode creates when the database has none left to merge into. */
+export const MAIN_ACCOUNT_DEFAULT = {
+  emri: "Llogaria Kryesore",
+  lloji: "kryesore",
+  bilanciFillestar: 0,
+  ngjyra: "#10b981",
+  shenim: "",
+  arkivuar: false,
+};
 
 export const MONTHS_SHORT = ["Jan", "Shk", "Mar", "Pri", "Maj", "Qer", "Kor", "Gus", "Sht", "Tet", "Nën", "Dhj"];
 

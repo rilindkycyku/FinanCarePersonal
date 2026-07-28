@@ -7,6 +7,7 @@ import PageTitle from "../Components/PageTitle";
 import PageLoading from "../Components/PageLoading";
 import Tabela from "../Components/Tabela/Tabela";
 import ShtoLlogarine from "../Components/ShtoLlogarine";
+import CilesimiNjeLlogari from "../Components/CilesimiNjeLlogari";
 import { Kpi, Empty } from "../Components/Ui";
 import { useData } from "../Context/DataContext";
 import { useDialog } from "../Context/DialogContext";
@@ -20,7 +21,7 @@ import "./Styles/DizajniPergjithshem.css";
 import "./Styles/Personal.css";
 
 function Llogarite() {
-  const { accounts, transactions, save, destroy, money, simboli, loading } = useData();
+  const { accounts, transactions, save, destroy, money, simboli, loading, njeLlogari, llogariaKryesore } = useData();
   const dialog = useDialog();
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState(null);
@@ -38,6 +39,11 @@ function Llogarite() {
       detajet: detajet.sort((a, b) => Number(a.arkivuar) - Number(b.arkivuar) || b.bilanci - a.bilanci),
     };
   }, [accounts, transactions]);
+
+  // Single-account mode: one card for the account everything is booked into, and — only after an
+  // import or a mode switch — the leftovers still waiting to be merged into it.
+  const tjera = accounts.filter((a) => a.id !== llogariaKryesore?.id);
+  const kryesorja = stats.detajet.find((a) => a.id === llogariaKryesore?.id);
 
   const pozitive = stats.aktive.reduce((sum, a) => {
     const b = accountBalance(a, transactions);
@@ -83,6 +89,9 @@ function Llogarite() {
   }));
 
   const renderCard = (account) => {
+    // The main account of single-account mode can be renamed and recoloured, but not archived or
+    // deleted — every form writes into it.
+    const mbrojtur = njeLlogari && account.id === llogariaKryesore?.id;
     const tipi = accountTypeMeta(account.lloji);
     const Icon = getIcon(tipi.icon);
     const bilanci = accountBalance(account, transactions);
@@ -109,18 +118,24 @@ function Llogarite() {
           <button type="button" className="fcp-icon-action edit" title="Ndrysho" onClick={() => openEdit(account)}>
             <Edit3 size={14} />
           </button>
-          <button
-            type="button"
-            className="fcp-icon-action"
-            title={account.arkivuar ? "Kthe nga arkiva" : "Arkivo"}
-            onClick={() => toggleArchive(account)}
-          >
-            {account.arkivuar ? <ArchiveRestore size={14} /> : <Archive size={14} />}
-          </button>
-          <button type="button" className="fcp-icon-action delete" title="Fshij" onClick={() => onDelete(account)}>
-            <Trash2 size={14} />
-          </button>
-          <span className="fcp-icon-action-label">{account.arkivuar ? "Arkivuar" : ""}</span>
+          {!mbrojtur && (
+            <>
+              <button
+                type="button"
+                className="fcp-icon-action"
+                title={account.arkivuar ? "Kthe nga arkiva" : "Arkivo"}
+                onClick={() => toggleArchive(account)}
+              >
+                {account.arkivuar ? <ArchiveRestore size={14} /> : <Archive size={14} />}
+              </button>
+              <button type="button" className="fcp-icon-action delete" title="Fshij" onClick={() => onDelete(account)}>
+                <Trash2 size={14} />
+              </button>
+            </>
+          )}
+          <span className="fcp-icon-action-label">
+            {mbrojtur ? "Llogaria kryesore" : account.arkivuar ? "Arkivuar" : ""}
+          </span>
         </div>
       </div>
     );
@@ -137,51 +152,121 @@ function Llogarite() {
         <div className="fcp-page-head">
           <div>
             <h2>Llogaritë</h2>
-            <p>Kesh, llogari bankare, kartela dhe kursime — bilanci llogaritet nga transaksionet.</p>
+            <p>
+              {njeLlogari
+                ? "Një llogari e vetme mban gjithçka — kesh, bankë dhe kartelë bashkë, pa u ndarë."
+                : "Kesh, llogari bankare, kartela dhe kursime — bilanci llogaritet nga transaksionet."}
+            </p>
           </div>
-          <Button className="btn-primary" onClick={openNew}>
-            <Plus size={16} className="me-1" /> Shto Llogari
-          </Button>
+          {!njeLlogari && (
+            <Button className="btn-primary" onClick={openNew}>
+              <Plus size={16} className="me-1" /> Shto Llogari
+            </Button>
+          )}
         </div>
 
         <Row className="g-2 g-md-4">
           <Kpi
             label="Bilanci Total"
             value={money(stats.bilanci)}
-            sub={`${stats.aktive.length} aktive · ${stats.arkivuara.length} arkivuar`}
+            sub={
+              njeLlogari
+                ? llogariaKryesore?.emri
+                : `${stats.aktive.length} aktive · ${stats.arkivuara.length} arkivuar`
+            }
             icon={Wallet}
             color={stats.bilanci < 0 ? "danger" : "emerald"}
             md={4}
             lg={4}
           />
-          <Kpi label="Mjete (bilanc pozitiv)" value={money(pozitive)} icon={TrendingUp} color="cyan" md={4} lg={4} />
-          <Kpi label="Detyrime (bilanc negativ)" value={money(negative)} icon={TrendingDown} color="danger" md={4} lg={4} />
+          {njeLlogari ? (
+            <>
+              <Kpi
+                label="Hyrjet Gjithsej"
+                value={money(kryesorja?.hyrjet || 0)}
+                icon={TrendingUp}
+                color="cyan"
+                md={4}
+                lg={4}
+              />
+              <Kpi
+                label="Daljet Gjithsej"
+                value={money(kryesorja?.daljet || 0)}
+                icon={TrendingDown}
+                color="danger"
+                md={4}
+                lg={4}
+              />
+            </>
+          ) : (
+            <>
+              <Kpi label="Mjete (bilanc pozitiv)" value={money(pozitive)} icon={TrendingUp} color="cyan" md={4} lg={4} />
+              <Kpi
+                label="Detyrime (bilanc negativ)"
+                value={money(negative)}
+                icon={TrendingDown}
+                color="danger"
+                md={4}
+                lg={4}
+              />
+            </>
+          )}
         </Row>
 
-        <section className="mb-4">
-          <h4 className="fcp-section-title">
-            <Wallet size={20} className="text-primary" />
-            Llogaritë Aktive
-          </h4>
-          {stats.aktive.length === 0 ? (
-            <Empty>Nuk ka llogari aktive. Shtoni një llogari për të filluar.</Empty>
-          ) : (
-            <div className="fcp-account-grid">{stats.aktive.map(renderCard)}</div>
-          )}
-        </section>
+        {njeLlogari ? (
+          <>
+            <section className="mb-4">
+              <h4 className="fcp-section-title">
+                <Wallet size={20} className="text-primary" />
+                Llogaria Kryesore
+              </h4>
+              {llogariaKryesore ? (
+                <div className="fcp-account-grid">{renderCard(llogariaKryesore)}</div>
+              ) : (
+                <Empty>Nuk ka asnjë llogari. Çaktivizoni modalitetin më poshtë ose shtoni një llogari.</Empty>
+              )}
+            </section>
 
-        {stats.arkivuara.length > 0 && (
-          <section className="mb-4">
-            <h4 className="fcp-section-title">
-              <Archive size={20} className="text-primary" />
-              Të Arkivuara
-            </h4>
-            <div className="fcp-account-grid">{stats.arkivuara.map(renderCard)}</div>
-          </section>
+            {tjera.length > 0 && (
+              <section className="mb-4">
+                <h4 className="fcp-section-title">
+                  <Archive size={20} className="text-primary" />
+                  Llogari të Tjera (të pabashkuara)
+                </h4>
+                <div className="fcp-account-grid">{tjera.map(renderCard)}</div>
+              </section>
+            )}
+          </>
+        ) : (
+          <>
+            <section className="mb-4">
+              <h4 className="fcp-section-title">
+                <Wallet size={20} className="text-primary" />
+                Llogaritë Aktive
+              </h4>
+              {stats.aktive.length === 0 ? (
+                <Empty>Nuk ka llogari aktive. Shtoni një llogari për të filluar.</Empty>
+              ) : (
+                <div className="fcp-account-grid">{stats.aktive.map(renderCard)}</div>
+              )}
+            </section>
+
+            {stats.arkivuara.length > 0 && (
+              <section className="mb-4">
+                <h4 className="fcp-section-title">
+                  <Archive size={20} className="text-primary" />
+                  Të Arkivuara
+                </h4>
+                <div className="fcp-account-grid">{stats.arkivuara.map(renderCard)}</div>
+              </section>
+            )}
+          </>
         )}
+
+        <CilesimiNjeLlogari />
       </Container>
 
-      {rows.length > 0 && (
+      {rows.length > 0 && !(njeLlogari && accounts.length === 1) && (
         <Tabela data={rows} tableName="Përmbledhje e Llogarive" mosShfaqID />
       )}
 
