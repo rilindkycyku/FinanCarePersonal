@@ -37,6 +37,19 @@ export function statementTitle(start, end) {
   return "Pasqyra e periudhës";
 }
 
+/**
+ * What the saved file is called: the statement's own name, slugged, with the account appended when
+ * one was picked so two statements for the same period don't overwrite each other.
+ */
+export function statementFilename(start, end, emriLlogarise) {
+  return `${["financarepersonal", statementTitle(start, end), emriLlogarise]
+    .filter(Boolean)
+    .join("-")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")}.pdf`;
+}
+
 const CLR = {
   navy: [13, 33, 55],
   emerald: [16, 185, 129],
@@ -502,8 +515,16 @@ export async function exportStatementPdf({
     const k = kolonat(gjeresi, seksioni.keste);
     const totali = totaliI(seksioni);
 
+    // `??` passes `false` straight through — it only steps aside for null/undefined — so the
+    // shorter `gjeresi < 300 && …` form handed jsPDF a literal `false` for every section drawn at
+    // full width without an explicit title, and the whole statement died on "Type of text must be
+    // string or Array". Full width is what the year and full-history statements use, which is why
+    // only those two were affected.
+    const kryeTitulli =
+      titull ?? (gjeresi < 300 && seksioni.titullNgushte ? seksioni.titullNgushte : seksioni.titull);
+
     setText(9, "bold", CLR.navy);
-    doc.text(titull ?? (gjeresi < 300 && seksioni.titullNgushte) ?? seksioni.titull, x, y0);
+    doc.text(kryeTitulli, x, y0);
     setText(7, "normal", CLR.muted);
     doc.text(
       `${seksioni.rows.length} ${seksioni.rows.length === 1 ? "rresht" : "rreshta"}`,

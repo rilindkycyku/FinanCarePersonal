@@ -138,6 +138,18 @@ export function yearBounds(date = new Date()) {
   return { start: `${d.getFullYear()}-01-01`, end: `${d.getFullYear()}-12-31` };
 }
 
+/**
+ * The day range a `STATEMENT_PERIODS` value means. Shared so the statement opened from the header
+ * covers exactly the same days as the one built on the Eksporto / Importo page.
+ */
+export function periodBounds(value, sot = new Date()) {
+  if (value === "muaji") return monthBounds(sot);
+  if (value === "kaluar") return monthBounds(addMonths(sot, -1));
+  if (value === "viti") return yearBounds(sot);
+  // Wide enough to hold every record, since the statement filters on plain date strings.
+  return { start: "0000-01-01", end: "9999-12-31" };
+}
+
 /** `start`/`end` are inclusive; either may be null to leave that side open. */
 export function filterByRange(transactions, start, end) {
   return transactions.filter((tx) => {
