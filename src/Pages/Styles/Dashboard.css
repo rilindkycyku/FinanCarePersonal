@@ -555,3 +555,28 @@ body.light-mode .hero-cta.ghost {
     justify-content: center;
   }
 }
+
+/* Stand-in for the QR when the link is too long to encode. */
+.fcp-transfer-gjate {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  background: var(--sp-surface-2);
+  border: 1px dashed var(--sp-border);
+  color: var(--sp-text-muted);
+  text-align: center;
+  padding: 1rem;
+}
+
+.fcp-transfer-gjate span {
+  font-size: 1.1rem;
+  font-weight: 900;
+  color: var(--sp-text);
+}
+
+.fcp-transfer-gjate small {
+  font-size: 0.68rem;
+  line-height: 1.3;
+}

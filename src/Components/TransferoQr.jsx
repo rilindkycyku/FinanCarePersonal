@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Button, Alert, ProgressBar } from "react-bootstrap";
-import { QrCode, Camera, ChevronLeft, ChevronRight, Play, Pause, X, Link2, Copy, Check } from "lucide-react";
+import { QrCode, Camera, ChevronLeft, ChevronRight, Play, Pause, X, Link2, Copy, Check, Share2 } from "lucide-react";
 import { useData } from "../Context/DataContext";
 import { useDialog } from "../Context/DialogContext";
 import { exportAllData, importAllData } from "../lib/db";
@@ -85,34 +85,41 @@ function TransferoQr() {
   };
 
   /**
-   * The same data as one link. It only works while the whole ledger fits in a single code, but
-   * when it does the other device needs nothing but its ordinary camera app.
+   * The same data as one link. A QR only holds so much, but the link itself has no such limit -
+   * past what a code can carry it is still perfectly good to copy or send, so the link is always
+   * produced and only the QR beside it disappears.
    */
   const krijoLinkun = async () => {
     setDuke("link");
     setGabimi("");
     try {
       const data = await exportAllData();
-      const { url, mundet, gjatesia } = await encodeTransferLink(data);
-      if (!mundet) {
-        setGabimi(
-          `Të dhënat tuaja (${Math.round(gjatesia / 1024)} kB të ngjeshura) janë shumë të mëdha për një link të vetëm. Përdorni "Dërgo me QR", që i ndan në disa kode.`
-        );
-        return;
+      const { url, mundet } = await encodeTransferLink(data);
+      let img = null;
+      if (mundet) {
+        const QRCode = await import("qrcode").then((m) => m.default || m);
+        img = await QRCode.toDataURL(url, {
+          width: 420,
+          margin: 1,
+          errorCorrectionLevel: "L",
+          color: { dark: "#0d2137", light: "#ffffff" },
+        });
       }
-      const QRCode = await import("qrcode").then((m) => m.default || m);
-      const img = await QRCode.toDataURL(url, {
-        width: 420,
-        margin: 1,
-        errorCorrectionLevel: "L",
-        color: { dark: "#0d2137", light: "#ffffff" },
-      });
-      setLinku({ url, img });
+      setLinku({ url, img, mundet });
       setModaliteti("link");
     } catch (err) {
       setGabimi(`Linku nuk u krijua: ${err.message}`);
     } finally {
       setDuke("");
+    }
+  };
+
+  const ndajLinkun = async () => {
+    if (!navigator.share) return kopjoLinkun();
+    try {
+      await navigator.share({ title: "Transfer - FinanCarePersonal", url: linku.url });
+    } catch {
+      /* dismissed by the user */
     }
   };
 
@@ -238,8 +245,9 @@ function TransferoQr() {
           </div>
           <div className="fcp-row-sub mt-2">
             <strong>Dërgo me QR</strong> i ndan të dhënat në disa kode dhe lexohet me <strong>Prano me kamerë</strong>
-            këtu në aplikacion. <strong>Dërgo me një link</strong> i vendos të gjitha në një kod të vetëm, që hapet me
-            kamerën e zakonshme të telefonit - punon vetëm nëse të dhënat janë mjaft të vogla.
+            këtu në aplikacion. <strong>Dërgo me një link</strong> i vendos të gjitha në një link të vetëm, që e kopjoni
+            ose e dërgoni te vetja - dhe kur të dhënat janë mjaft të vogla, vjen edhe si një kod i vetëm që hapet me
+            kamerën e zakonshme të telefonit.
           </div>
         </>
       )}
@@ -286,23 +294,42 @@ function TransferoQr() {
 
       {modaliteti === "link" && linku && (
         <div className="fcp-transfer">
-          <img src={linku.img} alt="Kodi QR i transferit" className="fcp-transfer-qr" />
+          {linku.img ? (
+            <img src={linku.img} alt="Kodi QR i transferit" className="fcp-transfer-qr" />
+          ) : (
+            <div className="fcp-transfer-qr fcp-transfer-gjate">
+              <Link2 size={28} />
+              <span>{Math.round(linku.url.length / 1024)} kB</span>
+              <small>shumë i gjatë për një kod QR</small>
+            </div>
+          )}
           <div className="fcp-transfer-side">
-            <div className="fcp-row-title mb-1">Një kod, të gjitha të dhënat</div>
+            <div className="fcp-row-title mb-1">
+              {linku.img ? "Një kod, të gjitha të dhënat" : "Një link, të gjitha të dhënat"}
+            </div>
             <div className="fcp-row-sub mb-2">
-              Skanojeni me kamerën e zakonshme të pajisjes tjetër - hapet aplikacioni dhe ju pyet para se të
-              zëvendësojë çka ka. Linku i mban të dhënat pas <code>#</code>, pra nuk kalon kurrë te ndonjë server.
+              {linku.img
+                ? "Skanojeni me kamerën e zakonshme të pajisjes tjetër - hapet aplikacioni dhe ju pyet para se të zëvendësojë çka ka."
+                : "Të dhënat nuk hyjnë në një kod QR, por linku punon njësoj: dërgojeni te vetja (WhatsApp, email, shënime) dhe hapeni në pajisjen tjetër - nuk ju duhet të skanoni disa kode."}{" "}
+              Linku i mban të dhënat pas <code>#</code>, pra nuk kalon kurrë te ndonjë server.
             </div>
             <div className="d-flex gap-2 flex-wrap">
               <Button size="sm" variant="outline-light" onClick={kopjoLinkun}>
                 {kopjuar ? <Check size={14} className="me-1" /> : <Copy size={14} className="me-1" />}
                 {kopjuar ? "U kopjua" : "Kopjo linkun"}
               </Button>
+              <Button size="sm" variant="outline-light" onClick={ndajLinkun}>
+                <Share2 size={14} className="me-1" /> Ndaje linkun
+              </Button>
               <Button size="sm" variant="outline-light" onClick={mbyll}>
                 <X size={14} className="me-1" /> Mbyll
               </Button>
             </div>
-            <div className="fcp-row-sub mt-2">{Math.round(linku.url.length / 1024)} kB</div>
+            <div className="fcp-row-sub mt-2">
+              {Math.round(linku.url.length / 1024)} kB
+              {!linku.img &&
+                " - disa aplikacione bisede e presin një link kaq të gjatë; nëse nuk hapet, përdorni kopjen JSON ose Dërgo me QR."}
+            </div>
           </div>
         </div>
       )}
