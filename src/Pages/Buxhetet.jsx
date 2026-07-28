@@ -160,6 +160,7 @@ function Buxhetet() {
                       <div className="fcp-row-title">{b.emri}</div>
                       <div className="fcp-row-sub">
                         {money(b.shpenzuar)} nga {money(b.buxheti)} · {formatPercent(b.perqindja)}
+                        {b.rimbartur > 0 && ` · përfshirë ${money(b.rimbartur)} të bartura`}
                       </div>
                     </div>
                     <div className="fcp-tracked-actions">
@@ -187,6 +188,13 @@ function Buxhetet() {
                   <div className="fcp-tracked-foot">
                     <span className={b.tepruar ? "fcp-neg" : ""}>
                       {b.tepruar ? `Tepruar me ${money(Math.abs(b.mbetur))}` : `Mbeten ${money(b.mbetur)}`}
+                      {/* How this month compares with the last one, which is what tells you whether
+                          a budget is drifting rather than just how full it is. */}
+                      {b.ndryshimi !== null && (
+                        <span className={`fcp-trend ${b.ndryshimi > 0 ? "up" : "down"}`}>
+                          {b.ndryshimi > 0 ? "▲" : "▼"} {formatPercent(Math.abs(b.ndryshimi))} ndaj muajit të kaluar
+                        </span>
+                      )}
                     </span>
                     <button type="button" className="fcp-chip" onClick={() => toggleScope(b)}>
                       {b.muaji ? `Vetëm ${monthLabel(b.muaji)} - bëje për çdo muaj` : `Çdo muaj - bëje vetëm për ${monthLabel(muaji)}`}

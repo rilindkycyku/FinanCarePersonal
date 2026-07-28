@@ -14,7 +14,7 @@ import "./ModalForms.css";
  */
 function ShtoBuxhetin({ show, onHide, initial, muajiAktual, kategoriaFillestare }) {
   const { categories, budgets, save, simboli } = useData();
-  const [budget, setBudget] = useState({ kategoriaId: "", vlera: "", vetemKeteMuaj: false });
+  const [budget, setBudget] = useState({ kategoriaId: "", vlera: "", vetemKeteMuaj: false, rimbart: false });
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -26,8 +26,9 @@ function ShtoBuxhetin({ show, onHide, initial, muajiAktual, kategoriaFillestare 
             ...initial,
             vlera: String(initial.vlera ?? ""),
             vetemKeteMuaj: Boolean(initial.muaji),
+            rimbart: Boolean(initial.rimbart),
           }
-        : { kategoriaId: kategoriaFillestare || "", vlera: "", vetemKeteMuaj: false }
+        : { kategoriaId: kategoriaFillestare || "", vlera: "", vetemKeteMuaj: false, rimbart: false }
     );
   }, [show, initial, kategoriaFillestare]);
 
@@ -63,6 +64,7 @@ function ShtoBuxhetin({ show, onHide, initial, muajiAktual, kategoriaFillestare 
       kategoriaId: budget.kategoriaId,
       vlera,
       muaji,
+      rimbart: Boolean(budget.rimbart),
     });
 
     onHide();
@@ -130,6 +132,20 @@ function ShtoBuxhetin({ show, onHide, initial, muajiAktual, kategoriaFillestare 
               <div className="fcp-modal-hint">
                 Pa këtë, buxheti vlen për çdo muaj. Me të, vlen vetëm për {monthLabel(muajiAktual)} dhe ka
                 përparësi ndaj buxhetit të përhershëm të kësaj kategorie.
+              </div>
+
+              <Form.Check
+                type="switch"
+                id="buxhet-rimbart"
+                className="mt-3"
+                label="Bart tepricën në muajin tjetër"
+                checked={budget.rimbart}
+                onChange={(e) => setField("rimbart", e.target.checked)}
+              />
+              <div className="fcp-modal-hint">
+                Çka nuk shpenzohet një muaj i shtohet kufirit të muajit pasues - e dobishme për kategori si
+                veshjet, ku një muaj i qetë paguan blerjen e muajit tjetër. Bartja ndalet te muaji i parë i
+                tepruar dhe nuk kalon kurrë një muaj buxhet shtesë.
               </div>
             </Col>
           </Row>

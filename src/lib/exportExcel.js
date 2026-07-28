@@ -1,4 +1,3 @@
-import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import { getProfile } from "./db";
 import { currencySymbol } from "./format";
@@ -51,8 +50,12 @@ const asNumber = (value) => {
   return Number.isFinite(n) ? n : null;
 };
 
+/** ExcelJS is ~900 kB and only two buttons in the app need it, so it is fetched when one is pressed. */
+const ngarkoExcelJS = () => import("exceljs").then((m) => m.default || m);
+
 /** Reusable utility to export any flat list of display-row objects into a styled ExcelJS workbook. */
 export async function exportListExcel(title, headers, data, filename = "Eksport.xlsx") {
+  const ExcelJS = await ngarkoExcelJS();
   const profile = await getProfile();
   const ownerName = profile?.emri || "FinanCarePersonal";
   const monedha = `Monedha: ${profile?.monedha || DEFAULT_CURRENCY} (${currencySymbol(profile?.monedha)})`;
@@ -312,7 +315,10 @@ export async function exportStatementExcel({
   filename,
 }) {
   // Same computation the PDF uses, so the two exports can never disagree.
-  const { statementRows, statementTitle } = await import("./exportPdf");
+  const [ExcelJS, { statementRows, statementTitle }] = await Promise.all([
+    ngarkoExcelJS(),
+    import("./exportPdf"),
+  ]);
   const t = statementRows({ accounts, categories, transactions, recurring, start, end, llogariaId });
   const titulli = statementTitle(start, end);
   const monedha = profile.monedha || DEFAULT_CURRENCY;

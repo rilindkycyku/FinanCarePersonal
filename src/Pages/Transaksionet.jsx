@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Container, Row } from "react-bootstrap";
-import { TrendingUp, TrendingDown, Percent, Hash } from "lucide-react";
+import { Container, Row, Col, Form, Button } from "react-bootstrap";
+import { TrendingUp, TrendingDown, Percent, Hash, Filter, X } from "lucide-react";
 import NavBar from "../Components/NavBar";
 import Footer from "../Components/Footer";
 import PageTitle from "../Components/PageTitle";
@@ -13,7 +13,7 @@ import { useData } from "../Context/DataContext";
 import { useDialog } from "../Context/DialogContext";
 import { STORES } from "../lib/db";
 import { cashflow, sortByDateDesc } from "../lib/finance";
-import { formatMoney, formatPercent, plainAmount } from "../lib/format";
+import { formatMoney, formatPercent, plainAmount, toNumber } from "../lib/format";
 import { TRANSACTION_TYPE_LABELS } from "../lib/options";
 import "./Styles/PremiumTheme.css";
 import "./Styles/DizajniPergjithshem.css";
@@ -23,6 +23,7 @@ const TYPE_PILL_COLORS = { hyrje: "var(--sp-emerald)", shpenzim: "var(--sp-red)"
 
 function Transaksionet() {
   const { accounts, categories, goals, transactions, destroy, simboli, money, loading, njeLlogari } = useData();
+  const [filtri, setFiltri] = useState({ kategoria: "", llogaria: "", min: "", max: "" });
   const dialog = useDialog();
   const [searchParams, setSearchParams] = useSearchParams();
   const [showModal, setShowModal] = useState(false);
@@ -40,14 +41,33 @@ function Transaksionet() {
     }
   }, [searchParams, setSearchParams]);
 
-  const flows = useMemo(() => cashflow(transactions), [transactions]);
+  /** The page's own filters, on top of the table's search and date range: which category, which
+   * account, and how large. Everything below - the tiles, the table, the Excel export - reads off
+   * the filtered list, so the totals always describe what is on screen. */
+  const teFiltruara = useMemo(() => {
+    const min = filtri.min === "" ? null : toNumber(filtri.min);
+    const max = filtri.max === "" ? null : toNumber(filtri.max);
+    return transactions.filter((tx) => {
+      if (filtri.kategoria && tx.kategoriaId !== filtri.kategoria) return false;
+      if (filtri.llogaria && tx.llogariaId !== filtri.llogaria && tx.llogariaDestinacionId !== filtri.llogaria) {
+        return false;
+      }
+      const vlera = toNumber(tx.vlera);
+      if (min !== null && vlera < min) return false;
+      if (max !== null && vlera > max) return false;
+      return true;
+    });
+  }, [transactions, filtri]);
+
+  const kaFiltra = Object.values(filtri).some(Boolean);
+  const flows = useMemo(() => cashflow(teFiltruara), [teFiltruara]);
 
   const rows = useMemo(() => {
     const accountName = (id) => accounts.find((a) => a.id === id)?.emri || "-";
     const category = (id) => categories.find((c) => c.id === id);
     const goalName = (id) => goals.find((g) => g.id === id)?.emri;
 
-    return sortByDateDesc(transactions).map((tx) => {
+    return sortByDateDesc(teFiltruara).map((tx) => {
       const kat = category(tx.kategoriaId);
       const shenja = tx.lloji === "hyrje" ? 1 : tx.lloji === "shpenzim" ? -1 : 0;
       const klasa = shenja > 0 ? "fcp-pos" : shenja < 0 ? "fcp-neg" : "fcp-neutral";
@@ -81,7 +101,7 @@ function Transaksionet() {
         [`Vlera (${simboli})`]: `<span class="${klasa}">${plainAmount(shenja === 0 ? tx.vlera : shenja * tx.vlera)}</span>`,
       };
     });
-  }, [transactions, accounts, categories, goals, simboli, njeLlogari]);
+  }, [teFiltruara, accounts, categories, goals, simboli, njeLlogari]);
 
   const onEdit = (id) => {
     setEditing(transactions.find((t) => t.id === id) || null);
@@ -123,7 +143,87 @@ function Transaksionet() {
             color={flows.neto >= 0 ? "cyan" : "danger"}
             sub={`Norma e kursimit: ${formatPercent(flows.normaKursimit, 1)}`}
           />
-          <Kpi label="Numri i Transaksioneve" value={transactions.length} icon={Hash} color="violet" />
+          <Kpi
+            label="Numri i Transaksioneve"
+            value={teFiltruara.length}
+            sub={kaFiltra ? `nga ${transactions.length} gjithsej` : undefined}
+            icon={Hash}
+            color="violet"
+          />
+        </Row>
+        <Row className="g-2 align-items-end mt-1 mb-1">
+          <Form.Group as={Col} xs={6} md={3} controlId="filtri-kategoria">
+            <Form.Label className="fcp-row-sub mb-1">
+              <Filter size={12} className="me-1" />
+              Kategoria
+            </Form.Label>
+            <Form.Select
+              value={filtri.kategoria}
+              onChange={(e) => setFiltri((f) => ({ ...f, kategoria: e.target.value }))}
+            >
+              <option value="">Të gjitha</option>
+              {[...categories]
+                .sort((a, b) => a.emri.localeCompare(b.emri))
+                .map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.emri}
+                  </option>
+                ))}
+            </Form.Select>
+          </Form.Group>
+
+          {!njeLlogari && accounts.length > 1 && (
+            <Form.Group as={Col} xs={6} md={3} controlId="filtri-llogaria">
+              <Form.Label className="fcp-row-sub mb-1">Llogaria</Form.Label>
+              <Form.Select
+                value={filtri.llogaria}
+                onChange={(e) => setFiltri((f) => ({ ...f, llogaria: e.target.value }))}
+              >
+                <option value="">Të gjitha</option>
+                {accounts.map((a) => (
+                  <option key={a.id} value={a.id}>
+                    {a.emri}
+                  </option>
+                ))}
+              </Form.Select>
+            </Form.Group>
+          )}
+
+          <Form.Group as={Col} xs={6} md={2} controlId="filtri-min">
+            <Form.Label className="fcp-row-sub mb-1">Nga ({simboli})</Form.Label>
+            <Form.Control
+              type="number"
+              step="0.01"
+              min="0"
+              placeholder="0"
+              value={filtri.min}
+              onChange={(e) => setFiltri((f) => ({ ...f, min: e.target.value }))}
+            />
+          </Form.Group>
+
+          <Form.Group as={Col} xs={6} md={2} controlId="filtri-max">
+            <Form.Label className="fcp-row-sub mb-1">Deri ({simboli})</Form.Label>
+            <Form.Control
+              type="number"
+              step="0.01"
+              min="0"
+              placeholder="∞"
+              value={filtri.max}
+              onChange={(e) => setFiltri((f) => ({ ...f, max: e.target.value }))}
+            />
+          </Form.Group>
+
+          {kaFiltra && (
+            <Col xs={12} md={2}>
+              <Button
+                variant="outline-light"
+                className="w-100"
+                onClick={() => setFiltri({ kategoria: "", llogaria: "", min: "", max: "" })}
+              >
+                <X size={14} className="me-1" /> Pastro
+              </Button>
+            </Col>
+          )}
         </Row>
       </Container>
 

@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { ensureDefaultCategories, getAllData, put, putProfile, remove } from "../lib/db";
+import { bookAutomaticRecurring, ensureDefaultCategories, getAllData, put, putProfile, remove } from "../lib/db";
 import { DEFAULT_CURRENCY } from "../lib/options";
 import { currencySymbol, formatMoney, formatSignedMoney } from "../lib/format";
 
@@ -44,9 +44,11 @@ export function DataProvider({ children }) {
 
   useEffect(() => {
     // Only at startup: categories shipped by a newer release are added to a database created by an
-    // older one, then everything is read in the usual way.
+    // older one, schedules marked "regjistroje vetë" catch up on what they owe, and then
+    // everything is read in the usual way.
     ensureDefaultCategories()
       .catch(() => undefined)
+      .then(() => bookAutomaticRecurring().catch(() => undefined))
       .then(reload)
       .finally(() => setLoading(false));
   }, [reload]);
