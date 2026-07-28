@@ -37,7 +37,10 @@ const toBase64 = (bytes) => {
   return btoa(binary);
 };
 
-const fromBase64 = (text) => Uint8Array.from(atob(text), (c) => c.charCodeAt(0));
+const fromBase64 = (text) =>
+  Uint8Array.from(atob(text.replace(/-/g, "+").replace(/_/g, "/")), (c) => c.charCodeAt(0));
+
+const toBase64Url = (bytes) => toBase64(bytes).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 
 /**
  * The codes to show, in order. `maxChars` keeps each QR sparse enough for a phone camera to read
@@ -75,5 +78,33 @@ export async function decodeTransfer(chunks) {
   }
   const b64 = rradha.map((c) => c.payload).join("");
   const bytes = await decompress(fromBase64(b64), rradha[0].ngjeshur);
+  return JSON.parse(new TextDecoder().decode(bytes));
+}
+
+// ── One link, one code ──────────────────────────────────────────────────────
+
+/** What a QR can hold in byte mode at the error correction this uses, with room for the address. */
+const MAX_LINK = 2600;
+
+/**
+ * The whole database as a single link, so any phone's camera app can open it - no scanner inside
+ * the app, no pairing. The payload rides in the fragment, which browsers never send to a server,
+ * so the data still goes nowhere but the other device.
+ *
+ * Returns `{ url, gjatesia, mundet }`: a ledger past what one code holds cannot travel this way and
+ * the caller falls back to the multi-code transfer.
+ */
+export async function encodeTransferLink(data, base = window.location.origin) {
+  const bytes = new TextEncoder().encode(JSON.stringify(data));
+  const { bytes: payload, ngjeshur } = await compress(bytes);
+  const url = `${base}/#fcp=${ngjeshur ? "z" : "r"}.${toBase64Url(payload)}`;
+  return { url, gjatesia: url.length, mundet: url.length <= MAX_LINK };
+}
+
+/** Reads a transfer out of a `#fcp=...` fragment, or null when there is none. */
+export async function decodeTransferLink(hash = window.location.hash) {
+  const match = /#fcp=([zr])\.([A-Za-z0-9\-_]+)/.exec(hash || "");
+  if (!match) return null;
+  const bytes = await decompress(fromBase64(match[2]), match[1] === "z");
   return JSON.parse(new TextDecoder().decode(bytes));
 }

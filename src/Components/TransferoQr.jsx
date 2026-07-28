@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { Button, Alert, ProgressBar } from "react-bootstrap";
-import { QrCode, Camera, ChevronLeft, ChevronRight, Play, Pause, X } from "lucide-react";
+import { QrCode, Camera, ChevronLeft, ChevronRight, Play, Pause, X, Link2, Copy, Check } from "lucide-react";
 import { useData } from "../Context/DataContext";
 import { useDialog } from "../Context/DialogContext";
 import { exportAllData, importAllData } from "../lib/db";
-import { decodeTransfer, encodeTransfer, parseChunk } from "../lib/transferQr";
+import { decodeTransfer, encodeTransfer, encodeTransferLink, parseChunk } from "../lib/transferQr";
 import "../Pages/Styles/Dashboard.css";
 
 /**
@@ -25,7 +25,9 @@ function TransferoQr() {
   const [luaj, setLuaj] = useState(true);
   const [mbledhur, setMbledhur] = useState([]);
   const [gabimi, setGabimi] = useState("");
-  const [duke, setDuke] = useState(false);
+  const [duke, setDuke] = useState("");
+  const [linku, setLinku] = useState(null);
+  const [kopjuar, setKopjuar] = useState(false);
 
   const videoRef = useRef(null);
   const streamRef = useRef(null);
@@ -46,12 +48,13 @@ function TransferoQr() {
     setMbledhur([]);
     setGabimi("");
     setAktivi(0);
+    setLinku(null);
   };
 
   useEffect(() => () => streamRef.current?.getTracks().forEach((t) => t.stop()), []);
 
   const filloDergimin = async () => {
-    setDuke(true);
+    setDuke("qr");
     setGabimi("");
     try {
       const data = await exportAllData();
@@ -77,7 +80,49 @@ function TransferoQr() {
     } catch (err) {
       setGabimi(`Kodet nuk u krijuan: ${err.message}`);
     } finally {
-      setDuke(false);
+      setDuke("");
+    }
+  };
+
+  /**
+   * The same data as one link. It only works while the whole ledger fits in a single code, but
+   * when it does the other device needs nothing but its ordinary camera app.
+   */
+  const krijoLinkun = async () => {
+    setDuke("link");
+    setGabimi("");
+    try {
+      const data = await exportAllData();
+      const { url, mundet, gjatesia } = await encodeTransferLink(data);
+      if (!mundet) {
+        setGabimi(
+          `Të dhënat tuaja (${Math.round(gjatesia / 1024)} kB të ngjeshura) janë shumë të mëdha për një link të vetëm. Përdorni "Dërgo me QR", që i ndan në disa kode.`
+        );
+        return;
+      }
+      const QRCode = await import("qrcode").then((m) => m.default || m);
+      const img = await QRCode.toDataURL(url, {
+        width: 420,
+        margin: 1,
+        errorCorrectionLevel: "L",
+        color: { dark: "#0d2137", light: "#ffffff" },
+      });
+      setLinku({ url, img });
+      setModaliteti("link");
+    } catch (err) {
+      setGabimi(`Linku nuk u krijua: ${err.message}`);
+    } finally {
+      setDuke("");
+    }
+  };
+
+  const kopjoLinkun = async () => {
+    try {
+      await navigator.clipboard.writeText(linku.url);
+      setKopjuar(true);
+      setTimeout(() => setKopjuar(false), 2000);
+    } catch {
+      /* clipboard blocked */
     }
   };
 
@@ -181,16 +226,20 @@ function TransferoQr() {
       {modaliteti === "" && (
         <>
           <div className="d-flex gap-2 flex-wrap">
-            <Button variant="outline-light" onClick={filloDergimin} disabled={duke}>
-              <QrCode size={16} className="me-1" /> {duke ? "Duke krijuar..." : "Dërgo me QR"}
+            <Button variant="outline-light" onClick={filloDergimin} disabled={Boolean(duke)}>
+              <QrCode size={16} className="me-1" /> {duke === "qr" ? "Duke krijuar..." : "Dërgo me QR"}
+            </Button>
+            <Button variant="outline-light" onClick={krijoLinkun} disabled={Boolean(duke)}>
+              <Link2 size={16} className="me-1" /> {duke === "link" ? "Duke krijuar..." : "Dërgo me një link"}
             </Button>
             <Button variant="outline-light" onClick={filloPranimin}>
               <Camera size={16} className="me-1" /> Prano me kamerë
             </Button>
           </div>
           <div className="fcp-row-sub mt-2">
-            Në pajisjen e vjetër shtypni <strong>Dërgo me QR</strong>, në të renë <strong>Prano me kamerë</strong>,
-            dhe mbajeni kamerën para ekranit derisa të lexohen të gjitha kodet.
+            <strong>Dërgo me QR</strong> i ndan të dhënat në disa kode dhe lexohet me <strong>Prano me kamerë</strong>
+            këtu në aplikacion. <strong>Dërgo me një link</strong> i vendos të gjitha në një kod të vetëm, që hapet me
+            kamerën e zakonshme të telefonit - punon vetëm nëse të dhënat janë mjaft të vogla.
           </div>
         </>
       )}
@@ -231,6 +280,29 @@ function TransferoQr() {
               </Button>
             </div>
             <div className="fcp-row-sub mt-2">{kodet.length} kode gjithsej</div>
+          </div>
+        </div>
+      )}
+
+      {modaliteti === "link" && linku && (
+        <div className="fcp-transfer">
+          <img src={linku.img} alt="Kodi QR i transferit" className="fcp-transfer-qr" />
+          <div className="fcp-transfer-side">
+            <div className="fcp-row-title mb-1">Një kod, të gjitha të dhënat</div>
+            <div className="fcp-row-sub mb-2">
+              Skanojeni me kamerën e zakonshme të pajisjes tjetër - hapet aplikacioni dhe ju pyet para se të
+              zëvendësojë çka ka. Linku i mban të dhënat pas <code>#</code>, pra nuk kalon kurrë te ndonjë server.
+            </div>
+            <div className="d-flex gap-2 flex-wrap">
+              <Button size="sm" variant="outline-light" onClick={kopjoLinkun}>
+                {kopjuar ? <Check size={14} className="me-1" /> : <Copy size={14} className="me-1" />}
+                {kopjuar ? "U kopjua" : "Kopjo linkun"}
+              </Button>
+              <Button size="sm" variant="outline-light" onClick={mbyll}>
+                <X size={14} className="me-1" /> Mbyll
+              </Button>
+            </div>
+            <div className="fcp-row-sub mt-2">{Math.round(linku.url.length / 1024)} kB</div>
           </div>
         </div>
       )}
