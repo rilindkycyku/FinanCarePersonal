@@ -134,3 +134,104 @@
   color: var(--sp-text-muted);
   margin-top: 0.35rem;
 }
+
+/* ── Confirming a due recurring payment ───────────────────────
+   The month's running cost and the plan's paid/left standing are shown before the amount fields,
+   so the adjustment is made with the whole picture in view. */
+.fcp-confirm-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  background: var(--sp-surface-2);
+  border: 1px solid var(--sp-border);
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+}
+
+.fcp-confirm-total-value {
+  font-size: 1.15rem;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  color: var(--sp-text);
+}
+
+/* Same look as the Tabela on the pages behind the dialog, so the payment list reads as the app's
+   familiar table rather than a second style of grid. */
+.fcp-modal-table {
+  color: var(--sp-text);
+  margin-bottom: 0.5rem;
+  border-collapse: collapse;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.fcp-modal-table th {
+  padding: 0.6rem 0.8rem !important;
+  background: var(--sp-surface-2) !important;
+  color: var(--sp-text-muted) !important;
+  text-transform: uppercase;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  border: none !important;
+  white-space: nowrap;
+}
+
+.fcp-modal-table td {
+  padding: 0.55rem 0.8rem !important;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--sp-text) !important;
+  background: var(--sp-surface) !important;
+  border-top: 1px solid var(--sp-border) !important;
+  border-bottom: none !important;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.fcp-modal-table tfoot td {
+  background: var(--sp-surface-2) !important;
+  font-weight: 800;
+}
+
+.fcp-date-badge {
+  background: var(--sp-surface-3);
+  color: var(--sp-emerald);
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  border: 1px solid var(--sp-border);
+  white-space: nowrap;
+}
+
+.fcp-status-tani {
+  color: var(--sp-emerald);
+  font-weight: 800;
+}
+
+.fcp-confirm-line {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  width: 100%;
+  padding-bottom: 0.35rem;
+}
+
+/* The schedule being confirmed, highlighted inside the month's list of card payments. */
+.fcp-modal-table tr.fcp-row-tani td {
+  background: var(--sp-emerald-glow);
+  font-weight: 700;
+}
+
+/* A payment left out of this settlement. */
+.fcp-modal-table tr.fcp-row-jashte td {
+  opacity: 0.45;
+}
+
+.fcp-modal-table .form-control-sm {
+  padding: 0.25rem 0.5rem !important;
+  font-size: 0.78rem !important;
+}

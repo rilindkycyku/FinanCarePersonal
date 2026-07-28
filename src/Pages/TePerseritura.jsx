@@ -8,13 +8,14 @@ import Footer from "../Components/Footer";
 import PageTitle from "../Components/PageTitle";
 import PageLoading from "../Components/PageLoading";
 import ShtoTePerseritur from "../Components/ShtoTePerseritur";
+import KonfirmoPagesen from "../Components/KonfirmoPagesen";
 import Tabela from "../Components/Tabela/Tabela";
 import { Kpi, Empty } from "../Components/Ui";
 import { useData } from "../Context/DataContext";
 import { useDialog } from "../Context/DialogContext";
 import { makeId, STORES } from "../lib/db";
 import { dueRecurring, frequencyLabel, generateDueTransactions, isRecurringDue } from "../lib/finance";
-import { formatDate, plainAmount, todayISO } from "../lib/format";
+import { formatDate, formatMoney, plainAmount, todayISO } from "../lib/format";
 import { FREQUENCIES } from "../lib/options";
 import { getIcon } from "../lib/icons";
 import "./Styles/PremiumTheme.css";
@@ -25,10 +26,11 @@ import "./Styles/Personal.css";
 const PER_MONTH = { ditore: 30, javore: 4.33, dyjavore: 2.17, mujore: 1, tremujore: 1 / 3, gjashtemujore: 1 / 6, vjetore: 1 / 12 };
 
 function TePerseritura() {
-  const { accounts, categories, recurring, save, saveMany, destroy, money, simboli, loading } = useData();
+  const { accounts, categories, recurring, save, saveMany, destroy, money, simboli, loading, njeLlogari } = useData();
   const dialog = useDialog();
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState(null);
+  const [konfirmimi, setKonfirmimi] = useState(null);
 
   const today = todayISO();
 
@@ -75,21 +77,12 @@ function TePerseritura() {
     await destroy(STORES.recurring, rec.id);
   };
 
-  /** Books every occurrence a schedule owes up to today, then advances it past them. */
-  const confirmOne = async (rec) => {
-    const { transactions: gjeneruara, updated, changed } = generateDueTransactions(rec, today, makeId);
+  /** Opens the confirmation modal, where the amount of each due occurrence can still be corrected
+   * before it is booked (see KonfirmoPagesen). */
+  const confirmOne = (rec) => {
+    const { changed } = generateDueTransactions(rec, today, makeId);
     if (!changed) return;
-    const ok = await dialog.confirm(
-      gjeneruara.length === 1
-        ? `Të regjistroj transaksionin për "${rec.emri}" më ${formatDate(gjeneruara[0].data)}?`
-        : `"${rec.emri}" ka ${gjeneruara.length} raste të papranuara. Ti regjistroj të gjitha?`,
-      { title: "Konfirmo Pagesën", confirmLabel: "Regjistro" }
-    );
-    if (!ok) return;
-    await saveMany([
-      ...gjeneruara.map((tx) => [STORES.transactions, tx]),
-      [STORES.recurring, updated],
-    ]);
+    setKonfirmimi(rec);
   };
 
   const confirmAll = async () => {
@@ -106,7 +99,7 @@ function TePerseritura() {
     const ok = await dialog.confirm(
       `Të regjistroj ${numri} ${numri === 1 ? "transaksion" : "transaksione"} nga ${stats.due.length} ${
         stats.due.length === 1 ? "pagesë" : "pagesa"
-      } që kanë arritur datën?`,
+      } që kanë arritur datën, me vlerat e planifikuara? Për të ndryshuar vlerën e një pagese, konfirmojeni veç nga lista.`,
       { title: "Konfirmo të Gjitha", confirmLabel: "Regjistro" }
     );
     if (!ok) return;
@@ -120,7 +113,7 @@ function TePerseritura() {
     Frekuenca: frequencyLabel(r.frekuenca),
     "Data e Radhës": r.dataETjetres,
     Kategoria: nameOf(categories, r.kategoriaId),
-    Llogaria: nameOf(accounts, r.llogariaId),
+    ...(njeLlogari ? {} : { Llogaria: nameOf(accounts, r.llogariaId) }),
     Statusi: !r.aktiv ? "Joaktive" : isRecurringDue(r, today) ? "Ka arritur" : "Aktive",
     [`Vlera (${simboli})`]: `<span class="${r.lloji === "hyrje" ? "fcp-pos" : "fcp-neg"}">${plainAmount(
       r.lloji === "hyrje" ? r.vlera : -r.vlera
@@ -192,8 +185,15 @@ function TePerseritura() {
                     <div className="fcp-row-main">
                       <div className="fcp-row-title">{r.emri}</div>
                       <div className="fcp-row-sub">
-                        {frequencyLabel(r.frekuenca)} · {nameOf(accounts, r.llogariaId)} ·{" "}
-                        {kategoria?.emri || "Pa kategori"}
+                        {[
+                          frequencyLabel(r.frekuenca),
+                          r.monedhaOrigjinale ? formatMoney(r.vleraOrigjinale, r.monedhaOrigjinale) : null,
+                          r.nrKesteve ? `${r.nrKesteve} këste` : null,
+                          njeLlogari ? null : nameOf(accounts, r.llogariaId),
+                          kategoria?.emri || "Pa kategori",
+                        ]
+                          .filter(Boolean)
+                          .join(" · ")}
                       </div>
                     </div>
                     <div className={`fcp-row-value ${r.lloji === "hyrje" ? "fcp-pos" : "fcp-neg"} me-2`}>
@@ -253,6 +253,8 @@ function TePerseritura() {
       {rows.length > 0 && (
         <Tabela data={rows} tableName="Pagesat e Përsëritura" dateField="Data e Radhës" filterField="Statusi" mosShfaqID />
       )}
+
+      <KonfirmoPagesen show={Boolean(konfirmimi)} rec={konfirmimi} onHide={() => setKonfirmimi(null)} />
 
       <ShtoTePerseritur
         show={showModal}

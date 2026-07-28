@@ -19,6 +19,10 @@ sa shpenzohet, sa mbetet dhe sa po kursesh.
 - **Llogaritë** — kesh, llogari bankare, kartela krediti, kursime, investime, kredi. Bilanci
   llogaritet gjithmonë nga bilanci fillestar plus transaksionet, kurse llogaritë e vjetra
   arkivohen pa u fshirë historiku.
+- **Modaliteti me një llogari** (Cilësimet → Llogaritë, ose vetë faqja Llogaritë) — nëse nuk doni
+  kesh e bankë veç e veç, aktivizoni çelësin dhe gjithçka shkon te një llogari e vetme kryesore:
+  llogaritë ekzistuese bashkohen në të (bilancet fillestare mblidhen, transaksionet, pagesat e
+  përsëritura dhe qëllimet zhvendosen), dhe formularët nuk pyesin më për llogarinë.
 - **Kategoritë** — kategori të veçanta për hyrje dhe shpenzime, me ngjyrë e ikonë, dhe me numërimin
   e përdorimit real të secilës.
 - **Buxhetet** — kufi mujor shpenzimi për kategori, me ecuri, sinjalizim kur teprohet, lëvizje nga
@@ -26,8 +30,19 @@ sa shpenzohet, sa mbetet dhe sa po kursesh.
 - **Qëllimet e Kursimit** — synimi, afati, ecuria dhe kontributet. Një kontribut është transfer i
   vërtetë në llogarinë e kursimit, i etiketuar me qëllimin, pra paraja dhe ecuria janë e njëjta
   e dhënë.
-- **Pagesat e Përsëritura** — qira, abonime, rroga. Skedulimi nuk regjistron vetë asgjë: kur vjen
-  data, ju e konfirmoni dhe krijohet transaksioni (duke kapërcyer edhe rastet e mbetura pas).
+- **Pagesat e Përsëritura** — qira, abonime, rroga dhe blerjet me këste. Skedulimi nuk regjistron
+  vetë asgjë: kur vjen data, ju e konfirmoni dhe krijohet transaksioni (duke kapërcyer edhe rastet e
+  mbetura pas). Për një blerje me këste mjafton numri i kësteve — data e përfundimit llogaritet vetë
+  dhe pagesa ndalet pas kësti të fundit. Një kartelë paguhet një herë në muaj, jo këst për këst:
+  konfirmimi hap një dritare që mbledh të gjitha këstet e asaj kartele që kanë arritur datën, i
+  regjistron të gjitha me një datë të vetme pagese (zgjeroni datën për të përfshirë edhe këstet që
+  bien më vonë atë muaj), tregon ecurinë e çdo plani (kësti 3/6) dhe totalin që del nga llogaria.
+  Çdo rresht ka fushën <em>Shto / Zbrit</em> — p.sh. −7.50 kur bonuset zbriten nga pagesa minimale
+  ose +25 kur bie tarifa vjetore e kartelës — pa e prishur vlerën e planifikuar të skedulës.
+- **Monedhë tjetër për një shpenzim** — një abonim që faturohet në $ ndërsa profili juaj është në €:
+  shkruani vlerën e faturës, monedhën dhe kursin — ruhet vlera e kthyer në monedhën tuaj (vlera
+  origjinale mbahet për krahasim me ekstraktin e kartelës). Kursi i fundit për çdo monedhë mbahet
+  mend, sepse aplikacioni nuk ka backend për t'i marrë kurset vetë.
 - **Statistikat** — hyrje kundrejt shpenzimeve për 6 muajt e fundit, bilanc mujor, ndarja sipas
   kategorive e llogarive, mesatarja ditore dhe 5 shpenzimet më të mëdha, për periudhë të zgjedhur.
 - **Eksporto / Importo** — kopje e plotë JSON (për arkivim ose bartje në pajisje tjetër) dhe eksport
