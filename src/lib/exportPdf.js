@@ -279,7 +279,7 @@ export async function exportStatementPdf({
   // Full width, so every page below it can use the whole page and a continuation page never shows
   // an empty column where a sidebar used to be.
   const bandY = MARGIN + 36;
-  const bandH = 134;
+  const bandH = 150;
   const gap = 12;
   // The details panel holds short values, so the ring panel gets the room its legend needs.
   const wA = 148;
@@ -335,7 +335,7 @@ export async function exportStatementPdf({
     doc.setDrawColor(...CLR.line);
     doc.setLineWidth(0.5);
     doc.line(xB + 12, by + 6, xB + wB - 12, by + 6);
-    by += 21;
+    by += 19;
   });
 
   doc.setFillColor(...(t.perfundimtar < 0 ? CLR.red : CLR.navy));
@@ -684,6 +684,21 @@ export async function exportStatementPdf({
         MARGIN + 11,
         { align: "right" }
       );
+
+      // The figure the whole statement is about, carried onto every page that follows the summary.
+      const etiketa = "Bilanci përfundimtar";
+      setText(7, "bold", CLR.muted);
+      const gjeresiaEtiketes = doc.getTextWidth(etiketa);
+      setText(9, "bold", t.perfundimtar < 0 ? CLR.red : CLR.navy);
+      const gjeresiaVleres = doc.getTextWidth(money(t.perfundimtar));
+      const kutiaW = gjeresiaEtiketes + gjeresiaVleres + 26;
+      doc.setFillColor(...CLR.panel);
+      doc.roundedRect(MARGIN + 110, MARGIN - 10, kutiaW, 22, 5, 5, "F");
+      setText(7, "bold", CLR.muted);
+      doc.text(etiketa, MARGIN + 120, MARGIN + 3);
+      setText(9, "bold", t.perfundimtar < 0 ? CLR.red : CLR.navy);
+      doc.text(money(t.perfundimtar), MARGIN + 120 + gjeresiaEtiketes + 8, MARGIN + 3);
+
       doc.setDrawColor(...CLR.line);
       doc.setLineWidth(0.5);
       doc.line(MARGIN, MARGIN + 22, W - MARGIN, MARGIN + 22);
