@@ -252,7 +252,7 @@ export async function exportStatementPdf({
   // Full width, so every page below it can use the whole page and a continuation page never shows
   // an empty column where a sidebar used to be.
   const bandY = MARGIN + 36;
-  const bandH = 136;
+  const bandH = 128;
   const gap = 12;
   // The details panel holds short values, so the ring panel gets the room its legend needs.
   const wA = 148;
@@ -399,22 +399,22 @@ export async function exportStatementPdf({
     },
   ].filter((s) => s.rows.length > 0);
 
-  let y = bandY + bandH + 26;
+  let y = bandY + bandH + 22;
 
   const seksioniTabele = (seksioni) => {
     const shuma = (r) => (seksioni.transfer ? r.shfaq : r.vlera);
     const totali = seksioni.rows.reduce((sum, r) => sum + shuma(r), 0);
 
-    setText(10, "bold", CLR.navy);
+    setText(9, "bold", CLR.navy);
     doc.text(seksioni.titull, MARGIN, y);
-    setText(7.5, "normal", CLR.muted);
+    setText(7, "normal", CLR.muted);
     doc.text(
       `${seksioni.rows.length} ${seksioni.rows.length === 1 ? "rresht" : "rreshta"}`,
       W - MARGIN,
       y,
       { align: "right" }
     );
-    y += 10;
+    y += 8;
 
     const head = seksioni.keste
       ? [["Data", "Përshkrimi i transaksionit", "Kategoria", "Kësti", `Shuma (${simboli})`]]
@@ -436,10 +436,12 @@ export async function exportStatementPdf({
           plainAmount(totali),
         ],
       ],
+      // Statement density: a compact row keeps a long month to as few pages as possible while
+      // staying legible on paper (banks print these around 7 pt).
       styles: {
         font,
-        fontSize: 8,
-        cellPadding: { top: 4.5, right: 6, bottom: 4.5, left: 6 },
+        fontSize: 7.2,
+        cellPadding: { top: 2.6, right: 6, bottom: 2.6, left: 6 },
         textColor: CLR.text,
         lineWidth: 0,
         overflow: "linebreak",
@@ -447,32 +449,33 @@ export async function exportStatementPdf({
       headStyles: {
         font,
         fontStyle: "bold",
-        fontSize: 7.5,
+        fontSize: 6.8,
         fillColor: CLR.emerald,
         textColor: CLR.white,
-        cellPadding: { top: 5, right: 6, bottom: 5, left: 6 },
+        cellPadding: { top: 3.5, right: 6, bottom: 3.5, left: 6 },
       },
       footStyles: {
         font,
         fontStyle: "bold",
-        fontSize: 8.5,
+        fontSize: 7.6,
         fillColor: CLR.white,
         textColor: totali < 0 ? CLR.red : CLR.navy,
+        cellPadding: { top: 3.5, right: 6, bottom: 3.5, left: 6 },
         lineWidth: { top: 0.7 },
         lineColor: CLR.navy,
       },
       alternateRowStyles: { fillColor: CLR.panel },
       columnStyles: seksioni.keste
         ? {
-            0: { cellWidth: 62, textColor: CLR.muted },
-            2: { cellWidth: 120, textColor: CLR.muted },
-            3: { cellWidth: 40, halign: "center", textColor: CLR.muted },
-            4: { cellWidth: 82, halign: "right", fontStyle: "bold" },
+            0: { cellWidth: 52, textColor: CLR.muted },
+            2: { cellWidth: 112, textColor: CLR.muted },
+            3: { cellWidth: 34, halign: "center", textColor: CLR.muted },
+            4: { cellWidth: 70, halign: "right", fontStyle: "bold" },
           }
         : {
-            0: { cellWidth: 62, textColor: CLR.muted },
-            2: { cellWidth: 120, textColor: CLR.muted },
-            3: { cellWidth: 82, halign: "right", fontStyle: "bold" },
+            0: { cellWidth: 52, textColor: CLR.muted },
+            2: { cellWidth: 112, textColor: CLR.muted },
+            3: { cellWidth: 70, halign: "right", fontStyle: "bold" },
           },
       // The total belongs to the section, not to each page it happens to span.
       showFoot: "lastPage",
@@ -500,7 +503,7 @@ export async function exportStatementPdf({
       },
     });
 
-    y = doc.lastAutoTable.finalY + 26;
+    y = doc.lastAutoTable.finalY + 18;
   };
 
   if (seksionet.length === 0) {
