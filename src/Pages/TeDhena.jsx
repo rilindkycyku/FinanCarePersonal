@@ -11,6 +11,7 @@ import { useDialog } from "../Context/DialogContext";
 import { exportAllData, importAllData } from "../lib/db";
 import { exportListExcel, exportStatementExcel } from "../lib/exportExcel";
 import { exportStatementPdf, statementTitle } from "../lib/exportPdf";
+import PdfViewerModal from "../Components/PdfViewerModal";
 import { monthBounds, sortByDateDesc, yearBounds } from "../lib/finance";
 import { plainAmount } from "../lib/format";
 import { TRANSACTION_TYPE_LABELS } from "../lib/options";
@@ -42,6 +43,7 @@ function TeDhena() {
   const [message, setMessage] = useState(null);
   const [periudha, setPeriudha] = useState("muaji");
   const [llogariaPdf, setLlogariaPdf] = useState("");
+  const [pdf, setPdf] = useState(null);
   const fileInputRef = useRef(null);
 
   const handleExportJson = async () => {
@@ -86,11 +88,13 @@ function TeDhena() {
     );
   };
 
-  /** A statement for a period (and optionally one account): summary plus every movement, as PDF. */
+  /** A statement for a period (and optionally one account): summary plus every movement, as PDF.
+   * It opens in the viewer first — saving it is a button inside that. */
   const handleExportPdf = async () => {
     const { start, end } = periudhaBounds(periudha);
     try {
-      const emri = await exportStatementPdf({
+      const pasqyra = await exportStatementPdf({
+        kthejBlob: true,
         profile,
         accounts,
         categories,
@@ -112,7 +116,7 @@ function TeDhena() {
           .replace(/[^a-z0-9]+/g, "-")
           .replace(/^-|-$/g, "")}.pdf`,
       });
-      setMessage({ type: "success", text: `Pasqyra u shkarkua: ${emri}` });
+      setPdf(pasqyra);
     } catch (err) {
       setMessage({ type: "danger", text: `PDF-ja nuk u krijua: ${err.message}` });
     }
@@ -272,7 +276,7 @@ function TeDhena() {
 
             <Col md={4} className="d-flex gap-2 flex-wrap">
               <Button className="btn-primary" onClick={handleExportPdf}>
-                <Download size={16} className="me-1" /> Shkarko PDF
+                <FileText size={16} className="me-1" /> Shiko PDF
               </Button>
               <Button variant="outline-light" onClick={handleStatementExcel}>
                 <Sheet size={16} className="me-1" /> Excel
@@ -302,6 +306,14 @@ function TeDhena() {
       </div>
 
       <Footer />
+
+      <PdfViewerModal
+        show={Boolean(pdf)}
+        blob={pdf?.blob}
+        filename={pdf?.filename}
+        title="Pasqyra"
+        onHide={() => setPdf(null)}
+      />
     </div>
   );
 }
