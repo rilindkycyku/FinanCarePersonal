@@ -484,3 +484,37 @@ body.light-mode .hero-cta.ghost {
 .fcp-spin {
   animation: fcp-spin 0.9s linear infinite;
 }
+
+/* Share card: the QR beside the link, stacking on a phone. */
+.fcp-share {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.fcp-share-qr {
+  width: 132px;
+  height: 132px;
+  border-radius: 12px;
+  background: #fff;
+  padding: 6px;
+  flex-shrink: 0;
+}
+
+.fcp-share-qr-bosh {
+  background: var(--sp-surface-2);
+  border: 1px dashed var(--sp-border);
+}
+
+.fcp-share-main {
+  flex: 1 1 260px;
+  min-width: 0;
+}
+
+@media (max-width: 640px) {
+  .fcp-share {
+    justify-content: center;
+    text-align: center;
+  }
+}

@@ -226,3 +226,186 @@ export async function exportListExcel(title, headers, data, filename = "Eksport.
     filename
   );
 }
+
+// ── Statement workbook ──────────────────────────────────────────────────────
+
+/** One styled sheet: a green title bar, a header row, the rows, and an optional totals row. */
+function statementSheet(wb, titulli, headers, rows, { totali } = {}) {
+  const ws = wb.addWorksheet(titulli.replace(/[*?:[\]\\/]/g, "-").slice(0, 31), {
+    views: [{ state: "frozen", ySplit: 3 }],
+    properties: { tabColor: { argb: CLR.tableHead } },
+  });
+
+  const titleRow = ws.addRow([titulli, ...new Array(Math.max(headers.length - 1, 0)).fill("")]);
+  if (headers.length > 1) ws.mergeCells(1, 1, 1, headers.length);
+  titleRow.height = 26;
+  titleRow.getCell(1).font = { bold: true, color: { argb: CLR.titleFg }, size: 12, name: "Calibri" };
+  titleRow.getCell(1).fill = fill(CLR.titleBg);
+  titleRow.getCell(1).alignment = { vertical: "middle", horizontal: "center" };
+
+  const head = ws.addRow(headers);
+  head.height = 20;
+  headers.forEach((_, i) => {
+    const cell = head.getCell(i + 1);
+    cell.fill = fill(CLR.tableHead);
+    cell.font = font(true, CLR.tableHeadFg, 10);
+    cell.border = border();
+    cell.alignment = { vertical: "middle", horizontal: "center" };
+  });
+
+  rows.forEach((r, idx) => {
+    const row = ws.addRow(r);
+    row.height = 17;
+    r.forEach((value, i) => {
+      const cell = row.getCell(i + 1);
+      cell.fill = fill(idx % 2 === 0 ? CLR.rowEven : CLR.rowAlt);
+      cell.font = font(false, CLR.valueFg, 10);
+      cell.border = border();
+      if (typeof value === "number") {
+        cell.numFmt = "#,##0.00";
+        cell.alignment = { horizontal: "right" };
+      }
+    });
+  });
+
+  if (totali !== undefined) {
+    const row = ws.addRow([...new Array(headers.length - 1).fill(""), totali]);
+    row.getCell(1).value = "TOTALI";
+    row.height = 20;
+    headers.forEach((_, i) => {
+      const cell = row.getCell(i + 1);
+      cell.fill = fill(CLR.totBg);
+      cell.font = font(true, CLR.totFg, 10);
+      cell.border = border("FF047857");
+      if (typeof cell.value === "number") {
+        cell.numFmt = "#,##0.00";
+        cell.alignment = { horizontal: "right" };
+      }
+    });
+  }
+
+  ws.columns.forEach((col, i) => {
+    const gjatesia = Math.max(
+      String(headers[i] ?? "").length,
+      ...rows.map((r) => String(r[i] ?? "").length)
+    );
+    col.width = Math.min(Math.max(gjatesia + 4, 12), 48);
+  });
+
+  return ws;
+}
+
+/**
+ * The statement as a workbook: the same figures the PDF prints, but in sheets you can sort, filter
+ * and total yourself — a summary, every movement, the categories behind them, and where each
+ * instalment plan stands.
+ */
+export async function exportStatementExcel({
+  profile = {},
+  accounts,
+  categories,
+  transactions,
+  recurring = [],
+  start,
+  end,
+  llogariaId = null,
+  filename,
+}) {
+  // Same computation the PDF uses, so the two exports can never disagree.
+  const { statementRows, statementTitle } = await import("./exportPdf");
+  const t = statementRows({ accounts, categories, transactions, recurring, start, end, llogariaId });
+  const titulli = statementTitle(start, end);
+  const monedha = profile.monedha || DEFAULT_CURRENCY;
+  const simboli = currencySymbol(monedha);
+  const llogaria = llogariaId ? accounts.find((a) => a.id === llogariaId) : null;
+
+  const wb = new ExcelJS.Workbook();
+  wb.creator = "FinanCarePersonal";
+  wb.created = new Date();
+
+  // 1. Summary — the figures, then where the money went.
+  statementSheet(
+    wb,
+    titulli,
+    ["Zëri", `Vlera (${simboli})`],
+    [
+      ["Përdoruesi", profile.emri || "Përdorues"],
+      ["Llogaria", llogaria ? llogaria.emri : "Të gjitha llogaritë"],
+      ["Periudha", `${start} - ${end}`],
+      ["Monedha", `${monedha} (${simboli})`],
+      ["Transaksione", t.nrRreshtave],
+      ["Bilanci paraprak", t.fillestar],
+      ["Hyrjet", t.hyrjet],
+      ["Shpenzimet", -t.daljet],
+      ["Rezultati i periudhës", t.neto],
+      ["Bilanci përfundimtar", t.perfundimtar],
+      ["Mbetur me këste", t.mbeturKeste],
+    ]
+  );
+
+  const gjithsejKategorite = t.kategorite.reduce((sum, k) => sum + k.vlera, 0);
+  statementSheet(
+    wb,
+    "Sipas kategorive",
+    ["Kategoria", "Transaksione", `Vlera (${simboli})`, "Pjesa"],
+    t.kategorite.map((k) => [
+      k.emri,
+      k.numri,
+      k.vlera,
+      gjithsejKategorite > 0 ? `${Math.round((k.vlera / gjithsejKategorite) * 100)}%` : "0%",
+    ]),
+    { totali: gjithsejKategorite }
+  );
+
+  // 2. Every movement of the period, in the order the statement lists them.
+  const seksionet = [
+    ["Hyrje", t.seksionet.hyrjet],
+    ["Shpenzim", t.seksionet.blerjet],
+    ["Këst", t.seksionet.keste],
+    ["Transfer", t.seksionet.transferet],
+  ];
+  statementSheet(
+    wb,
+    "Transaksionet",
+    ["Data", "Seksioni", "Përshkrimi", "Kategoria", "Llogaria", "Kësti", `Vlera (${simboli})`],
+    seksionet.flatMap(([emri, rows]) =>
+      rows.map((r) => [r.data, emri, r.pershkrimi, r.kategoria, r.llogaria, r.kesti || "", r.vlera])
+    ),
+    { totali: t.neto }
+  );
+
+  // 3. Where each instalment plan stands.
+  const planet = recurring.filter((r) => Number(r.nrKesteve) > 0);
+  if (planet.length > 0) {
+    statementSheet(
+      wb,
+      "Këstet",
+      ["Plani", "Kategoria", `Kësti (${simboli})`, "Këste", "Paguar", "Mbetur", `Mbetur (${simboli})`, "Data e radhës"],
+      planet.map((r) => {
+        const gjithsej = Math.floor(Number(r.nrKesteve)) || 0;
+        const paguar = transactions.filter((tx) => tx.perseritjaId === r.id && tx.data <= end).length;
+        const mbetur = Math.max(gjithsej - paguar, 0);
+        return [
+          r.emri,
+          categories.find((c) => c.id === r.kategoriaId)?.emri || "",
+          Number(r.vlera) || 0,
+          gjithsej,
+          paguar,
+          mbetur,
+          mbetur * (Number(r.vlera) || 0),
+          r.dataETjetres || "",
+        ];
+      })
+    );
+  }
+
+  const buffer = await wb.xlsx.writeBuffer();
+  const emri =
+    filename ||
+    `financarepersonal-${titulli.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}.xlsx`;
+  saveAs(
+    new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }),
+    emri
+  );
+  return emri;
+}
