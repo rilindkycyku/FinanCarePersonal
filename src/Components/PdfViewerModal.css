@@ -1,33 +1,64 @@
 /* The in-app PDF preview: a scrolling stack of rasterized pages on a neutral backdrop, so the
    sheet reads like paper regardless of the app's theme. */
 
+/* The dialog body only frames the sheet; the scrolling happens one level in, so the zoom controls
+   can float above it instead of travelling with the pages. */
 .fcp-pdf-body {
+  position: relative;
+  display: flex;
+  flex-direction: column;
   background: var(--sp-bg);
-  padding: 0.75rem;
+  padding: 0;
+  overflow: hidden;
+}
+
+.fcp-pdf-scroll {
+  flex: 1;
+  min-height: 0;
   max-height: 78vh;
+  /* Room at the foot for the floating zoom pill, so it never covers the last rows of a page. */
+  padding: 0.75rem 0.75rem 3rem;
   overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.fcp-pdf-loading {
+  padding: 1.25rem 0.75rem;
+  text-align: center;
+  color: var(--sp-text-muted);
+  font-size: 0.85rem;
 }
 
 .fcp-pdf-zoom {
-  position: sticky;
-  top: 0;
-  z-index: 2;
+  position: absolute;
+  left: 50%;
+  bottom: 0.75rem;
+  transform: translateX(-50%);
+  z-index: 3;
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  width: fit-content;
-  margin: 0 auto 0.5rem;
-  padding: 0.25rem 0.5rem;
+  gap: 0.4rem;
+  padding: 0.25rem 0.35rem;
   border-radius: 999px;
   border: 1px solid var(--sp-border);
   background: var(--sp-surface-2);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.3);
   font-size: 0.7rem;
   font-weight: 800;
   color: var(--sp-text-muted);
 }
 
-.fcp-pdf-zoom button {
+.fcp-pdf-zoom-nivel {
+  min-width: 44px;
+  padding: 0 0.2rem;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.fcp-pdf-zoom button:not(.fcp-pdf-zoom-nivel) {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -74,8 +105,9 @@
 }
 
 @media (max-width: 575.98px) {
-  .fcp-pdf-body {
-    padding: 0.5rem;
+  /* Fullscreen on a phone: the sheet takes whatever height the dialog gives it. */
+  .fcp-pdf-scroll {
+    padding: 0.5rem 0.5rem 3rem;
     max-height: none;
   }
 

@@ -17,6 +17,7 @@ const RENDER_WIDTH = 900;
  */
 function PdfViewerModal({ show, blob, filename, title, onHide }) {
   const containerRef = useRef(null);
+  const scrollRef = useRef(null);
   const [error, setError] = useState(null);
   const [gati, setGati] = useState(false);
   // A wide sheet scaled to a phone's width is unreadable, so the pages can be blown up past the
@@ -76,6 +77,13 @@ function PdfViewerModal({ show, blob, filename, title, onHide }) {
     };
   }, [show, blob]);
 
+  /** Zooming out to the full width also pans back to the left edge, which is where the sheet is. */
+  const zoomo = (vlera) => {
+    const i = Math.min(Math.max(vlera, 1), 3);
+    setZoom(i);
+    if (i === 1) scrollRef.current?.scrollTo({ left: 0 });
+  };
+
   const shkarko = () => blob && saveAs(blob, filename || "dokument.pdf");
 
   /** Prints the PDF itself through a hidden iframe, so the printout is the document rather than
@@ -116,22 +124,28 @@ function PdfViewerModal({ show, blob, filename, title, onHide }) {
                 <Spinner animation="border" size="sm" className="me-2" /> Duke përgatitur PDF-në...
               </div>
             )}
+            <div className="fcp-pdf-scroll" ref={scrollRef}>
+              <div
+                ref={containerRef}
+                className={`fcp-pdf-pages${zoom > 1 ? " zoomuar" : ""}`}
+                style={{ "--fcp-pdf-zoom": zoom }}
+              />
+            </div>
+            {/* Floating rather than scrolling with the pages: a zoomed sheet is panned sideways,
+                and controls that pan away with it cannot be used to zoom back out. */}
             {gati && (
               <div className="fcp-pdf-zoom">
-                <button type="button" aria-label="Zvogëlo" onClick={() => setZoom((z) => Math.max(1, z - 0.5))} disabled={zoom <= 1}>
+                <button type="button" aria-label="Zvogëlo" onClick={() => zoomo(zoom - 0.5)} disabled={zoom <= 1}>
                   <ZoomOut size={15} />
                 </button>
-                <span>{Math.round(zoom * 100)}%</span>
-                <button type="button" aria-label="Zmadho" onClick={() => setZoom((z) => Math.min(3, z + 0.5))} disabled={zoom >= 3}>
+                <button type="button" className="fcp-pdf-zoom-nivel" onClick={() => zoomo(1)} disabled={zoom <= 1} title="Kthe në gjerësinë e faqes">
+                  {Math.round(zoom * 100)}%
+                </button>
+                <button type="button" aria-label="Zmadho" onClick={() => zoomo(zoom + 0.5)} disabled={zoom >= 3}>
                   <ZoomIn size={15} />
                 </button>
               </div>
             )}
-            <div
-              ref={containerRef}
-              className={`fcp-pdf-pages${zoom > 1 ? " zoomuar" : ""}`}
-              style={{ "--fcp-pdf-zoom": zoom }}
-            />
           </>
         )}
       </Modal.Body>

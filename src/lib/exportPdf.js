@@ -18,6 +18,14 @@ import { currencySymbol, formatDate, plainAmount, toNumber } from "./format";
 import { accountTypeMeta, DEFAULT_CURRENCY, MONTHS_GENITIVE } from "./options";
 
 /**
+ * True for the open-ended bounds `periodBounds("gjithcka")` hands out. They are sentinels wide
+ * enough to hold every record, not a period — printing them gives "01/01/0001 - 31/12/9999".
+ */
+export function isFullHistoryRange(start, end) {
+  return Number(String(start).slice(0, 4)) <= 1 && Number(String(end).slice(0, 4)) >= 9999;
+}
+
+/**
  * What to call this statement. A personal statement is remembered by its month — "Pasqyra e
  * korrikut 2026" — so a reference number is only produced for a range that is not a whole month or
  * year.
@@ -33,7 +41,7 @@ export function statementTitle(start, end) {
   if (vitiA === vitiB && muajiA === 1 && ditaA === 1 && muajiB === 12 && ditaB >= 31) {
     return `Pasqyra e vitit ${vitiA}`;
   }
-  if (vitiA <= 1 && vitiB >= 9999) return "Pasqyra e gjithë historikut";
+  if (isFullHistoryRange(start, end)) return "Pasqyra e gjithë historikut";
   return "Pasqyra e periudhës";
 }
 
@@ -216,6 +224,10 @@ export function statementRows({ accounts, categories, transactions, recurring = 
       transferet: rows.filter((r) => r.shenja === 0),
     },
     nrRreshtave: rows.length,
+    // The span the movements actually cover — what an open-ended statement prints instead of the
+    // sentinel bounds it was asked for. `rows` runs oldest first.
+    nga: rows[0]?.data || null,
+    deri: rows.length > 0 ? rows[rows.length - 1].data : null,
   };
 }
 
@@ -277,10 +289,18 @@ export async function exportStatementPdf({
   const dyShifra = (n) => String(n).padStart(2, "0");
   const titulli = statementTitle(start, end);
 
+  // "01/01/0001 - 31/12/9999" is a sentinel, not a period anyone recognises: an open-ended
+  // statement prints the span its own movements cover, and says so in words when it has none.
+  const periudhaTekst = isFullHistoryRange(start, end)
+    ? t.nga && t.deri
+      ? `${formatDate(t.nga)} - ${formatDate(t.deri)}`
+      : "I gjithë historiku"
+    : `${formatDate(start)} - ${formatDate(end)}`;
+
   setText(12, "bold", CLR.navy);
   doc.text(titulli.toUpperCase(), W - MARGIN, MARGIN + 2, { align: "right" });
   setText(8.5, "normal", CLR.muted);
-  doc.text(`${formatDate(start)} - ${formatDate(end)}`, W - MARGIN, MARGIN + 15, { align: "right" });
+  doc.text(periudhaTekst, W - MARGIN, MARGIN + 15, { align: "right" });
   setText(7, "normal", CLR.muted);
   doc.text(
     `Lëshuar më ${formatDate(tani.toISOString().slice(0, 10))} ${dyShifra(tani.getHours())}:${dyShifra(
@@ -317,12 +337,44 @@ export async function exportStatementPdf({
   panel(xA, wA, "Të dhënat e pasqyrës");
   let ay = bandY + 34;
   const llogariteAktive = accounts.filter((a) => !a.arkivuar).length;
+
+  /**
+   * A value right-aligned in what the row has left over after its label. The panel is 148 pt wide,
+   * so a date range or a long account name is stepped down a little first and, if that still will
+   * not hold it, dropped onto its own line across the panel — being cut short used to lose the
+   * year off the period ("01/01 - 31/12/2026"). Returns the extra height the second line took.
+   */
+  const vleraNePanel = (teksti, hapesira, y) => {
+    const gjeresia = (madhesia) => {
+      setText(madhesia, "bold", CLR.text);
+      return doc.getTextWidth(teksti);
+    };
+
+    let madhesia = 7.4;
+    while (madhesia > 6.4 && gjeresia(madhesia) > hapesira) madhesia -= 0.2;
+    if (gjeresia(madhesia) <= hapesira) {
+      doc.text(teksti, xA + wA - 12, y, { align: "right" });
+      return 0;
+    }
+
+    // A second line only while the panel still has room for one; otherwise the value is cut.
+    const veteMLine = y + 9 <= bandY + bandH - 12;
+    const hapesiraE = veteMLine ? wA - 24 : hapesira;
+    madhesia = 7.4;
+    while (madhesia > 5.8 && gjeresia(madhesia) > hapesiraE) madhesia -= 0.2;
+    let out = teksti;
+    while (out.length > 1 && doc.getTextWidth(`${out}...`) > hapesiraE) out = out.slice(0, -1);
+    doc.text(out === teksti ? teksti : `${out}...`, xA + wA - 12, veteMLine ? y + 9 : y, {
+      align: "right",
+    });
+    return veteMLine ? 9 : 0;
+  };
+
   [
     ["Emri", profile.emri || "Përdorues"],
     ["Llogaria", llogaria ? llogaria.emri : `Të gjitha (${llogariteAktive})`],
     ["Lloji", llogaria ? accountTypeMeta(llogaria.lloji).short : "Përmbledhëse"],
-    // Short form: the panel is 148 pt wide and the full range does not fit beside its label.
-    ["Periudha", `${formatDate(start).slice(0, 5)} - ${formatDate(end)}`],
+    ["Periudha", periudhaTekst],
     ["Monedha", `${monedha} (${simboli})`],
     ["Transaksione", String(t.nrRreshtave)],
     // The reference number and issue time are in the masthead, where there is room for them.
@@ -330,9 +382,7 @@ export async function exportStatementPdf({
   ].forEach(([label, value]) => {
     setText(6.6, "normal", CLR.muted);
     doc.text(label, xA + 12, ay);
-    setText(7.4, "bold", CLR.text);
-    doc.text(doc.splitTextToSize(value, wA - 60)[0], xA + wA - 12, ay, { align: "right" });
-    ay += 13;
+    ay += 13 + vleraNePanel(String(value), wA - 24 - doc.getTextWidth(label) - 8, ay);
   });
 
   // B — the figures, ending in the closing balance
@@ -712,7 +762,7 @@ export async function exportStatementPdf({
       doc.text(titulli, W - MARGIN, MARGIN, { align: "right" });
       setText(7, "normal", CLR.muted);
       doc.text(
-        `${llogaria ? `${llogaria.emri} · ` : ""}${formatDate(start)} - ${formatDate(end)}`,
+        `${llogaria ? `${llogaria.emri} · ` : ""}${periudhaTekst}`,
         W - MARGIN,
         MARGIN + 11,
         { align: "right" }
