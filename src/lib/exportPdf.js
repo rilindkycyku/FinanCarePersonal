@@ -365,14 +365,18 @@ export async function exportStatementPdf({
   const totaliFetave = feta.reduce((sum, f) => sum + f.vlera, 0);
 
   if (totaliFetave > 0) {
-    const qendraX = xC + 40;
+    const qendraX = xC + 42;
     const qendraY = bandY + 66;
-    const rrezja = 23;
+    // A wider ring with a thinner band leaves a hole the total actually fits inside; the caption
+    // that used to sit under it collided with the band on both sides, and the panel's own title
+    // already says what the figure is.
+    const rrezja = 27;
+    const trashesia = 10;
 
     /** A ring segment, approximated with short thick strokes — jsPDF has no arc primitive. */
     const segment = (nga, deri, ngjyra) => {
       doc.setDrawColor(...ngjyra);
-      doc.setLineWidth(12);
+      doc.setLineWidth(trashesia);
       doc.setLineCap("butt");
       const hapa = Math.max(Math.round(Math.abs(deri - nga) / 0.05), 2);
       for (let i = 0; i < hapa; i += 1) {
@@ -394,10 +398,15 @@ export async function exportStatementPdf({
       kendi -= hapesira;
     });
 
-    setText(8, "bold", CLR.navy);
-    doc.text(plainAmount(totaliFetave), qendraX, qendraY + 1, { align: "center" });
-    setText(5.5, "normal", CLR.muted);
-    doc.text("SHPENZIME", qendraX, qendraY + 9, { align: "center" });
+    // Shrunk a step at a time until it clears the hole, so a five-figure month still fits.
+    const hapesiraE = (rrezja - trashesia / 2) * 2 - 6;
+    let madhesia = 9;
+    setText(madhesia, "bold", CLR.navy);
+    while (madhesia > 5 && doc.getTextWidth(plainAmount(totaliFetave)) > hapesiraE) {
+      madhesia -= 0.5;
+      setText(madhesia, "bold", CLR.navy);
+    }
+    doc.text(plainAmount(totaliFetave), qendraX, qendraY + madhesia / 3, { align: "center" });
 
     let cy = bandY + 36;
     feta.forEach((f) => {
