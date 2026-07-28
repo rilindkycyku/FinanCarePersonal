@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
-import { Button, Alert, Row, Col, Card } from "react-bootstrap";
-import { Download, Upload, DatabaseBackup, ShieldCheck } from "lucide-react";
+import { Button, Alert, Row, Col, Card, Form } from "react-bootstrap";
+import { Download, Upload, DatabaseBackup, ShieldCheck, FileText } from "lucide-react";
 import NavBar from "../Components/NavBar";
 import Footer from "../Components/Footer";
 import PageTitle from "../Components/PageTitle";
@@ -9,18 +9,38 @@ import { useData } from "../Context/DataContext";
 import { useDialog } from "../Context/DialogContext";
 import { exportAllData, importAllData } from "../lib/db";
 import { exportListExcel } from "../lib/exportExcel";
-import { sortByDateDesc } from "../lib/finance";
+import { exportStatementPdf, statementTitle } from "../lib/exportPdf";
+import { monthBounds, sortByDateDesc, yearBounds } from "../lib/finance";
 import { plainAmount } from "../lib/format";
 import { TRANSACTION_TYPE_LABELS } from "../lib/options";
+import { subMonths } from "date-fns";
 import "./Styles/PremiumTheme.css";
 import "./Styles/DizajniPergjithshem.css";
 import "./Styles/Dashboard.css";
 import "./Styles/Personal.css";
 
+/** The periods a statement can cover, each resolved to the day range it means. */
+function periudhaBounds(value) {
+  if (value === "muaji") return monthBounds();
+  if (value === "kaluar") return monthBounds(subMonths(new Date(), 1));
+  if (value === "viti") return yearBounds();
+  return { start: "0000-01-01", end: "9999-12-31" };
+}
+
+const PERIUDHAT = [
+  { value: "muaji", label: "Ky muaj" },
+  { value: "kaluar", label: "Muaji i kaluar" },
+  { value: "viti", label: "Ky vit" },
+  { value: "gjithcka", label: "Gjithë historiku" },
+];
+
 function TeDhena() {
-  const { accounts, categories, transactions, budgets, goals, recurring, reload, simboli, loading } = useData();
+  const { profile, accounts, categories, transactions, budgets, goals, recurring, reload, simboli, loading, njeLlogari } =
+    useData();
   const dialog = useDialog();
   const [message, setMessage] = useState(null);
+  const [periudha, setPeriudha] = useState("muaji");
+  const [llogariaPdf, setLlogariaPdf] = useState("");
   const fileInputRef = useRef(null);
 
   const handleExportJson = async () => {
@@ -63,6 +83,38 @@ function TeDhena() {
       rows,
       `financarepersonal-transaksionet-${new Date().toISOString().slice(0, 10)}.xlsx`
     );
+  };
+
+  /** A statement for a period (and optionally one account): summary plus every movement, as PDF. */
+  const handleExportPdf = async () => {
+    const { start, end } = periudhaBounds(periudha);
+    try {
+      const emri = await exportStatementPdf({
+        profile,
+        accounts,
+        categories,
+        transactions,
+        recurring,
+        start,
+        end,
+        llogariaId: llogariaPdf || null,
+        // Named after the statement itself — "pasqyra-e-korrikut-2026" — with the account appended
+        // so two statements for the same month do not overwrite each other.
+        filename: `${[
+          "financarepersonal",
+          statementTitle(start, end),
+          accounts.find((a) => a.id === llogariaPdf)?.emri,
+        ]
+          .filter(Boolean)
+          .join("-")
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/^-|-$/g, "")}.pdf`,
+      });
+      setMessage({ type: "success", text: `Pasqyra u shkarkua: ${emri}` });
+    } catch (err) {
+      setMessage({ type: "danger", text: `PDF-ja nuk u krijua: ${err.message}` });
+    }
   };
 
   const handleImportClick = () => fileInputRef.current?.click();
@@ -157,6 +209,52 @@ function TeDhena() {
             </Card>
           </Col>
         </Row>
+
+        <Card className="profile-card border-0 p-4 mb-4">
+          <h5 className="fw-bold mb-2">
+            <FileText size={18} className="me-2 text-primary" />
+            Pasqyrë (PDF)
+          </h5>
+          <p className="text-muted small">
+            Një pasqyrë e gatshme për printim ose dërgim: bilanci fillestar, hyrjet, daljet dhe bilanci
+            përfundimtar i periudhës, pastaj çdo lëvizje me datë, kategori dhe vlerë.
+          </p>
+          <Row className="g-3 align-items-end">
+            <Form.Group as={Col} md={4} controlId="pdf-periudha">
+              <Form.Label>Periudha</Form.Label>
+              <Form.Select value={periudha} onChange={(e) => setPeriudha(e.target.value)}>
+                {PERIUDHAT.map((p) => (
+                  <option key={p.value} value={p.value}>
+                    {p.label}
+                  </option>
+                ))}
+              </Form.Select>
+            </Form.Group>
+
+            {!njeLlogari && accounts.length > 1 && (
+              <Form.Group as={Col} md={4} controlId="pdf-llogaria">
+                <Form.Label>Llogaria</Form.Label>
+                <Form.Select value={llogariaPdf} onChange={(e) => setLlogariaPdf(e.target.value)}>
+                  <option value="">Të gjitha llogaritë</option>
+                  {accounts.map((a) => (
+                    <option key={a.id} value={a.id}>
+                      {a.emri}
+                    </option>
+                  ))}
+                </Form.Select>
+                <div className="fcp-row-sub mt-1">
+                  Për një llogari të vetme, transferet brenda llogarive numërohen si hyrje ose dalje e saj.
+                </div>
+              </Form.Group>
+            )}
+
+            <Col md={4}>
+              <Button className="btn-primary" onClick={handleExportPdf}>
+                <Download size={16} className="me-1" /> Shkarko PDF
+              </Button>
+            </Col>
+          </Row>
+        </Card>
 
         <Card className="profile-card border-0 p-4">
           <h5 className="fw-bold mb-3">

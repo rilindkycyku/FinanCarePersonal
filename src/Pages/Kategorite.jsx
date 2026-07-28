@@ -18,7 +18,7 @@ import "./Styles/DizajniPergjithshem.css";
 import "./Styles/Personal.css";
 
 function Kategorite() {
-  const { categories, transactions, budgets, destroyMany, money, simboli, loading } = useData();
+  const { categories, transactions, budgets, profile, destroyMany, saveProfile, money, simboli, loading } = useData();
   const dialog = useDialog();
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState(null);
@@ -74,6 +74,15 @@ function Kategorite() {
       ...budgets.filter((b) => b.kategoriaId === category.id).map((b) => [STORES.budgets, b.id]),
       [STORES.categories, category.id],
     ]);
+
+    // Remembered so the startup check that adds newly shipped defaults does not bring this one
+    // back on the next load.
+    if (String(category.id).startsWith("cat_default_")) {
+      await saveProfile({
+        ...profile,
+        kategoriTeHequra: [...new Set([...(profile.kategoriTeHequra || []), category.id])],
+      });
+    }
   };
 
   const renderGrid = (list) =>

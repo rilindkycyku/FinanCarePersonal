@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://personal.financare.rilindkycyku.dev/sitemap.xml

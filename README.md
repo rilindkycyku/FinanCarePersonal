@@ -47,6 +47,13 @@ sa shpenzohet, sa mbetet dhe sa po kursesh.
   kategorive e llogarive, mesatarja ditore dhe 5 shpenzimet më të mëdha, për periudhë të zgjedhur.
 - **Eksporto / Importo** — kopje e plotë JSON (për arkivim ose bartje në pajisje tjetër) dhe eksport
   Excel i të gjitha transaksioneve.
+- **Pasqyrë PDF** — e ndërtuar si pasqyra e bankës, për një periudhë (ky muaj, muaji i kaluar, ky
+  vit, gjithë historiku) dhe opsionalisht për një llogari të vetme. Kolona kryesore ndahet në
+  seksione sipas asaj që bënë paratë — hyrjet, blerjet, blerjet me këste (me numrin e kësti, p.sh.
+  3/6) dhe transferet — secili me totalin e vet; kolona anësore mban të dhënat, përmbledhjen e
+  periudhës me bilancin përfundimtar, një unazë me kategoritë kryesore (të tjerat mblidhen në një
+  fetë të vetme) dhe shumën që mbetet me këste. Seksionet me dhjetëra rreshta vazhdojnë në faqet
+  pasuese me titullin dhe kokën e tabelës të përsëritur.
 - **Tema e errët / e bardhë**, dizajn responsiv për telefon, dhe monedhë e konfigurueshme.
 
 ## Konfigurimi

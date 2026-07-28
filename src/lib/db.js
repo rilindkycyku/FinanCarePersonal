@@ -122,6 +122,24 @@ export function clearStore(store) {
   return withStore(store, "readwrite", (s) => s.clear()).then(() => undefined);
 }
 
+/**
+ * Adds default categories the database has never seen. The store is seeded once at creation, so a
+ * browser that opened the app before a release would otherwise never get the categories added by
+ * that release (this is how "Këste të Kartelës" reached existing installs).
+ *
+ * Deleting a default records its id in `kategoriTeHequra` on the profile, so a category the user
+ * threw away stays gone — only genuinely new ones appear.
+ */
+export async function ensureDefaultCategories() {
+  const [categories, profile] = await Promise.all([getAll(STORES.categories), getProfile()]);
+  const hequra = new Set(profile?.kategoriTeHequra || []);
+  const ekzistuese = new Set(categories.map((c) => c.id));
+  const munguara = DEFAULT_CATEGORIES.filter((c) => !ekzistuese.has(c.id) && !hequra.has(c.id));
+  if (munguara.length === 0) return false;
+  await Promise.all(munguara.map((c) => put(STORES.categories, c)));
+  return true;
+}
+
 /** Loads everything the dashboard/statistics pages need in one round trip. */
 export function getAllData() {
   return Promise.all([
