@@ -479,15 +479,26 @@ export async function exportStatementPdf({
       kendi -= hapesira;
     });
 
-    // Shrunk a step at a time until it clears the hole, so a five-figure month still fits.
-    const hapesiraE = (rrezja - trashesia / 2) * 2 - 6;
-    let madhesia = 9;
+    // The figure in the hole is the total the ring divides up, so it says so and carries the
+    // currency like every other amount on the sheet: a bare number sitting beside a labelled
+    // "Mbetur me këste" reads as a different kind of figure than it is.
+    setText(4.6, "bold", CLR.muted);
+    doc.text("GJITHSEJ", qendraX, qendraY - 4.5, { align: "center" });
+
+    // Shrunk a step at a time until it clears the hole, so a five-figure year still fits. The hole
+    // is round, so what the figure has to clear is the chord at its own height, not the diameter -
+    // measured against the diameter it ran into the band on both sides.
+    const teksti = money(totaliFetave);
+    const rBrenda = rrezja - trashesia / 2;
+    const yTeksti = 6;
+    const hapesiraE = 2 * Math.sqrt(Math.max(rBrenda ** 2 - (yTeksti + 1) ** 2, 1)) - 5;
+    let madhesia = 8;
     setText(madhesia, "bold", CLR.navy);
-    while (madhesia > 5 && doc.getTextWidth(plainAmount(totaliFetave)) > hapesiraE) {
-      madhesia -= 0.5;
+    while (madhesia > 4.4 && doc.getTextWidth(teksti) > hapesiraE) {
+      madhesia -= 0.2;
       setText(madhesia, "bold", CLR.navy);
     }
-    doc.text(plainAmount(totaliFetave), qendraX, qendraY + madhesia / 3, { align: "center" });
+    doc.text(teksti, qendraX, qendraY + yTeksti, { align: "center" });
 
     let cy = bandY + 36;
     // The share is right-aligned to the panel's edge; the name gets what is left between the two.
