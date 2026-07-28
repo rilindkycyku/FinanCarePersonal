@@ -518,3 +518,40 @@ body.light-mode .hero-cta.ghost {
     text-align: center;
   }
 }
+
+/* Device-to-device transfer: the code (or the camera) beside its progress. */
+.fcp-transfer {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
+}
+
+.fcp-transfer-qr,
+.fcp-transfer-video {
+  width: 220px;
+  height: 220px;
+  border-radius: 14px;
+  background: #fff;
+  padding: 8px;
+  flex-shrink: 0;
+  object-fit: cover;
+}
+
+.fcp-transfer-video {
+  background: #000;
+  padding: 0;
+  border: 1px solid var(--sp-border);
+}
+
+.fcp-transfer-side {
+  flex: 1 1 240px;
+  min-width: 0;
+}
+
+@media (max-width: 640px) {
+  .fcp-transfer {
+    justify-content: center;
+  }
+}

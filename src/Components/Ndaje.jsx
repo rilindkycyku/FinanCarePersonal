@@ -6,6 +6,7 @@ import { useData } from "../Context/DataContext";
 import { exportAllData } from "../lib/db";
 import { exportStatementPdf } from "../lib/exportPdf";
 import { exportStatementExcel } from "../lib/exportExcel";
+import TransferoQr from "./TransferoQr";
 import { cashflow, filterByRange, monthBounds, totalBalance } from "../lib/finance";
 import { formatMoney, monthKey, monthLabel } from "../lib/format";
 import "../Pages/Styles/Dashboard.css";
@@ -224,6 +225,10 @@ function Ndaje() {
         Kopja e plotë përmban çdo transaksion, llogari dhe buxhet - dërgojeni vetëm te vetja, p.sh. për ta hapur
         në një pajisje tjetër me <strong>Importo JSON</strong>.
       </div>
+
+      <hr className="my-4" />
+
+      <TransferoQr />
     </Card>
   );
 }
