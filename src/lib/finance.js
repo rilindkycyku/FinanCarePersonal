@@ -92,6 +92,31 @@ export function consolidateAccounts({ accounts, transactions, recurring = [], go
   };
 }
 
+// ── Currencies ──────────────────────────────────────────────────────────────
+
+/**
+ * A record entered in another currency (a subscription billed in $ while the profile is in €)
+ * stores `vlera` already converted, so every balance, budget and chart keeps working on one
+ * currency. `kursi` is what one unit of the foreign currency is worth in the profile currency,
+ * and the original amount is kept alongside only so the row can still show what was billed.
+ */
+export function convertedAmount(vleraOrigjinale, kursi) {
+  return Math.round(toNumber(vleraOrigjinale) * toNumber(kursi) * 100) / 100;
+}
+
+/** The currency fields of a transaction/schedule, normalised: `null` everywhere when the amount
+ * was entered in the profile currency. */
+export function currencyFields({ monedhaOrigjinale, vleraOrigjinale, kursi }, monedhaBaze) {
+  if (!monedhaOrigjinale || monedhaOrigjinale === monedhaBaze) {
+    return { monedhaOrigjinale: null, vleraOrigjinale: null, kursi: null };
+  }
+  return {
+    monedhaOrigjinale,
+    vleraOrigjinale: toNumber(vleraOrigjinale),
+    kursi: toNumber(kursi),
+  };
+}
+
 // ── Date ranges ─────────────────────────────────────────────────────────────
 
 /** Inclusive first/last day of the month a date falls in, as "YYYY-MM-DD" strings. */
@@ -366,6 +391,11 @@ export function generateDueTransactions(rec, todayStr, makeIdFn, maxCatchUp = 60
       shenim: `Krijuar automatikisht nga pagesa e përsëritur "${updated.emri}".`,
       qellimiId: null,
       perseritjaId: updated.id,
+      // Carried over so a $-billed subscription still shows what was charged; the confirmation
+      // dialog is where the month's real rate (and amount) can be corrected.
+      monedhaOrigjinale: updated.monedhaOrigjinale || null,
+      vleraOrigjinale: updated.monedhaOrigjinale ? toNumber(updated.vleraOrigjinale) : null,
+      kursi: updated.monedhaOrigjinale ? toNumber(updated.kursi) : null,
     });
     updated = {
       ...updated,

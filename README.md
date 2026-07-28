@@ -33,7 +33,13 @@ sa shpenzohet, sa mbetet dhe sa po kursesh.
 - **Pagesat e Përsëritura** — qira, abonime, rroga dhe blerjet me këste. Skedulimi nuk regjistron
   vetë asgjë: kur vjen data, ju e konfirmoni dhe krijohet transaksioni (duke kapërcyer edhe rastet e
   mbetura pas). Për një blerje me këste mjafton numri i kësteve — data e përfundimit llogaritet vetë
-  dhe pagesa ndalet pas kësti të fundit.
+  dhe pagesa ndalet pas kësti të fundit. Në konfirmim mund të ndryshoni vlerën e asaj pagese (bonuse
+  të zbritura nga pagesa minimale, tarifë vjetore e kartelës, kurs tjetër i muajit) pa e prishur
+  vlerën e planifikuar të skedulës.
+- **Monedhë tjetër për një shpenzim** — një abonim që faturohet në $ ndërsa profili juaj është në €:
+  shkruani vlerën e faturës, monedhën dhe kursin — ruhet vlera e kthyer në monedhën tuaj (vlera
+  origjinale mbahet për krahasim me ekstraktin e kartelës). Kursi i fundit për çdo monedhë mbahet
+  mend, sepse aplikacioni nuk ka backend për t'i marrë kurset vetë.
 - **Statistikat** — hyrje kundrejt shpenzimeve për 6 muajt e fundit, bilanc mujor, ndarja sipas
   kategorive e llogarive, mesatarja ditore dhe 5 shpenzimet më të mëdha, për periudhë të zgjedhur.
 - **Eksporto / Importo** — kopje e plotë JSON (për arkivim ose bartje në pajisje tjetër) dhe eksport

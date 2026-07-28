@@ -2,9 +2,10 @@ import { useEffect, useMemo, useState } from "react";
 import { Modal, Button, Form, Row, Col, Alert } from "react-bootstrap";
 import { TrendingUp, TrendingDown, ArrowRightLeft } from "lucide-react";
 import { useData } from "../Context/DataContext";
+import MonedhaTjeter from "./MonedhaTjeter";
 import { makeId, STORES } from "../lib/db";
-import { toNumber, todayISO } from "../lib/format";
-import { goalProgress } from "../lib/finance";
+import { currencySymbol, toNumber, todayISO } from "../lib/format";
+import { convertedAmount, currencyFields, goalProgress } from "../lib/finance";
 import "./ModalForms.css";
 
 const TYPE_BUTTONS = [
@@ -23,6 +24,8 @@ const blank = (lloji = "shpenzim") => ({
   pershkrimi: "",
   shenim: "",
   qellimiId: "",
+  monedhaOrigjinale: "",
+  kursi: "",
 });
 
 /**
@@ -43,7 +46,8 @@ function ShtoTransaksionin({
   qellimiFiksuar,
   destinacioniFillestar,
 }) {
-  const { accounts, categories, goals, transactions, save, simboli, njeLlogari, llogariaKryesore } = useData();
+  const { accounts, categories, goals, transactions, save, saveProfile, profile, monedha, simboli, njeLlogari, llogariaKryesore } =
+    useData();
   const [tx, setTx] = useState(blank(llojiFillestar));
   const [error, setError] = useState("");
 
@@ -58,7 +62,10 @@ function ShtoTransaksionin({
       setTx({
         ...blank(initial.lloji),
         ...initial,
-        vlera: String(initial.vlera ?? ""),
+        // A record billed in another currency is edited in that currency, not in the stored one.
+        vlera: String((initial.monedhaOrigjinale ? initial.vleraOrigjinale : initial.vlera) ?? ""),
+        monedhaOrigjinale: initial.monedhaOrigjinale || "",
+        kursi: initial.kursi ? String(initial.kursi) : "",
         llogariaId: fixed(initial.llogariaId),
         llogariaDestinacionId: fixed(initial.llogariaDestinacionId || ""),
         kategoriaId: initial.kategoriaId || "",
@@ -146,9 +153,15 @@ function ShtoTransaksionin({
 
   const handleSave = async (e) => {
     e.preventDefault();
-    const vlera = toNumber(tx.vlera);
+    // The form's `vlera` field holds the amount as billed, which is what gets kept as the original.
+    const monedhat = currencyFields({ ...tx, vleraOrigjinale: tx.vlera }, monedha);
+    // What the user typed is in the billing currency; what gets stored is the converted amount.
+    const vlera = monedhat.monedhaOrigjinale ? convertedAmount(tx.vlera, tx.kursi) : toNumber(tx.vlera);
 
     if (!tx.data) return setError("Data është e detyrueshme.");
+    if (monedhat.monedhaOrigjinale && !(toNumber(tx.kursi) > 0)) {
+      return setError("Shkruani kursin e këmbimit për monedhën e zgjedhur.");
+    }
     if (!(vlera > 0)) return setError("Vlera duhet të jetë një numër më i madh se zero.");
     if (!tx.llogariaId) return setError(isTransfer ? "Zgjidhni llogarinë burim." : "Zgjidhni llogarinë.");
     if (isTransfer && !tx.llogariaDestinacionId) return setError("Zgjidhni llogarinë e destinacionit.");
@@ -173,7 +186,16 @@ function ShtoTransaksionin({
       shenim: tx.shenim.trim(),
       qellimiId: tx.qellimiId || null,
       perseritjaId: tx.perseritjaId || null,
+      ...monedhat,
     });
+
+    // Remembered so the next $ subscription starts from the rate used last time.
+    if (monedhat.monedhaOrigjinale) {
+      await saveProfile({
+        ...profile,
+        kurset: { ...(profile.kurset || {}), [monedhat.monedhaOrigjinale]: monedhat.kursi },
+      });
+    }
 
     onHide();
   };
@@ -252,7 +274,9 @@ function ShtoTransaksionin({
                   autoFocus
                   required
                 />
-                <span className="fcp-amount-symbol">{simboli}</span>
+                <span className="fcp-amount-symbol">
+                  {tx.monedhaOrigjinale ? currencySymbol(tx.monedhaOrigjinale) : simboli}
+                </span>
               </div>
             </Form.Group>
 
@@ -262,6 +286,13 @@ function ShtoTransaksionin({
               </Form.Label>
               <Form.Control type="date" value={tx.data} onChange={(e) => setField("data", e.target.value)} required />
             </Form.Group>
+
+            <MonedhaTjeter
+              monedhaOrigjinale={tx.monedhaOrigjinale}
+              kursi={tx.kursi}
+              vlera={tx.vlera}
+              onChange={(fusha) => setTx((prev) => ({ ...prev, ...fusha }))}
+            />
 
             {/* Single-account mode books everything into the main account, so the pickers are
                 replaced by a plain line telling the user where the money is going. */}

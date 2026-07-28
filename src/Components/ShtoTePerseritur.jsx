@@ -2,9 +2,10 @@ import { useEffect, useMemo, useState } from "react";
 import { Modal, Button, Form, Row, Col, Alert } from "react-bootstrap";
 import { TrendingUp, TrendingDown } from "lucide-react";
 import { useData } from "../Context/DataContext";
+import MonedhaTjeter from "./MonedhaTjeter";
 import { makeId, STORES } from "../lib/db";
-import { toNumber, todayISO } from "../lib/format";
-import { lastInstallmentDate } from "../lib/finance";
+import { currencySymbol, toNumber, todayISO } from "../lib/format";
+import { convertedAmount, currencyFields, lastInstallmentDate } from "../lib/finance";
 import { FREQUENCIES } from "../lib/options";
 import { formatDate } from "../lib/format";
 import "./ModalForms.css";
@@ -19,6 +20,8 @@ const BLANK = {
   dataETjetres: todayISO(),
   dataFundit: "",
   nrKesteve: "",
+  monedhaOrigjinale: "",
+  kursi: "",
   aktiv: true,
 };
 
@@ -29,7 +32,7 @@ const BLANK = {
  * which is what advances the date.
  */
 function ShtoTePerseritur({ show, onHide, initial }) {
-  const { accounts, categories, save, simboli, njeLlogari, llogariaKryesore } = useData();
+  const { accounts, categories, save, saveProfile, profile, monedha, simboli, njeLlogari, llogariaKryesore } = useData();
   const [rec, setRec] = useState(BLANK);
   const [error, setError] = useState("");
 
@@ -44,7 +47,9 @@ function ShtoTePerseritur({ show, onHide, initial }) {
         ...BLANK,
         ...initial,
         llogariaId: njeLlogari && !gjendet ? llogariaKryesore?.id || "" : initial.llogariaId,
-        vlera: String(initial.vlera ?? ""),
+        vlera: String((initial.monedhaOrigjinale ? initial.vleraOrigjinale : initial.vlera) ?? ""),
+        monedhaOrigjinale: initial.monedhaOrigjinale || "",
+        kursi: initial.kursi ? String(initial.kursi) : "",
         dataFundit: initial.dataFundit || "",
         nrKesteve: initial.nrKesteve ? String(initial.nrKesteve) : "",
       });
@@ -81,8 +86,15 @@ function ShtoTePerseritur({ show, onHide, initial }) {
 
   const handleSave = async (e) => {
     e.preventDefault();
+    // The form's `vlera` field holds the amount as billed, which is what gets kept as the original.
+    const monedhat = currencyFields({ ...rec, vleraOrigjinale: rec.vlera }, monedha);
+    const vlera = monedhat.monedhaOrigjinale ? convertedAmount(rec.vlera, rec.kursi) : toNumber(rec.vlera);
+
     if (!rec.emri.trim()) return setError("Emri është i detyrueshëm.");
-    if (!(toNumber(rec.vlera) > 0)) return setError("Vlera duhet të jetë një numër më i madh se zero.");
+    if (monedhat.monedhaOrigjinale && !(toNumber(rec.kursi) > 0)) {
+      return setError("Shkruani kursin e këmbimit për monedhën e zgjedhur.");
+    }
+    if (!(vlera > 0)) return setError("Vlera duhet të jetë një numër më i madh se zero.");
     if (!rec.llogariaId) return setError("Zgjidhni llogarinë.");
     if (!rec.kategoriaId) return setError("Zgjidhni kategorinë.");
     if (!rec.dataETjetres) return setError("Data e radhës është e detyrueshme.");
@@ -95,7 +107,8 @@ function ShtoTePerseritur({ show, onHide, initial }) {
       id: rec.id || makeId("rec"),
       emri: rec.emri.trim(),
       lloji: rec.lloji,
-      vlera: toNumber(rec.vlera),
+      vlera,
+      ...monedhat,
       kategoriaId: rec.kategoriaId,
       llogariaId: rec.llogariaId,
       frekuenca: rec.frekuenca,
@@ -105,6 +118,13 @@ function ShtoTePerseritur({ show, onHide, initial }) {
       dataEFundit: rec.dataEFundit || null,
       aktiv: Boolean(rec.aktiv),
     });
+
+    if (monedhat.monedhaOrigjinale) {
+      await saveProfile({
+        ...profile,
+        kurset: { ...(profile.kurset || {}), [monedhat.monedhaOrigjinale]: monedhat.kursi },
+      });
+    }
 
     onHide();
   };
@@ -156,7 +176,8 @@ function ShtoTePerseritur({ show, onHide, initial }) {
 
             <Form.Group as={Col} md={6} controlId="rec-vlera">
               <Form.Label>
-                Vlera ({simboli}) <span className="text-danger">*</span>
+                Vlera ({rec.monedhaOrigjinale ? currencySymbol(rec.monedhaOrigjinale) : simboli}){" "}
+                <span className="text-danger">*</span>
               </Form.Label>
               <Form.Control
                 type="number"
@@ -179,6 +200,13 @@ function ShtoTePerseritur({ show, onHide, initial }) {
                 ))}
               </Form.Select>
             </Form.Group>
+
+            <MonedhaTjeter
+              monedhaOrigjinale={rec.monedhaOrigjinale}
+              kursi={rec.kursi}
+              vlera={rec.vlera}
+              onChange={(fusha) => setRec((prev) => ({ ...prev, ...fusha }))}
+            />
 
             {!njeLlogari && (
               <Form.Group as={Col} md={6} controlId="rec-llogariaid">

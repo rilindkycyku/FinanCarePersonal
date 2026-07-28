@@ -17,7 +17,7 @@ import {
   accountsWithBalances, budgetProgress, cashflow, dueRecurring, filterByRange, goalProgress,
   monthBounds, sortByDateDesc, totalBalance, totalsByCategory, upcomingRecurring,
 } from "../lib/finance";
-import { formatDate, formatPercent, monthKey, monthLabel, todayISO } from "../lib/format";
+import { formatDate, formatMoney, formatPercent, monthKey, monthLabel, todayISO } from "../lib/format";
 import { accountTypeMeta, DAYS_LONG, MONTHS_LONG } from "../lib/options";
 import "./Styles/PremiumTheme.css";
 import "./Styles/DizajniPergjithshem.css";
@@ -240,7 +240,13 @@ function Dashboard() {
                             ? njeLlogari
                               ? "Kursim brenda llogarisë"
                               : `${nameOf(accounts, tx.llogariaId)} → ${nameOf(accounts, tx.llogariaDestinacionId)}`
-                            : [kategoria?.emri || "Pa kategori", njeLlogari ? null : nameOf(accounts, tx.llogariaId)]
+                            : [
+                                kategoria?.emri || "Pa kategori",
+                                njeLlogari ? null : nameOf(accounts, tx.llogariaId),
+                                tx.monedhaOrigjinale
+                                  ? formatMoney(tx.vleraOrigjinale, tx.monedhaOrigjinale)
+                                  : null,
+                              ]
                                 .filter(Boolean)
                                 .join(" · ")}
                         </div>
