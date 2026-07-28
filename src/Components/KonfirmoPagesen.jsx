@@ -22,7 +22,7 @@ import "./ModalForms.css";
  * each row takes a plus-or-minus adjustment. The schedules keep their planned figures unless
  * "ruaj për muajt e ardhshëm" is ticked.
  */
-function KonfirmoPagesen({ show, rec, onHide }) {
+function KonfirmoPagesen({ show, rec, onHide, gjithcka = false }) {
   const {
     saveMany, saveProfile, profile, transactions, recurring, accounts, categories, njeLlogari,
     monedha, money, simboli,
@@ -38,11 +38,14 @@ function KonfirmoPagesen({ show, rec, onHide }) {
   // instalments paid from the bank) the category stands in for it — "Këste të Kartelës" and such.
   const llogaria = accounts.find((a) => a.id === rec?.llogariaId);
   const sipasLlogarise = !njeLlogari && ["karte", "kredi"].includes(llogaria?.lloji);
+  // "Regjistro të gjitha" settles every schedule that has come due, not just one card's.
   const nGrup = (x) =>
-    sipasLlogarise ? x.llogariaId === rec?.llogariaId : x.kategoriaId === rec?.kategoriaId;
-  const emriGrupit = sipasLlogarise
-    ? llogaria?.emri || "Llogaria"
-    : categories.find((c) => c.id === rec?.kategoriaId)?.emri || "Kategoria";
+    gjithcka || (sipasLlogarise ? x.llogariaId === rec?.llogariaId : x.kategoriaId === rec?.kategoriaId);
+  const emriGrupit = gjithcka
+    ? "Të gjitha pagesat"
+    : sipasLlogarise
+      ? llogaria?.emri || "Llogaria"
+      : categories.find((c) => c.id === rec?.kategoriaId)?.emri || "Kategoria";
 
   useEffect(() => {
     if (!show || !rec) return;
@@ -187,7 +190,7 @@ function KonfirmoPagesen({ show, rec, onHide }) {
   return (
     <Modal show={show} onHide={onHide} centered size="lg" className="sp-modal">
       <Modal.Header closeButton>
-        <Modal.Title>Konfirmo Pagesën</Modal.Title>
+        <Modal.Title>{gjithcka ? "Konfirmo Pagesat" : "Konfirmo Pagesën"}</Modal.Title>
       </Modal.Header>
 
       <Form onSubmit={handleSave}>

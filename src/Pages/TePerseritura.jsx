@@ -26,7 +26,7 @@ import "./Styles/Personal.css";
 const PER_MONTH = { ditore: 30, javore: 4.33, dyjavore: 2.17, mujore: 1, tremujore: 1 / 3, gjashtemujore: 1 / 6, vjetore: 1 / 12 };
 
 function TePerseritura() {
-  const { accounts, categories, recurring, save, saveMany, destroy, money, simboli, loading, njeLlogari } = useData();
+  const { accounts, categories, recurring, save, destroy, money, simboli, loading, njeLlogari } = useData();
   const dialog = useDialog();
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState(null);
@@ -82,28 +82,14 @@ function TePerseritura() {
   const confirmOne = (rec) => {
     const { changed } = generateDueTransactions(rec, today, makeId);
     if (!changed) return;
-    setKonfirmimi(rec);
+    setKonfirmimi({ rec });
   };
 
-  const confirmAll = async () => {
-    const entries = [];
-    let numri = 0;
-    stats.due.forEach((rec) => {
-      const { transactions: gjeneruara, updated, changed } = generateDueTransactions(rec, today, makeId);
-      if (!changed) return;
-      numri += gjeneruara.length;
-      entries.push(...gjeneruara.map((tx) => [STORES.transactions, tx]), [STORES.recurring, updated]);
-    });
-    if (entries.length === 0) return;
-
-    const ok = await dialog.confirm(
-      `Të regjistroj ${numri} ${numri === 1 ? "transaksion" : "transaksione"} nga ${stats.due.length} ${
-        stats.due.length === 1 ? "pagesë" : "pagesa"
-      } që kanë arritur datën, me vlerat e planifikuara? Për të ndryshuar vlerën e një pagese, konfirmojeni veç nga lista.`,
-      { title: "Konfirmo të Gjitha", confirmLabel: "Regjistro" }
-    );
-    if (!ok) return;
-    await saveMany(entries);
+  /** Same dialog, widened to every schedule that has come due — amounts stay adjustable instead of
+   * being booked blind at their planned values. */
+  const confirmAll = () => {
+    if (stats.due.length === 0) return;
+    setKonfirmimi({ rec: stats.due[0], gjithcka: true });
   };
 
   const rows = stats.renditur.map((r) => ({
@@ -254,7 +240,12 @@ function TePerseritura() {
         <Tabela data={rows} tableName="Pagesat e Përsëritura" dateField="Data e Radhës" filterField="Statusi" mosShfaqID />
       )}
 
-      <KonfirmoPagesen show={Boolean(konfirmimi)} rec={konfirmimi} onHide={() => setKonfirmimi(null)} />
+      <KonfirmoPagesen
+        show={Boolean(konfirmimi)}
+        rec={konfirmimi?.rec}
+        gjithcka={konfirmimi?.gjithcka}
+        onHide={() => setKonfirmimi(null)}
+      />
 
       <ShtoTePerseritur
         show={showModal}
