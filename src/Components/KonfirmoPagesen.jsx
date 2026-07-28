@@ -1,181 +1,182 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Modal, Button, Form, Row, Col, Alert, Table } from "react-bootstrap";
 import { useData } from "../Context/DataContext";
 import { makeId, STORES } from "../lib/db";
 import {
-  convertedAmount, filterByRange, generateDueTransactions, monthBounds, monthlyRecurringBreakdown,
-  recurringProgress,
+  convertedAmount, generateDueTransactions, monthBounds, monthlyRecurringBreakdown,
+  recurringProgress, scheduledOccurrences,
 } from "../lib/finance";
-import {
-  currencySymbol, formatDate, formatMoney, monthLabel, monthKey, plainAmount, toNumber, todayISO,
-} from "../lib/format";
+import { formatDate, formatMoney, monthLabel, monthKey, plainAmount, toNumber, todayISO } from "../lib/format";
 import "./ModalForms.css";
 
 /**
- * Confirmation step for a recurring payment that has come due.
+ * Confirmation step for recurring payments that have come due.
  *
- * The planned amount is only ever a plan: a card instalment drops when collected bonus points are
- * taken off the minimum payment, rises when the yearly card fee lands on the same statement, and a
- * $-billed subscription lands at a different rate every month. So the dialog shows what this month
- * already costs, where the plan stands (paid / left), and takes a plus-or-minus adjustment for this
- * payment only — the schedule keeps its planned figures unless told otherwise.
+ * A card is paid once a month, not instalment by instalment: every plan on the same card is
+ * settled together on the statement date. So the dialog collects the whole group — every schedule
+ * of the same card due up to the payment date — books them all on that one date, and shows the
+ * total that will leave the account.
+ *
+ * The planned amount is only ever a plan (collected bonus points come off the minimum payment, the
+ * yearly card fee lands on the same statement, a $-billed line converts at that day's rate), so
+ * each row takes a plus-or-minus adjustment. The schedules keep their planned figures unless
+ * "ruaj për muajt e ardhshëm" is ticked.
  */
 function KonfirmoPagesen({ show, rec, onHide }) {
-  const { saveMany, saveProfile, profile, transactions, recurring, accounts, categories, njeLlogari, monedha, money, simboli } =
-    useData();
-  const [rreshtat, setRreshtat] = useState([]);
-  const [ruajVleren, setRuajVleren] = useState(false);
+  const {
+    saveMany, saveProfile, profile, transactions, recurring, accounts, categories, njeLlogari,
+    monedha, money, simboli,
+  } = useData();
+  const [dataPageses, setDataPageses] = useState(todayISO());
+  const [ndryshimet, setNdryshimet] = useState({});
+  const [shenimi, setShenimi] = useState("");
+  const [ruajVlerat, setRuajVlerat] = useState(false);
   const [error, setError] = useState("");
 
-  const today = todayISO();
-  const monedhaRec = rec?.monedhaOrigjinale || null;
-  const simboliRec = monedhaRec ? currencySymbol(monedhaRec) : simboli;
-
-  useEffect(() => {
-    if (!show || !rec) return;
-    setError("");
-    setRuajVleren(false);
-    const { transactions: gjeneruara } = generateDueTransactions(rec, today, makeId);
-    setRreshtat(
-      gjeneruara.map((tx) => ({
-        id: tx.id,
-        data: tx.data,
-        // The planned amount stays as typed on the schedule; the adjustment is what varies.
-        planifikuar: monedhaRec ? toNumber(tx.vleraOrigjinale) : toNumber(tx.vlera),
-        rregullim: "",
-        kursi: monedhaRec ? String(tx.kursi ?? "") : "",
-        pershkrimi: tx.pershkrimi || "",
-      }))
-    );
-  }, [show, rec, today, monedhaRec]);
-
-  const setField = (id, name, value) =>
-    setRreshtat((prev) => prev.map((r) => (r.id === id ? { ...r, [name]: value } : r)));
-
-  /** What will be charged in the billing currency (planned ± adjustment). */
-  const paguhet = (rresht) => rresht.planifikuar + toNumber(rresht.rregullim);
-
-  /** The same amount in the profile currency, which is what gets stored. */
-  const bazaE = (rresht) =>
-    monedhaRec ? convertedAmount(paguhet(rresht), rresht.kursi) : paguhet(rresht);
-
-  const gjithsej = rreshtat.reduce((sum, r) => sum + bazaE(r), 0);
-
-  const ecuria = rec ? recurringProgress(rec, transactions, rreshtat.length) : null;
-
-  const muajiKey = monthKey();
-  const { start, end } = monthBounds();
-
-  // Occurrences being confirmed right now that land in the current month — they are what the
-  // schedule costs this month, in place of its planned figure.
-  const rreshtatKeteMuaj = rreshtat.filter((r) => r.data >= start && r.data <= end);
-  const shumaTani = rreshtatKeteMuaj.reduce((sum, r) => sum + bazaE(r), 0);
-  const datatTani = new Set(rreshtatKeteMuaj.map((r) => r.data));
-
-  /**
-   * This month's recurring payments, itemised. One card usually carries several instalment plans at
-   * once, so the month's real obligation is the list, not a single figure — the schedule being
-   * confirmed shows the amount typed below rather than its plan.
-   */
-  const zerat = monthlyRecurringBreakdown(recurring, transactions, start, end)
-    .map((z) => {
-      if (z.id !== rec?.id) return z;
-      const mbetura = z.datat.filter((d) => !datatTani.has(d));
-      return {
-        ...z,
-        tani: true,
-        shumaTani,
-        datat: mbetura,
-        shumaPritur: mbetura.length * toNumber(rec.vlera),
-        gjithsej: z.shumaPaguar + shumaTani + mbetura.length * toNumber(rec.vlera),
-      };
-    })
-    .map((z) => {
-      // One date and one status per row, the way the tables on the pages read.
-      const dataMuajit = z.tani
-        ? rreshtatKeteMuaj[0]?.data || z.datat[0] || z.datatPaguara[0]
-        : z.datatPaguara[0] || z.datat[0];
-      const statusi = z.tani
-        ? "Tani"
-        : z.datat.length === 0
-          ? "Paguar"
-          : z.nrPaguara > 0
-            ? "Paguar · pritet"
-            : z.datat[0] <= today
-              ? "Ka arritur"
-              : "Pritet";
-      return { ...z, dataMuajit, statusi };
-    });
-
-  // Grouped the way the user actually tracks a card. When the payment comes off an account that is
-  // itself a card or a loan, that account *is* the card, so everything charged to it belongs
-  // together. Otherwise (a single account for everything, or instalments paid from the bank) the
-  // category is what stands in for the card — "Këste të Kartelës" and the like.
+  // Grouped the way the user actually pays. When the payment comes off an account that is itself a
+  // card or a loan, that account *is* the card. Otherwise (one account for everything, or
+  // instalments paid from the bank) the category stands in for it — "Këste të Kartelës" and such.
   const llogaria = accounts.find((a) => a.id === rec?.llogariaId);
   const sipasLlogarise = !njeLlogari && ["karte", "kredi"].includes(llogaria?.lloji);
-  const grupi = zerat.filter((z) =>
-    sipasLlogarise ? z.llogariaId === rec?.llogariaId : z.kategoriaId === rec?.kategoriaId
-  );
+  const nGrup = (x) =>
+    sipasLlogarise ? x.llogariaId === rec?.llogariaId : x.kategoriaId === rec?.kategoriaId;
   const emriGrupit = sipasLlogarise
     ? llogaria?.emri || "Llogaria"
     : categories.find((c) => c.id === rec?.kategoriaId)?.emri || "Kategoria";
 
-  const totaliGrupit = grupi.reduce((sum, z) => sum + z.gjithsej, 0);
-  const totaliMuajit = zerat.reduce((sum, z) => sum + z.gjithsej, 0);
-  // Everything else booked this month that no schedule produced, so the month reads in full.
-  const jashteSkedulave = filterByRange(transactions, start, end)
-    .filter((tx) => !tx.perseritjaId && tx.lloji === "shpenzim")
-    .reduce((sum, tx) => sum + toNumber(tx.vlera), 0);
+  useEffect(() => {
+    if (!show || !rec) return;
+    setError("");
+    setRuajVlerat(false);
+    setShenimi("");
+    setNdryshimet({});
+    setDataPageses(todayISO());
+  }, [show, rec]);
+
+  /**
+   * One row per schedule of the group that owes something by the payment date. The date doubles as
+   * the cut-off, so moving it to the statement day pulls in the instalments that fall due before
+   * it — which is exactly how a card statement works.
+   */
+  const rreshtat = useMemo(() => {
+    if (!show || !rec) return [];
+    return recurring
+      .filter((r) => r.aktiv !== false && nGrup(r))
+      .map((r) => {
+        const { transactions: occ } = generateDueTransactions(r, dataPageses, makeId);
+        if (occ.length === 0) return null;
+        const fx = r.monedhaOrigjinale || null;
+        const njesia = fx ? toNumber(r.vleraOrigjinale) : toNumber(r.vlera);
+        const nd = ndryshimet[r.id] || {};
+        return {
+          id: r.id,
+          rec: r,
+          emri: r.emri,
+          fx,
+          datat: occ.map((o) => o.data),
+          njesia,
+          planifikuar: njesia * occ.length,
+          ecuria: recurringProgress(r, transactions, occ.length),
+          perfshi: nd.perfshi ?? true,
+          rregullim: nd.rregullim ?? "",
+          kursi: nd.kursi ?? (fx ? String(r.kursi ?? "") : ""),
+        };
+      })
+      .filter(Boolean)
+      .sort((a, b) => (a.id === rec.id ? -1 : b.id === rec.id ? 1 : a.emri.localeCompare(b.emri)));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [show, rec, recurring, transactions, dataPageses, ndryshimet]);
+
+  const setField = (id, name, value) =>
+    setNdryshimet((prev) => ({ ...prev, [id]: { ...prev[id], [name]: value } }));
+
+  /** What a row charges in its own billing currency (planned ± adjustment). */
+  const paguhet = (r) => r.planifikuar + toNumber(r.rregullim);
+
+  /** The same amount in the profile currency, which is what gets stored. */
+  const bazaE = (r) => (r.fx ? convertedAmount(paguhet(r), r.kursi) : paguhet(r));
+
+  const perfshira = rreshtat.filter((r) => r.perfshi);
+  const gjithsej = perfshira.reduce((sum, r) => sum + bazaE(r), 0);
+
+  const muajiKey = monthKey();
+  const { start, end } = monthBounds();
+  const totaliMuajit = monthlyRecurringBreakdown(recurring, transactions, start, end).reduce(
+    (sum, z) => sum + z.gjithsej,
+    0
+  );
+
+  // What this card still owes after today's settlement: instalments falling later in the month
+  // (the payment date can be moved forward to swallow them) and any row left unticked.
+  const mbetenKeteMuaj = recurring
+    .filter((r) => r.aktiv !== false && nGrup(r))
+    .reduce((sum, r) => {
+      const rresht = rreshtat.find((x) => x.id === r.id);
+      const mbetura = scheduledOccurrences(r, start, end).filter(
+        (d) => d > dataPageses || (rresht && !rresht.perfshi)
+      );
+      return sum + mbetura.length * toNumber(r.vlera);
+    }, 0);
 
   const handleSave = async (e) => {
     e.preventDefault();
-    if (rreshtat.some((r) => !(bazaE(r) > 0))) {
-      return setError(
-        monedhaRec
-          ? "Çdo pagesë duhet të mbetet me vlerë dhe kurs më të mëdha se zero pas rregullimit."
-          : "Çdo pagesë duhet të mbetet me vlerë më të madhe se zero pas rregullimit."
-      );
+    if (perfshira.length === 0) return setError("Zgjidhni së paku një pagesë për ta regjistruar.");
+    if (!dataPageses) return setError("Data e pagesës është e detyrueshme.");
+    if (perfshira.some((r) => r.fx && !(toNumber(r.kursi) > 0))) {
+      return setError("Shkruani kursin e këmbimit për pagesat në monedhë tjetër.");
+    }
+    if (perfshira.some((r) => !(bazaE(r) > 0))) {
+      return setError("Çdo pagesë duhet të mbetet me vlerë më të madhe se zero pas rregullimit.");
     }
     setError("");
 
-    // The occurrences and the advanced schedule come from the same pure helper the bulk action
-    // uses; only the amounts the user just corrected are laid on top. Rows are matched by position
-    // (this generation mints fresh ids), which is exact because both runs walk the same dates.
-    const { transactions: gjeneruara, updated } = generateDueTransactions(rec, today, makeId);
+    const entries = [];
+    const kurset = { ...(profile.kurset || {}) };
 
-    const perRuajtje = gjeneruara.map((tx, i) => {
-      const rresht = rreshtat[i];
-      if (!rresht || rresht.data !== tx.data) return tx;
-      return {
-        ...tx,
-        vlera: bazaE(rresht),
-        vleraOrigjinale: monedhaRec ? paguhet(rresht) : null,
-        kursi: monedhaRec ? toNumber(rresht.kursi) : null,
-        pershkrimi: rresht.pershkrimi.trim() || tx.pershkrimi,
-      };
+    perfshira.forEach((rresht) => {
+      // Same pure helper the bulk action uses, so the schedule advances exactly as it would have;
+      // only the dates, amounts and note are laid on top.
+      const { transactions: occ, updated } = generateDueTransactions(rresht.rec, dataPageses, makeId);
+      const rregullim = toNumber(rresht.rregullim);
+
+      occ.forEach((tx, i) => {
+        // A catch-up row covers several occurrences; the adjustment belongs to the payment as a
+        // whole, so it is applied once, on the last of them.
+        const faturuar = rresht.njesia + (i === occ.length - 1 ? rregullim : 0);
+        entries.push([
+          STORES.transactions,
+          {
+            ...tx,
+            // Everything on this card leaves the account on the same day.
+            data: dataPageses,
+            vlera: rresht.fx ? convertedAmount(faturuar, rresht.kursi) : faturuar,
+            vleraOrigjinale: rresht.fx ? faturuar : null,
+            kursi: rresht.fx ? toNumber(rresht.kursi) : null,
+            shenim: shenimi.trim() || tx.shenim,
+          },
+        ]);
+      });
+
+      const skedula =
+        ruajVlerat && rregullim !== 0
+          ? {
+              ...updated,
+              vlera: rresht.fx
+                ? convertedAmount(rresht.njesia + rregullim, rresht.kursi)
+                : rresht.njesia + rregullim,
+              vleraOrigjinale: rresht.fx ? rresht.njesia + rregullim : null,
+            }
+          : updated;
+      entries.push([STORES.recurring, rresht.fx ? { ...skedula, kursi: toNumber(rresht.kursi) } : skedula]);
+
+      if (rresht.fx && toNumber(rresht.kursi) > 0) kurset[rresht.fx] = toNumber(rresht.kursi);
     });
 
-    const iFundit = rreshtat[rreshtat.length - 1];
-    const skedula =
-      ruajVleren && iFundit
-        ? {
-            ...updated,
-            vlera: bazaE(iFundit),
-            vleraOrigjinale: monedhaRec ? paguhet(iFundit) : null,
-            kursi: monedhaRec ? toNumber(iFundit.kursi) : null,
-          }
-        : updated;
+    await saveMany(entries);
 
-    await saveMany([...perRuajtje.map((tx) => [STORES.transactions, tx]), [STORES.recurring, skedula]]);
-
-    // The rate typed here is the freshest one the user has seen, so it becomes the default for the
-    // next record in that currency.
-    const kursiFundit = toNumber(iFundit?.kursi);
-    if (monedhaRec && kursiFundit > 0) {
-      await saveProfile({
-        ...profile,
-        kurset: { ...(profile.kurset || {}), [monedhaRec]: kursiFundit },
-      });
+    // The rates typed here are the freshest the user has seen, so they become the next defaults.
+    if (JSON.stringify(kurset) !== JSON.stringify(profile.kurset || {})) {
+      await saveProfile({ ...profile, kurset });
     }
 
     onHide();
@@ -202,167 +203,134 @@ function KonfirmoPagesen({ show, rec, onHide }) {
               <div className="fcp-row-sub">
                 {emriGrupit} — {monthLabel(muajiKey)}
               </div>
-              <div className="fcp-confirm-total-value">{money(totaliGrupit)}</div>
-            </div>
-            <div className="text-end">
-              <div className="fcp-row-sub">Kjo pagesë</div>
               <div className="fcp-confirm-total-value">{money(gjithsej)}</div>
+              <div className="fcp-row-sub">
+                {perfshira.length} {perfshira.length === 1 ? "pagesë" : "pagesa"} në një ditë të vetme
+              </div>
             </div>
+            <Form.Group controlId="konfirmo-data" style={{ maxWidth: 190 }}>
+              <Form.Label>Data e pagesës</Form.Label>
+              <Form.Control
+                type="date"
+                value={dataPageses}
+                onChange={(e) => setDataPageses(e.target.value)}
+                required
+              />
+            </Form.Group>
           </div>
 
           <Table size="sm" responsive className="fcp-modal-table">
             <thead>
               <tr>
+                <th style={{ width: 34 }}> </th>
                 <th>Emri</th>
-                <th>Data</th>
-                <th>Kategoria</th>
-                <th>Statusi</th>
-                <th className="text-end">Vlera ({simboli})</th>
+                <th>Këstet</th>
+                <th className="text-end">Planifikuar</th>
+                <th style={{ width: 120 }}>Shto / Zbrit</th>
+                {rreshtat.some((r) => r.fx) && <th style={{ width: 110 }}>Kursi</th>}
+                <th className="text-end">Paguhet ({simboli})</th>
               </tr>
             </thead>
             <tbody>
-              {grupi.map((z) => (
-                <tr key={z.id} className={z.tani ? "fcp-row-tani" : undefined}>
-                  <td>{z.emri}</td>
+              {rreshtat.map((r) => (
+                <tr key={r.id} className={r.perfshi ? undefined : "fcp-row-jashte"}>
                   <td>
-                    <span className="fcp-date-badge">{formatDate(z.dataMuajit)}</span>
+                    <Form.Check
+                      type="checkbox"
+                      aria-label={`Përfshi ${r.emri}`}
+                      checked={r.perfshi}
+                      onChange={(e) => setField(r.id, "perfshi", e.target.checked)}
+                    />
                   </td>
-                  <td>{categories.find((c) => c.id === z.kategoriaId)?.emri || "—"}</td>
-                  <td className={z.tani ? "fcp-status-tani" : undefined}>{z.statusi}</td>
-                  <td className={`text-end ${z.lloji === "hyrje" ? "fcp-pos" : "fcp-neg"}`}>
-                    {plainAmount(z.lloji === "hyrje" ? z.gjithsej : -z.gjithsej)}
+                  <td>
+                    {r.emri}
+                    <div className="fcp-row-sub">
+                      {r.datat.length > 1
+                        ? `${r.datat.length} pagesa të pakonfirmuara`
+                        : formatDate(r.datat[0])}
+                    </div>
                   </td>
+                  <td>
+                    {r.ecuria.gjithsej ? `${r.ecuria.paguar} / ${r.ecuria.gjithsej}` : "—"}
+                  </td>
+                  <td className="text-end">{formatMoney(r.planifikuar, r.fx || monedha)}</td>
+                  <td>
+                    <Form.Control
+                      type="number"
+                      step="0.01"
+                      inputMode="decimal"
+                      placeholder="0.00"
+                      size="sm"
+                      value={r.rregullim}
+                      onChange={(e) => setField(r.id, "rregullim", e.target.value)}
+                    />
+                  </td>
+                  {rreshtat.some((x) => x.fx) && (
+                    <td>
+                      {r.fx ? (
+                        <Form.Control
+                          type="number"
+                          step="0.0001"
+                          min="0"
+                          inputMode="decimal"
+                          size="sm"
+                          value={r.kursi}
+                          onChange={(e) => setField(r.id, "kursi", e.target.value)}
+                        />
+                      ) : (
+                        "—"
+                      )}
+                    </td>
+                  )}
+                  <td className="text-end fcp-neg">{r.perfshi ? plainAmount(-bazaE(r)) : "—"}</td>
                 </tr>
               ))}
             </tbody>
             <tfoot>
               <tr>
-                <td colSpan={4}>Gjithsej për këtë muaj</td>
-                <td className="text-end fcp-neg">{plainAmount(-totaliGrupit)}</td>
+                <td colSpan={rreshtat.some((r) => r.fx) ? 6 : 5}>Gjithsej që paguhet</td>
+                <td className="text-end fcp-neg">{plainAmount(-gjithsej)}</td>
               </tr>
             </tfoot>
           </Table>
-          <div className="fcp-modal-hint mb-3">
-            Të gjitha pagesat e përsëritura këtë muaj: {money(totaliMuajit)}
-            {jashteSkedulave > 0 && `, plus ${money(jashteSkedulave)} shpenzime të tjera të regjistruara.`}
-          </div>
-
-          <Table size="sm" responsive className="fcp-modal-table">
-            <thead>
-              <tr>
-                <th>Ecuria — {rec.emri}</th>
-                <th className="text-end">Pagesa</th>
-                <th className="text-end">Vlera ({simboli})</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>Paguar deri tani</td>
-                <td className="text-end">
-                  {ecuria.paguar - rreshtat.length}
-                  {ecuria.gjithsej ? ` / ${ecuria.gjithsej}` : ""}
-                </td>
-                <td className="text-end">{plainAmount(ecuria.shumaPaguar)}</td>
-              </tr>
-              <tr className="fcp-row-tani">
-                <td>Tani</td>
-                <td className="text-end">{rreshtat.length}</td>
-                <td className="text-end">{plainAmount(gjithsej)}</td>
-              </tr>
-              <tr>
-                <td>Mbetet pas kësaj</td>
-                <td className="text-end">{ecuria.mbetur === null ? "pa afat" : ecuria.mbetur}</td>
-                <td className="text-end">
-                  {ecuria.shumaMbetur === null ? "—" : plainAmount(ecuria.shumaMbetur)}
-                </td>
-              </tr>
-            </tbody>
-          </Table>
-          {rec.dataFundit && (
-            <div className="fcp-modal-hint mb-3">
-              {ecuria.mbetur === 0
-                ? `Kjo është pagesa e fundit — plani mbyllet më ${formatDate(rec.dataFundit)}.`
-                : `Pagesa e fundit e planifikuar: ${formatDate(rec.dataFundit)}.`}
-            </div>
-          )}
-
-          {rreshtat.map((rresht) => (
-            <Row className="g-3 mb-2" key={rresht.id}>
-              <Col md={12}>
-                <div className="fcp-row-title">
-                  {formatDate(rresht.data)} · e planifikuar {formatMoney(rresht.planifikuar, monedhaRec || monedha)}
-                </div>
-              </Col>
-
-              <Form.Group as={Col} md={monedhaRec ? 3 : 4}>
-                <Form.Label>Shto / Zbrit ({simboliRec})</Form.Label>
-                <Form.Control
-                  type="number"
-                  step="0.01"
-                  inputMode="decimal"
-                  placeholder="0.00"
-                  value={rresht.rregullim}
-                  onChange={(e) => setField(rresht.id, "rregullim", e.target.value)}
-                />
-              </Form.Group>
-
-              {monedhaRec && (
-                <Form.Group as={Col} md={3}>
-                  <Form.Label>
-                    Kursi (1 {simboliRec} = ? {simboli}) <span className="text-danger">*</span>
-                  </Form.Label>
-                  <Form.Control
-                    type="number"
-                    step="0.0001"
-                    min="0"
-                    inputMode="decimal"
-                    value={rresht.kursi}
-                    onChange={(e) => setField(rresht.id, "kursi", e.target.value)}
-                    required
-                  />
-                </Form.Group>
-              )}
-
-              <Form.Group as={Col} md={monedhaRec ? 4 : 5}>
-                <Form.Label>Përshkrimi</Form.Label>
-                <Form.Control
-                  value={rresht.pershkrimi}
-                  placeholder={rec.emri}
-                  onChange={(e) => setField(rresht.id, "pershkrimi", e.target.value)}
-                />
-              </Form.Group>
-
-              <Col md={3} className="d-flex align-items-end">
-                <div className="fcp-confirm-line">
-                  <span className="fcp-row-sub">Për t&apos;u paguar</span>
-                  <span className={`fcp-row-value ${bazaE(rresht) > 0 ? "" : "fcp-neg"}`}>
-                    {formatMoney(paguhet(rresht), monedhaRec || monedha)}
-                  </span>
-                  {monedhaRec && <span className="fcp-row-sub">= {money(bazaE(rresht))}</span>}
-                </div>
-              </Col>
-            </Row>
-          ))}
 
           <div className="fcp-modal-hint mb-3">
-            Rregullimi vlen vetëm për pagesën përkatëse: p.sh. <strong>-7.50</strong> kur bonuset zbriten nga
-            pagesa minimale, ose <strong>+25</strong> kur bie tarifa vjetore e kartelës.
+            Rregullimi vlen vetëm për këtë pagesë: p.sh. <strong>-7.50</strong> kur bonuset zbriten nga pagesa
+            minimale, ose <strong>+25</strong> kur bie tarifa vjetore e kartelës. Zgjeroni datën e pagesës për të
+            përfshirë edhe këstet që bien më vonë këtë muaj.
+            {mbetenKeteMuaj > 0.004 && ` Pas kësaj, ${emriGrupit} ka edhe ${money(mbetenKeteMuaj)} këtë muaj.`}
           </div>
 
-          <Form.Check
-            type="switch"
-            id="konfirmo-ruaj-vleren"
-            label="Ruaj këtë vlerë edhe për pagesat e ardhshme"
-            checked={ruajVleren}
-            onChange={(e) => setRuajVleren(e.target.checked)}
-          />
-          <div className="fcp-modal-hint">
-            Lëreni të fikur nëse ndryshimi vlen vetëm për këtë herë — skedula ruan vlerën e planifikuar.
-          </div>
+          <Row className="g-3">
+            <Form.Group as={Col} md={12} controlId="konfirmo-shenimi">
+              <Form.Label>Shënim për këtë pagesë (opsional)</Form.Label>
+              <Form.Control
+                placeholder="p.sh. Ekstrakti i Bonus Card — korrik"
+                value={shenimi}
+                onChange={(e) => setShenimi(e.target.value)}
+              />
+            </Form.Group>
+
+            <Col md={12}>
+              <Form.Check
+                type="switch"
+                id="konfirmo-ruaj-vleren"
+                label="Ruaj vlerat e reja edhe për pagesat e ardhshme"
+                checked={ruajVlerat}
+                onChange={(e) => setRuajVlerat(e.target.checked)}
+              />
+              <div className="fcp-modal-hint">
+                Lëreni të fikur nëse ndryshimi vlen vetëm për këtë herë — skedulat ruajnë vlerat e planifikuara.
+                Të gjitha pagesat e përsëritura këtë muaj: {money(totaliMuajit)}.
+              </div>
+            </Col>
+          </Row>
         </Modal.Body>
 
         <Modal.Footer>
-          <span className="fcp-row-sub me-auto">Gjithsej: {money(gjithsej)}</span>
+          <span className="fcp-row-sub me-auto">
+            {formatDate(dataPageses)} · {money(gjithsej)}
+          </span>
           <Button variant="secondary" onClick={onHide}>
             Anulo
           </Button>

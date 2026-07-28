@@ -225,3 +225,13 @@
   background: var(--sp-emerald-glow);
   font-weight: 700;
 }
+
+/* A payment left out of this settlement. */
+.fcp-modal-table tr.fcp-row-jashte td {
+  opacity: 0.45;
+}
+
+.fcp-modal-table .form-control-sm {
+  padding: 0.25rem 0.5rem !important;
+  font-size: 0.78rem !important;
+}
