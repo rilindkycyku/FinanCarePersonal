@@ -300,7 +300,7 @@ function ShtoTransaksionin({
               <Col md={12}>
                 <div className="fcp-modal-hint">
                   Llogaria: <strong>{llogariaKryesore?.emri || "Llogaria kryesore"}</strong>
-                  {isTransfer && " — kontributi mbetet brenda saj, bilanci nuk ndryshon."}
+                  {isTransfer && " - kontributi mbetet brenda saj, bilanci nuk ndryshon."}
                 </div>
               </Col>
             ) : (
@@ -356,7 +356,7 @@ function ShtoTransaksionin({
                 </Form.Select>
                 {kategoriteERelevante.length === 0 && (
                   <div className="fcp-modal-hint">
-                    Nuk ka kategori për këtë lloj — shtoni një te faqja Kategoritë.
+                    Nuk ka kategori për këtë lloj - shtoni një te faqja Kategoritë.
                   </div>
                 )}
               </Form.Group>

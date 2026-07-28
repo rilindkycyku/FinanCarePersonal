@@ -117,7 +117,7 @@ function TePerseritura() {
         <div className="fcp-page-head">
           <div>
             <h2>Pagesat e Përsëritura</h2>
-            <p>Qira, abonime, rroga — planifikoni çka përsëritet dhe konfirmojeni kur vjen data.</p>
+            <p>Qira, abonime, rroga - planifikoni çka përsëritet dhe konfirmojeni kur vjen data.</p>
           </div>
           <Button className="btn-primary" onClick={openNew}>
             <Plus size={16} className="me-1" /> Shto Pagesë

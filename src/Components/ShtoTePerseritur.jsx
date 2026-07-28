@@ -264,7 +264,7 @@ function ShtoTePerseritur({ show, onHide, initial }) {
               />
               <div className="fcp-modal-hint">
                 Për një blerje me këste (p.sh. me Bonus Card): shkruani sa këste janë dhe data e përfundimit
-                llogaritet vetë — pagesa ndalet pas kësti të fundit.
+                llogaritet vetë - pagesa ndalet pas kësti të fundit.
               </div>
             </Form.Group>
 
@@ -290,7 +290,7 @@ function ShtoTePerseritur({ show, onHide, initial }) {
                 onChange={(e) => setField("aktiv", e.target.checked)}
               />
               <div className="fcp-modal-hint">
-                Pagesat e përsëritura nuk regjistrohen vetë — kur vjen data, ju e konfirmoni me një klikim dhe
+                Pagesat e përsëritura nuk regjistrohen vetë - kur vjen data, ju e konfirmoni me një klikim dhe
                 krijohet transaksioni.
               </div>
             </Col>

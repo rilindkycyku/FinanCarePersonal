@@ -142,7 +142,7 @@ function Buxhetet() {
         <section className="mb-4">
           <h4 className="fcp-section-title">
             <PiggyBank size={20} className="text-primary" />
-            Ecuria — {monthLabel(muaji)}
+            Ecuria - {monthLabel(muaji)}
           </h4>
 
           {progress.length === 0 ? (
@@ -189,7 +189,7 @@ function Buxhetet() {
                       {b.tepruar ? `Tepruar me ${money(Math.abs(b.mbetur))}` : `Mbeten ${money(b.mbetur)}`}
                     </span>
                     <button type="button" className="fcp-chip" onClick={() => toggleScope(b)}>
-                      {b.muaji ? `Vetëm ${monthLabel(b.muaji)} — bëje për çdo muaj` : `Çdo muaj — bëje vetëm për ${monthLabel(muaji)}`}
+                      {b.muaji ? `Vetëm ${monthLabel(b.muaji)} - bëje për çdo muaj` : `Çdo muaj - bëje vetëm për ${monthLabel(muaji)}`}
                     </button>
                   </div>
                 </div>

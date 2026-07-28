@@ -204,7 +204,7 @@ function KonfirmoPagesen({ show, rec, onHide, gjithcka = false }) {
           <div className="fcp-confirm-total">
             <div>
               <div className="fcp-row-sub">
-                {emriGrupit} — {monthLabel(muajiKey)}
+                {emriGrupit} - {monthLabel(muajiKey)}
               </div>
               <div className="fcp-confirm-total-value">{money(gjithsej)}</div>
               <div className="fcp-row-sub">
@@ -254,7 +254,7 @@ function KonfirmoPagesen({ show, rec, onHide, gjithcka = false }) {
                     </div>
                   </td>
                   <td>
-                    {r.ecuria.gjithsej ? `${r.ecuria.paguar} / ${r.ecuria.gjithsej}` : "—"}
+                    {r.ecuria.gjithsej ? `${r.ecuria.paguar} / ${r.ecuria.gjithsej}` : "-"}
                   </td>
                   <td className="text-end">{formatMoney(r.planifikuar, r.fx || monedha)}</td>
                   <td>
@@ -281,11 +281,11 @@ function KonfirmoPagesen({ show, rec, onHide, gjithcka = false }) {
                           onChange={(e) => setField(r.id, "kursi", e.target.value)}
                         />
                       ) : (
-                        "—"
+                        "-"
                       )}
                     </td>
                   )}
-                  <td className="text-end fcp-neg">{r.perfshi ? plainAmount(-bazaE(r)) : "—"}</td>
+                  <td className="text-end fcp-neg">{r.perfshi ? plainAmount(-bazaE(r)) : "-"}</td>
                 </tr>
               ))}
             </tbody>
@@ -308,7 +308,7 @@ function KonfirmoPagesen({ show, rec, onHide, gjithcka = false }) {
             <Form.Group as={Col} md={12} controlId="konfirmo-shenimi">
               <Form.Label>Shënim për këtë pagesë (opsional)</Form.Label>
               <Form.Control
-                placeholder="p.sh. Ekstrakti i Bonus Card — korrik"
+                placeholder="p.sh. Ekstrakti i Bonus Card - korrik"
                 value={shenimi}
                 onChange={(e) => setShenimi(e.target.value)}
               />
@@ -323,7 +323,7 @@ function KonfirmoPagesen({ show, rec, onHide, gjithcka = false }) {
                 onChange={(e) => setRuajVlerat(e.target.checked)}
               />
               <div className="fcp-modal-hint">
-                Lëreni të fikur nëse ndryshimi vlen vetëm për këtë herë — skedulat ruajnë vlerat e planifikuara.
+                Lëreni të fikur nëse ndryshimi vlen vetëm për këtë herë - skedulat ruajnë vlerat e planifikuara.
                 Të gjitha pagesat e përsëritura këtë muaj: {money(totaliMuajit)}.
               </div>
             </Col>

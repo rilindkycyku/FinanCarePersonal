@@ -51,7 +51,7 @@ function MonedhaTjeter({ monedhaOrigjinale, kursi, vlera, onChange }) {
             <Form.Select value={monedhaOrigjinale} onChange={(e) => changeCurrency(e.target.value)}>
               {CURRENCIES.filter((c) => c.code !== monedha).map((c) => (
                 <option key={c.code} value={c.code}>
-                  {c.label} — {c.symbol}
+                  {c.label} - {c.symbol}
                 </option>
               ))}
             </Form.Select>
@@ -77,7 +77,7 @@ function MonedhaTjeter({ monedhaOrigjinale, kursi, vlera, onChange }) {
             <div className="fcp-modal-hint">
               {toNumber(vlera) > 0 && toNumber(kursi) > 0
                 ? `${formatMoney(vlera, monedhaOrigjinale)} ruhet si ${formatMoney(baza, monedha)}.`
-                : `Shkruani vlerën dhe kursin — ruhet vlera e kthyer në ${currencySymbol(monedha)}.`}{" "}
+                : `Shkruani vlerën dhe kursin - ruhet vlera e kthyer në ${currencySymbol(monedha)}.`}{" "}
               Kursi i fundit për këtë monedhë mbahet mend për herën tjetër.
             </div>
           </Col>

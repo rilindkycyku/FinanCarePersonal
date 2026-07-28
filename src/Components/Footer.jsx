@@ -23,7 +23,7 @@ function Footer() {
             className="fcp-footer-logo"
           />
           <p className="fcp-footer-tagline">
-            Financat tuaja personale, në një vend. Të dhënat rrinë vetëm në këtë shfletues — pa llogari, pa server.
+            Financat tuaja personale, në një vend. Të dhënat rrinë vetëm në këtë shfletues - pa llogari, pa server.
           </p>
         </div>
 

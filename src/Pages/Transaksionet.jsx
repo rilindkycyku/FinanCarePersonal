@@ -59,7 +59,7 @@ function Transaksionet() {
         Lloji: `<span class="fcp-pill" style="color:${TYPE_PILL_COLORS[tx.lloji]}">${
           TRANSACTION_TYPE_LABELS[tx.lloji] || tx.lloji
         }</span>`,
-        Kategoria: tx.lloji === "transfer" ? "—" : kat?.emri || "Pa kategori",
+        Kategoria: tx.lloji === "transfer" ? "-" : kat?.emri || "Pa kategori",
         // With one account for everything the column would repeat the same name on every row.
         ...(njeLlogari
           ? {}

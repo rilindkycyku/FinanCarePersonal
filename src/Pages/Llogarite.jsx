@@ -154,8 +154,8 @@ function Llogarite() {
             <h2>Llogaritë</h2>
             <p>
               {njeLlogari
-                ? "Një llogari e vetme mban gjithçka — kesh, bankë dhe kartelë bashkë, pa u ndarë."
-                : "Kesh, llogari bankare, kartela dhe kursime — bilanci llogaritet nga transaksionet."}
+                ? "Një llogari e vetme mban gjithçka - kesh, bankë dhe kartelë bashkë, pa u ndarë."
+                : "Kesh, llogari bankare, kartela dhe kursime - bilanci llogaritet nga transaksionet."}
             </p>
           </div>
           {!njeLlogari && (

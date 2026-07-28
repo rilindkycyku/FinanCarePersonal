@@ -17,7 +17,7 @@ root.render(
       <DialogProvider>
         <DataProvider>
           <App />
-          {/* Page views only — no financial data leaves the browser, since every figure lives in
+          {/* Page views only - no financial data leaves the browser, since every figure lives in
               IndexedDB and none of it is passed to the tracker. Inside the router so client-side
               navigations between the pages are counted too. */}
           <Analytics />

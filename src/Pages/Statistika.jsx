@@ -127,7 +127,7 @@ function Statistika() {
         <div className="fcp-page-head">
           <div>
             <h2>Statistikat</h2>
-            <p>Përmbledhje e financave tuaja — {periodLabel(period)}.</p>
+            <p>Përmbledhje e financave tuaja - {periodLabel(period)}.</p>
           </div>
           <Form.Select
             value={period}
@@ -181,7 +181,7 @@ function Statistika() {
 
         <Row className="g-3 g-md-4 mt-1">
           <Col xl={6}>
-            <Panel title="Hyrje kundrejt Shpenzimeve — 6 Muajt e Fundit" icon={BarChart3}>
+            <Panel title="Hyrje kundrejt Shpenzimeve - 6 Muajt e Fundit" icon={BarChart3}>
               {stats.trendi.every((m) => m.hyrjet === 0 && m.shpenzimet === 0) ? (
                 <Empty>Nuk ka të dhëna ende.</Empty>
               ) : (

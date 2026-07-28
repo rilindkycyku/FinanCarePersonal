@@ -198,7 +198,7 @@ function TeDhena() {
             <Card className="profile-card border-0 p-4 h-100">
               <h5 className="fw-bold mb-2">Transaksionet (Excel)</h5>
               <p className="text-muted small">
-                Një fletë e vetme me çdo transaksion — datë, lloj, kategori, llogari dhe vlerë e nënshkruar, me
+                Një fletë e vetme me çdo transaksion - datë, lloj, kategori, llogari dhe vlerë e nënshkruar, me
                 totalet në fund. E njëjta pamje si eksportet nëpër tabelat e aplikacionit.
               </p>
               <div className="mt-auto">

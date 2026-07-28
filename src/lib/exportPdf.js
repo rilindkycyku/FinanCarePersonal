@@ -729,7 +729,7 @@ export async function exportStatementPdf({
     doc.line(MARGIN, H - 44, W - MARGIN, H - 44);
     setText(6.8, "normal", CLR.muted);
     doc.text(
-      "Gjeneruar nga FinanCarePersonal mbi të dhënat e ruajtura në shfletuesin tuaj — asnjë e dhënë nuk kalon në ndonjë server.",
+      "Gjeneruar nga FinanCarePersonal mbi të dhënat e ruajtura në shfletuesin tuaj - asnjë e dhënë nuk kalon në ndonjë server.",
       MARGIN,
       H - 31
     );

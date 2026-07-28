@@ -134,7 +134,7 @@ function Dashboard() {
             lg={3}
           />
           <Kpi
-            label={`Hyrjet — ${monthLabel(muajiKey)}`}
+            label={`Hyrjet - ${monthLabel(muajiKey)}`}
             value={money(stats.muaji.hyrjet)}
             sub={
               planifikuar > 0
@@ -146,7 +146,7 @@ function Dashboard() {
             lg={3}
           />
           <Kpi
-            label={`Shpenzimet — ${monthLabel(muajiKey)}`}
+            label={`Shpenzimet - ${monthLabel(muajiKey)}`}
             value={money(stats.muaji.shpenzimet)}
             icon={TrendingDown}
             color="danger"
@@ -266,7 +266,7 @@ function Dashboard() {
           </Col>
 
           <Col xl={6}>
-            <Panel title={`Buxhetet — ${monthLabel(muajiKey)}`} icon={PiggyBank} action="Të gjitha" actionTo="/buxhetet">
+            <Panel title={`Buxhetet - ${monthLabel(muajiKey)}`} icon={PiggyBank} action="Të gjitha" actionTo="/buxhetet">
               {stats.buxhetet.length === 0 ? (
                 <Empty>
                   Nuk ka buxhete. <Link to="/buxhetet">Caktoni një kufi mujor</Link> për kategoritë tuaja.
@@ -294,7 +294,7 @@ function Dashboard() {
 
           <Col xl={6}>
             <Panel
-              title={`Shpenzimet sipas Kategorisë — ${monthLabel(muajiKey)}`}
+              title={`Shpenzimet sipas Kategorisë - ${monthLabel(muajiKey)}`}
               icon={Tags}
               action="Statistikat"
               actionTo="/statistikat"
