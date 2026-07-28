@@ -189,3 +189,9 @@
   width: 100%;
   padding-bottom: 0.35rem;
 }
+
+/* The schedule being confirmed, highlighted inside the month's list of card payments. */
+.fcp-modal-table tr.fcp-row-tani td {
+  background: var(--sp-emerald-glow);
+  font-weight: 700;
+}

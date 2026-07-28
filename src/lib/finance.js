@@ -365,6 +365,52 @@ export function recurringProgress(rec, transactions, tanime = 0) {
   };
 }
 
+/** The dates a schedule still falls on inside `[start, end]`, from where it stands right now. */
+export function scheduledOccurrences(rec, start, end) {
+  const datat = [];
+  let date = rec?.dataETjetres;
+  if (!date) return datat;
+  // A schedule left unconfirmed for months starts before the window, so it is stepped forward
+  // until it reaches it; the cap is the same safety valve `generateDueTransactions` uses.
+  for (let i = 0; i < 400 && date <= end; i += 1) {
+    if (rec.dataFundit && date > rec.dataFundit) break;
+    if (date >= start) datat.push(date);
+    date = nextOccurrence(date, rec.frekuenca);
+  }
+  return datat;
+}
+
+/**
+ * What every recurring payment costs in one month, itemised: what has already been booked from it
+ * and what it is still expected to cost. This is the "so what does this card actually come to this
+ * month" view — several instalment plans on the same card each carry their own monthly payment,
+ * and only the sum of them is the month's real obligation.
+ */
+export function monthlyRecurringBreakdown(recurring, transactions, start, end) {
+  return recurring
+    .map((rec) => {
+      const paguara = transactions.filter(
+        (tx) => tx.perseritjaId === rec.id && tx.data >= start && tx.data <= end
+      );
+      const datat = rec.aktiv === false ? [] : scheduledOccurrences(rec, start, end);
+      const shumaPaguar = paguara.reduce((sum, tx) => sum + toNumber(tx.vlera), 0);
+      const shumaPritur = datat.length * toNumber(rec.vlera);
+      return {
+        id: rec.id,
+        emri: rec.emri,
+        lloji: rec.lloji,
+        llogariaId: rec.llogariaId,
+        kategoriaId: rec.kategoriaId,
+        nrPaguara: paguara.length,
+        shumaPaguar,
+        datat,
+        shumaPritur,
+        gjithsej: shumaPaguar + shumaPritur,
+      };
+    })
+    .filter((r) => r.nrPaguara > 0 || r.datat.length > 0);
+}
+
 export function isRecurringDue(rec, todayStr) {
   if (!rec.aktiv) return false;
   if (!rec.dataETjetres) return false;

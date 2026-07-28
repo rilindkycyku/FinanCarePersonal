@@ -3,7 +3,8 @@ import { Modal, Button, Form, Row, Col, Alert, Table } from "react-bootstrap";
 import { useData } from "../Context/DataContext";
 import { makeId, STORES } from "../lib/db";
 import {
-  convertedAmount, filterByRange, generateDueTransactions, monthBounds, recurringProgress,
+  convertedAmount, filterByRange, generateDueTransactions, monthBounds, monthlyRecurringBreakdown,
+  recurringProgress,
 } from "../lib/finance";
 import { currencySymbol, formatDate, formatMoney, monthLabel, monthKey, toNumber, todayISO } from "../lib/format";
 import "./ModalForms.css";
@@ -18,7 +19,8 @@ import "./ModalForms.css";
  * payment only — the schedule keeps its planned figures unless told otherwise.
  */
 function KonfirmoPagesen({ show, rec, onHide }) {
-  const { saveMany, saveProfile, profile, transactions, monedha, money, simboli } = useData();
+  const { saveMany, saveProfile, profile, transactions, recurring, accounts, categories, njeLlogari, monedha, money, simboli } =
+    useData();
   const [rreshtat, setRreshtat] = useState([]);
   const [ruajVleren, setRuajVleren] = useState(false);
   const [error, setError] = useState("");
@@ -59,18 +61,52 @@ function KonfirmoPagesen({ show, rec, onHide }) {
 
   const ecuria = rec ? recurringProgress(rec, transactions, rreshtat.length) : null;
 
-  // What every schedule has already cost this month, plus the occurrences about to be booked into
-  // it — the "so what does this month actually come to" figure.
   const muajiKey = monthKey();
   const { start, end } = monthBounds();
-  const perseriturKeteMuaj = filterByRange(transactions, start, end)
-    .filter((tx) => tx.perseritjaId && tx.lloji === "shpenzim")
+
+  // Occurrences being confirmed right now that land in the current month — they are what the
+  // schedule costs this month, in place of its planned figure.
+  const rreshtatKeteMuaj = rreshtat.filter((r) => r.data >= start && r.data <= end);
+  const shumaTani = rreshtatKeteMuaj.reduce((sum, r) => sum + bazaE(r), 0);
+  const datatTani = new Set(rreshtatKeteMuaj.map((r) => r.data));
+
+  /**
+   * This month's recurring payments, itemised. One card usually carries several instalment plans at
+   * once, so the month's real obligation is the list, not a single figure — the schedule being
+   * confirmed shows the amount typed below rather than its plan.
+   */
+  const zerat = monthlyRecurringBreakdown(recurring, transactions, start, end).map((z) => {
+    if (z.id !== rec?.id) return z;
+    const mbetura = z.datat.filter((d) => !datatTani.has(d));
+    return {
+      ...z,
+      tani: true,
+      shumaTani,
+      datat: mbetura,
+      shumaPritur: mbetura.length * toNumber(rec.vlera),
+      gjithsej: z.shumaPaguar + shumaTani + mbetura.length * toNumber(rec.vlera),
+    };
+  });
+
+  // Grouped the way the user actually tracks a card. When the payment comes off an account that is
+  // itself a card or a loan, that account *is* the card, so everything charged to it belongs
+  // together. Otherwise (a single account for everything, or instalments paid from the bank) the
+  // category is what stands in for the card — "Këste të Kartelës" and the like.
+  const llogaria = accounts.find((a) => a.id === rec?.llogariaId);
+  const sipasLlogarise = !njeLlogari && ["karte", "kredi"].includes(llogaria?.lloji);
+  const grupi = zerat.filter((z) =>
+    sipasLlogarise ? z.llogariaId === rec?.llogariaId : z.kategoriaId === rec?.kategoriaId
+  );
+  const emriGrupit = sipasLlogarise
+    ? llogaria?.emri || "Llogaria"
+    : categories.find((c) => c.id === rec?.kategoriaId)?.emri || "Kategoria";
+
+  const totaliGrupit = grupi.reduce((sum, z) => sum + z.gjithsej, 0);
+  const totaliMuajit = zerat.reduce((sum, z) => sum + z.gjithsej, 0);
+  // Everything else booked this month that no schedule produced, so the month reads in full.
+  const jashteSkedulave = filterByRange(transactions, start, end)
+    .filter((tx) => !tx.perseritjaId && tx.lloji === "shpenzim")
     .reduce((sum, tx) => sum + toNumber(tx.vlera), 0);
-  const totaliMuajit =
-    perseriturKeteMuaj +
-    rreshtat
-      .filter((r) => r.data >= start && r.data <= end && rec?.lloji === "shpenzim")
-      .reduce((sum, r) => sum + bazaE(r), 0);
 
   const handleSave = async (e) => {
     e.preventDefault();
@@ -144,13 +180,54 @@ function KonfirmoPagesen({ show, rec, onHide }) {
 
           <div className="fcp-confirm-total">
             <div>
-              <div className="fcp-row-sub">Pagesat e përsëritura — {monthLabel(muajiKey)}</div>
-              <div className="fcp-confirm-total-value">{money(totaliMuajit)}</div>
+              <div className="fcp-row-sub">
+                {emriGrupit} — {monthLabel(muajiKey)}
+              </div>
+              <div className="fcp-confirm-total-value">{money(totaliGrupit)}</div>
             </div>
             <div className="text-end">
               <div className="fcp-row-sub">Kjo pagesë</div>
               <div className="fcp-confirm-total-value">{money(gjithsej)}</div>
             </div>
+          </div>
+
+          <Table size="sm" responsive className="fcp-modal-table">
+            <thead>
+              <tr>
+                <th>Pagesat e muajit — {emriGrupit}</th>
+                <th>Statusi</th>
+                <th className="text-end">Vlera</th>
+              </tr>
+            </thead>
+            <tbody>
+              {grupi.map((z) => (
+                <tr key={z.id} className={z.tani ? "fcp-row-tani" : undefined}>
+                  <td>{z.emri}</td>
+                  <td className="fcp-row-sub">
+                    {[
+                      z.nrPaguara > 0 ? `${z.nrPaguara} paguar` : null,
+                      z.tani ? `${rreshtatKeteMuaj.length} tani` : null,
+                      z.datat.length > 0 ? `${z.datat.length} pritet (${formatDate(z.datat[0])})` : null,
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </td>
+                  <td className="text-end">{money(z.gjithsej)}</td>
+                </tr>
+              ))}
+              <tr>
+                <td colSpan={2}>
+                  <strong>Gjithsej për këtë muaj</strong>
+                </td>
+                <td className="text-end">
+                  <strong>{money(totaliGrupit)}</strong>
+                </td>
+              </tr>
+            </tbody>
+          </Table>
+          <div className="fcp-modal-hint mb-3">
+            Të gjitha pagesat e përsëritura këtë muaj: {money(totaliMuajit)}
+            {jashteSkedulave > 0 && `, plus ${money(jashteSkedulave)} shpenzime të tjera të regjistruara.`}
           </div>
 
           <Table size="sm" responsive className="fcp-modal-table">
