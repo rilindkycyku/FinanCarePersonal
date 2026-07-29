@@ -315,7 +315,7 @@ function TransferoQr() {
 
       {modaliteti === "" && (
         <>
-          <div className="d-flex gap-2 flex-wrap">
+          <div className="fcp-share-actions">
             <Button variant="outline-light" onClick={filloDergimin} disabled={Boolean(duke)}>
               <QrCode size={16} className="me-1" /> {duke === "qr" ? "Duke krijuar..." : "Dërgo me QR"}
             </Button>
@@ -327,8 +327,8 @@ function TransferoQr() {
             </Button>
           </div>
           <div className="fcp-row-sub mt-2">
-            <strong>Dërgo me QR</strong> i ndan të dhënat në disa kode dhe lexohet me <strong>Prano me kamerë</strong>
-            këtu në aplikacion. <strong>Dërgo me një link</strong> i vendos të gjitha në një link të vetëm, që e kopjoni
+            <strong>Dërgo me QR</strong> i ndan të dhënat në disa kode dhe lexohet me{" "}
+            <strong>Prano me kamerë</strong> këtu në aplikacion. <strong>Dërgo me një link</strong> i vendos të gjitha në një link të vetëm, që e kopjoni
             ose e dërgoni te vetja - dhe kur të dhënat janë mjaft të vogla, vjen edhe si një kod i vetëm që hapet me
             kamerën e zakonshme të telefonit.
           </div>

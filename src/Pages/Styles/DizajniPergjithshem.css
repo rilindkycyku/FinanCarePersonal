@@ -200,3 +200,20 @@ body {
     -webkit-overflow-scrolling: touch;
   }
 }
+
+@media (max-width: 575.98px) {
+  /* The page's own opening paragraph, which at body size runs most of a phone screen before the
+     first thing you can press. */
+  .containerDashboardP > p.text-muted {
+    font-size: 0.8rem;
+    margin-bottom: 0.9rem !important;
+  }
+
+  /* Buttons keep their desktop size right down to the narrowest phone, where a card's pair of
+     actions then no longer fits one row - and a wrapped pair reads as two unrelated buttons.
+     `!important` because that is how the rule above sets them in the first place. */
+  .btn {
+    font-size: 0.78rem !important;
+    padding: 0.42rem 0.8rem !important;
+  }
+}

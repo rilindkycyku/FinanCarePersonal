@@ -519,10 +519,73 @@ body.light-mode .hero-cta.ghost {
   min-width: 0;
 }
 
+/* The share targets: side by side while they fit, two-up on a phone (below). */
+.fcp-share-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
 @media (max-width: 640px) {
   .fcp-share {
     justify-content: center;
     text-align: center;
+  }
+}
+
+/* Phones. The long-form pages - export/import, settings, share - lean on Bootstrap's own type
+   scale, which sits a step above everything else the app draws: an 18.75 px card heading next to a
+   12.6 px section title, and a paragraph of body copy that runs nine lines before the first
+   button. These bring the cards' own text back into the app's scale. */
+@media (max-width: 575.98px) {
+  .profile-card h5 {
+    font-size: 0.95rem;
+    margin-bottom: 0.35rem !important;
+  }
+
+  .profile-card h5 svg {
+    width: 15px;
+    height: 15px;
+  }
+
+  .profile-card p.small {
+    font-size: 0.76rem;
+    margin-bottom: 0.6rem;
+  }
+
+  .profile-card hr.my-4 {
+    margin-top: 0.9rem !important;
+    margin-bottom: 0.9rem !important;
+  }
+
+  .fcp-share {
+    gap: 0.75rem;
+  }
+
+  /* Four share targets, one per row at this width. Two-up they cost half the page and read as one
+     set of choices rather than a list. */
+  .fcp-share-actions {
+    display: grid;
+    /* `minmax(0, …)` so the longest label cannot claim a wider column than its neighbour - two
+       equal halves read as a pair of choices, two ragged ones read as a mistake. */
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.4rem;
+  }
+
+  .fcp-share-actions .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    width: 100%;
+    font-size: 0.7rem !important;
+    padding: 0.45rem 0.3rem !important;
+    text-align: center;
+    line-height: 1.15;
+  }
+
+  .fcp-share-actions .btn svg {
+    flex-shrink: 0;
   }
 }
 

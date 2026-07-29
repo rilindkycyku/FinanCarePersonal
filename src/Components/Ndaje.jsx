@@ -163,7 +163,20 @@ function Ndaje() {
       return "copied";
     });
 
-  const etiketa = (celesi, tekst) => (duke === celesi ? "Duke përgatitur..." : tekst);
+  /**
+   * The label, and the short form phones use. Four of these sit two-up on a phone, where the long
+   * names wrap to three ragged lines in a half-width button; the group above them already says
+   * these are this month's data.
+   */
+  const etiketa = (celesi, tekst, shkurt) =>
+    duke === celesi ? (
+      "Duke përgatitur..."
+    ) : (
+      <>
+        <span className="d-none d-sm-inline">{tekst}</span>
+        <span className="d-sm-none">{shkurt}</span>
+      </>
+    );
 
   return (
     <Card className="profile-card border-0 p-4 mb-4">
@@ -207,18 +220,18 @@ function Ndaje() {
       <hr className="my-4" />
 
       <div className="fcp-row-sub mb-2">Ndaj të dhënat e mia - {muaji}</div>
-      <div className="d-flex gap-2 flex-wrap">
+      <div className="fcp-share-actions">
         <Button variant="outline-light" onClick={ndajPdf} disabled={Boolean(duke)}>
-          <FileText size={16} className="me-1" /> {etiketa("pdf", "Pasqyra (PDF)")}
+          <FileText size={16} className="me-1" /> {etiketa("pdf", "Pasqyra (PDF)", "Pasqyra PDF")}
         </Button>
         <Button variant="outline-light" onClick={ndajExcel} disabled={Boolean(duke)}>
-          <Sheet size={16} className="me-1" /> {etiketa("excel", "Pasqyra (Excel)")}
+          <Sheet size={16} className="me-1" /> {etiketa("excel", "Pasqyra (Excel)", "Pasqyra Excel")}
         </Button>
         <Button variant="outline-light" onClick={ndajPermbledhjen} disabled={Boolean(duke)}>
-          <MessageSquare size={16} className="me-1" /> {etiketa("tekst", "Përmbledhja si tekst")}
+          <MessageSquare size={16} className="me-1" /> {etiketa("tekst", "Përmbledhja si tekst", "Përmbledhja")}
         </Button>
         <Button variant="outline-light" onClick={ndajKopjen} disabled={Boolean(duke)}>
-          <DatabaseBackup size={16} className="me-1" /> {etiketa("json", "Kopja e plotë (JSON)")}
+          <DatabaseBackup size={16} className="me-1" /> {etiketa("json", "Kopja e plotë (JSON)", "Kopja JSON")}
         </Button>
       </div>
       <div className="fcp-row-sub mt-2">
