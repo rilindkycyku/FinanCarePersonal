@@ -168,8 +168,8 @@ body {
 @media (max-width: 768px) {
   .containerDashboardP {
     width: 100%;
-    margin: 0.75rem 0;
-    padding: 0.85rem;
+    margin: 0.5rem 0;
+    padding: 0.6rem;
     border-radius: 0;
   }
 
@@ -178,12 +178,12 @@ body {
   }
 
   .containerDashboardP .card-header {
-    padding: 0.6rem 0.85rem;
+    padding: 0.5rem 0.7rem;
     font-size: 0.85rem;
   }
 
   .containerDashboardP .card-body {
-    padding: 0.85rem;
+    padding: 0.65rem;
   }
 
   .DataPerFiltrim {

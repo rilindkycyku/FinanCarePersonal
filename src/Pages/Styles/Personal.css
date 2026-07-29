@@ -389,51 +389,58 @@
 }
 
 /* ── Mobile ───────────────────────────────────────────────── */
+/* Phones. The root is a step smaller here (index.css), so every rem below is already ~6% down on
+   what it draws elsewhere; the sizes that were near the readable floor are nudged up a notch so
+   the step does not eat the legends, and the padding is what gives up the room instead. */
 @media (max-width: 575.98px) {
+  .fcp-page-head {
+    gap: 0.6rem;
+    margin-bottom: 0.9rem;
+  }
   .fcp-page-head h2 { font-size: 1.15rem; }
-  .fcp-page-head p { font-size: 0.75rem; }
-  .fcp-kpi-col { margin-bottom: 0.5rem; }
+  .fcp-page-head p { font-size: 0.76rem; }
+  .fcp-kpi-col { margin-bottom: 0.4rem; }
   .fcp-kpi {
-    padding: 0.65rem 0.7rem;
+    padding: 0.55rem 0.6rem;
     border-radius: 12px;
     border-top-width: 2px;
   }
   .fcp-kpi-icon {
-    width: 24px;
-    height: 24px;
+    width: 22px;
+    height: 22px;
     border-radius: 7px;
-    margin-bottom: 0.4rem;
+    margin-bottom: 0.3rem;
   }
   .fcp-kpi-icon svg { width: 13px; height: 13px; }
-  .fcp-kpi-label { font-size: 0.53rem; margin-bottom: 0.15rem; }
+  .fcp-kpi-label { font-size: 0.57rem; margin-bottom: 0.1rem; }
   .fcp-kpi-value { font-size: 0.92rem; }
-  .fcp-kpi-sub { font-size: 0.6rem; }
+  .fcp-kpi-sub { font-size: 0.64rem; }
 
   .fcp-panel { border-radius: 12px; }
   .fcp-panel-header {
-    padding: 0.6rem 0.75rem;
+    padding: 0.5rem 0.65rem;
     gap: 7px;
-    font-size: 0.72rem;
+    font-size: 0.74rem;
   }
   .fcp-panel-header svg { width: 14px; height: 14px; }
-  .fcp-panel-body { padding: 0.75rem; }
+  .fcp-panel-body { padding: 0.6rem; }
 
-  .fcp-row { gap: 0.5rem; padding: 0.5rem 0; }
-  .fcp-row-icon { width: 28px; height: 28px; border-radius: 8px; }
+  .fcp-row { gap: 0.45rem; padding: 0.4rem 0; }
+  .fcp-row-icon { width: 26px; height: 26px; border-radius: 8px; }
   .fcp-row-icon svg { width: 14px; height: 14px; }
   .fcp-row-title { font-size: 0.78rem; }
-  .fcp-row-sub { font-size: 0.63rem; }
+  .fcp-row-sub { font-size: 0.67rem; }
   .fcp-row-value { font-size: 0.78rem; }
   .fcp-row-bar { min-width: 46px; flex-basis: 46px; }
 
-  .fcp-account-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 0.5rem; }
-  .fcp-account-card { padding: 0.7rem; border-radius: 12px; }
+  .fcp-account-grid { grid-template-columns: repeat(auto-fill, minmax(145px, 1fr)); gap: 0.4rem; }
+  .fcp-account-card { padding: 0.6rem; border-radius: 12px; }
   .fcp-account-balance { font-size: 1rem; }
   .fcp-account-name { font-size: 0.78rem; }
 
-  .fcp-chart { height: 150px; gap: 0.25rem; }
-  .fcp-chart-label { font-size: 0.55rem; }
-  .fcp-section-title { font-size: 0.82rem; }
+  .fcp-chart { height: 140px; gap: 0.25rem; }
+  .fcp-chart-label { font-size: 0.58rem; }
+  .fcp-section-title { font-size: 0.84rem; margin-bottom: 0.6rem; }
 }
 
 /* ══════════════════════════════════════════════════════════════

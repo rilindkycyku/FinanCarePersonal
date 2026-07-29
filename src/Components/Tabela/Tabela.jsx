@@ -469,19 +469,23 @@ function Tabela({
         }
         .premium-pagination .page-item.active .page-link { background: var(--sp-emerald) !important; color: white !important; border-color: var(--sp-emerald) !important; box-shadow: 0 5px 15px var(--sp-emerald-glow); }
         .premium-pagination .page-item .page-link:hover:not(.active) { background: var(--sp-surface-3) !important; color: var(--sp-text) !important; border-color: var(--sp-emerald) !important; }
+        /* Phones run a smaller root (index.css), so these rem values are already a step down on
+           what they draw elsewhere; the labels near the floor are pinned up a notch and the
+           padding gives up the room instead - a table is mostly padding at this width. */
         @media (max-width: 575.98px) {
+          .premium-main-card .card-body { padding: 0.6rem !important; }
           .premium-table-title { font-size: 0.9rem; }
-          .premium-filter-bar { padding: 0.65rem; }
-          .premium-filter-label { font-size: 0.58rem; }
+          .premium-filter-bar { padding: 0.5rem; }
+          .premium-filter-label { font-size: 0.62rem; margin-bottom: 0.25rem; }
           .btn-premium-shto, .btn-premium-outline, .btn-premium-pastro {
-            font-size: 0.75rem !important; padding: 0.4rem 0.75rem !important;
+            font-size: 0.75rem !important; padding: 0.35rem 0.7rem !important;
           }
-          .premium-filter-pill { font-size: 0.68rem; padding: 0.35rem 0.7rem; }
-          .premium-th { font-size: 0.58rem; padding: 0.6rem 0.75rem; }
-          .premium-td { font-size: 0.75rem !important; padding: 0.55rem 0.75rem !important; }
-          .date-badge { font-size: 0.65rem; padding: 0.2rem 0.45rem; }
-          .premium-pagination-wrapper { font-size: 0.72rem; }
-          .premium-pagination .page-item .page-link { width: 28px; height: 28px; font-size: 0.72rem; }
+          .premium-filter-pill { font-size: 0.7rem; padding: 0.3rem 0.6rem; }
+          .premium-th { font-size: 0.62rem; padding: 0.45rem 0.55rem; }
+          .premium-td { font-size: 0.75rem !important; padding: 0.4rem 0.55rem !important; }
+          .date-badge { font-size: 0.68rem; padding: 0.15rem 0.4rem; }
+          .premium-pagination-wrapper { font-size: 0.74rem; gap: 0.5rem; }
+          .premium-pagination .page-item .page-link { width: 28px; height: 28px; font-size: 0.74rem; }
         }
       `}</style>
     </div>
