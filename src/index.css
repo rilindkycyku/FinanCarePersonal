@@ -20,6 +20,35 @@ body,
   height: 100%;
 }
 
+/* The off-canvas menu is parked just past the right edge, so the page could be dragged sideways by
+   a strip of it. `clip` stops that without turning the page into a scroll container the way
+   `hidden` would - the sticky navbar keeps working. */
+html {
+  overflow-x: clip;
+}
+
 a {
   color: inherit;
+}
+
+/* ── Phones: the whole interface one step down ────────────────────────────
+   Every size in the app is in rem, so a single step at the root scales the lot - text, padding,
+   icons and radii together - rather than a hundred rules shaved by hand and drifting apart.
+   15px is as far as this goes: the app's smallest labels already sit near 8px, and the handful
+   that would fall under it are pinned back up a notch where they are declared. */
+@media (max-width: 575.98px) {
+  html {
+    font-size: 15px;
+  }
+
+  /* Bootstrap's own vertical padding on the page container, which is a whole line of text at the
+     top of every screen. */
+  .fcp-page .container.py-4 {
+    padding-top: 0.9rem !important;
+    padding-bottom: 0.9rem !important;
+  }
+
+  .fcp-page .container.pt-4 {
+    padding-top: 0.9rem !important;
+  }
 }

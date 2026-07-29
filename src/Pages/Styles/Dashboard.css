@@ -75,7 +75,7 @@
 @media (max-width: 640px) {
   .profile-card {
     border-radius: 16px;
-    padding: 1.1rem !important;
+    padding: 0.85rem !important;
   }
 }
 
@@ -124,7 +124,7 @@
 @media (max-width: 640px) {
   .modern-tabs .nav-tabs {
     gap: 0.3rem;
-    margin-bottom: 1.25rem;
+    margin-bottom: 0.9rem;
   }
 
   .modern-tabs .nav-item {
@@ -257,11 +257,12 @@
 @media (max-width: 768px) {
   .welcome-hero {
     border-radius: 0 0 20px 20px;
-    padding: 1.75rem 0;
+    padding: 1.1rem 0;
+    margin-bottom: 1.1rem;
   }
 
   .welcome-hero h1 {
-    font-size: 1.4rem;
+    font-size: 1.2rem;
   }
 
   .quick-actions-grid {
@@ -284,20 +285,26 @@
   }
 
   .data-group {
-    padding: 0.6rem 0.7rem;
+    padding: 0.5rem 0.6rem;
     border-radius: 10px;
   }
 
   .data-label {
-    font-size: 0.58rem;
+    font-size: 0.62rem;
     gap: 6px;
-    margin-bottom: 0.3rem;
+    margin-bottom: 0.25rem;
     align-items: flex-start;
   }
 
   .data-value {
     font-size: 0.78rem;
     word-break: break-word;
+  }
+
+  /* The two hero actions, which are as tall as a card header on a phone otherwise. */
+  .hero-cta {
+    font-size: 0.8rem;
+    padding: 0.4rem 0.8rem;
   }
 }
 
@@ -512,10 +519,73 @@ body.light-mode .hero-cta.ghost {
   min-width: 0;
 }
 
+/* The share targets: side by side while they fit, two-up on a phone (below). */
+.fcp-share-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
 @media (max-width: 640px) {
   .fcp-share {
     justify-content: center;
     text-align: center;
+  }
+}
+
+/* Phones. The long-form pages - export/import, settings, share - lean on Bootstrap's own type
+   scale, which sits a step above everything else the app draws: an 18.75 px card heading next to a
+   12.6 px section title, and a paragraph of body copy that runs nine lines before the first
+   button. These bring the cards' own text back into the app's scale. */
+@media (max-width: 575.98px) {
+  .profile-card h5 {
+    font-size: 0.95rem;
+    margin-bottom: 0.35rem !important;
+  }
+
+  .profile-card h5 svg {
+    width: 15px;
+    height: 15px;
+  }
+
+  .profile-card p.small {
+    font-size: 0.76rem;
+    margin-bottom: 0.6rem;
+  }
+
+  .profile-card hr.my-4 {
+    margin-top: 0.9rem !important;
+    margin-bottom: 0.9rem !important;
+  }
+
+  .fcp-share {
+    gap: 0.75rem;
+  }
+
+  /* Four share targets, one per row at this width. Two-up they cost half the page and read as one
+     set of choices rather than a list. */
+  .fcp-share-actions {
+    display: grid;
+    /* `minmax(0, …)` so the longest label cannot claim a wider column than its neighbour - two
+       equal halves read as a pair of choices, two ragged ones read as a mistake. */
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.4rem;
+  }
+
+  .fcp-share-actions .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    width: 100%;
+    font-size: 0.7rem !important;
+    padding: 0.45rem 0.3rem !important;
+    text-align: center;
+    line-height: 1.15;
+  }
+
+  .fcp-share-actions .btn svg {
+    flex-shrink: 0;
   }
 }
 
@@ -579,4 +649,168 @@ body.light-mode .hero-cta.ghost {
 .fcp-transfer-gjate small {
   font-size: 0.68rem;
   line-height: 1.3;
+}
+
+/* ── The transfer, full screen ─────────────────────────────────────────────
+   Playing the codes and scanning them are both jobs the whole screen does: a code has to be big
+   enough for another phone's camera to resolve its modules, and the camera preview has to be big
+   enough to aim. White behind the code on purpose - a tinted or dark surround costs the scanner
+   contrast, whichever theme the app is in. */
+.fcp-qr-plote {
+  position: fixed;
+  inset: 0;
+  z-index: 1080;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.9rem;
+  background: #ffffff;
+  color: #0d2137;
+  overscroll-behavior: contain;
+}
+
+.fcp-qr-plote.errej {
+  background: #0b1523;
+  color: #e2e8f0;
+}
+
+.fcp-qr-plote-koka {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.fcp-qr-plote-koka strong {
+  display: block;
+  font-size: 1.05rem;
+  font-weight: 900;
+}
+
+.fcp-qr-plote-koka span {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.78rem;
+  line-height: 1.35;
+  opacity: 0.7;
+}
+
+.fcp-qr-plote-koka button {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid currentColor;
+  background: none;
+  color: inherit;
+  opacity: 0.65;
+  cursor: pointer;
+}
+
+.fcp-qr-plote-kodi {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fcp-qr-plote-kodi img {
+  width: min(100%, 82vh);
+  max-height: 100%;
+  aspect-ratio: 1;
+  border-radius: 12px;
+  background: #ffffff;
+}
+
+/* The whole frame, uncropped: the detector reads the stream itself, so anything cut off here would
+   be a code the user cannot see being caught but can see missed. */
+.fcp-qr-plote-kodi video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 12px;
+  background: #000000;
+}
+
+.fcp-qr-plote-fundi {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.fcp-qr-plote-fundi .progress {
+  width: 100%;
+}
+
+.fcp-qr-plote-butonat {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.fcp-qr-plote-butonat button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  min-width: 46px;
+  height: 46px;
+  padding: 0 0.9rem;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid rgba(13, 33, 55, 0.18);
+  background: rgba(13, 33, 55, 0.04);
+  color: inherit;
+  font-size: 0.8rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.fcp-qr-plote-shpejtesia {
+  white-space: nowrap;
+}
+
+/* Which codes have already been read - a filled dot each, so the gaps are the ones still to catch. */
+.fcp-qr-plote-pikat {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px;
+  max-width: 100%;
+}
+
+.fcp-qr-plote-pikat span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(148, 163, 184, 0.35);
+}
+
+.fcp-qr-plote-pikat span.ka {
+  background: var(--sp-emerald, #10b981);
+}
+
+.fcp-qr-plote-fusnote {
+  font-size: 0.7rem;
+  opacity: 0.6;
+  text-align: center;
+}
+
+/* The single link code opens full screen the same way - in its 220 px box it is a grid of
+   hair-thin modules, and the other phone's own camera app has to resolve every one of them. */
+.fcp-transfer-qr-buton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--sp-text-muted);
+  font-size: 0.68rem;
+  font-weight: 700;
+  cursor: pointer;
 }

@@ -18,6 +18,14 @@ import { currencySymbol, formatDate, plainAmount, toNumber } from "./format";
 import { accountTypeMeta, DEFAULT_CURRENCY, MONTHS_GENITIVE } from "./options";
 
 /**
+ * True for the open-ended bounds `periodBounds("gjithcka")` hands out. They are sentinels wide
+ * enough to hold every record, not a period — printing them gives "01/01/0001 - 31/12/9999".
+ */
+export function isFullHistoryRange(start, end) {
+  return Number(String(start).slice(0, 4)) <= 1 && Number(String(end).slice(0, 4)) >= 9999;
+}
+
+/**
  * What to call this statement. A personal statement is remembered by its month — "Pasqyra e
  * korrikut 2026" — so a reference number is only produced for a range that is not a whole month or
  * year.
@@ -33,7 +41,7 @@ export function statementTitle(start, end) {
   if (vitiA === vitiB && muajiA === 1 && ditaA === 1 && muajiB === 12 && ditaB >= 31) {
     return `Pasqyra e vitit ${vitiA}`;
   }
-  if (vitiA <= 1 && vitiB >= 9999) return "Pasqyra e gjithë historikut";
+  if (isFullHistoryRange(start, end)) return "Pasqyra e gjithë historikut";
   return "Pasqyra e periudhës";
 }
 
@@ -216,6 +224,10 @@ export function statementRows({ accounts, categories, transactions, recurring = 
       transferet: rows.filter((r) => r.shenja === 0),
     },
     nrRreshtave: rows.length,
+    // The span the movements actually cover — what an open-ended statement prints instead of the
+    // sentinel bounds it was asked for. `rows` runs oldest first.
+    nga: rows[0]?.data || null,
+    deri: rows.length > 0 ? rows[rows.length - 1].data : null,
   };
 }
 
@@ -277,10 +289,18 @@ export async function exportStatementPdf({
   const dyShifra = (n) => String(n).padStart(2, "0");
   const titulli = statementTitle(start, end);
 
+  // "01/01/0001 - 31/12/9999" is a sentinel, not a period anyone recognises: an open-ended
+  // statement prints the span its own movements cover, and says so in words when it has none.
+  const periudhaTekst = isFullHistoryRange(start, end)
+    ? t.nga && t.deri
+      ? `${formatDate(t.nga)} - ${formatDate(t.deri)}`
+      : "I gjithë historiku"
+    : `${formatDate(start)} - ${formatDate(end)}`;
+
   setText(12, "bold", CLR.navy);
   doc.text(titulli.toUpperCase(), W - MARGIN, MARGIN + 2, { align: "right" });
   setText(8.5, "normal", CLR.muted);
-  doc.text(`${formatDate(start)} - ${formatDate(end)}`, W - MARGIN, MARGIN + 15, { align: "right" });
+  doc.text(periudhaTekst, W - MARGIN, MARGIN + 15, { align: "right" });
   setText(7, "normal", CLR.muted);
   doc.text(
     `Lëshuar më ${formatDate(tani.toISOString().slice(0, 10))} ${dyShifra(tani.getHours())}:${dyShifra(
@@ -317,12 +337,44 @@ export async function exportStatementPdf({
   panel(xA, wA, "Të dhënat e pasqyrës");
   let ay = bandY + 34;
   const llogariteAktive = accounts.filter((a) => !a.arkivuar).length;
+
+  /**
+   * A value right-aligned in what the row has left over after its label. The panel is 148 pt wide,
+   * so a date range or a long account name is stepped down a little first and, if that still will
+   * not hold it, dropped onto its own line across the panel — being cut short used to lose the
+   * year off the period ("01/01 - 31/12/2026"). Returns the extra height the second line took.
+   */
+  const vleraNePanel = (teksti, hapesira, y) => {
+    const gjeresia = (madhesia) => {
+      setText(madhesia, "bold", CLR.text);
+      return doc.getTextWidth(teksti);
+    };
+
+    let madhesia = 7.4;
+    while (madhesia > 6.4 && gjeresia(madhesia) > hapesira) madhesia -= 0.2;
+    if (gjeresia(madhesia) <= hapesira) {
+      doc.text(teksti, xA + wA - 12, y, { align: "right" });
+      return 0;
+    }
+
+    // A second line only while the panel still has room for one; otherwise the value is cut.
+    const veteMLine = y + 9 <= bandY + bandH - 12;
+    const hapesiraE = veteMLine ? wA - 24 : hapesira;
+    madhesia = 7.4;
+    while (madhesia > 5.8 && gjeresia(madhesia) > hapesiraE) madhesia -= 0.2;
+    let out = teksti;
+    while (out.length > 1 && doc.getTextWidth(`${out}...`) > hapesiraE) out = out.slice(0, -1);
+    doc.text(out === teksti ? teksti : `${out}...`, xA + wA - 12, veteMLine ? y + 9 : y, {
+      align: "right",
+    });
+    return veteMLine ? 9 : 0;
+  };
+
   [
     ["Emri", profile.emri || "Përdorues"],
     ["Llogaria", llogaria ? llogaria.emri : `Të gjitha (${llogariteAktive})`],
     ["Lloji", llogaria ? accountTypeMeta(llogaria.lloji).short : "Përmbledhëse"],
-    // Short form: the panel is 148 pt wide and the full range does not fit beside its label.
-    ["Periudha", `${formatDate(start).slice(0, 5)} - ${formatDate(end)}`],
+    ["Periudha", periudhaTekst],
     ["Monedha", `${monedha} (${simboli})`],
     ["Transaksione", String(t.nrRreshtave)],
     // The reference number and issue time are in the masthead, where there is room for them.
@@ -330,9 +382,7 @@ export async function exportStatementPdf({
   ].forEach(([label, value]) => {
     setText(6.6, "normal", CLR.muted);
     doc.text(label, xA + 12, ay);
-    setText(7.4, "bold", CLR.text);
-    doc.text(doc.splitTextToSize(value, wA - 60)[0], xA + wA - 12, ay, { align: "right" });
-    ay += 13;
+    ay += 13 + vleraNePanel(String(value), wA - 24 - doc.getTextWidth(label) - 8, ay);
   });
 
   // B — the figures, ending in the closing balance
@@ -381,57 +431,86 @@ export async function exportStatementPdf({
   const totaliFetave = feta.reduce((sum, f) => sum + f.vlera, 0);
 
   if (totaliFetave > 0) {
-    const qendraX = xC + 42;
+    // The ring sits flush with the panel's left padding and stops well short of the legend: at its
+    // old size the band ran right up to the swatches, and the two read as one smudged block.
+    const trashesia = 8;
+    const rrezja = 22;
+    const qendraX = xC + 12 + rrezja + trashesia / 2;
     const qendraY = bandY + 66;
-    // A wider ring with a thinner band leaves a hole the total actually fits inside; the caption
-    // that used to sit under it collided with the band on both sides, and the panel's own title
-    // already says what the figure is.
-    const rrezja = 27;
-    const trashesia = 10;
+    // Where the legend starts: clear of the band, with the same air on both sides of the gap.
+    const xLegjenda = qendraX + rrezja + trashesia / 2 + 8;
 
-    /** A ring segment, approximated with short thick strokes — jsPDF has no arc primitive. */
+    /**
+     * A ring segment as one filled band — jsPDF has no arc primitive, so both edges of the band are
+     * walked as short straight steps and the whole shape is filled in a single path.
+     *
+     * Drawing the segment as a row of short thick strokes instead left the ring visibly combed: a
+     * stroke is a chord, so its square ends fall inside the ring's curve, and every joint showed as
+     * a pale stripe across the colour — worst on the widest slices, which are the ones being read.
+     */
     const segment = (nga, deri, ngjyra) => {
-      doc.setDrawColor(...ngjyra);
-      doc.setLineWidth(trashesia);
-      doc.setLineCap("butt");
-      const hapa = Math.max(Math.round(Math.abs(deri - nga) / 0.05), 2);
-      for (let i = 0; i < hapa; i += 1) {
-        const a1 = nga + ((deri - nga) * i) / hapa;
-        const a2 = nga + ((deri - nga) * (i + 1)) / hapa;
-        doc.line(
-          qendraX + rrezja * Math.cos(a1),
-          qendraY - rrezja * Math.sin(a1),
-          qendraX + rrezja * Math.cos(a2),
-          qendraY - rrezja * Math.sin(a2)
-        );
-      }
+      const jashtem = rrezja + trashesia / 2;
+      const brendshem = rrezja - trashesia / 2;
+      // ~3° steps: the flat of a step sits 0.03 pt inside the true curve, well under a printed dot.
+      const hapa = Math.max(Math.ceil(Math.abs(deri - nga) / 0.05), 2);
+      const neKend = (kendi, rreze) => [qendraX + rreze * Math.cos(kendi), qendraY - rreze * Math.sin(kendi)];
+      const pika = [];
+      for (let i = 0; i <= hapa; i += 1) pika.push(neKend(nga + ((deri - nga) * i) / hapa, jashtem));
+      for (let i = hapa; i >= 0; i -= 1) pika.push(neKend(nga + ((deri - nga) * i) / hapa, brendshem));
+
+      doc.setFillColor(...ngjyra);
+      // `lines` walks in steps from the point before it, so the path is handed over as deltas.
+      doc.lines(
+        pika.slice(1).map((p, i) => [p[0] - pika[i][0], p[1] - pika[i][1]]),
+        pika[0][0],
+        pika[0][1],
+        [1, 1],
+        "F",
+        true
+      );
     };
 
     let kendi = Math.PI / 2; // starts at twelve o'clock and runs clockwise
     feta.forEach((f) => {
       const hapesira = (f.vlera / totaliFetave) * Math.PI * 2;
-      segment(kendi, kendi - hapesira, f.ngjyra);
+      // Each slice starts a whisker inside the one before it: two fills that merely touch leave a
+      // hairline of paper between them once the page is rasterized.
+      segment(kendi + 0.006, kendi - hapesira, f.ngjyra);
       kendi -= hapesira;
     });
 
-    // Shrunk a step at a time until it clears the hole, so a five-figure month still fits.
-    const hapesiraE = (rrezja - trashesia / 2) * 2 - 6;
-    let madhesia = 9;
+    // The figure in the hole is the total the ring divides up, so it says so and carries the
+    // currency like every other amount on the sheet: a bare number sitting beside a labelled
+    // "Mbetur me këste" reads as a different kind of figure than it is.
+    setText(4.6, "bold", CLR.muted);
+    doc.text("GJITHSEJ", qendraX, qendraY - 4.5, { align: "center" });
+
+    // Shrunk a step at a time until it clears the hole, so a five-figure year still fits. The hole
+    // is round, so what the figure has to clear is the chord at its own height, not the diameter -
+    // measured against the diameter it ran into the band on both sides.
+    const teksti = money(totaliFetave);
+    const rBrenda = rrezja - trashesia / 2;
+    const yTeksti = 6;
+    const hapesiraE = 2 * Math.sqrt(Math.max(rBrenda ** 2 - (yTeksti + 1) ** 2, 1)) - 5;
+    let madhesia = 8;
     setText(madhesia, "bold", CLR.navy);
-    while (madhesia > 5 && doc.getTextWidth(plainAmount(totaliFetave)) > hapesiraE) {
-      madhesia -= 0.5;
+    while (madhesia > 4.4 && doc.getTextWidth(teksti) > hapesiraE) {
+      madhesia -= 0.2;
       setText(madhesia, "bold", CLR.navy);
     }
-    doc.text(plainAmount(totaliFetave), qendraX, qendraY + madhesia / 3, { align: "center" });
+    doc.text(teksti, qendraX, qendraY + yTeksti, { align: "center" });
 
     let cy = bandY + 36;
+    // The share is right-aligned to the panel's edge; the name gets what is left between the two.
+    const xPerqindja = xC + wC - 12;
+    const emriW = xPerqindja - 20 - (xLegjenda + 9);
     feta.forEach((f) => {
       doc.setFillColor(...f.ngjyra);
-      doc.roundedRect(xC + 74, cy - 5, 5, 5, 1.5, 1.5, "F");
+      doc.roundedRect(xLegjenda, cy - 5, 5, 5, 1.5, 1.5, "F");
       setText(6.4, "normal", CLR.text);
-      doc.text(doc.splitTextToSize(f.emri, wC - 108)[0], xC + 83, cy);
+      doc.text(doc.splitTextToSize(f.emri, emriW)[0], xLegjenda + 9, cy);
       setText(6.4, "bold", CLR.text);
-      doc.text(`${Math.round((f.vlera / totaliFetave) * 100)}%`, xC + wC - 12, cy, { align: "right" });
+      doc.text(`${Math.round((f.vlera / totaliFetave) * 100)}%`, xPerqindja, cy, { align: "right" });
       cy += 12;
     });
 
@@ -712,7 +791,7 @@ export async function exportStatementPdf({
       doc.text(titulli, W - MARGIN, MARGIN, { align: "right" });
       setText(7, "normal", CLR.muted);
       doc.text(
-        `${llogaria ? `${llogaria.emri} · ` : ""}${formatDate(start)} - ${formatDate(end)}`,
+        `${llogaria ? `${llogaria.emri} · ` : ""}${periudhaTekst}`,
         W - MARGIN,
         MARGIN + 11,
         { align: "right" }
