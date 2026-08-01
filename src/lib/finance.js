@@ -160,8 +160,30 @@ export function filterByRange(transactions, start, end) {
   });
 }
 
+/**
+ * When a record was entered, as a comparable number — the tie-breaker `data` cannot provide.
+ * `data` is a date-only string, so everything booked today looks equal to it and the list falls
+ * back to whatever order IndexedDB returns (oldest first), which is why a row just added showed
+ * up at the bottom of its day instead of on top.
+ *
+ * `krijuar` is stamped when the record is created. Rows saved before that field existed still
+ * order correctly because `makeId()` starts every id with `Date.now()` in base 36 — eight
+ * characters, from 2004 until well past 2059.
+ */
+export function enteredAt(record) {
+  const stamp = Date.parse(record?.krijuar ?? "");
+  if (Number.isFinite(stamp)) return stamp;
+  // `|| ""` matters: parseInt(undefined, 36) reads the literal string "undefined" as base 36.
+  const encoded = parseInt((String(record?.id ?? "").split("_")[1] || "").slice(0, 8), 36);
+  return Number.isFinite(encoded) ? encoded : 0;
+}
+
+/** Newest first: by date, then — within the same date — by when the row was entered. */
 export function sortByDateDesc(transactions) {
-  return [...transactions].sort((a, b) => (a.data === b.data ? 0 : a.data < b.data ? 1 : -1));
+  return [...transactions].sort((a, b) => {
+    if (a.data !== b.data) return a.data < b.data ? 1 : -1;
+    return enteredAt(b) - enteredAt(a);
+  });
 }
 
 // ── Cashflow ────────────────────────────────────────────────────────────────
@@ -382,9 +404,10 @@ export function goalProgress(goal, transactions) {
 
 /** The lines of one note, newest first. Tolerates a record saved before `pagesat` existed. */
 export function debtEntries(debt) {
-  return [...(Array.isArray(debt?.pagesat) ? debt.pagesat : [])].sort((a, b) =>
-    a.data === b.data ? 0 : a.data < b.data ? 1 : -1
-  );
+  return [...(Array.isArray(debt?.pagesat) ? debt.pagesat : [])].sort((a, b) => {
+    if (a.data !== b.data) return a.data < b.data ? 1 : -1;
+    return enteredAt(b) - enteredAt(a);
+  });
 }
 
 /** Where one note stands: what it started at, what has been added, what has been paid off. */
@@ -614,11 +637,14 @@ export function generateDueTransactions(rec, todayStr, makeIdFn, maxCatchUp = 60
   const transactions = [];
   let updated = { ...rec };
   let guard = 0;
+  // One stamp for the whole catch-up: they are all booked now, and `data` still separates them.
+  const krijuar = new Date().toISOString();
 
   while (isRecurringDue(updated, todayStr) && guard < maxCatchUp) {
     transactions.push({
       id: makeIdFn("tx"),
       data: updated.dataETjetres,
+      krijuar,
       lloji: updated.lloji,
       vlera: toNumber(updated.vlera),
       llogariaId: updated.llogariaId,

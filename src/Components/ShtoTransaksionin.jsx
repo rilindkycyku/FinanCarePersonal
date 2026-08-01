@@ -186,6 +186,9 @@ function ShtoTransaksionin({
       shenim: tx.shenim.trim(),
       qellimiId: tx.qellimiId || null,
       perseritjaId: tx.perseritjaId || null,
+      // Only ever set once: two transactions on the same date are ordered by when they were
+      // entered (finance.js), so re-stamping this on an edit would move an old row to the top.
+      krijuar: tx.krijuar || new Date().toISOString(),
       ...monedhat,
     });
 
