@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Card, Form, Row, Col, Button, Alert } from "react-bootstrap";
-import { Settings, Save, Trash2, RotateCcw, Sun, Moon, AlertTriangle, BellRing } from "lucide-react";
+import { Settings, Save, Trash2, RotateCcw, Sun, Moon, AlertTriangle, BellRing, Eraser } from "lucide-react";
 import NavBar from "../Components/NavBar";
 import Footer from "../Components/Footer";
 import PageTitle from "../Components/PageTitle";
@@ -11,6 +11,7 @@ import { useDialog } from "../Context/DialogContext";
 import { useTheme } from "../Context/ThemeContext";
 import { seedDefaults, wipeAllData } from "../lib/db";
 import { CURRENCIES, DEFAULT_CURRENCY } from "../lib/options";
+import { pastroRregullat } from "../lib/rregullat";
 import { toNumber } from "../lib/format";
 import { kerkoLeje, lejaAktuale } from "../lib/njoftimet";
 import "./Styles/PremiumTheme.css";
@@ -121,6 +122,19 @@ function Cilesimet() {
       type: "success",
       text: "Të gjitha të dhënat u fshinë dhe listat e parazgjedhura u kthyen - gati për të filluar nga e para.",
     });
+  };
+
+  /** Rules whose category still exists — the only ones that can ever fire (rregullat.js). */
+  const rregullaAktive = pastroRregullat(profile, categories);
+
+  const handleHarro = async () => {
+    const ok = await dialog.confirm(
+      `Kjo fshin ${rregullaAktive.length} rregulla të mësuara nga përshkrimet tuaja. Transaksionet dhe kategoritë nuk preken - vetëm propozimet automatike ndalen derisa aplikacioni t'i mësojë sërish.`,
+      { title: "Harro Kujtesën e Kategorive" }
+    );
+    if (!ok) return;
+    await saveProfile({ ...profile, rregullatKategorive: [] });
+    setMessage({ type: "success", text: "Kujtesa e kategorive u fshi." });
   };
 
   const handleReseed = async () => {
@@ -265,6 +279,40 @@ function Cilesimet() {
         </Card>
 
         <CilesimiNjeLlogari onMessage={(text) => setMessage({ type: "success", text })} />
+
+        {/* The memory is built from the user's own choices, so they get to see what it learned and
+            throw it away — a suggestion nobody can inspect or undo is just the app being odd. */}
+        <Card className="profile-card border-0 p-4 mb-4">
+          <h5 className="fw-bold mb-3">Kujtesa e Kategorive</h5>
+          {rregullaAktive.length === 0 ? (
+            <p className="text-muted small mb-0">
+              Ende asnjë rregull. Sa herë që regjistroni një transaksion me përshkrim e kategori, aplikacioni e mban
+              mend çiftin dhe herën tjetër e propozon vetë - edhe kur importoni një ekstrakt të tërë nga CSV.
+            </p>
+          ) : (
+            <>
+              <p className="text-muted small">
+                {rregullaAktive.length}{" "}
+                {rregullaAktive.length === 1 ? "rregull i mësuar" : "rregulla të mësuara"} nga zgjedhjet tuaja. Një
+                rregull ngushtohet vetë te fjalët që përsëriten, prandaj &laquo;spar prishtine&raquo; dhe &laquo;spar
+                fushë kosovë&raquo; bëhen thjesht &laquo;spar&raquo;.
+              </p>
+              <div className="d-flex flex-wrap gap-2 mb-3">
+                {rregullaAktive.slice(0, 24).map((r) => (
+                  <span className="fcp-pill" key={`${r.fjalet.join("-")}-${r.lloji}`}>
+                    {r.fjalet.join(" ")} → {categories.find((c) => c.id === r.kategoriaId)?.emri}
+                  </span>
+                ))}
+                {rregullaAktive.length > 24 && (
+                  <span className="fcp-row-sub">edhe {rregullaAktive.length - 24} të tjera</span>
+                )}
+              </div>
+              <Button variant="outline-light" onClick={handleHarro} style={{ maxWidth: 240 }}>
+                <Eraser size={16} className="me-1" /> Harro të gjitha rregullat
+              </Button>
+            </>
+          )}
+        </Card>
 
         <Card className="profile-card border-0 p-4 mb-4">
           <h5 className="fw-bold mb-3">Pamja</h5>

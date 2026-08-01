@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import { Button, Alert, Row, Col, Card, Form, Spinner } from "react-bootstrap";
-import { Download, Upload, DatabaseBackup, ShieldCheck, FileText, Sheet, GitMerge } from "lucide-react";
+import { Download, Upload, DatabaseBackup, ShieldCheck, FileText, Sheet, GitMerge, FileSpreadsheet } from "lucide-react";
 import NavBar from "../Components/NavBar";
 import Footer from "../Components/Footer";
 import PageTitle from "../Components/PageTitle";
@@ -302,6 +303,23 @@ function TeDhena() {
             </Card>
           </Col>
         </Row>
+
+        <Card className="profile-card border-0 p-4 mb-4">
+          <h5 className="fw-bold mb-2">
+            <FileSpreadsheet size={18} className="me-2 text-primary" />
+            Importo nga Ekstrakti i Bankës (CSV)
+          </h5>
+          <p className="text-muted small">
+            Kopja JSON më sipër është për të dhënat e këtij aplikacioni. Për ekstraktin e bankës ose të kartelës ka një
+            faqe të vetën: lexon kolonat, i shënon lëvizjet që i keni tashmë dhe i propozon kategoritë sipas zgjedhjeve
+            tuaja të mëparshme. Skedari nuk dërgohet askund.
+          </p>
+          <div>
+            <Link to="/importo-csv" className="btn btn-outline-light">
+              <FileSpreadsheet size={16} className="me-1" /> Hap importimin nga CSV
+            </Link>
+          </div>
+        </Card>
 
         <Card className="profile-card border-0 p-4 mb-4">
           <h5 className="fw-bold mb-2">

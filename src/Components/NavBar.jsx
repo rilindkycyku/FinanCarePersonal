@@ -4,7 +4,7 @@ import { Dropdown } from "react-bootstrap";
 import {
   LayoutDashboard, ArrowRightLeft, Wallet, Tags, PiggyBank, Target, Repeat,
   BarChart3, Settings, DatabaseBackup, Sun, Moon, ChevronDown, Menu, X, Receipt,
-  ClipboardList,
+  ClipboardList, FileSpreadsheet,
 } from "lucide-react";
 import { useTheme } from "../Context/ThemeContext";
 import ButonPasqyra from "./ButonPasqyra";
@@ -42,6 +42,7 @@ const CATEGORIES = [
       { to: "/statistikat", label: "Statistikat", icon: BarChart3 },
       { to: "/cilesimet", label: "Cilësimet", icon: Settings },
       { to: "/te-dhena", label: "Eksporto / Importo", icon: DatabaseBackup },
+      { to: "/importo-csv", label: "Importo nga CSV", icon: FileSpreadsheet },
     ],
   },
 ];

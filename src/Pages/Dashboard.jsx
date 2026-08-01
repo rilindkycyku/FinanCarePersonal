@@ -4,7 +4,7 @@ import { Container, Row, Col, Button, Alert } from "react-bootstrap";
 import {
   LayoutDashboard, Wallet, TrendingUp, TrendingDown, PiggyBank, Percent, PlusCircle,
   ArrowRightLeft, Tags, Target, Repeat, BarChart3, Settings, DatabaseBackup, CalendarClock,
-  Receipt, ClipboardList, ShieldAlert, LineChart, TriangleAlert,
+  Receipt, ClipboardList, ShieldAlert, LineChart, TriangleAlert, FileSpreadsheet,
 } from "lucide-react";
 import NavBar from "../Components/NavBar";
 import PageTitle from "../Components/PageTitle";
@@ -40,6 +40,7 @@ const QUICK_ACTIONS = [
   { to: "/statistikat", label: "Statistikat", icon: BarChart3 },
   { to: "/cilesimet", label: "Cilësimet", icon: Settings },
   { to: "/te-dhena", label: "Eksporto / Importo", icon: DatabaseBackup },
+  { to: "/importo-csv", label: "Importo nga CSV", icon: FileSpreadsheet },
 ];
 
 function Dashboard() {
