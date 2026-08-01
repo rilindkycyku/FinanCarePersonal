@@ -221,8 +221,9 @@ function Cilesimet() {
                   onChange={(e) => setField("limitiDitor", e.target.value)}
                 />
                 <div className="fcp-row-sub mt-1">
-                  Lëreni bosh dhe limiti llogaritet vetë: hyrjet e mbetura të muajit të ndara mbi ditët që kanë
-                  mbetur.
+                  Lëreni bosh dhe limiti llogaritet vetë: bilanci që keni për të shpenzuar (pa kursimet e
+                  investimet), plus hyrjet që priten këtë muaj, minus pagesat e përsëritura të pakonfirmuara dhe
+                  shpenzimet e planifikuara — të ndara mbi ditët që kanë mbetur.
                 </div>
               </Form.Group>
 

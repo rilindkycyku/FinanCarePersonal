@@ -4,6 +4,7 @@ import { Dropdown } from "react-bootstrap";
 import {
   LayoutDashboard, ArrowRightLeft, Wallet, Tags, PiggyBank, Target, Repeat,
   BarChart3, Settings, DatabaseBackup, Sun, Moon, ChevronDown, Menu, X, Receipt,
+  ClipboardList,
 } from "lucide-react";
 import { useTheme } from "../Context/ThemeContext";
 import ButonPasqyra from "./ButonPasqyra";
@@ -28,6 +29,7 @@ const CATEGORIES = [
     label: "Planifikimi",
     icon: PiggyBank,
     links: [
+      { to: "/planifikuara", label: "Shpenzimet e Planifikuara", icon: ClipboardList },
       { to: "/buxhetet", label: "Buxhetet", icon: PiggyBank },
       { to: "/qellimet", label: "Qëllimet e Kursimit", icon: Target },
       { to: "/te-perseritura", label: "Pagesat e Përsëritura", icon: Repeat },

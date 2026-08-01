@@ -1,6 +1,7 @@
 /**
  * Every derived number in the app comes from here: account balances, monthly cashflow, category
- * breakdowns, budget usage, savings-goal progress and recurring-payment schedules.
+ * breakdowns, budget usage, savings-goal progress, recurring-payment schedules, planned spending
+ * and the daily allowance.
  *
  * All functions are pure — they take the raw IndexedDB records and return plain results, so the
  * pages stay thin and the same maths is shared by the dashboard, the statistics page and the
@@ -14,7 +15,7 @@
  */
 
 import { addDays, addMonths, addWeeks, addYears, format, parseISO } from "date-fns";
-import { debtTypeMeta, FREQUENCIES, MONTHS_SHORT } from "./options";
+import { debtTypeMeta, planPriorityMeta, FREQUENCIES, MONTHS_SHORT } from "./options";
 import { toNumber } from "./format";
 
 // ── Accounts ────────────────────────────────────────────────────────────────
@@ -46,6 +47,24 @@ export function totalBalance(accounts, transactions) {
   return accounts
     .filter((a) => !a.arkivuar)
     .reduce((sum, account) => sum + accountBalance(account, transactions), 0);
+}
+
+/** Account kinds holding money that is already put aside, not money to live on this month. */
+const SAVINGS_ACCOUNT_TYPES = ["kursim", "investim"];
+
+/**
+ * The part of the net worth that is actually there to be spent — everything except savings and
+ * investment accounts, so the daily allowance never hands out the emergency fund. When those are
+ * the only accounts there are, the full balance is used instead: the user clearly lives off them,
+ * and reporting "0 € për sot" would be wrong rather than careful.
+ */
+export function spendableBalance(accounts, transactions) {
+  const aktive = accounts.filter((a) => !a.arkivuar);
+  const rrjedhese = aktive.filter((a) => !SAVINGS_ACCOUNT_TYPES.includes(a.lloji));
+  return (rrjedhese.length > 0 ? rrjedhese : aktive).reduce(
+    (sum, account) => sum + accountBalance(account, transactions),
+    0
+  );
 }
 
 export function accountsWithBalances(accounts, transactions) {
@@ -209,44 +228,83 @@ export function cashflow(transactions) {
 }
 
 /**
- * Today's spending allowance. The limit is the fixed one set in Cilësimet or, when that is left
- * empty, this month's income spread over the days still to come — the figure that answers "sa mund
- * të shpenzoj sot": it goes up when a salary lands and shrinks after an expensive week.
+ * Today's spending allowance — the figure that answers "sa mund të shpenzoj sot".
  *
- * Only spending booked *before* today comes out of the pool. That keeps the limit still for the
- * whole day, so what you spend today eats into the allowance instead of into the limit itself —
- * otherwise spending exactly the limit would leave you over it.
+ * The money left to live on is what you actually hold and can spend (savings and investment
+ * accounts left out, `spendableBalance`), plus the income still expected this month, minus
+ * everything already promised: recurring payments that have not been booked yet and planned
+ * purchases that have not been bought yet. Spread over the days left in the month, today included,
+ * that is the limit; a fixed limit set in Cilësimet overrides it.
+ *
+ * Working from the balance rather than from the month's income is what lets it know the difference
+ * between money that arrived and money still to come, and lets rent that falls on the 15th shrink
+ * today's figure before it is paid instead of after.
+ *
+ * Two details keep it honest rather than merely arithmetic:
+ *  - The pool is measured from the *start of today*, so a purchase made this morning eats into
+ *    today's allowance instead of quietly shrinking every day left in the month.
+ *  - "Spent today" is day-to-day spending only. An instalment or a planned purchase booked today
+ *    was already set aside as a commitment, so counting it again here would wipe out a day's
+ *    allowance over money that was never part of it.
  */
-export function dailyLimit(transactions, todayStr, limitiManual = 0) {
-  const { start, end } = monthBounds(todayStr);
-  const muajiTx = filterByRange(transactions, start, end);
-  const hyrjet = sumByType(muajiTx, "hyrje");
-  const shpenzuarMePare = sumByType(
-    muajiTx.filter((tx) => tx.data < todayStr),
-    "shpenzim"
-  );
+export function dailyLimit({
+  accounts = [],
+  transactions = [],
+  plans = [],
+  recurring = [],
+  today = format(new Date(), "yyyy-MM-dd"),
+  limitiManual = 0,
+} = {}) {
+  const { start, end } = monthBounds(today);
+  const key = today.slice(0, 7);
+  const ditetGjithsej = Number(end.slice(8, 10));
   // Today counts as remaining: an allowance worked out this morning still has to cover today.
-  const ditetMbetura = Math.max(Number(end.slice(8, 10)) - Number(todayStr.slice(8, 10)) + 1, 1);
+  // Clamped so a date outside the month (a clock set oddly) can never divide by zero or negatives.
+  const ditetMbetura = Math.min(Math.max(ditetGjithsej - Number(today.slice(8, 10)) + 1, 1), ditetGjithsej);
+
+  const shpenzuarSot = transactions
+    .filter((tx) => tx.lloji === "shpenzim" && tx.data === today && !tx.perseritjaId && !tx.planiId)
+    .reduce((sum, tx) => sum + toNumber(tx.vlera), 0);
+
+  // The whole month is the window on purpose: `shumaPritur` is what is still unbooked, which for a
+  // payment that fell due last week and is still waiting for confirmation is exactly right — that
+  // money has not left the account yet, but it is going to.
+  const perseritjet = monthlyRecurringBreakdown(recurring, transactions, start, end);
+  const priturNga = (lloji) =>
+    perseritjet.filter((r) => r.lloji === lloji).reduce((sum, r) => sum + r.shumaPritur, 0);
+  const perseritjePritura = priturNga("shpenzim");
+  const hyrjePritura = priturNga("hyrje");
+
+  const planePritura = plans
+    .filter((p) => p.muaji === key && !p.kryer)
+    .reduce((sum, p) => sum + toNumber(p.vlera), 0);
+
+  const bilanci = spendableBalance(accounts, transactions);
+  const disponueshme = bilanci + shpenzuarSot + hyrjePritura - perseritjePritura - planePritura;
 
   const manual = toNumber(limitiManual);
-  const disponueshme = Math.max(hyrjet - shpenzuarMePare, 0);
   const limiti = manual > 0 ? manual : disponueshme / ditetMbetura;
-  const shpenzuarSot = sumByType(
-    muajiTx.filter((tx) => tx.data === todayStr),
-    "shpenzim"
-  );
 
   return {
     limiti,
-    // Nothing to show against: no manual limit and no income recorded this month yet.
+    // Nothing to spread and no fixed limit: an empty ledger, or commitments that already outrun
+    // the balance. Either way the UI has something to explain rather than a bare 0,00 €.
     caktuar: limiti > 0,
     manual: manual > 0,
     shpenzuarSot,
     mbetur: limiti - shpenzuarSot,
-    perqindja: limiti > 0 ? (shpenzuarSot / limiti) * 100 : 0,
-    tejkaluar: limiti > 0 && shpenzuarSot > limiti,
+    perqindja: limiti > 0 ? (shpenzuarSot / limiti) * 100 : shpenzuarSot > 0 ? 100 : 0,
+    tejkaluar: limiti - shpenzuarSot < 0,
     ditetMbetura,
+    ditetGjithsej,
     disponueshme,
+    // The parts the pool was built from, so the card can show its working.
+    bilanci,
+    hyrjePritura,
+    perseritjePritura,
+    planePritura,
+    dita: today,
+    muaji: key,
   };
 }
 
@@ -761,4 +819,79 @@ export function generateDueTransactions(rec, todayStr, makeIdFn, maxCatchUp = 60
   }
 
   return { transactions, updated, changed: transactions.length > 0 };
+}
+
+// ── Planned spending ────────────────────────────────────────────────────────
+
+/**
+ * A plan is a purchase the user already knows about but has not made yet — "shelves for the living
+ * room, some time this month". It is neither a transaction nor a budget: it moves no money and sets
+ * no per-category limit. It belongs to one month (`muaji`, a "YYYY-MM" key) and its whole job is to
+ * be set aside before it is spent, so the daily allowance below stops offering money that is
+ * already promised.
+ *
+ * Completing a plan is what turns it into a real transaction; the plan then keeps that
+ * transaction's id and reads the amount back from it, so correcting the transaction later never
+ * leaves the plan claiming a price that was never paid.
+ */
+export function planProgress(plan, transactions = []) {
+  const transaksioni = plan.transaksioniId
+    ? transactions.find((tx) => tx.id === plan.transaksioniId) || null
+    : null;
+  const vlera = toNumber(plan.vlera);
+  const kryer = Boolean(plan.kryer);
+  return {
+    ...plan,
+    vlera,
+    kryer,
+    transaksioni,
+    prioriteti: plan.prioriteti || "normale",
+    // What it really cost. The planned amount is the fallback for a plan ticked off without a
+    // transaction, or whose transaction was later deleted from the Transaksionet page.
+    vleraReale: kryer ? toNumber(transaksioni?.vlera ?? vlera) : 0,
+    // What it is still expected to take out of this month.
+    vleraMbetur: kryer ? 0 : vlera,
+  };
+}
+
+/** The plans of one month — still to buy first, then by priority, then largest first. */
+export function plansForMonth(plans, key, transactions = []) {
+  return plans
+    .filter((p) => p.muaji === key)
+    .map((p) => planProgress(p, transactions))
+    .sort(
+      (a, b) =>
+        Number(a.kryer) - Number(b.kryer) ||
+        planPriorityMeta(a.prioriteti).rendi - planPriorityMeta(b.prioriteti).rendi ||
+        b.vlera - a.vlera
+    );
+}
+
+/** What one month's plans come to: everything planned, what is already bought, what is still ahead. */
+export function planTotals(plans, key, transactions = []) {
+  const muaji = plansForMonth(plans, key, transactions);
+  const kryer = muaji.reduce((sum, p) => sum + p.vleraReale, 0);
+  const mbetur = muaji.reduce((sum, p) => sum + p.vleraMbetur, 0);
+  const planifikuar = muaji.reduce((sum, p) => sum + p.vlera, 0);
+  return {
+    planifikuar,
+    kryer,
+    mbetur,
+    numri: muaji.length,
+    numriKryer: muaji.filter((p) => p.kryer).length,
+    numriMbetur: muaji.filter((p) => !p.kryer).length,
+    perqindja: planifikuar > 0 ? Math.min((kryer / planifikuar) * 100, 100) : 0,
+  };
+}
+
+/**
+ * Plans left unbought in months that have already gone by, oldest first. They are deliberately
+ * *not* folded into the current month's totals — a plan belongs to the month it was made for, and
+ * moving it forward is the user's decision, one button away on the Planet page.
+ */
+export function overduePlans(plans, key, transactions = []) {
+  return plans
+    .filter((p) => !p.kryer && p.muaji && p.muaji < key)
+    .map((p) => planProgress(p, transactions))
+    .sort((a, b) => (a.muaji === b.muaji ? b.vlera - a.vlera : a.muaji < b.muaji ? -1 : 1));
 }

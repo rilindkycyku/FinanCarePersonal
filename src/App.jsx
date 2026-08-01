@@ -13,6 +13,7 @@ const Borxhet = lazy(() => import("./Pages/Borxhet"));
 const Kategorite = lazy(() => import("./Pages/Kategorite"));
 const Buxhetet = lazy(() => import("./Pages/Buxhetet"));
 const Qellimet = lazy(() => import("./Pages/Qellimet"));
+const Planifikuara = lazy(() => import("./Pages/Planifikuara"));
 const TePerseritura = lazy(() => import("./Pages/TePerseritura"));
 const Statistika = lazy(() => import("./Pages/Statistika"));
 const Cilesimet = lazy(() => import("./Pages/Cilesimet"));
@@ -29,6 +30,7 @@ function App() {
         <Route path="/kategorite" element={<Kategorite />} />
         <Route path="/buxhetet" element={<Buxhetet />} />
         <Route path="/qellimet" element={<Qellimet />} />
+        <Route path="/planifikuara" element={<Planifikuara />} />
         <Route path="/te-perseritura" element={<TePerseritura />} />
         <Route path="/statistikat" element={<Statistika />} />
         <Route path="/cilesimet" element={<Cilesimet />} />

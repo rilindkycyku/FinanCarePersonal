@@ -9,7 +9,7 @@ import { generateDueTransactions } from "./finance";
 import { todayISO } from "./format";
 
 const DB_NAME = "financarepersonal";
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 
 export const STORES = {
   profile: "profile",
@@ -22,6 +22,10 @@ export const STORES = {
   // Debt notes (cards, loans, money lent out). Deliberately a store of its own and never read by
   // the balance maths — see finance.js.
   borxhet: "borxhet",
+  // Planned purchases for a month: money the user knows will go out but has not spent yet. Like
+  // debts they are not transactions, so they never move a balance — they only reserve part of the
+  // month's money so the daily allowance stops handing it out (finance.js).
+  planet: "planet",
 };
 
 const PROFILE_KEY = "main";
@@ -99,6 +103,10 @@ function openDb() {
       // store on the next open without touching anything already in it.
       if (!db.objectStoreNames.contains(STORES.borxhet)) {
         db.createObjectStore(STORES.borxhet, { keyPath: "id" });
+      }
+      // Added in DB_VERSION 3, same guard: an existing database gains the store on the next open.
+      if (!db.objectStoreNames.contains(STORES.planet)) {
+        db.createObjectStore(STORES.planet, { keyPath: "id" });
       }
     };
     // The request keeps waiting either way; these only decide whether the user is told about it.
@@ -228,7 +236,8 @@ export function getAllData() {
     getAll(STORES.goals),
     getAll(STORES.recurring),
     getAll(STORES.borxhet),
-  ]).then(([profile, accounts, categories, transactions, budgets, goals, recurring, borxhet]) => ({
+    getAll(STORES.planet),
+  ]).then(([profile, accounts, categories, transactions, budgets, goals, recurring, borxhet, planet]) => ({
     profile: profile ?? {},
     accounts,
     categories,
@@ -237,6 +246,7 @@ export function getAllData() {
     goals,
     recurring,
     borxhet,
+    planet,
   }));
 }
 
@@ -256,7 +266,7 @@ export async function exportAllData() {
   const data = await getAllData();
   return {
     app: "FinanCarePersonal",
-    version: 2,
+    version: 3,
     exportedAt: new Date().toISOString(),
     profile: data.profile ?? null,
     accounts: data.accounts,
@@ -266,6 +276,7 @@ export async function exportAllData() {
     goals: data.goals,
     recurring: data.recurring,
     borxhet: data.borxhet,
+    planet: data.planet,
   };
 }
 
@@ -281,6 +292,7 @@ export async function importAllData(data) {
     clearStore(STORES.goals),
     clearStore(STORES.recurring),
     clearStore(STORES.borxhet),
+    clearStore(STORES.planet),
   ]);
   if (data.profile) await putProfile(data.profile);
   await Promise.all([
@@ -292,6 +304,7 @@ export async function importAllData(data) {
     ...(data.recurring ?? []).map((r) => put(STORES.recurring, r)),
     // Absent from a backup taken before debt notes existed, which `?? []` turns into "none".
     ...(data.borxhet ?? []).map((b) => put(STORES.borxhet, b)),
+    ...(data.planet ?? []).map((p) => put(STORES.planet, p)),
   ]);
 }
 
