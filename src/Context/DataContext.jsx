@@ -1,7 +1,10 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { bookAutomaticRecurring, ensureDefaultCategories, getAllData, put, putProfile, remove } from "../lib/db";
+import {
+  bookAutomaticRecurring, ensureDefaultCategories, getAllData, onBllokimBaze, put, putProfile, remove,
+} from "../lib/db";
 import { DEFAULT_CURRENCY } from "../lib/options";
 import { currencySymbol, formatMoney, formatSignedMoney } from "../lib/format";
+import BazaEBllokuar from "../Components/BazaEBllokuar";
 
 const DataContext = createContext(null);
 
@@ -28,6 +31,11 @@ export function DataProvider({ children }) {
   const [data, setData] = useState(EMPTY);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  // Not an error: the database is intact, just held open at an older version by another tab, and
+  // the read is still queued behind it. db.js announces both the wait and the moment it clears, so
+  // there is nothing to retry here — closing the other tab lets the pending read finish by itself.
+  const [bllokuar, setBllokuar] = useState(false);
+  useEffect(() => onBllokimBaze(setBllokuar), []);
 
   const reload = useCallback(async () => {
     try {
@@ -115,6 +123,7 @@ export function DataProvider({ children }) {
       ...data,
       loading,
       error,
+      bllokuar,
       reload,
       save,
       saveMany,
@@ -129,12 +138,19 @@ export function DataProvider({ children }) {
       signedMoney: (v) => formatSignedMoney(v, monedha),
     }),
     [
-      data, loading, error, reload, save, saveMany, destroy, destroyMany, saveProfile,
+      data, loading, error, bllokuar, reload, save, saveMany, destroy, destroyMany, saveProfile,
       njeLlogari, llogariaKryesore, monedha,
     ]
   );
 
-  return <DataContext.Provider value={value}>{children}</DataContext.Provider>;
+  return (
+    <DataContext.Provider value={value}>
+      {children}
+      {/* Deliberately over the whole app rather than per page: with no readable database every
+          page would otherwise render as empty, which reads as data loss when nothing is lost. */}
+      {bllokuar && <BazaEBllokuar />}
+    </DataContext.Provider>
+  );
 }
 
 export function useData() {
