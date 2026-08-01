@@ -891,6 +891,40 @@ export function generateDueTransactions(rec, todayStr, makeIdFn, maxCatchUp = 60
   return { transactions, updated, changed: transactions.length > 0 };
 }
 
+// ── Backups ─────────────────────────────────────────────────────────────────
+
+/**
+ * How exposed the ledger is right now — everything lives in one browser's IndexedDB, and clearing
+ * site data takes it with it, so the only real protection is a file the user keeps somewhere else.
+ *
+ * `teReja` counts the transactions entered since that file was written, which is the honest measure
+ * of what a wipe would cost: three weeks with nothing recorded is not the same risk as three weeks
+ * of daily entries. `duhet` is deliberately quiet on an empty or barely-used ledger — a brand new
+ * database has nothing to lose and being nagged on day one only teaches the user to ignore it.
+ */
+export function backupStatus({ profile = {}, transactions = [], sot = new Date(), afati = 30, minimumi = 10 } = {}) {
+  const stamp = Date.parse(profile?.kopjaFundit ?? "");
+  const kurre = !Number.isFinite(stamp);
+  const tani = sot instanceof Date ? sot.getTime() : Date.parse(sot);
+
+  const ditet = kurre ? null : Math.max(Math.floor((tani - stamp) / 86400000), 0);
+  const teReja = kurre
+    ? transactions.length
+    : transactions.filter((tx) => enteredAt(tx) > stamp).length;
+
+  return {
+    kurre,
+    data: kurre ? null : profile.kopjaFundit,
+    ditet,
+    teReja,
+    vjeter: kurre || ditet >= afati,
+    // Worth a word on the dashboard: never backed up with real data in there, or an old copy that
+    // has since fallen behind.
+    duhet: (kurre && transactions.length >= minimumi) || (!kurre && ditet >= afati && teReja > 0),
+    afati,
+  };
+}
+
 // ── Planned spending ────────────────────────────────────────────────────────
 
 /**

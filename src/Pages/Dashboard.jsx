@@ -4,7 +4,7 @@ import { Container, Row, Col, Button, Alert } from "react-bootstrap";
 import {
   LayoutDashboard, Wallet, TrendingUp, TrendingDown, PiggyBank, Percent, PlusCircle,
   ArrowRightLeft, Tags, Target, Repeat, BarChart3, Settings, DatabaseBackup, CalendarClock,
-  Receipt, ClipboardList,
+  Receipt, ClipboardList, ShieldAlert,
 } from "lucide-react";
 import NavBar from "../Components/NavBar";
 import PageTitle from "../Components/PageTitle";
@@ -17,7 +17,7 @@ import { Kpi, Panel, ProgressBar, Empty } from "../Components/Ui";
 import { useData } from "../Context/DataContext";
 import { getIcon } from "../lib/icons";
 import {
-  accountsWithBalances, budgetProgress, cashflow, debtProgress, debtTotals, dueRecurring,
+  accountsWithBalances, backupStatus, budgetProgress, cashflow, debtProgress, debtTotals, dueRecurring,
   filterByRange, goalProgress, monthBounds, overduePlans, planTotals, plansForMonth,
   sortByDateDesc, totalBalance, totalsByCategory, upcomingRecurring,
 } from "../lib/finance";
@@ -62,6 +62,7 @@ function Dashboard() {
       qellimet: goals.map((g) => goalProgress(g, transactions)).slice(0, 3),
       teFundit: sortByDateDesc(transactions).slice(0, 6),
       dueTani: dueRecurring(recurring, today),
+      kopja: backupStatus({ profile, transactions }),
       neVijim: upcomingRecurring(recurring, today, 14),
       // Notes only — deliberately not folded into `bilanci` above (see finance.js).
       borxhet: borxhet
@@ -78,7 +79,7 @@ function Dashboard() {
       planetTotal: planTotals(planet, muajiKey, transactions),
       planetTeMbartura: overduePlans(planet, muajiKey).length,
     };
-  }, [accounts, categories, transactions, budgets, goals, recurring, borxhet, planet, muajiKey, today]);
+  }, [accounts, categories, transactions, budgets, goals, recurring, borxhet, planet, profile, muajiKey, today]);
 
   const pershendetja = profile.emri || "përdorues";
   // Both are optional targets set in Cilësimet; when unset the KPIs fall back to plain figures.
@@ -138,6 +139,33 @@ function Dashboard() {
             </span>
             <Link to="/te-perseritura" className="btn btn-warning btn-sm">
               Shiko dhe konfirmo
+            </Link>
+          </Alert>
+        )}
+
+        {/* Everything is in this browser and nowhere else, so the only thing that survives a
+            cleared cache is a file kept somewhere else. Shown only when there is something to
+            lose — see `backupStatus` in finance.js. */}
+        {stats.kopja.duhet && (
+          <Alert variant="secondary" className="d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <span>
+              <ShieldAlert size={16} className="me-2" />
+              {stats.kopja.kurre ? (
+                <>
+                  Të dhënat tuaja ndodhen vetëm në këtë shfletues dhe nuk keni ende asnjë kopje. Pastrimi i të dhënave
+                  të faqes do t&apos;i merrte me vete{" "}
+                  <strong>{transactions.length}</strong> transaksione.
+                </>
+              ) : (
+                <>
+                  Kopja e fundit është marrë <strong>{stats.kopja.ditet} ditë</strong> më parë dhe që atëherë keni
+                  shtuar <strong>{stats.kopja.teReja}</strong>{" "}
+                  {stats.kopja.teReja === 1 ? "transaksion" : "transaksione"} që nuk janë në asnjë skedar.
+                </>
+              )}
+            </span>
+            <Link to="/te-dhena" className="btn btn-outline-light btn-sm">
+              Merr një kopje
             </Link>
           </Alert>
         )}

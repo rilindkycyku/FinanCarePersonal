@@ -9,7 +9,7 @@
 
 import { describe, expect, it } from "vitest";
 import {
-  accountBalance, annualOutlook, budgetProgress, cashflow, categoryComparison, consolidateAccounts,
+  accountBalance, annualOutlook, backupStatus, budgetProgress, cashflow, categoryComparison, consolidateAccounts,
   convertedAmount, currencyFields, dailyLimit, debtPaymentsFromTransactions, debtProgress,
   debtTotals, dueRecurring, effectiveBudgets, enteredAt, filterByRange, generateDueTransactions,
   goalProgress, isRecurringDue, lastInstallmentDate, monthBounds, monthKeyBounds, monthlyTrend,
@@ -558,6 +558,54 @@ describe("annualOutlook", () => {
     expect(outlook.neto).toEqual({ vjetore: 7200, mujore: 600 });
     // Each row's share is measured against its own side.
     expect(outlook.rreshtat.every((r) => r.perqindja === 100)).toBe(true);
+  });
+});
+
+describe("backupStatus", () => {
+  const sot = new Date("2026-08-10T12:00:00.000Z");
+  const entered = (id, iso) => tx(id, { krijuar: iso });
+
+  it("says nothing on a ledger with almost nothing in it", () => {
+    const status = backupStatus({ profile: {}, transactions: [entered("1", "2026-08-09T10:00:00.000Z")], sot });
+    expect(status).toMatchObject({ kurre: true, ditet: null, vjeter: true, duhet: false });
+  });
+
+  it("asks for a first copy once there is real data to lose", () => {
+    const txs = Array.from({ length: 12 }, (_, i) => entered(`t${i}`, "2026-08-09T10:00:00.000Z"));
+    expect(backupStatus({ profile: {}, transactions: txs, sot })).toMatchObject({
+      kurre: true, teReja: 12, duhet: true,
+    });
+  });
+
+  it("stays quiet while the copy is recent", () => {
+    const status = backupStatus({
+      profile: { kopjaFundit: "2026-08-01T10:00:00.000Z" },
+      transactions: [entered("1", "2026-08-05T10:00:00.000Z")],
+      sot,
+    });
+    expect(status).toMatchObject({ kurre: false, ditet: 9, teReja: 1, vjeter: false, duhet: false });
+  });
+
+  it("counts only what was entered after the copy was taken", () => {
+    const status = backupStatus({
+      profile: { kopjaFundit: "2026-06-01T10:00:00.000Z" },
+      transactions: [
+        entered("para", "2026-05-20T10:00:00.000Z"),
+        entered("pas1", "2026-06-20T10:00:00.000Z"),
+        entered("pas2", "2026-07-20T10:00:00.000Z"),
+      ],
+      sot,
+    });
+    expect(status).toMatchObject({ ditet: 70, teReja: 2, vjeter: true, duhet: true });
+  });
+
+  it("does not nag over an old copy that nothing has changed since", () => {
+    const status = backupStatus({
+      profile: { kopjaFundit: "2026-01-01T10:00:00.000Z" },
+      transactions: [entered("para", "2025-12-20T10:00:00.000Z")],
+      sot,
+    });
+    expect(status).toMatchObject({ vjeter: true, teReja: 0, duhet: false });
   });
 });
 
