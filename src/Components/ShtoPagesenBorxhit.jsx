@@ -100,6 +100,8 @@ function ShtoPagesenBorxhit({ show, onHide, borxhi, initial }) {
     }
 
     const transaksioniId = lidhet ? vjeterTxId || makeId("tx") : null;
+    // Kept from the original line when editing: `krijuar` is what orders two rows booked on the
+    // same date (finance.js), and re-stamping it here would jump an old line to the top.
     const rreshti = {
       id: initial?.id || makeId("dpay"),
       data: entry.data,
@@ -108,6 +110,7 @@ function ShtoPagesenBorxhit({ show, onHide, borxhi, initial }) {
       shenim: entry.shenim.trim(),
       llogariaId: lidhet ? entry.llogariaId : null,
       transaksioniId,
+      krijuar: initial?.krijuar || new Date().toISOString(),
     };
 
     const pagesat = Array.isArray(borxhi.pagesat) ? borxhi.pagesat : [];
@@ -142,6 +145,7 @@ function ShtoPagesenBorxhit({ show, onHide, borxhi, initial }) {
           monedhaOrigjinale: null,
           vleraOrigjinale: null,
           kursi: null,
+          krijuar: transactions.find((t) => t.id === transaksioniId)?.krijuar || rreshti.krijuar,
         },
       ]);
     }

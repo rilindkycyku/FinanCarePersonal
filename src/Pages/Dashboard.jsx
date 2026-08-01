@@ -4,7 +4,7 @@ import { Container, Row, Col, Button, Alert } from "react-bootstrap";
 import {
   LayoutDashboard, Wallet, TrendingUp, TrendingDown, PiggyBank, Percent, PlusCircle,
   ArrowRightLeft, Tags, Target, Repeat, BarChart3, Settings, DatabaseBackup, CalendarClock,
-  Receipt,
+  Receipt, Gauge,
 } from "lucide-react";
 import NavBar from "../Components/NavBar";
 import PageTitle from "../Components/PageTitle";
@@ -16,7 +16,7 @@ import { Kpi, Panel, ProgressBar, Empty } from "../Components/Ui";
 import { useData } from "../Context/DataContext";
 import { getIcon } from "../lib/icons";
 import {
-  accountsWithBalances, budgetProgress, cashflow, debtProgress, debtTotals, dueRecurring,
+  accountsWithBalances, budgetProgress, cashflow, dailyLimit, debtProgress, debtTotals, dueRecurring,
   filterByRange, goalProgress, monthBounds, sortByDateDesc, totalBalance, totalsByCategory,
   upcomingRecurring,
 } from "../lib/finance";
@@ -71,6 +71,12 @@ function Dashboard() {
       borxhetTotal: debtTotals(borxhet),
     };
   }, [accounts, categories, transactions, budgets, goals, recurring, borxhet, muajiKey, today]);
+
+  // Kept out of `stats` because it is the one figure that depends on the profile as well.
+  const limiti = useMemo(
+    () => dailyLimit(transactions, today, profile.limitiDitor),
+    [transactions, today, profile.limitiDitor]
+  );
 
   const pershendetja = profile.emri || "përdorues";
   // Both are optional targets set in Cilësimet; when unset the KPIs fall back to plain figures.
@@ -185,6 +191,40 @@ function Dashboard() {
             lg={3}
           />
         </Row>
+
+        {/* A "today" figure among four month-and-total tiles, so it gets its own strip rather than
+            a fifth cell that would leave the grid ragged on every screen size. */}
+        <div className="mt-2 mb-4">
+          <Panel title="Limiti i Shpenzimeve Ditore" icon={Gauge} action="Cakto" actionTo="/cilesimet">
+            {limiti.caktuar ? (
+              <>
+                <div className="d-flex justify-content-between align-items-center mb-1">
+                  <span className="fcp-row-title">
+                    {money(limiti.shpenzuarSot)} / {money(limiti.limiti)}
+                  </span>
+                  <span className={`fcp-row-sub ${limiti.tejkaluar ? "fcp-neg" : ""}`}>
+                    {limiti.tejkaluar
+                      ? `Tejkaluar me ${money(Math.abs(limiti.mbetur))}`
+                      : `Mbeten ${money(limiti.mbetur)} për sot`}
+                  </span>
+                </div>
+                <ProgressBar value={limiti.perqindja} color="var(--sp-cyan)" over={limiti.tejkaluar} />
+                <div className="fcp-row-sub mt-1">
+                  {limiti.manual
+                    ? "Limit i caktuar nga ju te Cilësimet."
+                    : `${money(limiti.disponueshme)} të mbetura nga hyrjet e muajit, ndarë mbi ${limiti.ditetMbetura} ${
+                        limiti.ditetMbetura === 1 ? "ditë të mbetur" : "ditë të mbetura"
+                      }.`}
+                </div>
+              </>
+            ) : (
+              <Empty>
+                Nuk ka ende hyrje këtë muaj për të ndarë mbi ditët e mbetura.{" "}
+                <Link to="/cilesimet">Caktoni një limit ditor</Link> nëse doni një shifër fikse.
+              </Empty>
+            )}
+          </Panel>
+        </div>
 
         {/* With a single account the grid would only repeat the "Bilanci Total" tile above it, so
             the section appears when there is more than one balance to compare. */}

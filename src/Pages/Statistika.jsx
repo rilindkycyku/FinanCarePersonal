@@ -3,6 +3,7 @@ import { Container, Row, Col, Form } from "react-bootstrap";
 import { subMonths } from "date-fns";
 import {
   BarChart3, TrendingUp, TrendingDown, Percent, Wallet, Tags, ArrowRightLeft, CalendarRange, Hash,
+  GitCompareArrows,
 } from "lucide-react";
 import NavBar from "../Components/NavBar";
 import Footer from "../Components/Footer";
@@ -11,8 +12,8 @@ import PageLoading from "../Components/PageLoading";
 import { Kpi, Panel, ProgressBar, Empty } from "../Components/Ui";
 import { useData } from "../Context/DataContext";
 import {
-  accountBalance, cashflow, filterByRange, monthBounds, monthlyTrend,
-  totalsByAccount, totalsByCategory, yearBounds,
+  accountBalance, cashflow, categoryComparison, filterByRange, monthBounds, monthlyTrend,
+  previousMonthKey, totalsByAccount, totalsByCategory, yearBounds,
 } from "../lib/finance";
 import { formatDate, formatPercent, monthKey, monthLabel, todayISO } from "../lib/format";
 import { accountTypeMeta } from "../lib/options";
@@ -87,6 +88,15 @@ function Statistika() {
     const ditet = Math.max(1, (new Date(fundi) - new Date(start)) / 86400000 + 1);
     return stats.flows.shpenzimet / ditet;
   }, [period, stats.flows.shpenzimet, stats.periudha]);
+
+  /** Only a month can be compared with "the month before it", so the panel follows the period
+   * selector and steps aside for the year and all-time views. */
+  const krahasimiKey = period === "muaji" ? monthKey() : period === "kaluar" ? monthKey(subMonths(new Date(), 1)) : null;
+
+  const krahasimi = useMemo(
+    () => (krahasimiKey ? categoryComparison(transactions, categories, krahasimiKey).slice(0, 8) : []),
+    [transactions, categories, krahasimiKey]
+  );
 
   const nameOf = (list, id, fallback = "-") => list.find((x) => x.id === id)?.emri || fallback;
 
@@ -278,6 +288,43 @@ function Statistika() {
                         </div>
                       </div>
                       <div className="fcp-row-value">{money(accountBalance(a, transactions))}</div>
+                    </div>
+                  );
+                })
+              )}
+            </Panel>
+          </Col>
+          )}
+
+          {krahasimiKey && (
+          <Col xl={6}>
+            <Panel title={`Ndryshimi ndaj ${monthLabel(previousMonthKey(krahasimiKey))}`} icon={GitCompareArrows}>
+              {krahasimi.length === 0 ? (
+                <Empty>Nuk ka shpenzime në asnjërin nga të dy muajt.</Empty>
+              ) : (
+                krahasimi.map((k) => {
+                  const Icon = getIcon(k.ikona);
+                  const rritje = k.ndryshimi > 0;
+                  return (
+                    <div className="fcp-row" key={k.id}>
+                      <div className="fcp-row-icon" style={{ color: k.ngjyra }}>
+                        <Icon size={16} />
+                      </div>
+                      <div className="fcp-row-main">
+                        <div className="fcp-row-title">{k.emri}</div>
+                        <div className="fcp-row-sub">
+                          {money(k.vleraKaluar)} → {money(k.vlera)}
+                          {k.perqindja === null
+                            ? k.vlera > 0
+                              ? " · e re këtë muaj"
+                              : " · ndaloi"
+                            : ` · ${formatPercent(Math.abs(k.perqindja))}`}
+                        </div>
+                      </div>
+                      <div className={`fcp-row-value ${rritje ? "fcp-neg" : "fcp-pos"}`}>
+                        {rritje ? "+" : "-"}
+                        {money(Math.abs(k.ndryshimi))}
+                      </div>
                     </div>
                   );
                 })

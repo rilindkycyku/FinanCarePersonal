@@ -160,8 +160,30 @@ export function filterByRange(transactions, start, end) {
   });
 }
 
+/**
+ * When a record was entered, as a comparable number — the tie-breaker `data` cannot provide.
+ * `data` is a date-only string, so everything booked today looks equal to it and the list falls
+ * back to whatever order IndexedDB returns (oldest first), which is why a row just added showed
+ * up at the bottom of its day instead of on top.
+ *
+ * `krijuar` is stamped when the record is created. Rows saved before that field existed still
+ * order correctly because `makeId()` starts every id with `Date.now()` in base 36 — eight
+ * characters, from 2004 until well past 2059.
+ */
+export function enteredAt(record) {
+  const stamp = Date.parse(record?.krijuar ?? "");
+  if (Number.isFinite(stamp)) return stamp;
+  // `|| ""` matters: parseInt(undefined, 36) reads the literal string "undefined" as base 36.
+  const encoded = parseInt((String(record?.id ?? "").split("_")[1] || "").slice(0, 8), 36);
+  return Number.isFinite(encoded) ? encoded : 0;
+}
+
+/** Newest first: by date, then — within the same date — by when the row was entered. */
 export function sortByDateDesc(transactions) {
-  return [...transactions].sort((a, b) => (a.data === b.data ? 0 : a.data < b.data ? 1 : -1));
+  return [...transactions].sort((a, b) => {
+    if (a.data !== b.data) return a.data < b.data ? 1 : -1;
+    return enteredAt(b) - enteredAt(a);
+  });
 }
 
 // ── Cashflow ────────────────────────────────────────────────────────────────
@@ -184,6 +206,90 @@ export function cashflow(transactions) {
     neto,
     normaKursimit: hyrjet > 0 ? (neto / hyrjet) * 100 : 0,
   };
+}
+
+/**
+ * Today's spending allowance. The limit is the fixed one set in Cilësimet or, when that is left
+ * empty, this month's income spread over the days still to come — the figure that answers "sa mund
+ * të shpenzoj sot": it goes up when a salary lands and shrinks after an expensive week.
+ *
+ * Only spending booked *before* today comes out of the pool. That keeps the limit still for the
+ * whole day, so what you spend today eats into the allowance instead of into the limit itself —
+ * otherwise spending exactly the limit would leave you over it.
+ */
+export function dailyLimit(transactions, todayStr, limitiManual = 0) {
+  const { start, end } = monthBounds(todayStr);
+  const muajiTx = filterByRange(transactions, start, end);
+  const hyrjet = sumByType(muajiTx, "hyrje");
+  const shpenzuarMePare = sumByType(
+    muajiTx.filter((tx) => tx.data < todayStr),
+    "shpenzim"
+  );
+  // Today counts as remaining: an allowance worked out this morning still has to cover today.
+  const ditetMbetura = Math.max(Number(end.slice(8, 10)) - Number(todayStr.slice(8, 10)) + 1, 1);
+
+  const manual = toNumber(limitiManual);
+  const disponueshme = Math.max(hyrjet - shpenzuarMePare, 0);
+  const limiti = manual > 0 ? manual : disponueshme / ditetMbetura;
+  const shpenzuarSot = sumByType(
+    muajiTx.filter((tx) => tx.data === todayStr),
+    "shpenzim"
+  );
+
+  return {
+    limiti,
+    // Nothing to show against: no manual limit and no income recorded this month yet.
+    caktuar: limiti > 0,
+    manual: manual > 0,
+    shpenzuarSot,
+    mbetur: limiti - shpenzuarSot,
+    perqindja: limiti > 0 ? (shpenzuarSot / limiti) * 100 : 0,
+    tejkaluar: limiti > 0 && shpenzuarSot > limiti,
+    ditetMbetura,
+    disponueshme,
+  };
+}
+
+/**
+ * One month against the one before it, category by category, biggest swing first — the view that
+ * says *what changed* rather than what the month cost.
+ *
+ * Categories present in only one of the two months are kept with a zero on the missing side: a
+ * category that appeared this month and one that stopped are exactly what this is meant to surface,
+ * and dropping either would make the list agree with itself while hiding the news.
+ */
+export function categoryComparison(transactions, categories, key, lloji = "shpenzim") {
+  const totalsFor = (muaji) => {
+    const { start, end } = monthKeyBounds(muaji);
+    return new Map(
+      totalsByCategory(filterByRange(transactions, start, end), categories, lloji).map((k) => [k.id, k])
+    );
+  };
+
+  const tani = totalsFor(key);
+  const kaluar = totalsFor(previousMonthKey(key));
+
+  return [...new Set([...tani.keys(), ...kaluar.keys()])]
+    .map((id) => {
+      const a = tani.get(id);
+      const b = kaluar.get(id);
+      const meta = a || b;
+      const vlera = a?.vlera || 0;
+      const vleraKaluar = b?.vlera || 0;
+      return {
+        id,
+        emri: meta.emri,
+        ngjyra: meta.ngjyra,
+        ikona: meta.ikona,
+        vlera,
+        vleraKaluar,
+        ndryshimi: vlera - vleraKaluar,
+        // Null rather than Infinity when the category is new: "u shtua" is the honest reading of a
+        // jump from nothing, and no percentage describes it.
+        perqindja: vleraKaluar > 0 ? ((vlera - vleraKaluar) / vleraKaluar) * 100 : null,
+      };
+    })
+    .sort((a, b) => Math.abs(b.ndryshimi) - Math.abs(a.ndryshimi));
 }
 
 /** Category totals for one direction ("shpenzim" or "hyrje"), largest first. Transactions whose
@@ -382,9 +488,10 @@ export function goalProgress(goal, transactions) {
 
 /** The lines of one note, newest first. Tolerates a record saved before `pagesat` existed. */
 export function debtEntries(debt) {
-  return [...(Array.isArray(debt?.pagesat) ? debt.pagesat : [])].sort((a, b) =>
-    a.data === b.data ? 0 : a.data < b.data ? 1 : -1
-  );
+  return [...(Array.isArray(debt?.pagesat) ? debt.pagesat : [])].sort((a, b) => {
+    if (a.data !== b.data) return a.data < b.data ? 1 : -1;
+    return enteredAt(b) - enteredAt(a);
+  });
 }
 
 /** Where one note stands: what it started at, what has been added, what has been paid off. */
@@ -614,11 +721,14 @@ export function generateDueTransactions(rec, todayStr, makeIdFn, maxCatchUp = 60
   const transactions = [];
   let updated = { ...rec };
   let guard = 0;
+  // One stamp for the whole catch-up: they are all booked now, and `data` still separates them.
+  const krijuar = new Date().toISOString();
 
   while (isRecurringDue(updated, todayStr) && guard < maxCatchUp) {
     transactions.push({
       id: makeIdFn("tx"),
       data: updated.dataETjetres,
+      krijuar,
       lloji: updated.lloji,
       vlera: toNumber(updated.vlera),
       llogariaId: updated.llogariaId,

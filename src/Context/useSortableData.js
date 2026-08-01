@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { parseISO, isValid, isWithinInterval } from "date-fns";
 
 // Cells may carry markup (the coloured amount/type pills), and money columns must sort by value
@@ -34,7 +34,13 @@ const useSortableData = (items, config = null, search = "", itemsPerPage = 10, d
     setSortConfig({ key, direction });
   };
 
-  const sortedData = () => {
+  /**
+   * The full result set, worked out once per change rather than once per read. Both the page count
+   * and the visible slice come off this; they used to call the pipeline separately, which meant
+   * every keystroke in the search box re-ran the date parsing, the sort and the markup-stripping
+   * twice over the whole list.
+   */
+  const processed = useMemo(() => {
     let sortableData = [...items];
 
     if (dateField && startDate && endDate) {
@@ -62,25 +68,30 @@ const useSortableData = (items, config = null, search = "", itemsPerPage = 10, d
     }
 
     return sortableData;
-  };
+  }, [items, sortConfig, search, dateField, startDate, endDate]);
 
-  const pageCount = Math.ceil(sortedData().length / itemsPerPage);
+  const pageCount = Math.ceil(processed.length / itemsPerPage);
 
-  const sliceStart = currentPage * itemsPerPage;
-  const sliceEnd = sliceStart + itemsPerPage;
-  const visibleItems = sortedData().slice(sliceStart, sliceEnd);
+  // Searching or filtering can leave fewer pages than the one being read. Clamping here (rather
+  // than resetting on every keystroke) keeps the view on the last page that still has rows instead
+  // of rendering a slice past the end of the results — an empty table with a full pager under it.
+  const page = Math.min(currentPage, Math.max(pageCount - 1, 0));
+  const sliceStart = page * itemsPerPage;
+  const visibleItems = processed.slice(sliceStart, sliceStart + itemsPerPage);
 
-  const goToPage = (page) => {
-    setCurrentPage(page);
+  const goToPage = (target) => {
+    setCurrentPage(target);
   };
 
   return {
     items: visibleItems,
     requestSort: sortData,
     sortConfig,
-    currentPage,
+    currentPage: page,
     pageCount,
     goToPage,
+    // How many rows survived the search/filter — what the "nga N rezultate" line has to count.
+    total: processed.length,
   };
 };
 
