@@ -9,7 +9,7 @@
 
 import { describe, expect, it } from "vitest";
 import {
-  accountBalance, budgetProgress, cashflow, categoryComparison, consolidateAccounts,
+  accountBalance, annualOutlook, budgetProgress, cashflow, categoryComparison, consolidateAccounts,
   convertedAmount, currencyFields, dailyLimit, debtPaymentsFromTransactions, debtProgress,
   debtTotals, dueRecurring, effectiveBudgets, enteredAt, filterByRange, generateDueTransactions,
   goalProgress, isRecurringDue, lastInstallmentDate, monthBounds, monthKeyBounds, monthlyTrend,
@@ -509,6 +509,55 @@ describe("recurring payments", () => {
     const rec = schedule("r", { monedhaOrigjinale: "USD", vleraOrigjinale: 12, kursi: 0.9, vlera: 10.8 });
     const [booked] = generateDueTransactions(rec, "2026-08-10", (p) => `${p}_1`).transactions;
     expect(booked).toMatchObject({ monedhaOrigjinale: "USD", vleraOrigjinale: 12, kursi: 0.9, vlera: 10.8 });
+  });
+});
+
+describe("annualOutlook", () => {
+  it("counts the payments that really fall in the next twelve months", () => {
+    const outlook = annualOutlook(
+      [
+        schedule("qira", { vlera: 300, dataETjetres: "2026-08-15" }),
+        schedule("netflix", { vlera: 120, frekuenca: "vjetore", dataETjetres: "2026-08-10" }),
+      ],
+      "2026-08-10"
+    );
+    expect(outlook.end).toBe("2027-08-09");
+    // Twelve months of rent, and the yearly subscription exactly once — not twice.
+    expect(outlook.rreshtat.map((r) => [r.id, r.nrPagesave, r.vjetore])).toEqual([
+      ["qira", 12, 3600],
+      ["netflix", 1, 120],
+    ]);
+    expect(outlook.shpenzime).toMatchObject({ vjetore: 3720, numri: 2 });
+    expect(outlook.rreshtat[0].mujore).toBe(300);
+  });
+
+  it("charges an instalment plan only for the instalments it has left", () => {
+    const [row] = annualOutlook(
+      [schedule("keste", { vlera: 50, dataETjetres: "2026-08-20", dataFundit: "2026-10-20" })],
+      "2026-08-10"
+    ).rreshtat;
+    expect(row).toMatchObject({ nrPagesave: 3, vjetore: 150, perfundon: "2026-10-20" });
+  });
+
+  it("leaves paused schedules out entirely", () => {
+    const outlook = annualOutlook([schedule("ndalur", { aktiv: false })], "2026-08-10");
+    expect(outlook.rreshtat).toEqual([]);
+    expect(outlook.shpenzime.vjetore).toBe(0);
+  });
+
+  it("keeps income and expenses apart, and nets them", () => {
+    const outlook = annualOutlook(
+      [
+        schedule("rroga", { lloji: "hyrje", vlera: 1000, dataETjetres: "2026-08-31" }),
+        schedule("qira", { vlera: 400, dataETjetres: "2026-08-01" }),
+      ],
+      "2026-08-10"
+    );
+    expect(outlook.hyrje.vjetore).toBe(12000);
+    expect(outlook.shpenzime.vjetore).toBe(4800);
+    expect(outlook.neto).toEqual({ vjetore: 7200, mujore: 600 });
+    // Each row's share is measured against its own side.
+    expect(outlook.rreshtat.every((r) => r.perqindja === 100)).toBe(true);
   });
 });
 

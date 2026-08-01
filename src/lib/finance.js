@@ -747,6 +747,76 @@ export function monthlyRecurringBreakdown(recurring, transactions, start, end) {
     .filter((r) => r.nrPaguara > 0 || r.datat.length > 0);
 }
 
+/**
+ * What every schedule costs over the next twelve months — the view that answers "so what do all
+ * these subscriptions actually come to a year".
+ *
+ * The figure is counted, not multiplied by a frequency factor: each schedule is stepped through the
+ * window and only the dates that really fall inside it are paid for. That is the difference between
+ * an estimate and an answer, because a card plan with two instalments left costs two instalments,
+ * not twelve, and a schedule that stops in March stops in March. Paused schedules cost nothing.
+ *
+ * `mujore` is the annual figure spread over the window, so a yearly subscription can be compared
+ * with the rent on the same scale — it is a monthly average, not what any one month bills.
+ */
+export function annualOutlook(recurring, todayStr = format(new Date(), "yyyy-MM-dd"), muaj = 12) {
+  // Inclusive end one day short of the anniversary, so a yearly payment due today is counted once.
+  const end = format(addDays(addMonths(parseISO(todayStr), muaj), -1), "yyyy-MM-dd");
+
+  const rreshtat = recurring
+    .filter((rec) => rec.aktiv !== false)
+    .map((rec) => {
+      const datat = scheduledOccurrences(rec, todayStr, end);
+      const vjetore = datat.length * toNumber(rec.vlera);
+      return {
+        id: rec.id,
+        emri: rec.emri,
+        lloji: rec.lloji,
+        frekuenca: rec.frekuenca,
+        kategoriaId: rec.kategoriaId,
+        llogariaId: rec.llogariaId,
+        vlera: toNumber(rec.vlera),
+        monedhaOrigjinale: rec.monedhaOrigjinale || null,
+        vleraOrigjinale: rec.monedhaOrigjinale ? toNumber(rec.vleraOrigjinale) : null,
+        nrPagesave: datat.length,
+        dataEPare: datat[0] || null,
+        dataEFundit: datat[datat.length - 1] || null,
+        // Set only when the schedule runs out inside the window — the reason its yearly figure is
+        // smaller than its frequency alone would suggest.
+        perfundon: rec.dataFundit && rec.dataFundit <= end ? rec.dataFundit : null,
+        vjetore,
+        mujore: vjetore / muaj,
+      };
+    })
+    .filter((r) => r.nrPagesave > 0)
+    .sort((a, b) => b.vjetore - a.vjetore);
+
+  const anesore = (lloji) => {
+    const list = rreshtat.filter((r) => r.lloji === lloji);
+    const vjetore = list.reduce((sum, r) => sum + r.vjetore, 0);
+    return { vjetore, mujore: vjetore / muaj, numri: list.length };
+  };
+  const shpenzime = anesore("shpenzim");
+  const hyrje = anesore("hyrje");
+
+  return {
+    rreshtat: rreshtat.map((r) => ({
+      ...r,
+      // Share of its own side, so an income schedule is not measured against the expenses.
+      perqindja:
+        (r.lloji === "hyrje" ? hyrje.vjetore : shpenzime.vjetore) > 0
+          ? (r.vjetore / (r.lloji === "hyrje" ? hyrje.vjetore : shpenzime.vjetore)) * 100
+          : 0,
+    })),
+    shpenzime,
+    hyrje,
+    neto: { vjetore: hyrje.vjetore - shpenzime.vjetore, mujore: (hyrje.vjetore - shpenzime.vjetore) / muaj },
+    muaj,
+    start: todayStr,
+    end,
+  };
+}
+
 export function isRecurringDue(rec, todayStr) {
   if (!rec.aktiv) return false;
   if (!rec.dataETjetres) return false;
