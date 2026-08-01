@@ -9,10 +9,10 @@
 
 import { describe, expect, it } from "vitest";
 import {
-  accountBalance, annualOutlook, backupStatus, budgetProgress, cashflow, categoryComparison, consolidateAccounts,
+  accountBalance, annualOutlook, backupStatus, balanceHistory, budgetProgress, cashflow, categoryComparison, consolidateAccounts,
   convertedAmount, currencyFields, dailyLimit, debtPaymentsFromTransactions, debtProgress,
   debtTotals, dueRecurring, effectiveBudgets, enteredAt, filterByRange, generateDueTransactions,
-  goalProgress, isRecurringDue, lastInstallmentDate, monthBounds, monthKeyBounds, monthlyTrend,
+  forecast, goalProgress, isRecurringDue, lastInstallmentDate, monthBounds, monthKeyBounds, monthlyTrend,
   monthlyRecurringBreakdown, nextOccurrence, overduePlans, periodBounds, planProgress,
   plansForMonth, planTotals, previousMonthKey, recurringProgress, rolloverAmount,
   scheduledOccurrences, sortByDateDesc, spendableBalance, totalBalance, totalsByAccount,
@@ -262,6 +262,135 @@ describe("breakdowns", () => {
     const krahasimi = categoryComparison(txs, categories, "2026-08");
     expect(krahasimi[0]).toMatchObject({ id: "c2", ndryshimi: 200, perqindja: null });
     expect(krahasimi[1]).toMatchObject({ id: "c1", ndryshimi: 30, vleraKaluar: 100 });
+  });
+});
+
+describe("balanceHistory", () => {
+  it("closes each month with everything recorded up to that day", () => {
+    const accounts = [account("a", { bilanciFillestar: 100 })];
+    const txs = [
+      tx("1", { data: "2026-06-15", lloji: "hyrje", vlera: 500 }),
+      tx("2", { data: "2026-07-10", vlera: 200 }),
+      tx("3", { data: "2026-08-05", vlera: 50 }),
+    ];
+    const history = balanceHistory(accounts, txs, 3, new Date(2026, 7, 15));
+    expect(history.map((m) => [m.key, m.bilanci])).toEqual([
+      ["2026-06", 600],
+      ["2026-07", 400],
+      ["2026-08", 350],
+    ]);
+    // The last month agrees with what the dashboard shows as the total balance.
+    expect(history.at(-1).bilanci).toBe(totalBalance(accounts, txs));
+  });
+
+  it("nets a transfer between two of your own accounts to nothing", () => {
+    const accounts = [account("a", { bilanciFillestar: 100 }), account("b")];
+    const txs = [tx("1", { data: "2026-08-02", lloji: "transfer", vlera: 60, llogariaDestinacionId: "b" })];
+    expect(balanceHistory(accounts, txs, 1, new Date(2026, 7, 15))[0].bilanci).toBe(100);
+  });
+});
+
+describe("forecast", () => {
+  const accounts = [account("a", { bilanciFillestar: 1000 })];
+  const today = "2026-08-10";
+
+  it("starts from what is there today and applies only what is already scheduled", () => {
+    const f = forecast({
+      accounts,
+      transactions: [],
+      recurring: [
+        schedule("qira", { vlera: 300, dataETjetres: "2026-08-15" }),
+        schedule("rroga", { lloji: "hyrje", vlera: 900, dataETjetres: "2026-08-31" }),
+      ],
+      today,
+      muaj: 2,
+    });
+    expect(f.fillimi).toBe(1000);
+    expect(f.end).toBe("2026-09-30");
+    // August: -300 +900; September: the same again.
+    expect(f.muajt.map((m) => [m.key, m.mbyllja])).toEqual([
+      ["2026-08", 1600],
+      ["2026-09", 2200],
+    ]);
+    expect(f.perfundimi).toBe(2200);
+    expect(f.ndryshimi).toBe(1200);
+  });
+
+  it("finds the low point and the day the balance would go negative", () => {
+    const f = forecast({
+      accounts: [account("a", { bilanciFillestar: 400 })],
+      transactions: [],
+      recurring: [
+        schedule("qira", { vlera: 500, dataETjetres: "2026-08-15" }),
+        schedule("rroga", { lloji: "hyrje", vlera: 900, dataETjetres: "2026-08-25" }),
+      ],
+      today,
+      muaj: 1,
+    });
+    expect(f.meUleta).toEqual({ data: "2026-08-15", bilanci: -100 });
+    expect(f.nenZeros).toBe("2026-08-15");
+    // The month still closes in the black — which is exactly why the low point is worth showing.
+    expect(f.perfundimi).toBe(800);
+  });
+
+  it("brings an unconfirmed payment forward instead of leaving it in the past", () => {
+    const f = forecast({
+      accounts,
+      transactions: [],
+      // Due on the 1st and never confirmed: the money has not left the account yet.
+      recurring: [schedule("qira", { vlera: 300, dataETjetres: "2026-08-01" })],
+      today,
+      muaj: 1,
+    });
+    expect(f.pikat[1]).toEqual({ data: "2026-08-11", bilanci: 700 });
+  });
+
+  it("counts transactions already entered with a future date, once and on their own day", () => {
+    const txs = [tx("ardhshem", { data: "2026-08-20", vlera: 250 })];
+    const f = forecast({ accounts, transactions: txs, today, muaj: 1 });
+    expect(f.fillimi).toBe(1000);
+    // What the dashboard shows as "Bilanci Total" — the difference is the future-dated entry.
+    expect(f.regjistruar).toBe(750);
+    expect(f.regjistruar).toBe(totalBalance(accounts, txs));
+    expect(f.perfundimi).toBe(750);
+    expect(f.pikat.find((p) => p.data === "2026-08-19").bilanci).toBe(1000);
+  });
+
+  it("sets a planned purchase aside at the end of its month", () => {
+    const f = forecast({
+      accounts,
+      transactions: [],
+      plans: [
+        { id: "p1", emri: "Gomat", muaji: "2026-08", vlera: 200, kryer: false },
+        { id: "p2", emri: "E blerë", muaji: "2026-08", vlera: 500, kryer: true },
+        { id: "p3", emri: "Muaj i shkuar", muaji: "2026-07", vlera: 700, kryer: false },
+      ],
+      today,
+      muaj: 1,
+    });
+    // Only the unbought plan of a month inside the horizon counts.
+    expect(f.perfundimi).toBe(800);
+    expect(f.meUleta).toEqual({ data: "2026-08-31", bilanci: 800 });
+  });
+
+  it("says when there is nothing scheduled rather than drawing a flat line", () => {
+    const f = forecast({ accounts, transactions: [], today, muaj: 3 });
+    expect(f.bosh).toBe(true);
+    expect(f.perfundimi).toBe(f.fillimi);
+  });
+
+  it("leaves a paused schedule and one past its end date out", () => {
+    const f = forecast({
+      accounts,
+      transactions: [],
+      recurring: [
+        schedule("ndalur", { vlera: 100, aktiv: false }),
+        schedule("mbaruar", { vlera: 100, dataETjetres: "2026-08-15", dataFundit: "2026-08-14" }),
+      ],
+      today,
+      muaj: 1,
+    });
+    expect(f.bosh).toBe(true);
   });
 });
 

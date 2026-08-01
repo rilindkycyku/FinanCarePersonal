@@ -4,7 +4,7 @@ import { Container, Row, Col, Button, Alert } from "react-bootstrap";
 import {
   LayoutDashboard, Wallet, TrendingUp, TrendingDown, PiggyBank, Percent, PlusCircle,
   ArrowRightLeft, Tags, Target, Repeat, BarChart3, Settings, DatabaseBackup, CalendarClock,
-  Receipt, ClipboardList, ShieldAlert,
+  Receipt, ClipboardList, ShieldAlert, LineChart, TriangleAlert,
 } from "lucide-react";
 import NavBar from "../Components/NavBar";
 import PageTitle from "../Components/PageTitle";
@@ -18,7 +18,7 @@ import { useData } from "../Context/DataContext";
 import { getIcon } from "../lib/icons";
 import {
   accountsWithBalances, backupStatus, budgetProgress, cashflow, debtProgress, debtTotals, dueRecurring,
-  filterByRange, goalProgress, monthBounds, overduePlans, planTotals, plansForMonth,
+  filterByRange, forecast, goalProgress, monthBounds, overduePlans, planTotals, plansForMonth,
   sortByDateDesc, totalBalance, totalsByCategory, upcomingRecurring,
 } from "../lib/finance";
 import { formatDate, formatMoney, formatPercent, monthKey, monthLabel, todayISO } from "../lib/format";
@@ -63,6 +63,8 @@ function Dashboard() {
       teFundit: sortByDateDesc(transactions).slice(0, 6),
       dueTani: dueRecurring(recurring, today),
       kopja: backupStatus({ profile, transactions }),
+      // Six months ahead, but only the first month and the low point are shown here.
+      parashikimi: forecast({ accounts, transactions, recurring, plans: planet, today, muaj: 6 }),
       neVijim: upcomingRecurring(recurring, today, 14),
       // Notes only — deliberately not folded into `bilanci` above (see finance.js).
       borxhet: borxhet
@@ -495,6 +497,54 @@ function Dashboard() {
                   Gjithsej i mbetur: <strong className="fcp-neg">{money(stats.borxhetTotal.detyrimet.mbetur)}</strong> -
                   shënim, jashtë Bilancit Total.
                 </div>
+              </Panel>
+            </Col>
+          )}
+
+          {/* Where the balance is heading, from what is already scheduled. Silent on a ledger with
+              nothing planned, where the "forecast" would just be today's balance drawn flat. */}
+          {!stats.parashikimi.bosh && (
+            <Col xl={6}>
+              <Panel title="Parashikimi i Bilancit" icon={LineChart} action="Statistikat" actionTo="/statistikat">
+                <div className="fcp-row">
+                  <div className="fcp-row-main">
+                    <div className="fcp-row-title">Fundi i {monthLabel(stats.parashikimi.muajt[0].key)}</div>
+                    <div className="fcp-row-sub">
+                      Nga {money(stats.parashikimi.fillimi)} të bilancit deri sot ·{" "}
+                      {signedMoney(stats.parashikimi.muajt[0].mbyllja - stats.parashikimi.fillimi)} nga çka është
+                      planifikuar
+                    </div>
+                  </div>
+                  <div
+                    className={`fcp-row-value ${stats.parashikimi.muajt[0].mbyllja < 0 ? "fcp-neg" : "fcp-pos"}`}
+                  >
+                    {money(stats.parashikimi.muajt[0].mbyllja)}
+                  </div>
+                </div>
+
+                {stats.parashikimi.meUleta.data !== stats.parashikimi.start && (
+                  <div className="fcp-row">
+                    <div
+                      className="fcp-row-icon"
+                      style={{ color: stats.parashikimi.nenZeros ? "var(--sp-red)" : "var(--sp-cyan)" }}
+                    >
+                      <TriangleAlert size={16} />
+                    </div>
+                    <div className="fcp-row-main">
+                      <div className="fcp-row-title">Pika më e ulët</div>
+                      <div className="fcp-row-sub">{formatDate(stats.parashikimi.meUleta.data)}</div>
+                    </div>
+                    <div className={`fcp-row-value ${stats.parashikimi.meUleta.bilanci < 0 ? "fcp-neg" : ""}`}>
+                      {money(stats.parashikimi.meUleta.bilanci)}
+                    </div>
+                  </div>
+                )}
+
+                {stats.parashikimi.nenZeros && (
+                  <div className="fcp-row-sub fcp-neg mt-1">
+                    Me këtë ritëm bilanci bie nën zero më {formatDate(stats.parashikimi.nenZeros)}.
+                  </div>
+                )}
               </Panel>
             </Col>
           )}

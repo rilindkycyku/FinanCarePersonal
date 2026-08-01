@@ -3,17 +3,18 @@ import { Container, Row, Col, Form } from "react-bootstrap";
 import { subMonths } from "date-fns";
 import {
   BarChart3, TrendingUp, TrendingDown, Percent, Wallet, Tags, ArrowRightLeft, CalendarRange, Hash,
-  GitCompareArrows,
+  GitCompareArrows, LineChart, TriangleAlert,
 } from "lucide-react";
 import NavBar from "../Components/NavBar";
 import Footer from "../Components/Footer";
 import PageTitle from "../Components/PageTitle";
 import PageLoading from "../Components/PageLoading";
 import { Kpi, Panel, ProgressBar, Empty } from "../Components/Ui";
+import GrafikuBilancit from "../Components/GrafikuBilancit";
 import { useData } from "../Context/DataContext";
 import {
-  accountBalance, cashflow, categoryComparison, filterByRange, monthBounds, monthlyTrend,
-  previousMonthKey, totalsByAccount, totalsByCategory, yearBounds,
+  accountBalance, balanceHistory, cashflow, categoryComparison, filterByRange, forecast, monthBounds,
+  monthlyTrend, previousMonthKey, totalsByAccount, totalsByCategory, yearBounds,
 } from "../lib/finance";
 import { formatDate, formatPercent, monthKey, monthLabel, todayISO } from "../lib/format";
 import { accountTypeMeta } from "../lib/options";
@@ -45,7 +46,8 @@ function periodLabel(period) {
 }
 
 function Statistika() {
-  const { accounts, categories, transactions, loading, money, signedMoney, njeLlogari } = useData();
+  const { accounts, categories, transactions, recurring, planet, loading, money, signedMoney,
+    njeLlogari } = useData();
   const [period, setPeriod] = useState("muaji");
 
   const stats = useMemo(() => {
@@ -65,6 +67,30 @@ function Statistika() {
       transferet: periudha.filter((tx) => tx.lloji === "transfer"),
     };
   }, [transactions, categories, accounts, period]);
+
+  /**
+   * The one view that ignores the period picker: where the balance has been and where what is
+   * already scheduled takes it. The current month belongs to the forecast half — most of it has
+   * not happened yet — so the history's copy of it is dropped rather than drawn twice.
+   */
+  const ecuria = useMemo(() => {
+    const sot = todayISO();
+    const historiku = balanceHistory(accounts, transactions, 6);
+    const parashikimi = forecast({ accounts, transactions, recurring, plans: planet, today: sot, muaj: 6 });
+    return {
+      parashikimi,
+      pikat: [
+        ...historiku.slice(0, -1).map((m) => ({ ...m, parashikim: false })),
+        ...parashikimi.muajt.map((m) => ({
+          key: m.key,
+          label: m.label,
+          viti: m.viti,
+          bilanci: m.mbyllja,
+          parashikim: true,
+        })),
+      ],
+    };
+  }, [accounts, transactions, recurring, planet]);
 
   const maxTrend = Math.max(...stats.trendi.map((m) => Math.max(m.hyrjet, m.shpenzimet)), 1);
   const maxShpenzim = stats.shpenzimet[0]?.vlera || 1;
@@ -190,6 +216,82 @@ function Statistika() {
         </Row>
 
         <Row className="g-3 g-md-4 mt-1">
+          <Col xs={12}>
+            <Panel title="Bilanci Ndër Muaj dhe Parashikimi" icon={LineChart}>
+              <GrafikuBilancit pikat={ecuria.pikat} money={money} />
+
+              <div className="fcp-row">
+                <div className="fcp-row-main">
+                  <div className="fcp-row-title">Sot</div>
+                  <div className="fcp-row-sub">
+                    Bilanci i llogarive aktive deri sot
+                    {/* Said out loud only when it matters: an entry made for a date that has not
+                        arrived is counted on its own day, so this figure is smaller than "Bilanci
+                        Total" until then. */}
+                    {ecuria.parashikimi.regjistruar !== ecuria.parashikimi.fillimi &&
+                      ` · ${money(ecuria.parashikimi.regjistruar)} bashkë me transaksionet e regjistruara me datë të ardhshme`}
+                  </div>
+                </div>
+                <div className="fcp-row-value">{money(ecuria.parashikimi.fillimi)}</div>
+              </div>
+
+              <div className="fcp-row">
+                <div className="fcp-row-main">
+                  <div className="fcp-row-title">Fundi i {monthLabel(ecuria.parashikimi.muajt[0].key)}</div>
+                  <div className="fcp-row-sub">
+                    {ecuria.parashikimi.muajt[0].hyrje > 0 || ecuria.parashikimi.muajt[0].shpenzime > 0
+                      ? `Mbeten ${money(ecuria.parashikimi.muajt[0].hyrje)} hyrje dhe ${money(
+                          ecuria.parashikimi.muajt[0].shpenzime
+                        )} pagesa të planifikuara`
+                      : "Asgjë e planifikuar për pjesën e mbetur të muajit"}
+                  </div>
+                </div>
+                <div className="fcp-row-value">{money(ecuria.parashikimi.muajt[0].mbyllja)}</div>
+              </div>
+
+              <div className="fcp-row">
+                <div className="fcp-row-main">
+                  <div className="fcp-row-title">Pas {ecuria.parashikimi.muajt.length} muajsh</div>
+                  <div className="fcp-row-sub">
+                    {monthLabel(ecuria.parashikimi.muajt.at(-1).key)} · ndryshimi{" "}
+                    {signedMoney(ecuria.parashikimi.ndryshimi)}
+                  </div>
+                </div>
+                <div className={`fcp-row-value ${ecuria.parashikimi.ndryshimi >= 0 ? "fcp-pos" : "fcp-neg"}`}>
+                  {money(ecuria.parashikimi.perfundimi)}
+                </div>
+              </div>
+
+              {/* The month's closing figure can look healthy while the middle of it does not — the
+                  low point is the number that decides whether a payment bounces. */}
+              {ecuria.parashikimi.meUleta.data !== ecuria.parashikimi.start && (
+                <div className="fcp-row">
+                  <div className="fcp-row-icon" style={{ color: ecuria.parashikimi.nenZeros ? "var(--sp-red)" : "var(--sp-cyan)" }}>
+                    <TriangleAlert size={16} />
+                  </div>
+                  <div className="fcp-row-main">
+                    <div className="fcp-row-title">Pika më e ulët</div>
+                    <div className="fcp-row-sub">
+                      {formatDate(ecuria.parashikimi.meUleta.data)}
+                      {ecuria.parashikimi.nenZeros
+                        ? ` · bilanci bie nën zero më ${formatDate(ecuria.parashikimi.nenZeros)}`
+                        : ""}
+                    </div>
+                  </div>
+                  <div className={`fcp-row-value ${ecuria.parashikimi.meUleta.bilanci < 0 ? "fcp-neg" : ""}`}>
+                    {money(ecuria.parashikimi.meUleta.bilanci)}
+                  </div>
+                </div>
+              )}
+
+              <div className="fcp-row-sub mt-2">
+                {ecuria.parashikimi.bosh
+                  ? "Nuk ka asgjë të planifikuar përpara, prandaj vija e ndërprerë qëndron aty ku është bilanci sot. Shtoni pagesat e përsëritura dhe shpenzimet e planifikuara që parashikimi të ketë çka të llogarisë."
+                  : "Vija e ndërprerë llogarit vetëm çka dihet tashmë: transaksionet me datë të ardhshme, këstet e pagesat e përsëritura që nuk janë konfirmuar ende, dhe shpenzimet e planifikuara që nuk janë blerë. Asgjë nuk supozohet nga mesatarja e muajve të kaluar."}
+              </div>
+            </Panel>
+          </Col>
+
           <Col xl={6}>
             <Panel title="Hyrje kundrejt Shpenzimeve - 6 Muajt e Fundit" icon={BarChart3}>
               {stats.trendi.every((m) => m.hyrjet === 0 && m.shpenzimet === 0) ? (

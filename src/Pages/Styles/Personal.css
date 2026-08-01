@@ -877,3 +877,79 @@ body.light-mode .card.profile-card.fcp-zona-rrezik {
 body.light-mode .card.profile-card.fcp-zona-rrezik:hover {
   border-color: rgba(239, 68, 68, 0.5) !important;
 }
+
+/* ── Balance line chart (GrafikuBilancit) ─────────────────────────────────────
+   The SVG is stretched to the panel width with `preserveAspectRatio="none"`, so every stroke in it
+   carries `vector-effect: non-scaling-stroke` and nothing round or textual is drawn inside it —
+   the dots and the month labels are positioned over and under it instead. */
+.fcp-line-chart {
+  position: relative;
+  padding-top: 0.5rem;
+}
+
+.fcp-line-chart svg {
+  display: block;
+  width: 100%;
+  overflow: visible;
+}
+
+.fcp-line-past,
+.fcp-line-future {
+  fill: none;
+  stroke: var(--sp-emerald);
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+/* Dashed, and a shade lighter: what has not happened yet should not look as solid as what has. */
+.fcp-line-future {
+  stroke: var(--sp-cyan);
+  stroke-dasharray: 6 5;
+  stroke-width: 2;
+}
+
+.fcp-line-zero {
+  stroke: var(--sp-red);
+  stroke-width: 1;
+  stroke-dasharray: 3 4;
+  opacity: 0.55;
+}
+
+.fcp-line-points {
+  position: absolute;
+  inset: 0.5rem 0 1.55rem 0;
+  pointer-events: none;
+}
+
+.fcp-line-dot {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  margin: -4px 0 0 -4px;
+  border-radius: 50%;
+  background: var(--sp-emerald);
+  box-shadow: 0 0 0 2px var(--sp-surface);
+  pointer-events: auto;
+}
+
+.fcp-line-dot.parashikim { background: var(--sp-cyan); }
+.fcp-line-dot.neg { background: var(--sp-red); }
+
+.fcp-line-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0.35rem;
+}
+
+.fcp-line-labels span {
+  flex: 1 1 0;
+  text-align: center;
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--sp-text-muted);
+  min-width: 0;
+}
+
+.fcp-line-labels span.parashikim { color: var(--sp-cyan); }
