@@ -675,6 +675,24 @@ body.light-mode .fcp-cat-card {
   gap: 0.4rem;
 }
 
+/* The payment/charge lines of one debt note, revealed under its progress bar. */
+.fcp-debt-entries {
+  margin-top: 0.6rem;
+  padding-top: 0.35rem;
+  border-top: 1px dashed var(--sp-border);
+}
+
+.fcp-debt-entry-actions {
+  display: flex;
+  gap: 0.25rem;
+  margin-left: 0.5rem;
+  flex-shrink: 0;
+}
+
+.fcp-debt-archived {
+  opacity: 0.6;
+}
+
 @media (max-width: 575.98px) {
   .fcp-tracked { padding: 0.7rem 0.75rem; border-radius: 12px; }
   .fcp-month-nav-label { min-width: 100px; font-size: 0.72rem; }

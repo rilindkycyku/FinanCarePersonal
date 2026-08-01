@@ -18,7 +18,7 @@ import "./Styles/Dashboard.css";
 import "./Styles/Personal.css";
 
 function Cilesimet() {
-  const { profile, transactions, accounts, categories, saveProfile, reload, loading, njeLlogari } = useData();
+  const { profile, transactions, accounts, categories, borxhet, saveProfile, reload, loading, njeLlogari } = useData();
   const dialog = useDialog();
   const { theme, toggleTheme } = useTheme();
   const [form, setForm] = useState({ emri: "", monedha: DEFAULT_CURRENCY, teArdhuratMujore: "", objektiviKursimit: "" });
@@ -49,7 +49,7 @@ function Cilesimet() {
 
   const handleWipe = async () => {
     const ok = await dialog.confirm(
-      `Kjo fshin PËRGJITHMONË të gjitha të dhënat në këtë shfletues: ${transactions.length} transaksione, ${accounts.length} llogari, ${categories.length} kategori, buxhetet, qëllimet dhe pagesat e përsëritura. Eksportoni një kopje JSON para se të vazhdoni. Ta fshij gjithçka?`,
+      `Kjo fshin PËRGJITHMONË të gjitha të dhënat në këtë shfletues: ${transactions.length} transaksione, ${accounts.length} llogari, ${categories.length} kategori, ${borxhet.length} borxhe, buxhetet, qëllimet dhe pagesat e përsëritura. Eksportoni një kopje JSON para se të vazhdoni. Ta fshij gjithçka?`,
       { title: "Fshi Të Gjitha Të Dhënat", confirmLabel: "Fshi gjithçka" }
     );
     if (!ok) return;

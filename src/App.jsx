@@ -4,6 +4,7 @@ import "./Pages/Styles/DizajniPergjithshem.css";
 import Dashboard from "./Pages/Dashboard";
 import Transaksionet from "./Pages/Transaksionet";
 import Llogarite from "./Pages/Llogarite";
+import Borxhet from "./Pages/Borxhet";
 import Kategorite from "./Pages/Kategorite";
 import Buxhetet from "./Pages/Buxhetet";
 import Qellimet from "./Pages/Qellimet";
@@ -18,6 +19,7 @@ function App() {
       <Route path="/" element={<Dashboard />} />
       <Route path="/transaksionet" element={<Transaksionet />} />
       <Route path="/llogarite" element={<Llogarite />} />
+      <Route path="/borxhet" element={<Borxhet />} />
       <Route path="/kategorite" element={<Kategorite />} />
       <Route path="/buxhetet" element={<Buxhetet />} />
       <Route path="/qellimet" element={<Qellimet />} />
