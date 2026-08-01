@@ -22,7 +22,9 @@ function Cilesimet() {
     loading, njeLlogari } = useData();
   const dialog = useDialog();
   const { theme, toggleTheme } = useTheme();
-  const [form, setForm] = useState({ emri: "", monedha: DEFAULT_CURRENCY, teArdhuratMujore: "", objektiviKursimit: "" });
+  const [form, setForm] = useState({
+    emri: "", monedha: DEFAULT_CURRENCY, teArdhuratMujore: "", objektiviKursimit: "", limitiDitor: "",
+  });
   const [message, setMessage] = useState(null);
 
   useEffect(() => {
@@ -31,6 +33,7 @@ function Cilesimet() {
       monedha: profile.monedha || DEFAULT_CURRENCY,
       teArdhuratMujore: profile.teArdhuratMujore ? String(profile.teArdhuratMujore) : "",
       objektiviKursimit: profile.objektiviKursimit ? String(profile.objektiviKursimit) : "",
+      limitiDitor: profile.limitiDitor ? String(profile.limitiDitor) : "",
     });
   }, [profile]);
 
@@ -56,6 +59,7 @@ function Cilesimet() {
       monedha: form.monedha,
       teArdhuratMujore: toNumber(form.teArdhuratMujore),
       objektiviKursimit: toNumber(form.objektiviKursimit),
+      limitiDitor: toNumber(form.limitiDitor),
     });
     setMessage({ type: "success", text: "Cilësimet u ruajtën." });
   };
@@ -197,6 +201,22 @@ function Cilesimet() {
                   value={form.objektiviKursimit}
                   onChange={(e) => setField("objektiviKursimit", e.target.value)}
                 />
+              </Form.Group>
+
+              <Form.Group as={Col} md={6} controlId="form-limitiditor">
+                <Form.Label>Limiti i Shpenzimeve Ditore (opsional)</Form.Label>
+                <Form.Control
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  placeholder="p.sh. 20.00"
+                  value={form.limitiDitor}
+                  onChange={(e) => setField("limitiDitor", e.target.value)}
+                />
+                <div className="fcp-row-sub mt-1">
+                  Lëreni bosh dhe limiti llogaritet vetë: hyrjet e mbetura të muajit të ndara mbi ditët që kanë
+                  mbetur.
+                </div>
               </Form.Group>
 
               <Col md={12}>

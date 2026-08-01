@@ -208,6 +208,48 @@ export function cashflow(transactions) {
   };
 }
 
+/**
+ * Today's spending allowance. The limit is the fixed one set in Cilësimet or, when that is left
+ * empty, this month's income spread over the days still to come — the figure that answers "sa mund
+ * të shpenzoj sot": it goes up when a salary lands and shrinks after an expensive week.
+ *
+ * Only spending booked *before* today comes out of the pool. That keeps the limit still for the
+ * whole day, so what you spend today eats into the allowance instead of into the limit itself —
+ * otherwise spending exactly the limit would leave you over it.
+ */
+export function dailyLimit(transactions, todayStr, limitiManual = 0) {
+  const { start, end } = monthBounds(todayStr);
+  const muajiTx = filterByRange(transactions, start, end);
+  const hyrjet = sumByType(muajiTx, "hyrje");
+  const shpenzuarMePare = sumByType(
+    muajiTx.filter((tx) => tx.data < todayStr),
+    "shpenzim"
+  );
+  // Today counts as remaining: an allowance worked out this morning still has to cover today.
+  const ditetMbetura = Math.max(Number(end.slice(8, 10)) - Number(todayStr.slice(8, 10)) + 1, 1);
+
+  const manual = toNumber(limitiManual);
+  const disponueshme = Math.max(hyrjet - shpenzuarMePare, 0);
+  const limiti = manual > 0 ? manual : disponueshme / ditetMbetura;
+  const shpenzuarSot = sumByType(
+    muajiTx.filter((tx) => tx.data === todayStr),
+    "shpenzim"
+  );
+
+  return {
+    limiti,
+    // Nothing to show against: no manual limit and no income recorded this month yet.
+    caktuar: limiti > 0,
+    manual: manual > 0,
+    shpenzuarSot,
+    mbetur: limiti - shpenzuarSot,
+    perqindja: limiti > 0 ? (shpenzuarSot / limiti) * 100 : 0,
+    tejkaluar: limiti > 0 && shpenzuarSot > limiti,
+    ditetMbetura,
+    disponueshme,
+  };
+}
+
 /** Category totals for one direction ("shpenzim" or "hyrje"), largest first. Transactions whose
  * category was deleted are grouped under "Pa kategori" instead of being dropped. */
 export function totalsByCategory(transactions, categories, lloji = "shpenzim") {
