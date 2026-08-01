@@ -250,6 +250,48 @@ export function dailyLimit(transactions, todayStr, limitiManual = 0) {
   };
 }
 
+/**
+ * One month against the one before it, category by category, biggest swing first — the view that
+ * says *what changed* rather than what the month cost.
+ *
+ * Categories present in only one of the two months are kept with a zero on the missing side: a
+ * category that appeared this month and one that stopped are exactly what this is meant to surface,
+ * and dropping either would make the list agree with itself while hiding the news.
+ */
+export function categoryComparison(transactions, categories, key, lloji = "shpenzim") {
+  const totalsFor = (muaji) => {
+    const { start, end } = monthKeyBounds(muaji);
+    return new Map(
+      totalsByCategory(filterByRange(transactions, start, end), categories, lloji).map((k) => [k.id, k])
+    );
+  };
+
+  const tani = totalsFor(key);
+  const kaluar = totalsFor(previousMonthKey(key));
+
+  return [...new Set([...tani.keys(), ...kaluar.keys()])]
+    .map((id) => {
+      const a = tani.get(id);
+      const b = kaluar.get(id);
+      const meta = a || b;
+      const vlera = a?.vlera || 0;
+      const vleraKaluar = b?.vlera || 0;
+      return {
+        id,
+        emri: meta.emri,
+        ngjyra: meta.ngjyra,
+        ikona: meta.ikona,
+        vlera,
+        vleraKaluar,
+        ndryshimi: vlera - vleraKaluar,
+        // Null rather than Infinity when the category is new: "u shtua" is the honest reading of a
+        // jump from nothing, and no percentage describes it.
+        perqindja: vleraKaluar > 0 ? ((vlera - vleraKaluar) / vleraKaluar) * 100 : null,
+      };
+    })
+    .sort((a, b) => Math.abs(b.ndryshimi) - Math.abs(a.ndryshimi));
+}
+
 /** Category totals for one direction ("shpenzim" or "hyrje"), largest first. Transactions whose
  * category was deleted are grouped under "Pa kategori" instead of being dropped. */
 export function totalsByCategory(transactions, categories, lloji = "shpenzim") {

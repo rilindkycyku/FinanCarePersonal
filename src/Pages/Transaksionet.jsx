@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Container, Row, Col, Form, Button } from "react-bootstrap";
-import { TrendingUp, TrendingDown, Percent, Hash, Filter, X } from "lucide-react";
+import { TrendingUp, TrendingDown, Percent, Hash, Filter, X, CopyPlus } from "lucide-react";
 import NavBar from "../Components/NavBar";
 import Footer from "../Components/Footer";
 import PageTitle from "../Components/PageTitle";
@@ -13,7 +13,7 @@ import { useData } from "../Context/DataContext";
 import { useDialog } from "../Context/DialogContext";
 import { STORES } from "../lib/db";
 import { cashflow, sortByDateDesc } from "../lib/finance";
-import { formatMoney, formatPercent, plainAmount, toNumber } from "../lib/format";
+import { formatMoney, formatPercent, plainAmount, todayISO, toNumber } from "../lib/format";
 import { TRANSACTION_TYPE_LABELS } from "../lib/options";
 import "./Styles/PremiumTheme.css";
 import "./Styles/DizajniPergjithshem.css";
@@ -111,6 +111,20 @@ function Transaksionet() {
 
   const onEdit = (id) => {
     setEditing(transactions.find((t) => t.id === id) || null);
+    setShowModal(true);
+  };
+
+  /**
+   * Most entries are near-copies of an earlier one, so this opens the form pre-filled from the row
+   * but as a new record: no id (or `krijuar`) to edit in place, dated today, and stripped of the
+   * links that belonged to the original — a repeat is not another instalment of the recurring
+   * payment or debt the source was booked against.
+   */
+  const onRepeat = (id) => {
+    const tx = transactions.find((t) => t.id === id);
+    if (!tx) return;
+    const { id: _id, krijuar: _krijuar, perseritjaId: _perseritjaId, borxhiId: _borxhiId, ...fushat } = tx;
+    setEditing({ ...fushat, data: todayISO() });
     setShowModal(true);
   };
 
@@ -244,6 +258,9 @@ function Transaksionet() {
         }}
         funksionButonEdit={onEdit}
         funksionButonFshij={onDelete}
+        funksionButonExtra={onRepeat}
+        titulliButonitExtra="Përsërit këtë transaksion"
+        ikonaButonitExtra={<CopyPlus size={16} />}
         dateField="Data"
         filterField="Lloji"
         mosShfaqID

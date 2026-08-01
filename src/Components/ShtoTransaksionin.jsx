@@ -4,8 +4,9 @@ import { TrendingUp, TrendingDown, ArrowRightLeft } from "lucide-react";
 import { useData } from "../Context/DataContext";
 import MonedhaTjeter from "./MonedhaTjeter";
 import { makeId, STORES } from "../lib/db";
-import { currencySymbol, toNumber, todayISO } from "../lib/format";
-import { convertedAmount, currencyFields, goalProgress } from "../lib/finance";
+import { currencySymbol, formatMoney, toNumber, todayISO } from "../lib/format";
+import { convertedAmount, currencyFields, dailyLimit, goalProgress } from "../lib/finance";
+import { njofto } from "../lib/njoftimet";
 import "./ModalForms.css";
 
 const TYPE_BUTTONS = [
@@ -174,7 +175,7 @@ function ShtoTransaksionin({
 
     setError("");
 
-    await save(STORES.transactions, {
+    const rekordi = {
       id: tx.id || makeId("tx"),
       data: tx.data,
       lloji: tx.lloji,
@@ -186,11 +187,31 @@ function ShtoTransaksionin({
       shenim: tx.shenim.trim(),
       qellimiId: tx.qellimiId || null,
       perseritjaId: tx.perseritjaId || null,
+      // Carried through explicitly: without it, editing a payment booked against a debt note from
+      // the Transaksionet page silently unlinked the two and the note stopped counting it paid.
+      borxhiId: tx.borxhiId || null,
       // Only ever set once: two transactions on the same date are ordered by when they were
       // entered (finance.js), so re-stamping this on an edit would move an old row to the top.
       krijuar: tx.krijuar || new Date().toISOString(),
       ...monedhat,
-    });
+    };
+
+    await save(STORES.transactions, rekordi);
+
+    // Only when *this* entry is what crossed the line: comparing the day before and after it keeps
+    // the app from notifying again on every expense that follows an already-blown limit.
+    if (profile.njoftimeLimiti) {
+      const sot = todayISO();
+      const tjeret = transactions.filter((t) => t.id !== rekordi.id);
+      const para = dailyLimit(tjeret, sot, profile.limitiDitor);
+      const pas = dailyLimit([...tjeret, rekordi], sot, profile.limitiDitor);
+      if (!para.tejkaluar && pas.tejkaluar) {
+        njofto(
+          "Limiti ditor u tejkalua",
+          `Sot keni shpenzuar ${formatMoney(pas.shpenzuarSot, monedha)} nga ${formatMoney(pas.limiti, monedha)}.`
+        );
+      }
+    }
 
     // Remembered so the next $ subscription starts from the rate used last time.
     if (monedhat.monedhaOrigjinale) {
@@ -227,7 +248,9 @@ function ShtoTransaksionin({
   return (
     <Modal show={show} onHide={onHide} centered size="lg" className="sp-modal">
       <Modal.Header closeButton>
-        <Modal.Title>{initial ? "Ndrysho Transaksionin" : "Transaksion i Ri"}</Modal.Title>
+        {/* Keyed on the id rather than on `initial`: repeating a transaction opens the form
+            pre-filled from an old one but saves a new record, so it is not an edit. */}
+        <Modal.Title>{initial?.id ? "Ndrysho Transaksionin" : "Transaksion i Ri"}</Modal.Title>
       </Modal.Header>
 
       <Form onSubmit={handleSave}>
@@ -412,7 +435,7 @@ function ShtoTransaksionin({
             Anulo
           </Button>
           <Button type="submit" className="btn-primary">
-            {initial ? "Ruaj Ndryshimet" : "Ruaj Transaksionin"}
+            {initial?.id ? "Ruaj Ndryshimet" : "Ruaj Transaksionin"}
           </Button>
         </Modal.Footer>
       </Form>

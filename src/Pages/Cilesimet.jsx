@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Card, Form, Row, Col, Button, Alert } from "react-bootstrap";
-import { Settings, Save, Trash2, RotateCcw, Sun, Moon, AlertTriangle } from "lucide-react";
+import { Settings, Save, Trash2, RotateCcw, Sun, Moon, AlertTriangle, BellRing } from "lucide-react";
 import NavBar from "../Components/NavBar";
 import Footer from "../Components/Footer";
 import PageTitle from "../Components/PageTitle";
@@ -12,6 +12,7 @@ import { useTheme } from "../Context/ThemeContext";
 import { seedDefaults, wipeAllData } from "../lib/db";
 import { CURRENCIES, DEFAULT_CURRENCY } from "../lib/options";
 import { toNumber } from "../lib/format";
+import { kerkoLeje, lejaAktuale } from "../lib/njoftimet";
 import "./Styles/PremiumTheme.css";
 import "./Styles/DizajniPergjithshem.css";
 import "./Styles/Dashboard.css";
@@ -24,7 +25,11 @@ function Cilesimet() {
   const { theme, toggleTheme } = useTheme();
   const [form, setForm] = useState({
     emri: "", monedha: DEFAULT_CURRENCY, teArdhuratMujore: "", objektiviKursimit: "", limitiDitor: "",
+    njoftimeLimiti: false,
   });
+  // Read once on mount and refreshed after asking: the browser answer can only change through the
+  // button below or through the site settings, which reload the page anyway.
+  const [leja, setLeja] = useState(lejaAktuale());
   const [message, setMessage] = useState(null);
 
   useEffect(() => {
@@ -34,6 +39,7 @@ function Cilesimet() {
       teArdhuratMujore: profile.teArdhuratMujore ? String(profile.teArdhuratMujore) : "",
       objektiviKursimit: profile.objektiviKursimit ? String(profile.objektiviKursimit) : "",
       limitiDitor: profile.limitiDitor ? String(profile.limitiDitor) : "",
+      njoftimeLimiti: Boolean(profile.njoftimeLimiti),
     });
   }, [profile]);
 
@@ -60,6 +66,7 @@ function Cilesimet() {
       teArdhuratMujore: toNumber(form.teArdhuratMujore),
       objektiviKursimit: toNumber(form.objektiviKursimit),
       limitiDitor: toNumber(form.limitiDitor),
+      njoftimeLimiti: form.njoftimeLimiti,
     });
     setMessage({ type: "success", text: "Cilësimet u ruajtën." });
   };
@@ -217,6 +224,34 @@ function Cilesimet() {
                   Lëreni bosh dhe limiti llogaritet vetë: hyrjet e mbetura të muajit të ndara mbi ditët që kanë
                   mbetur.
                 </div>
+              </Form.Group>
+
+              <Form.Group as={Col} md={6} controlId="form-njoftimelimiti">
+                <Form.Label>Njoftime</Form.Label>
+                <Form.Check
+                  type="switch"
+                  id="njoftime-limiti"
+                  label="Njofto kur tejkalohet limiti ditor"
+                  checked={form.njoftimeLimiti}
+                  onChange={(e) => setField("njoftimeLimiti", e.target.checked)}
+                />
+                <div className="fcp-row-sub mt-1">
+                  {leja === "unsupported"
+                    ? "Ky shfletues nuk i mbështet njoftimet."
+                    : leja === "denied"
+                      ? "Njoftimet janë bllokuar për këtë faqe - hapini nga cilësimet e shfletuesit."
+                      : "Njoftimi shfaqet vetëm kur një shpenzim i ri e kalon limitin, jo për çdo shpenzim pas tij."}
+                </div>
+                {form.njoftimeLimiti && leja === "default" && (
+                  <Button
+                    variant="outline-light"
+                    size="sm"
+                    className="mt-2"
+                    onClick={async () => setLeja(await kerkoLeje())}
+                  >
+                    <BellRing size={15} className="me-1" /> Lejo njoftimet
+                  </Button>
+                )}
               </Form.Group>
 
               <Col md={12}>

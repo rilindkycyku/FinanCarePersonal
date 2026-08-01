@@ -14,8 +14,8 @@ import { Kpi, ProgressBar, Empty } from "../Components/Ui";
 import { useData } from "../Context/DataContext";
 import { useDialog } from "../Context/DialogContext";
 import { STORES } from "../lib/db";
-import { budgetProgress, effectiveBudgets } from "../lib/finance";
-import { formatPercent, monthKey, monthLabel, plainAmount } from "../lib/format";
+import { budgetProgress, effectiveBudgets, monthKeyBounds } from "../lib/finance";
+import { formatPercent, monthKey, monthLabel, plainAmount, todayISO, toNumber } from "../lib/format";
 import { getIcon } from "../lib/icons";
 import "./Styles/PremiumTheme.css";
 import "./Styles/DizajniPergjithshem.css";
@@ -36,6 +36,40 @@ function Buxhetet() {
     () => budgetProgress(budgets, categories, transactions, muaji),
     [budgets, categories, transactions, muaji]
   );
+
+  /**
+   * The daily read of a monthly budget — what is actually left per day from here to the end of the
+   * month, plus what today has already taken out of it. A monthly figure says whether you are over;
+   * this says what today is allowed to look like.
+   *
+   * Only the running month has a "today": for any other month the budget is spread evenly across
+   * all its days instead, which is the average the month was planned around.
+   */
+  const progressiDitor = useMemo(() => {
+    const { end } = monthKeyBounds(muaji);
+    const ditetMuaji = Number(end.slice(8, 10));
+    const sot = todayISO();
+    const eshteMuajiAktual = muaji === monthKey();
+    const ditetMbetura = eshteMuajiAktual ? Math.max(ditetMuaji - Number(sot.slice(8, 10)) + 1, 1) : ditetMuaji;
+
+    const sotPerKategori = new Map();
+    if (eshteMuajiAktual) {
+      transactions
+        .filter((tx) => tx.lloji === "shpenzim" && tx.data === sot)
+        .forEach((tx) =>
+          sotPerKategori.set(tx.kategoriaId, (sotPerKategori.get(tx.kategoriaId) || 0) + toNumber(tx.vlera))
+        );
+    }
+
+    return progress.map((b) => ({
+      ...b,
+      eshteMuajiAktual,
+      ditetMbetura,
+      // Never negative: a blown budget leaves nothing per day, not a debt per day.
+      perDite: Math.max(b.mbetur, 0) / ditetMbetura,
+      shpenzuarSot: sotPerKategori.get(b.kategoriaId) || 0,
+    }));
+  }, [progress, transactions, muaji]);
 
   const totals = useMemo(() => {
     const buxheti = progress.reduce((sum, b) => sum + b.buxheti, 0);
@@ -82,13 +116,14 @@ function Buxhetet() {
     await save(STORES.budgets, { ...record, muaji: record.muaji ? null : muaji });
   };
 
-  const rows = progress.map((b) => ({
+  const rows = progressiDitor.map((b) => ({
     ID: b.id,
     Kategoria: b.emri,
     Vlefshmëria: b.muaji ? monthLabel(b.muaji) : "Çdo muaj",
     [`Buxheti (${simboli})`]: plainAmount(b.buxheti),
     [`Shpenzuar (${simboli})`]: plainAmount(b.shpenzuar),
     [`Mbetur (${simboli})`]: `<span class="${b.tepruar ? "fcp-neg" : "fcp-pos"}">${plainAmount(b.mbetur)}</span>`,
+    [`Ditore (${simboli})`]: plainAmount(b.perDite),
     Përqindja: formatPercent(b.perqindja),
   }));
 
@@ -148,7 +183,7 @@ function Buxhetet() {
           {progress.length === 0 ? (
             <Empty>Nuk ka buxhete për këtë muaj. Shtoni një kufi mujor për kategoritë që doni të kontrolloni.</Empty>
           ) : (
-            progress.map((b) => {
+            progressiDitor.map((b) => {
               const Icon = getIcon(b.ikona);
               return (
                 <div className={`fcp-tracked${b.tepruar ? " over" : ""}`} key={b.id}>
@@ -184,6 +219,19 @@ function Buxhetet() {
                   </div>
 
                   <ProgressBar value={b.perqindja} color={b.ngjyra} over={b.tepruar} />
+
+                  <div className="fcp-row-sub mt-1">
+                    {b.tepruar
+                      ? "Buxheti u mbarua - çdo shpenzim i ri e kalon kufirin."
+                      : `${money(b.perDite)}/ditë për ${b.ditetMbetura} ${
+                          b.ditetMbetura === 1 ? "ditë të mbetur" : "ditë të mbetura"
+                        }`}
+                    {b.eshteMuajiAktual && b.shpenzuarSot > 0 && (
+                      <span className={b.shpenzuarSot > b.perDite ? " fcp-neg" : ""}>
+                        {" "}· {money(b.shpenzuarSot)} sot
+                      </span>
+                    )}
+                  </div>
 
                   <div className="fcp-tracked-foot">
                     <span className={b.tepruar ? "fcp-neg" : ""}>
