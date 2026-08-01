@@ -9,6 +9,7 @@ import "./Pages/Styles/DizajniPergjithshem.css";
 const Dashboard = lazy(() => import("./Pages/Dashboard"));
 const Transaksionet = lazy(() => import("./Pages/Transaksionet"));
 const Llogarite = lazy(() => import("./Pages/Llogarite"));
+const Borxhet = lazy(() => import("./Pages/Borxhet"));
 const Kategorite = lazy(() => import("./Pages/Kategorite"));
 const Buxhetet = lazy(() => import("./Pages/Buxhetet"));
 const Qellimet = lazy(() => import("./Pages/Qellimet"));
@@ -24,6 +25,7 @@ function App() {
         <Route path="/" element={<Dashboard />} />
         <Route path="/transaksionet" element={<Transaksionet />} />
         <Route path="/llogarite" element={<Llogarite />} />
+        <Route path="/borxhet" element={<Borxhet />} />
         <Route path="/kategorite" element={<Kategorite />} />
         <Route path="/buxhetet" element={<Buxhetet />} />
         <Route path="/qellimet" element={<Qellimet />} />

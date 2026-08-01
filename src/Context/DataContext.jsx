@@ -13,6 +13,7 @@ const EMPTY = {
   budgets: [],
   goals: [],
   recurring: [],
+  borxhet: [],
 };
 
 /**

@@ -26,7 +26,9 @@ import "./Styles/Personal.css";
 const PER_MONTH = { ditore: 30, javore: 4.33, dyjavore: 2.17, mujore: 1, tremujore: 1 / 3, gjashtemujore: 1 / 6, vjetore: 1 / 12 };
 
 function TePerseritura() {
-  const { accounts, categories, recurring, save, destroy, money, simboli, loading, njeLlogari } = useData();
+  // `borxhet` is only read to name the note a schedule pays down in its list row — the booking
+  // itself happens in KonfirmoPagesen, which every confirmation now goes through.
+  const { accounts, categories, recurring, borxhet, save, destroy, money, simboli, loading, njeLlogari } = useData();
   const dialog = useDialog();
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState(null);
@@ -180,6 +182,9 @@ function TePerseritura() {
                           r.nrKesteve ? `${r.nrKesteve} këste` : null,
                           njeLlogari ? null : nameOf(accounts, r.llogariaId),
                           kategoria?.emri || "Pa kategori",
+                          r.borxhiId
+                            ? `zbret "${nameOf(borxhet, r.borxhiId, "borxh i fshirë")}"`
+                            : null,
                         ]
                           .filter(Boolean)
                           .join(" · ")}

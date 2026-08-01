@@ -47,6 +47,40 @@ export function accountTypeMeta(value) {
   );
 }
 
+/**
+ * Kinds of debt note. A debt is *not* an account: it lives in its own store and never reaches
+ * `accountBalance`/`totalBalance`, so a card you still owe on cannot drag the real balance
+ * negative. `drejtimi` says which way it points — `detyrim` is money you owe, `kerkese` is money
+ * someone owes you — which is all that changes in the wording ("paguar" vs "kthyer").
+ */
+export const DEBT_TYPES = [
+  { value: "karte", label: "Kartelë Krediti", short: "Kartelë", icon: "CreditCard", drejtimi: "detyrim" },
+  { value: "kredi", label: "Kredi Bankare", short: "Kredi", icon: "Landmark", drejtimi: "detyrim" },
+  { value: "keste", label: "Blerje me Këste", short: "Këste", icon: "Receipt", drejtimi: "detyrim" },
+  { value: "borxh", label: "Borxh Personal (i kam borxh dikujt)", short: "Borxh", icon: "Coins", drejtimi: "detyrim" },
+  { value: "huadhene", label: "Hua e Dhënë (dikush më ka borxh)", short: "Hua e dhënë", icon: "Banknote", drejtimi: "kerkese" },
+];
+
+/** Never returns undefined, so a note holding a type that was removed still renders. */
+export function debtTypeMeta(value) {
+  return (
+    DEBT_TYPES.find((t) => t.value === value) || {
+      value,
+      label: value,
+      short: value,
+      icon: "Receipt",
+      drejtimi: "detyrim",
+    }
+  );
+}
+
+/** A line on a debt note: `pagese` brings the balance down, `shtese` puts it back up (a new
+ * purchase on the card, interest, a late fee). */
+export const DEBT_ENTRY_TYPES = [
+  { value: "pagese", label: "Pagesë", sign: -1 },
+  { value: "shtese", label: "Shtesë / Blerje e re", sign: 1 },
+];
+
 export const TRANSACTION_TYPES = [
   { value: "hyrje", label: "Hyrje", sign: 1 },
   { value: "shpenzim", label: "Shpenzim", sign: -1 },

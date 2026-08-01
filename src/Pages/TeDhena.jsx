@@ -21,8 +21,8 @@ import "./Styles/Dashboard.css";
 import "./Styles/Personal.css";
 
 function TeDhena() {
-  const { profile, accounts, categories, transactions, budgets, goals, recurring, reload, simboli, loading, njeLlogari } =
-    useData();
+  const { profile, accounts, categories, transactions, budgets, goals, recurring, borxhet, reload, simboli,
+    loading, njeLlogari } = useData();
   const dialog = useDialog();
   const [message, setMessage] = useState(null);
   const [periudha, setPeriudha] = useState("muaji");
@@ -157,7 +157,7 @@ function TeDhena() {
     e.target.value = "";
     if (!file) return;
     const proceed = await dialog.confirm(
-      "Importimi zëvendëson TË GJITHA të dhënat aktuale (llogaritë, kategoritë, transaksionet, buxhetet, qëllimet dhe pagesat e përsëritura). Vazhdo?",
+      "Importimi zëvendëson TË GJITHA të dhënat aktuale (llogaritë, kategoritë, transaksionet, buxhetet, qëllimet, pagesat e përsëritura dhe borxhet). Vazhdo?",
       { title: "Konfirmo Importimin" }
     );
     if (!proceed) return;
@@ -182,6 +182,7 @@ function TeDhena() {
     ["Buxhete", budgets.length],
     ["Qëllime", goals.length],
     ["Pagesa të përsëritura", recurring.length],
+    ["Borxhe & kartela", borxhet.length],
   ];
 
   if (loading) return <PageLoading title="Eksporto / Importo" />;
@@ -214,8 +215,8 @@ function TeDhena() {
             <Card className="profile-card border-0 p-4 h-100">
               <h5 className="fw-bold mb-2">Kopje e Plotë (JSON)</h5>
               <p className="text-muted small">
-                Përfshin çdo gjë: profilin, llogaritë, kategoritë, transaksionet, buxhetet, qëllimet dhe pagesat e
-                përsëritura. Ky është skedari që importohet përsëri këtu.
+                Përfshin çdo gjë: profilin, llogaritë, kategoritë, transaksionet, buxhetet, qëllimet, pagesat e
+                përsëritura dhe borxhet me pagesat e tyre. Ky është skedari që importohet përsëri këtu.
               </p>
               <div className="d-flex gap-2 flex-wrap mt-auto">
                 <Button className="btn-primary" onClick={handleExportJson} disabled={Boolean(duke)}>

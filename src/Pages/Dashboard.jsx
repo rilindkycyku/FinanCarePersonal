@@ -4,6 +4,7 @@ import { Container, Row, Col, Button, Alert } from "react-bootstrap";
 import {
   LayoutDashboard, Wallet, TrendingUp, TrendingDown, PiggyBank, Percent, PlusCircle,
   ArrowRightLeft, Tags, Target, Repeat, BarChart3, Settings, DatabaseBackup, CalendarClock,
+  Receipt,
 } from "lucide-react";
 import NavBar from "../Components/NavBar";
 import PageTitle from "../Components/PageTitle";
@@ -15,11 +16,12 @@ import { Kpi, Panel, ProgressBar, Empty } from "../Components/Ui";
 import { useData } from "../Context/DataContext";
 import { getIcon } from "../lib/icons";
 import {
-  accountsWithBalances, budgetProgress, cashflow, dueRecurring, filterByRange, goalProgress,
-  monthBounds, sortByDateDesc, totalBalance, totalsByCategory, upcomingRecurring,
+  accountsWithBalances, budgetProgress, cashflow, debtProgress, debtTotals, dueRecurring,
+  filterByRange, goalProgress, monthBounds, sortByDateDesc, totalBalance, totalsByCategory,
+  upcomingRecurring,
 } from "../lib/finance";
 import { formatDate, formatMoney, formatPercent, monthKey, monthLabel, todayISO } from "../lib/format";
-import { accountTypeMeta, DAYS_LONG, MONTHS_LONG } from "../lib/options";
+import { accountTypeMeta, debtTypeMeta, DAYS_LONG, MONTHS_LONG } from "../lib/options";
 import "./Styles/PremiumTheme.css";
 import "./Styles/DizajniPergjithshem.css";
 import "./Styles/Dashboard.css";
@@ -28,6 +30,7 @@ import "./Styles/Personal.css";
 const QUICK_ACTIONS = [
   { to: "/transaksionet", label: "Transaksionet", icon: ArrowRightLeft },
   { to: "/llogarite", label: "Llogaritë", icon: Wallet },
+  { to: "/borxhet", label: "Borxhet & Kartelat", icon: Receipt },
   { to: "/kategorite", label: "Kategoritë", icon: Tags },
   { to: "/buxhetet", label: "Buxhetet", icon: PiggyBank },
   { to: "/qellimet", label: "Qëllimet e Kursimit", icon: Target },
@@ -38,8 +41,8 @@ const QUICK_ACTIONS = [
 ];
 
 function Dashboard() {
-  const { profile, accounts, categories, transactions, budgets, goals, recurring, loading, error, money, signedMoney,
-    njeLlogari, llogariaKryesore } = useData();
+  const { profile, accounts, categories, transactions, budgets, goals, recurring, borxhet, loading, error, money,
+    signedMoney, njeLlogari, llogariaKryesore } = useData();
   const [showTx, setShowTx] = useState(false);
 
   const today = todayISO();
@@ -58,8 +61,16 @@ function Dashboard() {
       teFundit: sortByDateDesc(transactions).slice(0, 6),
       dueTani: dueRecurring(recurring, today),
       neVijim: upcomingRecurring(recurring, today, 14),
+      // Notes only — deliberately not folded into `bilanci` above (see finance.js).
+      borxhet: borxhet
+        .filter((d) => !d.arkivuar)
+        .map((d) => debtProgress(d))
+        .filter((d) => !d.perfunduar)
+        .sort((a, b) => b.mbetur - a.mbetur)
+        .slice(0, 4),
+      borxhetTotal: debtTotals(borxhet),
     };
-  }, [accounts, categories, transactions, budgets, goals, recurring, muajiKey, today]);
+  }, [accounts, categories, transactions, budgets, goals, recurring, borxhet, muajiKey, today]);
 
   const pershendetja = profile.emri || "përdorues";
   // Both are optional targets set in Cilësimet; when unset the KPIs fall back to plain figures.
@@ -355,6 +366,39 @@ function Dashboard() {
               )}
             </Panel>
           </Col>
+
+          {stats.borxhet.length > 0 && (
+            <Col xl={6}>
+              <Panel title="Borxhet & Kartelat" icon={Receipt} action="Të gjitha" actionTo="/borxhet">
+                {stats.borxhet.map((d) => {
+                  const Icon = getIcon(debtTypeMeta(d.lloji).icon);
+                  return (
+                    <div className="mb-3" key={d.id}>
+                      <div className="d-flex justify-content-between align-items-center mb-1">
+                        <span className="fcp-row-title d-flex align-items-center gap-2">
+                          <Icon size={14} style={{ color: d.ngjyra }} />
+                          {d.emri}
+                        </span>
+                        <span className="fcp-row-sub">
+                          {money(d.paguar)} / {money(d.totali)}
+                        </span>
+                      </div>
+                      <ProgressBar value={d.perqindja} color={d.ngjyra} />
+                      <div className="fcp-row-sub mt-1">
+                        {d.drejtimi === "kerkese" ? "Për t'u marrë" : "Mbeten"} {money(d.mbetur)}
+                        {d.dataMbarimit ? ` · afati ${formatDate(d.dataMbarimit)}` : ""}
+                      </div>
+                    </div>
+                  );
+                })}
+                {/* Said out loud here because the "Bilanci Total" tile sits right above it. */}
+                <div className="fcp-row-sub">
+                  Gjithsej i mbetur: <strong className="fcp-neg">{money(stats.borxhetTotal.detyrimet.mbetur)}</strong> -
+                  shënim, jashtë Bilancit Total.
+                </div>
+              </Panel>
+            </Col>
+          )}
 
           {stats.neVijim.length > 0 && (
             <Col xl={6}>

@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { Container, Row, Button } from "react-bootstrap";
-import { Wallet, Plus, Edit3, Trash2, Archive, ArchiveRestore, TrendingUp, TrendingDown } from "lucide-react";
+import { Wallet, Plus, Edit3, Trash2, Archive, ArchiveRestore, TrendingUp, TrendingDown, Receipt } from "lucide-react";
 import NavBar from "../Components/NavBar";
 import Footer from "../Components/Footer";
 import PageTitle from "../Components/PageTitle";
@@ -12,7 +13,7 @@ import { Kpi, Empty } from "../Components/Ui";
 import { useData } from "../Context/DataContext";
 import { useDialog } from "../Context/DialogContext";
 import { STORES } from "../lib/db";
-import { accountBalance, totalBalance, totalsByAccount, txSignForAccount } from "../lib/finance";
+import { accountBalance, debtTotals, totalBalance, totalsByAccount, txSignForAccount } from "../lib/finance";
 import { plainAmount } from "../lib/format";
 import { accountTypeMeta } from "../lib/options";
 import { getIcon } from "../lib/icons";
@@ -21,7 +22,8 @@ import "./Styles/DizajniPergjithshem.css";
 import "./Styles/Personal.css";
 
 function Llogarite() {
-  const { accounts, transactions, save, destroy, money, simboli, loading, njeLlogari, llogariaKryesore } = useData();
+  const { accounts, transactions, borxhet, save, destroy, money, simboli, loading, njeLlogari, llogariaKryesore } =
+    useData();
   const dialog = useDialog();
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState(null);
@@ -53,6 +55,10 @@ function Llogarite() {
     const b = accountBalance(a, transactions);
     return sum + (b < 0 ? Math.abs(b) : 0);
   }, 0);
+
+  // Shown next to the balance precisely so the two never get confused: debt notes live in their
+  // own store and are not part of any figure on this page.
+  const borxhetTotal = useMemo(() => debtTotals(borxhet), [borxhet]);
 
   const openNew = () => {
     setEditing(null);
@@ -212,6 +218,25 @@ function Llogarite() {
             </>
           )}
         </Row>
+
+        {(borxhetTotal.detyrimet.mbetur > 0 || borxhetTotal.kerkesat.mbetur > 0) && (
+          <div className="fcp-row-sub mt-2 mb-3">
+            <Receipt size={13} className="me-1" />
+            Jashtë këtij bilanci:{" "}
+            {borxhetTotal.detyrimet.mbetur > 0 && (
+              <>
+                <strong className="fcp-neg">{money(borxhetTotal.detyrimet.mbetur)}</strong> borxh i mbetur
+              </>
+            )}
+            {borxhetTotal.detyrimet.mbetur > 0 && borxhetTotal.kerkesat.mbetur > 0 && " · "}
+            {borxhetTotal.kerkesat.mbetur > 0 && (
+              <>
+                <strong className="fcp-pos">{money(borxhetTotal.kerkesat.mbetur)}</strong> për t&apos;u marrë
+              </>
+            )}{" "}
+            - mbahen si shënim te <Link to="/borxhet">Borxhet &amp; Kartelat</Link>.
+          </div>
+        )}
 
         {njeLlogari ? (
           <>
