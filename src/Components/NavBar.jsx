@@ -3,7 +3,7 @@ import { Link, NavLink, useLocation } from "react-router-dom";
 import { Dropdown } from "react-bootstrap";
 import {
   LayoutDashboard, ArrowRightLeft, Wallet, Tags, PiggyBank, Target, Repeat,
-  BarChart3, Settings, DatabaseBackup, Sun, Moon, ChevronDown, Menu, X,
+  BarChart3, Settings, DatabaseBackup, Sun, Moon, ChevronDown, Menu, X, Receipt,
 } from "lucide-react";
 import { useTheme } from "../Context/ThemeContext";
 import "./NavBar.css";
@@ -19,6 +19,7 @@ const CATEGORIES = [
     links: [
       { to: "/transaksionet", label: "Transaksionet", icon: ArrowRightLeft },
       { to: "/llogarite", label: "Llogaritë", icon: Wallet },
+      { to: "/borxhet", label: "Borxhet & Kartelat", icon: Receipt },
       { to: "/kategorite", label: "Kategoritë", icon: Tags },
     ],
   },

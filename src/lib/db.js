@@ -7,7 +7,7 @@
 import { DEFAULT_CATEGORIES, DEFAULT_ACCOUNTS } from "./options";
 
 const DB_NAME = "financarepersonal";
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 export const STORES = {
   profile: "profile",
@@ -17,6 +17,9 @@ export const STORES = {
   budgets: "budgets",
   goals: "goals",
   recurring: "recurring",
+  // Debt notes (cards, loans, money lent out). Deliberately a store of its own and never read by
+  // the balance maths — see finance.js.
+  borxhet: "borxhet",
 };
 
 const PROFILE_KEY = "main";
@@ -58,6 +61,11 @@ function openDb() {
       }
       if (!db.objectStoreNames.contains(STORES.recurring)) {
         db.createObjectStore(STORES.recurring, { keyPath: "id" });
+      }
+      // Added in DB_VERSION 2. The `contains` guard is what lets an existing database gain the
+      // store on the next open without touching anything already in it.
+      if (!db.objectStoreNames.contains(STORES.borxhet)) {
+        db.createObjectStore(STORES.borxhet, { keyPath: "id" });
       }
     };
     req.onsuccess = () => {
@@ -132,7 +140,8 @@ export function getAllData() {
     getAll(STORES.budgets),
     getAll(STORES.goals),
     getAll(STORES.recurring),
-  ]).then(([profile, accounts, categories, transactions, budgets, goals, recurring]) => ({
+    getAll(STORES.borxhet),
+  ]).then(([profile, accounts, categories, transactions, budgets, goals, recurring, borxhet]) => ({
     profile: profile ?? {},
     accounts,
     categories,
@@ -140,6 +149,7 @@ export function getAllData() {
     budgets,
     goals,
     recurring,
+    borxhet,
   }));
 }
 
@@ -159,7 +169,7 @@ export async function exportAllData() {
   const data = await getAllData();
   return {
     app: "FinanCarePersonal",
-    version: 1,
+    version: 2,
     exportedAt: new Date().toISOString(),
     profile: data.profile ?? null,
     accounts: data.accounts,
@@ -168,6 +178,7 @@ export async function exportAllData() {
     budgets: data.budgets,
     goals: data.goals,
     recurring: data.recurring,
+    borxhet: data.borxhet,
   };
 }
 
@@ -182,6 +193,7 @@ export async function importAllData(data) {
     clearStore(STORES.budgets),
     clearStore(STORES.goals),
     clearStore(STORES.recurring),
+    clearStore(STORES.borxhet),
   ]);
   if (data.profile) await putProfile(data.profile);
   await Promise.all([
@@ -191,12 +203,15 @@ export async function importAllData(data) {
     ...(data.budgets ?? []).map((b) => put(STORES.budgets, b)),
     ...(data.goals ?? []).map((g) => put(STORES.goals, g)),
     ...(data.recurring ?? []).map((r) => put(STORES.recurring, r)),
+    // Absent from a backup taken before debt notes existed, which `?? []` turns into "none".
+    ...(data.borxhet ?? []).map((b) => put(STORES.borxhet, b)),
   ]);
 }
 
 /** Wipes every store (used by "Fshi të gjitha të dhënat" in Cilësimet). Defaults are seeded on
- * store *creation* only, so after this the user starts from a genuinely empty database — the
- * caller re-seeds accounts/categories if it wants the starter lists back. */
+ * store *creation* only, so this leaves a genuinely empty database; Cilësimet follows it straight
+ * away with `seedDefaults()` so the user lands on the usable starter lists instead of on an app
+ * with nowhere left to record anything. */
 export async function wipeAllData() {
   await Promise.all(Object.values(STORES).map((store) => clearStore(store)));
 }

@@ -4,8 +4,8 @@ import { Pencil, X } from "lucide-react";
 import { useData } from "../Context/DataContext";
 import { makeId, STORES } from "../lib/db";
 import {
-  convertedAmount, generateDueTransactions, monthBounds, monthlyRecurringBreakdown,
-  recurringProgress, scheduledOccurrences,
+  convertedAmount, debtPaymentsFromTransactions, generateDueTransactions, monthBounds,
+  monthlyRecurringBreakdown, recurringProgress, scheduledOccurrences,
 } from "../lib/finance";
 import {
   formatDate, formatMoney, formatSignedMoney, monthLabel, monthKey, plainAmount, toNumber, todayISO,
@@ -31,8 +31,8 @@ import "./ModalForms.css";
  */
 function KonfirmoPagesen({ show, rec, onHide }) {
   const {
-    saveMany, saveProfile, profile, transactions, recurring, accounts, categories, njeLlogari,
-    monedha, money, simboli,
+    saveMany, saveProfile, profile, transactions, recurring, accounts, categories, borxhet,
+    njeLlogari, monedha, money, simboli,
   } = useData();
   const [dataPageses, setDataPageses] = useState(todayISO());
   const [ndryshimet, setNdryshimet] = useState({});
@@ -86,6 +86,7 @@ function KonfirmoPagesen({ show, rec, onHide }) {
           njesia,
           planifikuar: njesia * occ.length,
           ecuria: recurringProgress(r, transactions, occ.length),
+          borxhi: r.borxhiId ? borxhet.find((d) => d.id === r.borxhiId) : null,
           perfshi: nd.perfshi ?? true,
           rregullim: nd.rregullim ?? "",
           kursi: nd.kursi ?? (fx ? String(r.kursi ?? "") : ""),
@@ -109,6 +110,11 @@ function KonfirmoPagesen({ show, rec, onHide }) {
   const gjithsej = perfshira.reduce((sum, r) => sum + bazaE(r), 0);
 
   const rregullimeAktive = perfshira.filter((r) => toNumber(r.rregullim) !== 0).length;
+
+  // How much of this settlement also comes off a linked note, so the user sees both effects before
+  // pressing Regjistro rather than discovering the second one on the Borxhet page afterwards.
+  const zbritjaEBorxhit = perfshira.filter((r) => r.borxhi).reduce((sum, r) => sum + bazaE(r), 0);
+  const borxhetEPrekura = Array.from(new Set(perfshira.filter((r) => r.borxhi).map((r) => r.borxhi.emri)));
   // A foreign-currency row cannot be booked without a rate, so the editor opens itself rather than
   // leaving the field hidden behind the button.
   const kursiMungon = perfshira.some((r) => r.fx && !(toNumber(r.kursi) > 0));
@@ -151,6 +157,7 @@ function KonfirmoPagesen({ show, rec, onHide }) {
     setError("");
 
     const entries = [];
+    const txsEKrijuara = [];
     const kurset = { ...(profile.kurset || {}) };
 
     perfshira.forEach((rresht) => {
@@ -163,18 +170,17 @@ function KonfirmoPagesen({ show, rec, onHide }) {
         // A catch-up row covers several occurrences; the adjustment belongs to the payment as a
         // whole, so it is applied once, on the last of them.
         const faturuar = rresht.njesia + (i === occ.length - 1 ? rregullim : 0);
-        entries.push([
-          STORES.transactions,
-          {
-            ...tx,
-            // Everything on this card leaves the account on the same day.
-            data: dataPageses,
-            vlera: rresht.fx ? convertedAmount(faturuar, rresht.kursi) : faturuar,
-            vleraOrigjinale: rresht.fx ? faturuar : null,
-            kursi: rresht.fx ? toNumber(rresht.kursi) : null,
-            shenim: shenimi.trim() || tx.shenim,
-          },
-        ]);
+        const perfundimtar = {
+          ...tx,
+          // Everything on this card leaves the account on the same day.
+          data: dataPageses,
+          vlera: rresht.fx ? convertedAmount(faturuar, rresht.kursi) : faturuar,
+          vleraOrigjinale: rresht.fx ? faturuar : null,
+          kursi: rresht.fx ? toNumber(rresht.kursi) : null,
+          shenim: shenimi.trim() || tx.shenim,
+        };
+        txsEKrijuara.push(perfundimtar);
+        entries.push([STORES.transactions, perfundimtar]);
       });
 
       const skedula =
@@ -191,6 +197,12 @@ function KonfirmoPagesen({ show, rec, onHide }) {
 
       if (rresht.fx && toNumber(rresht.kursi) > 0) kurset[rresht.fx] = toNumber(rresht.kursi);
     });
+
+    // The note goes down by what was actually paid, not by what was planned — bonus points taken
+    // off the minimum payment reduce the card balance by the smaller figure, which is the point.
+    entries.push(
+      ...debtPaymentsFromTransactions(borxhet, txsEKrijuara, makeId).map((d) => [STORES.borxhet, d])
+    );
 
     await saveMany(entries);
 
@@ -267,6 +279,7 @@ function KonfirmoPagesen({ show, rec, onHide }) {
                         ? `${r.datat.length} pagesa të pakonfirmuara`
                         : formatDate(r.datat[0])}
                       {r.fx && ` · ${r.fx} @ ${r.kursi || "—"}`}
+                      {r.borxhi && ` · zbret "${r.borxhi.emri}"`}
                     </div>
                     {toNumber(r.rregullim) !== 0 && (
                       <span className="fcp-adjust-badge">
@@ -377,6 +390,16 @@ function KonfirmoPagesen({ show, rec, onHide }) {
           {mbetenKeteMuaj > 0.004 && (
             <div className="fcp-modal-hint mb-3">
               Pas kësaj, {emriGrupit} ka edhe {money(mbetenKeteMuaj)} këtë muaj.
+            </div>
+          )}
+
+          {zbritjaEBorxhit > 0.004 && (
+            <div className="fcp-modal-hint mb-3">
+              Nga kjo pagesë, {money(zbritjaEBorxhit)} zbritet edhe nga{" "}
+              {borxhetEPrekura.length === 1
+                ? `borxhi "${borxhetEPrekura[0]}"`
+                : `${borxhetEPrekura.length} borxhe (${borxhetEPrekura.join(", ")})`}
+              .
             </div>
           )}
 

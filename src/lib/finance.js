@@ -14,7 +14,7 @@
  */
 
 import { addDays, addMonths, addWeeks, addYears, format, parseISO } from "date-fns";
-import { FREQUENCIES, MONTHS_SHORT } from "./options";
+import { debtTypeMeta, FREQUENCIES, MONTHS_SHORT } from "./options";
 import { toNumber } from "./format";
 
 // ── Accounts ────────────────────────────────────────────────────────────────
@@ -310,6 +310,120 @@ export function goalProgress(goal, transactions) {
   };
 }
 
+// ── Debt notes (off-ledger) ─────────────────────────────────────────────────
+
+/**
+ * Debts, credit cards and money lent out are **notes**, not accounts. They live in their own
+ * store, and nothing in this section is read by `accountBalance` / `totalBalance` / `cashflow`,
+ * so a card with 900 € still owed on it never turns up as −900 € in "Bilanci Total". The only
+ * thing that touches the real ledger is a payment the user explicitly asked to also book against
+ * an account — and that one is a plain expense transaction like any other.
+ *
+ * A note carries its own lines in `pagesat`: `{ id, data, vlera, lloji, shenim, llogariaId,
+ * transaksioniId }`, where `lloji` is "pagese" (brings the balance down) or "shtese" (a new
+ * purchase on the card, interest, a fee — puts it back up).
+ */
+
+/** The lines of one note, newest first. Tolerates a record saved before `pagesat` existed. */
+export function debtEntries(debt) {
+  return [...(Array.isArray(debt?.pagesat) ? debt.pagesat : [])].sort((a, b) =>
+    a.data === b.data ? 0 : a.data < b.data ? 1 : -1
+  );
+}
+
+/** Where one note stands: what it started at, what has been added, what has been paid off. */
+export function debtProgress(debt) {
+  const pagesat = debtEntries(debt);
+  const shtuar = pagesat
+    .filter((p) => p.lloji === "shtese")
+    .reduce((sum, p) => sum + toNumber(p.vlera), 0);
+  const paguar = pagesat
+    .filter((p) => p.lloji !== "shtese")
+    .reduce((sum, p) => sum + toNumber(p.vlera), 0);
+  const totali = toNumber(debt.vleraTotale) + shtuar;
+  const perqindja = totali > 0 ? Math.min((paguar / totali) * 100, 100) : 0;
+  return {
+    ...debt,
+    pagesat,
+    // Derived from the type rather than stored, so changing a note's type can never leave a stale
+    // direction behind on the record.
+    drejtimi: debtTypeMeta(debt.lloji).drejtimi,
+    totali,
+    shtuar,
+    paguar,
+    // Clamped: an overpayment is a data-entry slip, not a debt that owes money back, and letting
+    // it go negative would quietly cancel out other notes in the totals below.
+    mbetur: Math.max(totali - paguar, 0),
+    perqindja,
+    perfunduar: totali > 0 && paguar >= totali,
+    nrPagesave: pagesat.filter((p) => p.lloji !== "shtese").length,
+  };
+}
+
+/**
+ * The debt lines implied by a batch of transactions that were just booked. A recurring payment
+ * carrying `borxhiId` (a card instalment plan, a monthly loan payment, someone repaying you by
+ * standing order) both leaves the account *and* pays the note down, and this turns the second half
+ * into records — one updated note per debt touched.
+ *
+ * Pure: the caller persists the result. Each line keeps its transaction's id, so it behaves like
+ * any hand-entered linked payment — delete the line and the transaction goes with it.
+ */
+export function debtPaymentsFromTransactions(debts, transactions, makeIdFn) {
+  const byDebt = new Map();
+  transactions
+    .filter((tx) => tx.borxhiId)
+    .forEach((tx) => {
+      if (!byDebt.has(tx.borxhiId)) byDebt.set(tx.borxhiId, []);
+      byDebt.get(tx.borxhiId).push(tx);
+    });
+
+  return Array.from(byDebt.entries())
+    .map(([borxhiId, txs]) => {
+      // A schedule pointing at a note that was since deleted simply books the transaction and
+      // nothing else, rather than failing the whole confirmation.
+      const debt = debts.find((d) => d.id === borxhiId);
+      if (!debt) return null;
+      return {
+        ...debt,
+        pagesat: [
+          ...(Array.isArray(debt.pagesat) ? debt.pagesat : []),
+          ...txs.map((tx) => ({
+            id: makeIdFn("dpay"),
+            data: tx.data,
+            lloji: "pagese",
+            vlera: toNumber(tx.vlera),
+            shenim: tx.pershkrimi || "",
+            llogariaId: tx.llogariaId || null,
+            transaksioniId: tx.id,
+          })),
+        ],
+      };
+    })
+    .filter(Boolean);
+}
+
+/** Totals across the notes, split by direction — what you owe vs. what is owed to you. Archived
+ * notes are left out, the same way archived accounts are left out of the net worth. */
+export function debtTotals(debts) {
+  const empty = () => ({ totali: 0, paguar: 0, mbetur: 0, numri: 0, perfunduara: 0 });
+  const totals = { detyrimet: empty(), kerkesat: empty() };
+
+  debts
+    .filter((d) => !d.arkivuar)
+    .map((d) => debtProgress(d))
+    .forEach((d) => {
+      const bucket = d.drejtimi === "kerkese" ? totals.kerkesat : totals.detyrimet;
+      bucket.totali += d.totali;
+      bucket.paguar += d.paguar;
+      bucket.mbetur += d.mbetur;
+      bucket.numri += 1;
+      if (d.perfunduar) bucket.perfunduara += 1;
+    });
+
+  return totals;
+}
+
 // ── Recurring payments ──────────────────────────────────────────────────────
 
 export function frequencyLabel(value) {
@@ -458,6 +572,9 @@ export function generateDueTransactions(rec, todayStr, makeIdFn, maxCatchUp = 60
       shenim: `Krijuar automatikisht nga pagesa e përsëritur "${updated.emri}".`,
       qellimiId: null,
       perseritjaId: updated.id,
+      // Carried onto the transaction so whichever path books it can pay the linked note down with
+      // `debtPaymentsFromTransactions` — no separate bookkeeping to keep in step.
+      borxhiId: updated.borxhiId || null,
       // Carried over so a $-billed subscription still shows what was charged; the confirmation
       // dialog is where the month's real rate (and amount) can be corrected.
       monedhaOrigjinale: updated.monedhaOrigjinale || null,

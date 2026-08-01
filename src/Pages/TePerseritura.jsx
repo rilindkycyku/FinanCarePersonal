@@ -14,7 +14,9 @@ import { Kpi, Empty } from "../Components/Ui";
 import { useData } from "../Context/DataContext";
 import { useDialog } from "../Context/DialogContext";
 import { makeId, STORES } from "../lib/db";
-import { dueRecurring, frequencyLabel, generateDueTransactions, isRecurringDue } from "../lib/finance";
+import {
+  debtPaymentsFromTransactions, dueRecurring, frequencyLabel, generateDueTransactions, isRecurringDue,
+} from "../lib/finance";
 import { formatDate, formatMoney, plainAmount, todayISO } from "../lib/format";
 import { FREQUENCIES } from "../lib/options";
 import { getIcon } from "../lib/icons";
@@ -26,7 +28,8 @@ import "./Styles/Personal.css";
 const PER_MONTH = { ditore: 30, javore: 4.33, dyjavore: 2.17, mujore: 1, tremujore: 1 / 3, gjashtemujore: 1 / 6, vjetore: 1 / 12 };
 
 function TePerseritura() {
-  const { accounts, categories, recurring, save, saveMany, destroy, money, simboli, loading, njeLlogari } = useData();
+  const { accounts, categories, recurring, borxhet, save, saveMany, destroy, money, simboli, loading, njeLlogari } =
+    useData();
   const dialog = useDialog();
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState(null);
@@ -87,19 +90,30 @@ function TePerseritura() {
 
   const confirmAll = async () => {
     const entries = [];
+    const gjithaTx = [];
     let numri = 0;
     stats.due.forEach((rec) => {
       const { transactions: gjeneruara, updated, changed } = generateDueTransactions(rec, today, makeId);
       if (!changed) return;
       numri += gjeneruara.length;
+      gjithaTx.push(...gjeneruara);
       entries.push(...gjeneruara.map((tx) => [STORES.transactions, tx]), [STORES.recurring, updated]);
     });
     if (entries.length === 0) return;
 
+    // Schedules tied to a card or a loan settle the note in the same step, so the debt never drifts
+    // behind the ledger just because the payments were confirmed in bulk.
+    const borxhetEPrekura = debtPaymentsFromTransactions(borxhet, gjithaTx, makeId);
+    entries.push(...borxhetEPrekura.map((d) => [STORES.borxhet, d]));
+
     const ok = await dialog.confirm(
       `Të regjistroj ${numri} ${numri === 1 ? "transaksion" : "transaksione"} nga ${stats.due.length} ${
         stats.due.length === 1 ? "pagesë" : "pagesa"
-      } që kanë arritur datën, me vlerat e planifikuara? Për të ndryshuar vlerën e një pagese, konfirmojeni veç nga lista.`,
+      } që kanë arritur datën, me vlerat e planifikuara?${
+        borxhetEPrekura.length
+          ? ` ${borxhetEPrekura.length} ${borxhetEPrekura.length === 1 ? "borxh zbritet" : "borxhe zbriten"} bashkë me to.`
+          : ""
+      } Për të ndryshuar vlerën e një pagese, konfirmojeni veç nga lista.`,
       { title: "Konfirmo të Gjitha", confirmLabel: "Regjistro" }
     );
     if (!ok) return;
@@ -191,6 +205,9 @@ function TePerseritura() {
                           r.nrKesteve ? `${r.nrKesteve} këste` : null,
                           njeLlogari ? null : nameOf(accounts, r.llogariaId),
                           kategoria?.emri || "Pa kategori",
+                          r.borxhiId
+                            ? `zbret "${nameOf(borxhet, r.borxhiId, "borxh i fshirë")}"`
+                            : null,
                         ]
                           .filter(Boolean)
                           .join(" · ")}
