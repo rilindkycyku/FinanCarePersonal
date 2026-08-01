@@ -27,7 +27,7 @@ const BLANK = {
  * `vleraTotale` is only the opening figure; everything after it is a line in `pagesat`, which the
  * form carries through untouched on edit so re-saving a note can never lose its history.
  */
-function ShtoBorxhin({ show, onHide, initial }) {
+function ShtoBorxhin({ show, onHide, initial, llojiFillestar }) {
   const { categories, save, simboli } = useData();
   const [debt, setDebt] = useState(BLANK);
   const [error, setError] = useState("");
@@ -46,9 +46,11 @@ function ShtoBorxhin({ show, onHide, initial }) {
             kreditori: initial.kreditori || "",
             shenim: initial.shenim || "",
           }
-        : BLANK
+        : // The page adds from two separate sections ("what I owe" / "what I am owed"), so the
+          // section the user pressed decides which way the new note points.
+          { ...BLANK, lloji: llojiFillestar || BLANK.lloji }
     );
-  }, [show, initial]);
+  }, [show, initial, llojiFillestar]);
 
   const setField = (name, value) => setDebt((prev) => ({ ...prev, [name]: value }));
 

@@ -4,8 +4,8 @@ import { TrendingUp, TrendingDown } from "lucide-react";
 import { useData } from "../Context/DataContext";
 import MonedhaTjeter from "./MonedhaTjeter";
 import { makeId, STORES } from "../lib/db";
-import { currencySymbol, toNumber, todayISO } from "../lib/format";
-import { convertedAmount, currencyFields, lastInstallmentDate } from "../lib/finance";
+import { currencySymbol, formatMoney, toNumber, todayISO } from "../lib/format";
+import { convertedAmount, currencyFields, debtProgress, lastInstallmentDate } from "../lib/finance";
 import { FREQUENCIES } from "../lib/options";
 import { formatDate } from "../lib/format";
 import "./ModalForms.css";
@@ -22,6 +22,7 @@ const BLANK = {
   nrKesteve: "",
   monedhaOrigjinale: "",
   kursi: "",
+  borxhiId: "",
   aktiv: true,
 };
 
@@ -32,7 +33,8 @@ const BLANK = {
  * which is what advances the date.
  */
 function ShtoTePerseritur({ show, onHide, initial }) {
-  const { accounts, categories, save, saveProfile, profile, monedha, simboli, njeLlogari, llogariaKryesore } = useData();
+  const { accounts, categories, borxhet, save, saveProfile, profile, monedha, simboli, njeLlogari, llogariaKryesore } =
+    useData();
   const [rec, setRec] = useState(BLANK);
   const [error, setError] = useState("");
 
@@ -52,6 +54,7 @@ function ShtoTePerseritur({ show, onHide, initial }) {
         kursi: initial.kursi ? String(initial.kursi) : "",
         dataFundit: initial.dataFundit || "",
         nrKesteve: initial.nrKesteve ? String(initial.nrKesteve) : "",
+        borxhiId: initial.borxhiId || "",
       });
       return;
     }
@@ -64,6 +67,22 @@ function ShtoTePerseritur({ show, onHide, initial }) {
   const kategoriteERelevante = useMemo(
     () => categories.filter((c) => c.lloji === rec.lloji).sort((a, b) => a.emri.localeCompare(b.emri)),
     [categories, rec.lloji]
+  );
+
+  /**
+   * Notes this schedule could pay down, matched to its direction: an expense settles something you
+   * owe, an income is someone repaying you. A note already paid off stays out of the list unless
+   * this schedule is the one attached to it, so reopening an old schedule cannot silently lose the
+   * link.
+   */
+  const borxhetERelevante = useMemo(
+    () =>
+      borxhet
+        .map((d) => debtProgress(d))
+        .filter((d) => (rec.lloji === "hyrje" ? d.drejtimi === "kerkese" : d.drejtimi === "detyrim"))
+        .filter((d) => (!d.arkivuar && !d.perfunduar) || d.id === rec.borxhiId)
+        .sort((a, b) => a.emri.localeCompare(b.emri)),
+    [borxhet, rec.lloji, rec.borxhiId]
   );
 
   /** With an instalment count the end date is derived, so a card purchase split over N months
@@ -81,7 +100,17 @@ function ShtoTePerseritur({ show, onHide, initial }) {
   const changeType = (lloji) =>
     setRec((prev) => {
       const keepCategory = categories.find((c) => c.id === prev.kategoriaId)?.lloji === lloji;
-      return { ...prev, lloji, kategoriaId: keepCategory ? prev.kategoriaId : "" };
+      // A debt points one way only, so a link made while this was an expense is meaningless once
+      // it becomes an income (and the other way round) — dropped rather than left dangling.
+      const borxhi = borxhet.find((d) => d.id === prev.borxhiId);
+      const keepDebt =
+        borxhi && debtProgress(borxhi).drejtimi === (lloji === "hyrje" ? "kerkese" : "detyrim");
+      return {
+        ...prev,
+        lloji,
+        kategoriaId: keepCategory ? prev.kategoriaId : "",
+        borxhiId: keepDebt ? prev.borxhiId : "",
+      };
     });
 
   const handleSave = async (e) => {
@@ -116,6 +145,7 @@ function ShtoTePerseritur({ show, onHide, initial }) {
       dataFundit: rec.dataFundit || null,
       nrKesteve: Math.floor(toNumber(rec.nrKesteve)) || null,
       dataEFundit: rec.dataEFundit || null,
+      borxhiId: rec.borxhiId || null,
       aktiv: Boolean(rec.aktiv),
     });
 
@@ -279,6 +309,29 @@ function ShtoTePerseritur({ show, onHide, initial }) {
               {kesteFundi && (
                 <div className="fcp-modal-hint">Kësti i fundit: {formatDate(kesteFundi)}.</div>
               )}
+            </Form.Group>
+
+            <Form.Group as={Col} md={12} controlId="rec-borxhiid">
+              <Form.Label>
+                {rec.lloji === "hyrje" ? "Kthim borxhi (opsional)" : "Zbrit nga një borxh (opsional)"}
+              </Form.Label>
+              <Form.Select value={rec.borxhiId} onChange={(e) => setField("borxhiId", e.target.value)}>
+                <option value="">Pa lidhje me borxh</option>
+                {borxhetERelevante.map((d) => (
+                  <option key={d.id} value={d.id}>
+                    {d.emri} — mbeten {formatMoney(d.mbetur, monedha)}
+                  </option>
+                ))}
+              </Form.Select>
+              <div className="fcp-modal-hint">
+                {borxhetERelevante.length === 0
+                  ? rec.lloji === "hyrje"
+                    ? "Nuk ka hua të dhëna të hapura — shtoni një te faqja Borxhet & Kartelat."
+                    : "Nuk ka borxhe të hapura — shtoni një kartelë ose kredi te faqja Borxhet & Kartelat."
+                  : `Kur ta konfirmoni pagesën, ky borxh zbritet vetë me të njëjtën vlerë — p.sh. kësti mujor i një kartele bonus e ul borxhin pa e shënuar dy herë. ${
+                      rec.nrKesteve ? "Këstet ndalen vetë pas të fundit." : ""
+                    }`}
+              </div>
             </Form.Group>
 
             <Col md={12}>

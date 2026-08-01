@@ -360,6 +360,49 @@ export function debtProgress(debt) {
   };
 }
 
+/**
+ * The debt lines implied by a batch of transactions that were just booked. A recurring payment
+ * carrying `borxhiId` (a card instalment plan, a monthly loan payment, someone repaying you by
+ * standing order) both leaves the account *and* pays the note down, and this turns the second half
+ * into records — one updated note per debt touched.
+ *
+ * Pure: the caller persists the result. Each line keeps its transaction's id, so it behaves like
+ * any hand-entered linked payment — delete the line and the transaction goes with it.
+ */
+export function debtPaymentsFromTransactions(debts, transactions, makeIdFn) {
+  const byDebt = new Map();
+  transactions
+    .filter((tx) => tx.borxhiId)
+    .forEach((tx) => {
+      if (!byDebt.has(tx.borxhiId)) byDebt.set(tx.borxhiId, []);
+      byDebt.get(tx.borxhiId).push(tx);
+    });
+
+  return Array.from(byDebt.entries())
+    .map(([borxhiId, txs]) => {
+      // A schedule pointing at a note that was since deleted simply books the transaction and
+      // nothing else, rather than failing the whole confirmation.
+      const debt = debts.find((d) => d.id === borxhiId);
+      if (!debt) return null;
+      return {
+        ...debt,
+        pagesat: [
+          ...(Array.isArray(debt.pagesat) ? debt.pagesat : []),
+          ...txs.map((tx) => ({
+            id: makeIdFn("dpay"),
+            data: tx.data,
+            lloji: "pagese",
+            vlera: toNumber(tx.vlera),
+            shenim: tx.pershkrimi || "",
+            llogariaId: tx.llogariaId || null,
+            transaksioniId: tx.id,
+          })),
+        ],
+      };
+    })
+    .filter(Boolean);
+}
+
 /** Totals across the notes, split by direction — what you owe vs. what is owed to you. Archived
  * notes are left out, the same way archived accounts are left out of the net worth. */
 export function debtTotals(debts) {
@@ -529,6 +572,9 @@ export function generateDueTransactions(rec, todayStr, makeIdFn, maxCatchUp = 60
       shenim: `Krijuar automatikisht nga pagesa e përsëritur "${updated.emri}".`,
       qellimiId: null,
       perseritjaId: updated.id,
+      // Carried onto the transaction so whichever path books it can pay the linked note down with
+      // `debtPaymentsFromTransactions` — no separate bookkeeping to keep in step.
+      borxhiId: updated.borxhiId || null,
       // Carried over so a $-billed subscription still shows what was charged; the confirmation
       // dialog is where the month's real rate (and amount) can be corrected.
       monedhaOrigjinale: updated.monedhaOrigjinale || null,

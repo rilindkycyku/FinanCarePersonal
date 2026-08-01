@@ -675,6 +675,16 @@ body.light-mode .fcp-cat-card {
   gap: 0.4rem;
 }
 
+/* Section heading with its own action button on the right (Borxhet: two lists, two add buttons). */
+.fcp-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-bottom: 0.35rem;
+}
+
 /* The payment/charge lines of one debt note, revealed under its progress bar. */
 .fcp-debt-entries {
   margin-top: 0.6rem;
