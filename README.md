@@ -76,8 +76,33 @@ sa shpenzohet, sa mbetet dhe sa po kursesh.
   mend, sepse aplikacioni nuk ka backend për t'i marrë kurset vetë.
 - **Statistikat** — hyrje kundrejt shpenzimeve për 6 muajt e fundit, bilanc mujor, ndarja sipas
   kategorive e llogarive, mesatarja ditore dhe 5 shpenzimet më të mëdha, për periudhë të zgjedhur.
+- **Bilanci ndër muaj dhe parashikimi** — një vijë e vetme: muajt e kaluar me vijë të plotë, muajt
+  që vijnë me vijë të ndërprerë. Parashikimi nuk supozon asgjë nga mesatarja e së kaluarës — ecën
+  ditë për ditë mbi atë që dihet tashmë (transaksionet me datë të ardhshme, këstet e pagesat e
+  përsëritura ende të pakonfirmuara, planet e pablera), prandaj çdo shifër kontrollohet rresht për
+  rresht. Veç mbylljes së muajit tregohet edhe **pika më e ulët** dhe dita kur bilanci do të binte
+  nën zero: një muaj mund të mbyllet mirë e prapë të kalojë nga një e mërkurë pa para.
+- **Kostoja vjetore e pagesave të përsëritura** — sa kushtojnë abonimet, qiraja dhe këstet për 12
+  muajt e ardhshëm, të renditura nga më e shtrenjta. Numërohen pagesat që bien vërtet brenda
+  dritares, jo frekuenca e shumëzuar: një plan me tri këste të mbetura kushton tri këste dhe një
+  pagesë e pauzuar nuk kushton asgjë.
+- **Importim nga ekstrakti i bankës (CSV)** — zgjidhni skedarin dhe aplikacioni gjen vetë ndarësin,
+  kolonat, formatin e datës dhe atë të vlerës (`1.234,56` apo `1,234.56`, minusi para, prapa ose në
+  kllapa, një kolonë me shenjë apo dy kolona debit/kredit) — dhe ju i korrigjoni të gjitha. Lëvizjet
+  që i keni tashmë shënohen si dublikatë dhe lihen jashtë; rreshtat që nuk lexohen dot shfaqen me
+  arsyen, sepse një rresht i fshehur është para që s'do t'i vinit re kurrë. Asgjë nuk regjistrohet
+  para butonit të fundit.
+- **Kujtesa e kategorive** — çdo transaksion me përshkrim e kategori i mëson aplikacionit çiftin, dhe
+  herën tjetër kategoria plotësohet vetë — te formulari i zakonshëm dhe te importimi i një ekstrakti
+  të tërë. Rregulla ngushtohet vetë te fjalët që përsëriten: pas «SPAR PRISHTINE» dhe «SPAR FUSHË
+  KOSOVË» mbetet thjesht «spar», i cili njeh edhe një degë të re. Rregullat shihen dhe fshihen te
+  Cilësimet.
 - **Eksporto / Importo** — kopje e plotë JSON (për arkivim ose bartje në pajisje tjetër) dhe eksport
-  Excel i të gjitha transaksioneve.
+  Excel i të gjitha transaksioneve. Data e kopjes së fundit mbahet mend dhe Paneli e kujton kur ajo
+  ka mbetur pas — i matur me sa transaksione janë shtuar që atëherë, sepse dy javë pa regjistruar
+  asgjë nuk janë i njëjti rrezik me dy javë punë. Importimi ka dy sjellje: **zëvendëso**, që e kthen
+  bazën saktësisht siç ishte në skedar, dhe **bashko**, që shton vetëm rreshtat që mungojnë e nuk
+  prek asgjë ekzistuese — pra një kopje e vjetër e hapur gabimisht nuk fshin punën e muajve të fundit.
 - **Pasqyrë PDF** — e ndërtuar si pasqyra e bankës, për një periudhë (ky muaj, muaji i kaluar, ky
   vit, gjithë historiku) dhe opsionalisht për një llogari të vetme. Kolona kryesore ndahet në
   seksione sipas asaj që bënë paratë — hyrjet, blerjet, blerjet me këste (me numrin e kësti, p.sh.
@@ -95,7 +120,12 @@ npm run dev      # zhvillim
 npm run build    # ndërtim për produksion
 npm run preview  # shiko ndërtimin
 npm run lint
+npm test         # testet e llogaritjeve (vitest)
 ```
+
+Llogaritjet financiare mbulohen me teste në `src/lib/finance.test.js` dhe `src/lib/csv.test.js` —
+funksione të pastra, pa shfletues e pa bazë të dhënash, ku çdo gjë që varet nga koha e merr "sot"
+si argument.
 
 Aplikacioni është SPA i pastër — `vercel.json` e drejton çdo rrugë te `index.html`, pra mund të
 publikohet si faqe statike kudo.
@@ -111,16 +141,17 @@ fshin ato — përdorni **Eksporto / Importo** për të mbajtur një kopje JSON.
 ```
 src/
   Context/    DataContext (ngarkon dhe ruan gjithçka), ThemeContext, DialogContext
-  lib/        db.js (IndexedDB), finance.js (çdo kalkulim), format.js, options.js, exportExcel.js
+  lib/        db.js (IndexedDB), finance.js (çdo kalkulim), csv.js (leximi i ekstraktit),
+              rregullat.js (kujtesa e kategorive), format.js, options.js, exportExcel.js
   Components/ NavBar, Footer, Tabela (kërkim/renditje/eksport), modalet e shtimit, Ui.jsx
   Pages/      Paneli, Transaksionet, Llogaritë, Borxhet & Kartelat, Kategoritë, Buxhetet,
               Qëllimet, Shpenzimet e Planifikuara, Pagesat e Përsëritura, Statistikat,
-              Cilësimet, Eksporto/Importo
+              Cilësimet, Eksporto/Importo, Importo nga CSV
 ```
 
 Kalkulimet financiare janë të gjitha funksione të pastra në `src/lib/finance.js` — bilancet,
 rrjedha e parasë, ndarjet sipas kategorive, ecuria e buxheteve/qëllimeve, skedulimi i pagesave
-të përsëritura, shpenzimet e planifikuara dhe shpenzimi ditor — pra faqet mbeten të hollra dhe
-të gjitha numrat vijnë nga një burim i vetëm.
+të përsëritura, shpenzimet e planifikuara, shpenzimi ditor, parashikimi i bilancit dhe kostoja
+vjetore — pra faqet mbeten të hollra dhe të gjitha numrat vijnë nga një burim i vetëm.
 Borxhet janë ndarje e qëllimshme: ruhen në një `objectStore` të vetin dhe asnjë funksion i
 bilancit nuk i lexon, prandaj një shënim borxhi nuk mund ta prekë bilancin edhe nëse do të donte.

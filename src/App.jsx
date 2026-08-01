@@ -18,6 +18,7 @@ const TePerseritura = lazy(() => import("./Pages/TePerseritura"));
 const Statistika = lazy(() => import("./Pages/Statistika"));
 const Cilesimet = lazy(() => import("./Pages/Cilesimet"));
 const TeDhena = lazy(() => import("./Pages/TeDhena"));
+const ImportoCsv = lazy(() => import("./Pages/ImportoCsv"));
 
 function App() {
   return (
@@ -35,6 +36,7 @@ function App() {
         <Route path="/statistikat" element={<Statistika />} />
         <Route path="/cilesimet" element={<Cilesimet />} />
         <Route path="/te-dhena" element={<TeDhena />} />
+        <Route path="/importo-csv" element={<ImportoCsv />} />
       </Routes>
     </Suspense>
   );

@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { Container, Row, Button, Alert } from "react-bootstrap";
 import {
   Repeat, Plus, Edit3, Trash2, CheckCircle2, CalendarClock, Pause, Play, TrendingUp, TrendingDown,
+  CalendarRange,
 } from "lucide-react";
 import NavBar from "../Components/NavBar";
 import Footer from "../Components/Footer";
@@ -10,25 +11,22 @@ import PageLoading from "../Components/PageLoading";
 import ShtoTePerseritur from "../Components/ShtoTePerseritur";
 import KonfirmoPagesen from "../Components/KonfirmoPagesen";
 import Tabela from "../Components/Tabela/Tabela";
-import { Kpi, Empty } from "../Components/Ui";
+import { Kpi, Empty, Panel, ProgressBar } from "../Components/Ui";
 import { useData } from "../Context/DataContext";
 import { useDialog } from "../Context/DialogContext";
 import { makeId, STORES } from "../lib/db";
-import { dueRecurring, frequencyLabel, generateDueTransactions, isRecurringDue } from "../lib/finance";
+import { annualOutlook, dueRecurring, frequencyLabel, generateDueTransactions, isRecurringDue } from "../lib/finance";
 import { formatDate, formatMoney, plainAmount, todayISO } from "../lib/format";
-import { FREQUENCIES } from "../lib/options";
 import { getIcon } from "../lib/icons";
 import "./Styles/PremiumTheme.css";
 import "./Styles/DizajniPergjithshem.css";
 import "./Styles/Personal.css";
 
-// Rough monthly equivalent of each frequency, used only for the "monthly load" estimate.
-const PER_MONTH = { ditore: 30, javore: 4.33, dyjavore: 2.17, mujore: 1, tremujore: 1 / 3, gjashtemujore: 1 / 6, vjetore: 1 / 12 };
-
 function TePerseritura() {
   // `borxhet` is only read to name the note a schedule pays down in its list row — the booking
   // itself happens in KonfirmoPagesen, which every confirmation now goes through.
-  const { accounts, categories, recurring, borxhet, save, destroy, money, simboli, loading, njeLlogari } = useData();
+  const { accounts, categories, recurring, borxhet, save, destroy, money, signedMoney, simboli, loading,
+    njeLlogari } = useData();
   const dialog = useDialog();
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState(null);
@@ -38,13 +36,12 @@ function TePerseritura() {
 
   const stats = useMemo(() => {
     const aktive = recurring.filter((r) => r.aktiv);
-    const monthly = (list) =>
-      list.reduce((sum, r) => sum + Number(r.vlera || 0) * (PER_MONTH[r.frekuenca] ?? 1), 0);
     return {
       aktive,
       due: dueRecurring(recurring, today),
-      shpenzimeMujore: monthly(aktive.filter((r) => r.lloji === "shpenzim")),
-      hyrjeMujore: monthly(aktive.filter((r) => r.lloji === "hyrje")),
+      // Counted payment by payment over the next twelve months rather than converted from the
+      // frequency, so a plan with three instalments left costs three instalments (finance.js).
+      viti: annualOutlook(recurring, today),
       // Due first, then by next date, so whatever needs attention is at the top.
       renditur: [...recurring].sort((a, b) => {
         const dueA = isRecurringDue(a, today);
@@ -144,8 +141,20 @@ function TePerseritura() {
 
         <Row className="g-2 g-md-4">
           <Kpi label="Pagesa Aktive" value={stats.aktive.length} icon={Repeat} color="violet" />
-          <Kpi label="Shpenzime / Muaj (afërsisht)" value={money(stats.shpenzimeMujore)} icon={TrendingDown} color="danger" />
-          <Kpi label="Hyrje / Muaj (afërsisht)" value={money(stats.hyrjeMujore)} icon={TrendingUp} color="emerald" />
+          <Kpi
+            label="Shpenzime / Vit"
+            value={money(stats.viti.shpenzime.vjetore)}
+            sub={`${money(stats.viti.shpenzime.mujore)} mesatarisht në muaj`}
+            icon={TrendingDown}
+            color="danger"
+          />
+          <Kpi
+            label="Hyrje / Vit"
+            value={money(stats.viti.hyrje.vjetore)}
+            sub={`${money(stats.viti.hyrje.mujore)} mesatarisht në muaj`}
+            icon={TrendingUp}
+            color="emerald"
+          />
           <Kpi
             label="Kanë Arritur Datën"
             value={stats.due.length}
@@ -238,9 +247,66 @@ function TePerseritura() {
           )}
         </section>
 
+        {stats.viti.rreshtat.length > 0 && (
+          <section className="mb-4">
+            <Panel title={`Kostoja e 12 Muajve të Ardhshëm — deri më ${formatDate(stats.viti.end)}`} icon={CalendarRange}>
+              {stats.viti.rreshtat.map((r) => {
+                const kategoria = categories.find((c) => c.id === r.kategoriaId);
+                const Icon = getIcon(kategoria?.ikona);
+                const hyrje = r.lloji === "hyrje";
+                return (
+                  <div className="fcp-row" key={r.id}>
+                    <div className="fcp-row-icon" style={{ color: kategoria?.ngjyra || "#94a3b8" }}>
+                      <Icon size={16} />
+                    </div>
+                    <div className="fcp-row-main">
+                      <div className="fcp-row-title">{r.emri}</div>
+                      <div className="fcp-row-sub">
+                        {[
+                          `${r.nrPagesave} × ${money(r.vlera)}`,
+                          frequencyLabel(r.frekuenca),
+                          `${money(r.mujore)}/muaj`,
+                          // Said out loud, because it is the reason this row costs less than its
+                          // frequency alone suggests.
+                          r.perfundon ? `përfundon më ${formatDate(r.perfundon)}` : null,
+                        ]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </div>
+                    </div>
+                    <div className="fcp-row-bar">
+                      <ProgressBar
+                        value={r.perqindja}
+                        color={hyrje ? "var(--sp-emerald)" : kategoria?.ngjyra || "var(--sp-red)"}
+                        small
+                      />
+                    </div>
+                    <div className={`fcp-row-value ${hyrje ? "fcp-pos" : "fcp-neg"}`}>{money(r.vjetore)}</div>
+                  </div>
+                );
+              })}
+
+              <div className="fcp-row-sub mt-2">
+                Gjithsej për vitin: <span className="fcp-neg">{money(stats.viti.shpenzime.vjetore)}</span> shpenzime
+                {stats.viti.hyrje.vjetore > 0 && (
+                  <>
+                    {" "}
+                    dhe <span className="fcp-pos">{money(stats.viti.hyrje.vjetore)}</span> hyrje, neto{" "}
+                    <strong className={stats.viti.neto.vjetore >= 0 ? "fcp-pos" : "fcp-neg"}>
+                      {signedMoney(stats.viti.neto.vjetore)}
+                    </strong>
+                  </>
+                )}
+                .
+              </div>
+            </Panel>
+          </section>
+        )}
+
         <p className="fcp-row-sub">
-          Vlerësimi mujor konverton frekuencat në një bazë mujore ({FREQUENCIES.map((f) => f.label).join(", ")}), pra
-          është përafërsi, jo shuma e saktë e çdo muaji.
+          Shifra vjetore numëron pagesat që bien vërtet brenda 12 muajve të ardhshëm — jo frekuencën e shumëzuar. Prandaj
+          një plan me tri këste të mbetura kushton tri këste, një pagesë e pauzuar nuk kushton asgjë, dhe vlera{" "}
+          <em>për muaj</em> është mesatare e vitit, jo fatura e një muaji të vetëm.
         </p>
       </Container>
 

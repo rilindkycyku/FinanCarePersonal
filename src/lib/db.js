@@ -280,32 +280,75 @@ export async function exportAllData() {
   };
 }
 
-export async function importAllData(data) {
+/** The list stores a backup carries, in the order they are written back. */
+const IMPORT_STORES = [
+  [STORES.accounts, "accounts"],
+  [STORES.categories, "categories"],
+  [STORES.transactions, "transactions"],
+  [STORES.budgets, "budgets"],
+  [STORES.goals, "goals"],
+  [STORES.recurring, "recurring"],
+  // Absent from a backup taken before debt notes / planned spending existed, which `?? []` turns
+  // into "none" rather than a failed import.
+  [STORES.borxhet, "borxhet"],
+  [STORES.planet, "planet"],
+];
+
+/**
+ * Writes a backup back into the database, in one of two modes.
+ *
+ * `zevendeso` (the default) is a restore: every store is emptied first, so what is on screen
+ * afterwards is exactly what is in the file.
+ *
+ * `bashko` is for the other case entirely — a backup from another device, or an old one opened by
+ * mistake. It adds only the records whose id is not here yet and never touches one that is, so a
+ * file from three months ago cannot quietly undo three months of work. The profile is left alone
+ * too: currency, targets and the single-account setting belong to this device.
+ *
+ * Returns what it did, because "u importua me sukses" is not an answer when the interesting part
+ * is how much of the file was already here.
+ */
+export async function importAllData(data, { mode = "zevendeso" } = {}) {
   if (!data || typeof data !== "object") {
     throw new Error("Skedari i importuar nuk është JSON i vlefshëm.");
   }
-  await Promise.all([
-    clearStore(STORES.accounts),
-    clearStore(STORES.categories),
-    clearStore(STORES.transactions),
-    clearStore(STORES.budgets),
-    clearStore(STORES.goals),
-    clearStore(STORES.recurring),
-    clearStore(STORES.borxhet),
-    clearStore(STORES.planet),
-  ]);
-  if (data.profile) await putProfile(data.profile);
-  await Promise.all([
-    ...(data.accounts ?? []).map((a) => put(STORES.accounts, a)),
-    ...(data.categories ?? []).map((c) => put(STORES.categories, c)),
-    ...(data.transactions ?? []).map((t) => put(STORES.transactions, t)),
-    ...(data.budgets ?? []).map((b) => put(STORES.budgets, b)),
-    ...(data.goals ?? []).map((g) => put(STORES.goals, g)),
-    ...(data.recurring ?? []).map((r) => put(STORES.recurring, r)),
-    // Absent from a backup taken before debt notes existed, which `?? []` turns into "none".
-    ...(data.borxhet ?? []).map((b) => put(STORES.borxhet, b)),
-    ...(data.planet ?? []).map((p) => put(STORES.planet, p)),
-  ]);
+  const bashko = mode === "bashko";
+
+  if (!bashko) {
+    await Promise.all(IMPORT_STORES.map(([store]) => clearStore(store)));
+    if (data.profile) await putProfile(data.profile);
+  }
+
+  const permbledhja = { shtuar: 0, ekzistuese: 0 };
+
+  for (const [store, celesi] of IMPORT_STORES) {
+    const rreshtat = data[celesi] ?? [];
+    // Read once per store rather than per record: a merge of a few thousand transactions would
+    // otherwise open a read transaction for every one of them.
+    const ekzistueset = bashko ? new Set((await getAll(store)).map((r) => r.id)) : null;
+    const teShkruara = bashko ? rreshtat.filter((r) => r?.id && !ekzistueset.has(r.id)) : rreshtat;
+    permbledhja.shtuar += teShkruara.length;
+    permbledhja.ekzistuese += rreshtat.length - teShkruara.length;
+    await Promise.all(teShkruara.map((record) => put(store, record)));
+  }
+
+  // A restore leaves the database matching the file the user is holding, so that file *is* a
+  // current backup and the reminder should not go off the moment the import finishes. A merge
+  // says nothing of the sort: what is here now was never in one file.
+  if (!bashko) await shenoKopjen(data.exportedAt);
+
+  return permbledhja;
+}
+
+/**
+ * Records when the whole database was last written out to a file — the only thing standing between
+ * this browser's storage and a cleared cache. Written by the JSON export, the shared copy and the
+ * device-to-device transfer, and read by `backupStatus()` in finance.js.
+ */
+export async function shenoKopjen(kur = new Date().toISOString()) {
+  const profile = (await getProfile()) ?? {};
+  const data = Number.isFinite(Date.parse(kur)) ? kur : new Date().toISOString();
+  return putProfile({ ...profile, kopjaFundit: data });
 }
 
 /** Wipes every store (used by "Pastro të gjitha të dhënat" in Cilësimet). Defaults are seeded on

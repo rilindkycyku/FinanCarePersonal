@@ -415,6 +415,150 @@ export function monthlyTrend(transactions, months = 6, reference = new Date()) {
   });
 }
 
+// ── Net worth over time, and where it is heading ────────────────────────────
+
+/** How much one transaction moves the net worth held across `accountIds`. A transfer between two
+ * of them nets to zero; one whose account was deleted moves nothing. */
+function netEffect(tx, accountIds) {
+  const shenja = accountIds.reduce((sum, id) => sum + txSignForAccount(tx, id), 0);
+  return shenja * toNumber(tx.vlera);
+}
+
+/**
+ * Closing net worth at the end of each of the last `months` months, oldest first — the curve behind
+ * "am I actually getting anywhere", which a month-by-month income-vs-expense bar cannot show.
+ *
+ * Built the same way every balance in the app is: opening balances plus every movement up to that
+ * day, so the last month's figure is the same number the dashboard shows as "Bilanci Total".
+ */
+export function balanceHistory(accounts, transactions, months = 6, reference = new Date()) {
+  const aktive = accounts.filter((a) => !a.arkivuar);
+  const ids = aktive.map((a) => a.id);
+  const hapja = aktive.reduce((sum, a) => sum + toNumber(a.bilanciFillestar), 0);
+
+  return Array.from({ length: months }, (_, i) => {
+    const d = new Date(reference.getFullYear(), reference.getMonth() - (months - 1 - i), 1);
+    const { end } = monthBounds(d);
+    const bilanci = transactions
+      .filter((tx) => tx.data && tx.data <= end)
+      .reduce((sum, tx) => sum + netEffect(tx, ids), hapja);
+    return { key: format(d, "yyyy-MM"), label: MONTHS_SHORT[d.getMonth()], viti: d.getFullYear(), data: end, bilanci };
+  });
+}
+
+/**
+ * Where the balance is heading — the same question `dailyLimit` answers for today, asked of the
+ * months ahead.
+ *
+ * It starts from what is actually there today and then walks forward one day at a time, applying
+ * only what is already known: transactions the user has already entered with a future date, the
+ * occurrences each recurring schedule still owes, and planned purchases not bought yet. Nothing is
+ * extrapolated from past habits — a forecast that invents an "average month" would be a guess
+ * wearing the clothes of a number, and this one can be checked line by line.
+ *
+ * Two choices worth knowing about:
+ *  - A schedule left unconfirmed from an earlier date is money that has not left yet, so it lands
+ *    on the first day ahead rather than in the past where it was due.
+ *  - A plan is set aside on the last day of its month. It is only known to fall "some time that
+ *    month", and the closing figure is what the month is judged by; `meUleta` therefore reads as
+ *    the low point of what is scheduled, not of the worst possible ordering.
+ */
+export function forecast({
+  accounts = [],
+  transactions = [],
+  recurring = [],
+  plans = [],
+  today = format(new Date(), "yyyy-MM-dd"),
+  muaj = 6,
+} = {}) {
+  const aktive = accounts.filter((a) => !a.arkivuar);
+  const ids = aktive.map((a) => a.id);
+  const hapja = aktive.reduce((sum, a) => sum + toNumber(a.bilanciFillestar), 0);
+
+  // The horizon runs to the end of the last month covered, so every month in the result is whole.
+  const fundi = monthBounds(addMonths(parseISO(today), muaj - 1)).end;
+  const nesër = format(addDays(parseISO(today), 1), "yyyy-MM-dd");
+
+  // Where things stand right now: everything recorded up to and including today.
+  const fillimi = transactions
+    .filter((tx) => tx.data && tx.data <= today)
+    .reduce((sum, tx) => sum + netEffect(tx, ids), hapja);
+
+  const levizjet = new Map();
+  const shto = (data, vlera, lloji, emri) => {
+    if (!data || data > fundi) return;
+    // Anything already overdue is still ahead of us — it just has not been booked yet.
+    const dita = data < nesër ? nesër : data;
+    if (!levizjet.has(dita)) levizjet.set(dita, []);
+    levizjet.get(dita).push({ vlera, lloji, emri });
+  };
+
+  transactions
+    .filter((tx) => tx.data && tx.data > today)
+    .forEach((tx) => shto(tx.data, netEffect(tx, ids), tx.lloji, tx.pershkrimi || ""));
+
+  recurring
+    .filter((rec) => rec.aktiv !== false)
+    .forEach((rec) => {
+      const vlera = toNumber(rec.vlera) * (rec.lloji === "hyrje" ? 1 : -1);
+      scheduledOccurrences(rec, "0000-01-01", fundi).forEach((data) => shto(data, vlera, rec.lloji, rec.emri));
+    });
+
+  plans
+    .filter((p) => !p.kryer && p.muaji && p.muaji >= today.slice(0, 7))
+    .forEach((p) => shto(monthKeyBounds(p.muaji).end, -toNumber(p.vlera), "plan", p.emri));
+
+  const pikat = [{ data: today, bilanci: fillimi }];
+  const muajt = [];
+  let bilanci = fillimi;
+  let meUleta = { data: today, bilanci: fillimi };
+  let nenZeros = null;
+  let muajiTani = { key: today.slice(0, 7), hyrje: 0, shpenzime: 0 };
+
+  for (let data = nesër; data <= fundi; data = format(addDays(parseISO(data), 1), "yyyy-MM-dd")) {
+    const key = data.slice(0, 7);
+    if (key !== muajiTani.key) {
+      muajt.push({ ...muajiTani, mbyllja: bilanci, data: monthKeyBounds(muajiTani.key).end });
+      muajiTani = { key, hyrje: 0, shpenzime: 0 };
+    }
+    (levizjet.get(data) || []).forEach(({ vlera }) => {
+      bilanci += vlera;
+      if (vlera >= 0) muajiTani.hyrje += vlera;
+      else muajiTani.shpenzime += -vlera;
+    });
+    pikat.push({ data, bilanci });
+    if (bilanci < meUleta.bilanci) meUleta = { data, bilanci };
+    if (nenZeros === null && bilanci < 0) nenZeros = data;
+  }
+  muajt.push({ ...muajiTani, mbyllja: bilanci, data: monthKeyBounds(muajiTani.key).end });
+
+  return {
+    fillimi,
+    // Every recorded transaction, whatever its date — the figure the dashboard shows as "Bilanci
+    // Total". It differs from `fillimi` exactly when something is entered ahead of its date, and
+    // the two are reported side by side so that difference reads as a fact, not a discrepancy.
+    regjistruar: transactions.reduce((sum, tx) => sum + netEffect(tx, ids), hapja),
+    perfundimi: bilanci,
+    ndryshimi: bilanci - fillimi,
+    pikat,
+    muajt: muajt.map((m) => ({
+      ...m,
+      label: MONTHS_SHORT[Number(m.key.slice(5, 7)) - 1],
+      viti: Number(m.key.slice(0, 4)),
+      neto: m.hyrje - m.shpenzime,
+    })),
+    // The tightest point ahead, and the day the balance would first go negative — the two things
+    // worth knowing before the month happens.
+    meUleta,
+    nenZeros,
+    start: today,
+    end: fundi,
+    // Nothing scheduled at all: the caller should say so rather than draw a flat line pretending
+    // to be a forecast.
+    bosh: levizjet.size === 0,
+  };
+}
+
 // ── Budgets ─────────────────────────────────────────────────────────────────
 
 /**
@@ -747,6 +891,76 @@ export function monthlyRecurringBreakdown(recurring, transactions, start, end) {
     .filter((r) => r.nrPaguara > 0 || r.datat.length > 0);
 }
 
+/**
+ * What every schedule costs over the next twelve months — the view that answers "so what do all
+ * these subscriptions actually come to a year".
+ *
+ * The figure is counted, not multiplied by a frequency factor: each schedule is stepped through the
+ * window and only the dates that really fall inside it are paid for. That is the difference between
+ * an estimate and an answer, because a card plan with two instalments left costs two instalments,
+ * not twelve, and a schedule that stops in March stops in March. Paused schedules cost nothing.
+ *
+ * `mujore` is the annual figure spread over the window, so a yearly subscription can be compared
+ * with the rent on the same scale — it is a monthly average, not what any one month bills.
+ */
+export function annualOutlook(recurring, todayStr = format(new Date(), "yyyy-MM-dd"), muaj = 12) {
+  // Inclusive end one day short of the anniversary, so a yearly payment due today is counted once.
+  const end = format(addDays(addMonths(parseISO(todayStr), muaj), -1), "yyyy-MM-dd");
+
+  const rreshtat = recurring
+    .filter((rec) => rec.aktiv !== false)
+    .map((rec) => {
+      const datat = scheduledOccurrences(rec, todayStr, end);
+      const vjetore = datat.length * toNumber(rec.vlera);
+      return {
+        id: rec.id,
+        emri: rec.emri,
+        lloji: rec.lloji,
+        frekuenca: rec.frekuenca,
+        kategoriaId: rec.kategoriaId,
+        llogariaId: rec.llogariaId,
+        vlera: toNumber(rec.vlera),
+        monedhaOrigjinale: rec.monedhaOrigjinale || null,
+        vleraOrigjinale: rec.monedhaOrigjinale ? toNumber(rec.vleraOrigjinale) : null,
+        nrPagesave: datat.length,
+        dataEPare: datat[0] || null,
+        dataEFundit: datat[datat.length - 1] || null,
+        // Set only when the schedule runs out inside the window — the reason its yearly figure is
+        // smaller than its frequency alone would suggest.
+        perfundon: rec.dataFundit && rec.dataFundit <= end ? rec.dataFundit : null,
+        vjetore,
+        mujore: vjetore / muaj,
+      };
+    })
+    .filter((r) => r.nrPagesave > 0)
+    .sort((a, b) => b.vjetore - a.vjetore);
+
+  const anesore = (lloji) => {
+    const list = rreshtat.filter((r) => r.lloji === lloji);
+    const vjetore = list.reduce((sum, r) => sum + r.vjetore, 0);
+    return { vjetore, mujore: vjetore / muaj, numri: list.length };
+  };
+  const shpenzime = anesore("shpenzim");
+  const hyrje = anesore("hyrje");
+
+  return {
+    rreshtat: rreshtat.map((r) => ({
+      ...r,
+      // Share of its own side, so an income schedule is not measured against the expenses.
+      perqindja:
+        (r.lloji === "hyrje" ? hyrje.vjetore : shpenzime.vjetore) > 0
+          ? (r.vjetore / (r.lloji === "hyrje" ? hyrje.vjetore : shpenzime.vjetore)) * 100
+          : 0,
+    })),
+    shpenzime,
+    hyrje,
+    neto: { vjetore: hyrje.vjetore - shpenzime.vjetore, mujore: (hyrje.vjetore - shpenzime.vjetore) / muaj },
+    muaj,
+    start: todayStr,
+    end,
+  };
+}
+
 export function isRecurringDue(rec, todayStr) {
   if (!rec.aktiv) return false;
   if (!rec.dataETjetres) return false;
@@ -819,6 +1033,40 @@ export function generateDueTransactions(rec, todayStr, makeIdFn, maxCatchUp = 60
   }
 
   return { transactions, updated, changed: transactions.length > 0 };
+}
+
+// ── Backups ─────────────────────────────────────────────────────────────────
+
+/**
+ * How exposed the ledger is right now — everything lives in one browser's IndexedDB, and clearing
+ * site data takes it with it, so the only real protection is a file the user keeps somewhere else.
+ *
+ * `teReja` counts the transactions entered since that file was written, which is the honest measure
+ * of what a wipe would cost: three weeks with nothing recorded is not the same risk as three weeks
+ * of daily entries. `duhet` is deliberately quiet on an empty or barely-used ledger — a brand new
+ * database has nothing to lose and being nagged on day one only teaches the user to ignore it.
+ */
+export function backupStatus({ profile = {}, transactions = [], sot = new Date(), afati = 30, minimumi = 10 } = {}) {
+  const stamp = Date.parse(profile?.kopjaFundit ?? "");
+  const kurre = !Number.isFinite(stamp);
+  const tani = sot instanceof Date ? sot.getTime() : Date.parse(sot);
+
+  const ditet = kurre ? null : Math.max(Math.floor((tani - stamp) / 86400000), 0);
+  const teReja = kurre
+    ? transactions.length
+    : transactions.filter((tx) => enteredAt(tx) > stamp).length;
+
+  return {
+    kurre,
+    data: kurre ? null : profile.kopjaFundit,
+    ditet,
+    teReja,
+    vjeter: kurre || ditet >= afati,
+    // Worth a word on the dashboard: never backed up with real data in there, or an old copy that
+    // has since fallen behind.
+    duhet: (kurre && transactions.length >= minimumi) || (!kurre && ditet >= afati && teReja > 0),
+    afati,
+  };
 }
 
 // ── Planned spending ────────────────────────────────────────────────────────

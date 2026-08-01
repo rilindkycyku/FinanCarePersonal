@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { Modal, Button, Form, Row, Col, Alert } from "react-bootstrap";
-import { TrendingUp, TrendingDown, ArrowRightLeft } from "lucide-react";
+import { TrendingUp, TrendingDown, ArrowRightLeft, Wand2 } from "lucide-react";
 import { useData } from "../Context/DataContext";
 import MonedhaTjeter from "./MonedhaTjeter";
 import { makeId, STORES } from "../lib/db";
 import { currencySymbol, formatMoney, toNumber, todayISO } from "../lib/format";
 import { convertedAmount, currencyFields, dailyLimit, goalProgress } from "../lib/finance";
 import { njofto } from "../lib/njoftimet";
+import { mesoRregullen, sugjeroKategorine } from "../lib/rregullat";
 import "./ModalForms.css";
 
 const TYPE_BUTTONS = [
@@ -133,6 +134,25 @@ function ShtoTransaksionin({
 
   const setField = (name, value) => setTx((prev) => ({ ...prev, [name]: value }));
 
+  /**
+   * Typing a description fills the category in from what was picked for that shop last time — but
+   * only while the field is still empty, so a suggestion can never overwrite a deliberate choice.
+   * `sugjeruar` is what tells the hint below the field to appear, and it goes as soon as the user
+   * picks anything themselves.
+   */
+  const ndryshoPershkrimin = (value) => {
+    setTx((prev) => {
+      if (prev.kategoriaId && !prev.sugjeruar) return { ...prev, pershkrimi: value };
+      const propozimi = sugjeroKategorine(value, profile, categories, prev.lloji);
+      return {
+        ...prev,
+        pershkrimi: value,
+        kategoriaId: propozimi || (prev.sugjeruar ? "" : prev.kategoriaId),
+        sugjeruar: Boolean(propozimi),
+      };
+    });
+  };
+
   const changeType = (lloji) => {
     setTx((prev) => {
       // Categories belong to exactly one direction, so a category picked for the previous type
@@ -216,12 +236,17 @@ function ShtoTransaksionin({
       }
     }
 
-    // Remembered so the next $ subscription starts from the rate used last time.
-    if (monedhat.monedhaOrigjinale) {
-      await saveProfile({
-        ...profile,
-        kurset: { ...(profile.kurset || {}), [monedhat.monedhaOrigjinale]: monedhat.kursi },
-      });
+    // Two things the profile remembers from a saved transaction: the exchange rate, so the next
+    // $ subscription starts from the one used last time, and the description → category pairing,
+    // so the next "Spar" fills itself in (and so does a whole imported statement). Both in one
+    // write, because two `saveProfile` calls would each reload the database.
+    const rregullaTeReja = mesoRregullen(profile, rekordi);
+    const kursetENdryshuara = monedhat.monedhaOrigjinale
+      ? { ...(profile.kurset || {}), [monedhat.monedhaOrigjinale]: monedhat.kursi }
+      : profile.kurset;
+
+    if (rregullaTeReja !== profile.rregullatKategorive || kursetENdryshuara !== profile.kurset) {
+      await saveProfile({ ...profile, kurset: kursetENdryshuara, rregullatKategorive: rregullaTeReja });
     }
 
     onHide();
@@ -375,7 +400,11 @@ function ShtoTransaksionin({
                 <Form.Label>
                   Kategoria <span className="text-danger">*</span>
                 </Form.Label>
-                <Form.Select value={tx.kategoriaId} onChange={(e) => setField("kategoriaId", e.target.value)} required>
+                <Form.Select
+                  value={tx.kategoriaId}
+                  onChange={(e) => setTx((prev) => ({ ...prev, kategoriaId: e.target.value, sugjeruar: false }))}
+                  required
+                >
                   <option value="">Zgjidh kategorinë...</option>
                   {kategoriteERelevante.map((c) => (
                     <option key={c.id} value={c.id}>
@@ -383,6 +412,12 @@ function ShtoTransaksionin({
                     </option>
                   ))}
                 </Form.Select>
+                {tx.sugjeruar && tx.kategoriaId && (
+                  <div className="fcp-modal-hint">
+                    <Wand2 size={12} className="me-1" />
+                    Sugjeruar nga përshkrimi, sipas zgjedhjeve tuaja të mëparshme - ndryshojeni lirisht.
+                  </div>
+                )}
                 {kategoriteERelevante.length === 0 && (
                   <div className="fcp-modal-hint">
                     Nuk ka kategori për këtë lloj - shtoni një te faqja Kategoritë.
@@ -396,7 +431,7 @@ function ShtoTransaksionin({
               <Form.Control
                 placeholder={isTransfer ? "p.sh. Kursim mujor" : "p.sh. Blerje në supermarket"}
                 value={tx.pershkrimi}
-                onChange={(e) => setField("pershkrimi", e.target.value)}
+                onChange={(e) => ndryshoPershkrimin(e.target.value)}
               />
             </Form.Group>
 

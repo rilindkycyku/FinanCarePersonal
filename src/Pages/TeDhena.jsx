@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import { Button, Alert, Row, Col, Card, Form, Spinner } from "react-bootstrap";
-import { Download, Upload, DatabaseBackup, ShieldCheck, FileText, Sheet } from "lucide-react";
+import { Download, Upload, DatabaseBackup, ShieldCheck, FileText, Sheet, GitMerge, FileSpreadsheet } from "lucide-react";
 import NavBar from "../Components/NavBar";
 import Footer from "../Components/Footer";
 import PageTitle from "../Components/PageTitle";
@@ -8,12 +9,12 @@ import PageLoading from "../Components/PageLoading";
 import Ndaje from "../Components/Ndaje";
 import { useData } from "../Context/DataContext";
 import { useDialog } from "../Context/DialogContext";
-import { exportAllData, importAllData } from "../lib/db";
+import { exportAllData, importAllData, shenoKopjen } from "../lib/db";
 import { exportListExcel, exportStatementExcel } from "../lib/exportExcel";
 import { exportStatementPdf, statementFilename } from "../lib/exportPdf";
 import PdfViewerModal from "../Components/PdfViewerModal";
-import { periodBounds, sortByDateDesc } from "../lib/finance";
-import { plainAmount } from "../lib/format";
+import { backupStatus, periodBounds, sortByDateDesc } from "../lib/finance";
+import { formatDate, plainAmount } from "../lib/format";
 import { STATEMENT_PERIODS, TRANSACTION_TYPE_LABELS } from "../lib/options";
 import "./Styles/PremiumTheme.css";
 import "./Styles/DizajniPergjithshem.css";
@@ -33,7 +34,12 @@ function TeDhena() {
   // looks broken and gets tapped again, starting the whole thing a second time.
   const [duke, setDuke] = useState(null);
   const fileInputRef = useRef(null);
+  const importModeRef = useRef("zevendeso");
   const messageRef = useRef(null);
+
+  // How exposed the ledger is: everything lives in this browser, so a copy kept elsewhere is the
+  // only thing that survives clearing site data (finance.js).
+  const kopja = useMemo(() => backupStatus({ profile, transactions }), [profile, transactions]);
 
   // The message renders at the top of a long page; the buttons that produce it are far below, so
   // without this a failure is reported entirely off-screen and the export just looks dead.
@@ -53,6 +59,10 @@ function TeDhena() {
       link.download = `financarepersonal-backup-${new Date().toISOString().slice(0, 10)}.json`;
       link.click();
       URL.revokeObjectURL(url);
+      // The whole database is now in a file outside this browser — the one thing the reminder on
+      // the Panel is watching for.
+      await shenoKopjen(data.exportedAt);
+      await reload();
     } catch (err) {
       setMessage({ type: "danger", text: `Kopja nuk u krijua: ${err.message}` });
     } finally {
@@ -150,15 +160,22 @@ function TeDhena() {
     }
   };
 
-  const handleImportClick = () => fileInputRef.current?.click();
+  /** Which of the two imports the file picker was opened for — see `importAllData` in db.js. */
+  const handleImportClick = (mode) => {
+    importModeRef.current = mode;
+    fileInputRef.current?.click();
+  };
 
   const handleImportFile = async (e) => {
     const file = e.target.files?.[0];
     e.target.value = "";
     if (!file) return;
+    const bashko = importModeRef.current === "bashko";
     const proceed = await dialog.confirm(
-      "Importimi zëvendëson TË GJITHA të dhënat aktuale (llogaritë, kategoritë, transaksionet, buxhetet, qëllimet, pagesat e përsëritura, borxhet dhe shpenzimet e planifikuara). Vazhdo?",
-      { title: "Konfirmo Importimin" }
+      bashko
+        ? "Bashkimi shton vetëm rreshtat që mungojnë këtu dhe nuk prek asgjë ekzistuese - as profilin, monedhën apo objektivat. Një kopje e vjetër, pra, nuk mund t'ju fshijë punën e muajve të fundit. Vazhdo?"
+        : "Importimi zëvendëson TË GJITHA të dhënat aktuale (llogaritë, kategoritë, transaksionet, buxhetet, qëllimet, pagesat e përsëritura, borxhet dhe shpenzimet e planifikuara). Nëse skedari është i vjetër, gjithçka e regjistruar pas tij humbet - për atë rast përdorni Bashko. Vazhdo?",
+      { title: bashko ? "Bashko me të Dhënat Aktuale" : "Konfirmo Importimin" }
     );
     if (!proceed) return;
     try {
@@ -167,9 +184,14 @@ function TeDhena() {
       if (data.app && data.app !== "FinanCarePersonal") {
         throw new Error(`skedari është një kopje e "${data.app}", nuk përputhet me FinanCarePersonal`);
       }
-      await importAllData(data);
+      const permbledhja = await importAllData(data, { mode: importModeRef.current });
       await reload();
-      setMessage({ type: "success", text: "Të dhënat u importuan me sukses." });
+      setMessage({
+        type: "success",
+        text: bashko
+          ? `U shtuan ${permbledhja.shtuar} rreshta të rinj; ${permbledhja.ekzistuese} ishin tashmë këtu dhe mbetën si ishin.`
+          : `Të dhënat u zëvendësuan me kopjen e skedarit - ${permbledhja.shtuar} rreshta.`,
+      });
     } catch (err) {
       setMessage({ type: "danger", text: `Importimi dështoi: ${err.message}` });
     }
@@ -220,15 +242,47 @@ function TeDhena() {
                 përsëritura, borxhet me pagesat e tyre dhe shpenzimet e planifikuara. Ky është skedari që importohet
                 përsëri këtu.
               </p>
+              <div className="fcp-row-sub mb-3">
+                {kopja.kurre ? (
+                  <>
+                    Nuk keni marrë ende asnjë kopje.{" "}
+                    {transactions.length > 0 && (
+                      <span className="fcp-neg">
+                        {transactions.length}{" "}
+                        {transactions.length === 1 ? "transaksion ekziston" : "transaksione ekzistojnë"} vetëm këtu.
+                      </span>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    Kopja e fundit: <strong>{formatDate(kopja.data.slice(0, 10))}</strong>
+                    {kopja.ditet > 0 && ` · ${kopja.ditet} ditë më parë`}
+                    {kopja.teReja > 0 && (
+                      <span className={kopja.vjeter ? "fcp-neg" : ""}>
+                        {" "}
+                        · {kopja.teReja} {kopja.teReja === 1 ? "transaksion i ri" : "transaksione të reja"} që atëherë
+                      </span>
+                    )}
+                  </>
+                )}
+              </div>
               <div className="d-flex gap-2 flex-wrap mt-auto">
                 <Button className="btn-primary" onClick={handleExportJson} disabled={Boolean(duke)}>
                   {duke === "json" ? <Spinner as="span" animation="border" size="sm" className="me-1" /> : <Download size={16} className="me-1" />}
                   {duke === "json" ? "Duke përgatitur..." : "Eksporto JSON"}
                 </Button>
-                <Button variant="outline-light" onClick={handleImportClick} disabled={Boolean(duke)}>
-                  <Upload size={16} className="me-1" /> Importo JSON
+                <Button variant="outline-light" onClick={() => handleImportClick("zevendeso")} disabled={Boolean(duke)}>
+                  <Upload size={16} className="me-1" /> Importo (zëvendëso)
+                </Button>
+                <Button variant="outline-light" onClick={() => handleImportClick("bashko")} disabled={Boolean(duke)}>
+                  <GitMerge size={16} className="me-1" /> Bashko
                 </Button>
                 <input ref={fileInputRef} type="file" accept="application/json" hidden onChange={handleImportFile} />
+              </div>
+              <div className="fcp-row-sub mt-2">
+                <strong>Zëvendëso</strong> e kthen bazën saktësisht siç ishte në skedar. <strong>Bashko</strong> shton
+                vetëm rreshtat që mungojnë - për një kopje nga një pajisje tjetër, ose një të vjetër që nuk doni t&apos;ju
+                fshijë punën e re.
               </div>
             </Card>
           </Col>
@@ -249,6 +303,23 @@ function TeDhena() {
             </Card>
           </Col>
         </Row>
+
+        <Card className="profile-card border-0 p-4 mb-4">
+          <h5 className="fw-bold mb-2">
+            <FileSpreadsheet size={18} className="me-2 text-primary" />
+            Importo nga Ekstrakti i Bankës (CSV)
+          </h5>
+          <p className="text-muted small">
+            Kopja JSON më sipër është për të dhënat e këtij aplikacioni. Për ekstraktin e bankës ose të kartelës ka një
+            faqe të vetën: lexon kolonat, i shënon lëvizjet që i keni tashmë dhe i propozon kategoritë sipas zgjedhjeve
+            tuaja të mëparshme. Skedari nuk dërgohet askund.
+          </p>
+          <div>
+            <Link to="/importo-csv" className="btn btn-outline-light">
+              <FileSpreadsheet size={16} className="me-1" /> Hap importimin nga CSV
+            </Link>
+          </div>
+        </Card>
 
         <Card className="profile-card border-0 p-4 mb-4">
           <h5 className="fw-bold mb-2">

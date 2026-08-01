@@ -4,7 +4,7 @@ import { Container, Row, Col, Button, Alert } from "react-bootstrap";
 import {
   LayoutDashboard, Wallet, TrendingUp, TrendingDown, PiggyBank, Percent, PlusCircle,
   ArrowRightLeft, Tags, Target, Repeat, BarChart3, Settings, DatabaseBackup, CalendarClock,
-  Receipt, ClipboardList,
+  Receipt, ClipboardList, ShieldAlert, LineChart, TriangleAlert, FileSpreadsheet,
 } from "lucide-react";
 import NavBar from "../Components/NavBar";
 import PageTitle from "../Components/PageTitle";
@@ -17,8 +17,8 @@ import { Kpi, Panel, ProgressBar, Empty } from "../Components/Ui";
 import { useData } from "../Context/DataContext";
 import { getIcon } from "../lib/icons";
 import {
-  accountsWithBalances, budgetProgress, cashflow, debtProgress, debtTotals, dueRecurring,
-  filterByRange, goalProgress, monthBounds, overduePlans, planTotals, plansForMonth,
+  accountsWithBalances, backupStatus, budgetProgress, cashflow, debtProgress, debtTotals, dueRecurring,
+  filterByRange, forecast, goalProgress, monthBounds, overduePlans, planTotals, plansForMonth,
   sortByDateDesc, totalBalance, totalsByCategory, upcomingRecurring,
 } from "../lib/finance";
 import { formatDate, formatMoney, formatPercent, monthKey, monthLabel, todayISO } from "../lib/format";
@@ -40,6 +40,7 @@ const QUICK_ACTIONS = [
   { to: "/statistikat", label: "Statistikat", icon: BarChart3 },
   { to: "/cilesimet", label: "Cilësimet", icon: Settings },
   { to: "/te-dhena", label: "Eksporto / Importo", icon: DatabaseBackup },
+  { to: "/importo-csv", label: "Importo nga CSV", icon: FileSpreadsheet },
 ];
 
 function Dashboard() {
@@ -62,6 +63,9 @@ function Dashboard() {
       qellimet: goals.map((g) => goalProgress(g, transactions)).slice(0, 3),
       teFundit: sortByDateDesc(transactions).slice(0, 6),
       dueTani: dueRecurring(recurring, today),
+      kopja: backupStatus({ profile, transactions }),
+      // Six months ahead, but only the first month and the low point are shown here.
+      parashikimi: forecast({ accounts, transactions, recurring, plans: planet, today, muaj: 6 }),
       neVijim: upcomingRecurring(recurring, today, 14),
       // Notes only — deliberately not folded into `bilanci` above (see finance.js).
       borxhet: borxhet
@@ -78,7 +82,7 @@ function Dashboard() {
       planetTotal: planTotals(planet, muajiKey, transactions),
       planetTeMbartura: overduePlans(planet, muajiKey).length,
     };
-  }, [accounts, categories, transactions, budgets, goals, recurring, borxhet, planet, muajiKey, today]);
+  }, [accounts, categories, transactions, budgets, goals, recurring, borxhet, planet, profile, muajiKey, today]);
 
   const pershendetja = profile.emri || "përdorues";
   // Both are optional targets set in Cilësimet; when unset the KPIs fall back to plain figures.
@@ -138,6 +142,33 @@ function Dashboard() {
             </span>
             <Link to="/te-perseritura" className="btn btn-warning btn-sm">
               Shiko dhe konfirmo
+            </Link>
+          </Alert>
+        )}
+
+        {/* Everything is in this browser and nowhere else, so the only thing that survives a
+            cleared cache is a file kept somewhere else. Shown only when there is something to
+            lose — see `backupStatus` in finance.js. */}
+        {stats.kopja.duhet && (
+          <Alert variant="secondary" className="d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <span>
+              <ShieldAlert size={16} className="me-2" />
+              {stats.kopja.kurre ? (
+                <>
+                  Të dhënat tuaja ndodhen vetëm në këtë shfletues dhe nuk keni ende asnjë kopje. Pastrimi i të dhënave
+                  të faqes do t&apos;i merrte me vete{" "}
+                  <strong>{transactions.length}</strong> transaksione.
+                </>
+              ) : (
+                <>
+                  Kopja e fundit është marrë <strong>{stats.kopja.ditet} ditë</strong> më parë dhe që atëherë keni
+                  shtuar <strong>{stats.kopja.teReja}</strong>{" "}
+                  {stats.kopja.teReja === 1 ? "transaksion" : "transaksione"} që nuk janë në asnjë skedar.
+                </>
+              )}
+            </span>
+            <Link to="/te-dhena" className="btn btn-outline-light btn-sm">
+              Merr një kopje
             </Link>
           </Alert>
         )}
@@ -467,6 +498,54 @@ function Dashboard() {
                   Gjithsej i mbetur: <strong className="fcp-neg">{money(stats.borxhetTotal.detyrimet.mbetur)}</strong> -
                   shënim, jashtë Bilancit Total.
                 </div>
+              </Panel>
+            </Col>
+          )}
+
+          {/* Where the balance is heading, from what is already scheduled. Silent on a ledger with
+              nothing planned, where the "forecast" would just be today's balance drawn flat. */}
+          {!stats.parashikimi.bosh && (
+            <Col xl={6}>
+              <Panel title="Parashikimi i Bilancit" icon={LineChart} action="Statistikat" actionTo="/statistikat">
+                <div className="fcp-row">
+                  <div className="fcp-row-main">
+                    <div className="fcp-row-title">Fundi i {monthLabel(stats.parashikimi.muajt[0].key)}</div>
+                    <div className="fcp-row-sub">
+                      Nga {money(stats.parashikimi.fillimi)} të bilancit deri sot ·{" "}
+                      {signedMoney(stats.parashikimi.muajt[0].mbyllja - stats.parashikimi.fillimi)} nga çka është
+                      planifikuar
+                    </div>
+                  </div>
+                  <div
+                    className={`fcp-row-value ${stats.parashikimi.muajt[0].mbyllja < 0 ? "fcp-neg" : "fcp-pos"}`}
+                  >
+                    {money(stats.parashikimi.muajt[0].mbyllja)}
+                  </div>
+                </div>
+
+                {stats.parashikimi.meUleta.data !== stats.parashikimi.start && (
+                  <div className="fcp-row">
+                    <div
+                      className="fcp-row-icon"
+                      style={{ color: stats.parashikimi.nenZeros ? "var(--sp-red)" : "var(--sp-cyan)" }}
+                    >
+                      <TriangleAlert size={16} />
+                    </div>
+                    <div className="fcp-row-main">
+                      <div className="fcp-row-title">Pika më e ulët</div>
+                      <div className="fcp-row-sub">{formatDate(stats.parashikimi.meUleta.data)}</div>
+                    </div>
+                    <div className={`fcp-row-value ${stats.parashikimi.meUleta.bilanci < 0 ? "fcp-neg" : ""}`}>
+                      {money(stats.parashikimi.meUleta.bilanci)}
+                    </div>
+                  </div>
+                )}
+
+                {stats.parashikimi.nenZeros && (
+                  <div className="fcp-row-sub fcp-neg mt-1">
+                    Me këtë ritëm bilanci bie nën zero më {formatDate(stats.parashikimi.nenZeros)}.
+                  </div>
+                )}
               </Panel>
             </Col>
           )}

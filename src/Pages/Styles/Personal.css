@@ -877,3 +877,110 @@ body.light-mode .card.profile-card.fcp-zona-rrezik {
 body.light-mode .card.profile-card.fcp-zona-rrezik:hover {
   border-color: rgba(239, 68, 68, 0.5) !important;
 }
+
+/* ── Balance line chart (GrafikuBilancit) ─────────────────────────────────────
+   The SVG is stretched to the panel width with `preserveAspectRatio="none"`, so every stroke in it
+   carries `vector-effect: non-scaling-stroke` and nothing round or textual is drawn inside it —
+   the dots and the month labels are positioned over and under it instead. */
+.fcp-line-chart {
+  position: relative;
+  padding-top: 0.5rem;
+}
+
+.fcp-line-chart svg {
+  display: block;
+  width: 100%;
+  overflow: visible;
+}
+
+.fcp-line-past,
+.fcp-line-future {
+  fill: none;
+  stroke: var(--sp-emerald);
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+/* Dashed, and a shade lighter: what has not happened yet should not look as solid as what has. */
+.fcp-line-future {
+  stroke: var(--sp-cyan);
+  stroke-dasharray: 6 5;
+  stroke-width: 2;
+}
+
+.fcp-line-zero {
+  stroke: var(--sp-red);
+  stroke-width: 1;
+  stroke-dasharray: 3 4;
+  opacity: 0.55;
+}
+
+.fcp-line-points {
+  position: absolute;
+  inset: 0.5rem 0 1.55rem 0;
+  pointer-events: none;
+}
+
+.fcp-line-dot {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  margin: -4px 0 0 -4px;
+  border-radius: 50%;
+  background: var(--sp-emerald);
+  box-shadow: 0 0 0 2px var(--sp-surface);
+  pointer-events: auto;
+}
+
+.fcp-line-dot.parashikim { background: var(--sp-cyan); }
+.fcp-line-dot.neg { background: var(--sp-red); }
+
+.fcp-line-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0.35rem;
+}
+
+.fcp-line-labels span {
+  flex: 1 1 0;
+  text-align: center;
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--sp-text-muted);
+  min-width: 0;
+}
+
+.fcp-line-labels span.parashikim { color: var(--sp-cyan); }
+
+/* ── CSV import preview (ImportoCsv) ──────────────────────────────────────────
+   Rows that will not be imported stay on screen rather than being filtered away — a row silently
+   missing from an import is money the user never learns was dropped — so they are dimmed instead,
+   and unreadable ones carry the red edge that says "read me, do not scroll past". */
+.fcp-csv-table {
+  --bs-table-bg: transparent;
+  color: var(--sp-text-soft);
+}
+
+.fcp-csv-table th {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--sp-text-muted);
+  border-bottom: 1px solid var(--sp-border);
+}
+
+.fcp-csv-table td {
+  border-bottom: 1px solid var(--sp-border);
+  vertical-align: middle;
+}
+
+.fcp-csv-table tr.fcp-csv-jashte td { opacity: 0.45; }
+
+.fcp-csv-table tr.fcp-csv-gabim td {
+  opacity: 0.75;
+  background: rgba(239, 68, 68, 0.07);
+}
+
+.fcp-csv-table tr.fcp-csv-gabim td:first-child { box-shadow: inset 3px 0 0 var(--sp-red); }

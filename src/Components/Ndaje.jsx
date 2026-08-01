@@ -3,7 +3,7 @@ import { Card, Button, Form, InputGroup, Alert } from "react-bootstrap";
 import { QrCode, Copy, Check, Share2, FileText, Sheet, DatabaseBackup, MessageSquare } from "lucide-react";
 import { saveAs } from "file-saver";
 import { useData } from "../Context/DataContext";
-import { exportAllData } from "../lib/db";
+import { exportAllData, shenoKopjen } from "../lib/db";
 import { exportStatementPdf } from "../lib/exportPdf";
 import { exportStatementExcel } from "../lib/exportExcel";
 import TransferoQr from "./TransferoQr";
@@ -22,7 +22,7 @@ const ADRESA = "https://personal.financare.rilindkycyku.dev";
  * the file is built in the browser and passed straight to whichever app you pick.
  */
 function Ndaje() {
-  const { profile, accounts, categories, transactions, recurring } = useData();
+  const { profile, accounts, categories, transactions, recurring, reload } = useData();
   const [qr, setQr] = useState(null);
   const [kopjuar, setKopjuar] = useState(false);
   const [duke, setDuke] = useState("");
@@ -128,10 +128,16 @@ function Ndaje() {
     puno("json", async () => {
       const data = await exportAllData();
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-      return ndajSkedarin(
+      const rezultat = await ndajSkedarin(
         { blob, filename: `financarepersonal-backup-${new Date().toISOString().slice(0, 10)}.json` },
         "Kopja e të dhënave - FinanCarePersonal"
       );
+      // A copy the user cancelled out of the share sheet never left the device, so it is not one.
+      if (rezultat !== "cancelled") {
+        await shenoKopjen(data.exportedAt);
+        await reload();
+      }
+      return rezultat;
     });
 
   /** A month in one line, for pasting into a chat. */
