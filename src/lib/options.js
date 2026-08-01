@@ -81,6 +81,30 @@ export const DEBT_ENTRY_TYPES = [
   { value: "shtese", label: "Shtesë / Blerje e re", sign: 1 },
 ];
 
+/**
+ * How urgent a planned purchase is. The priority only sorts the list and colours the badge — every
+ * unfinished plan is set aside from the daily allowance all the same, because an "opsionale" plan
+ * you still intend to buy takes the same money out of the month as any other.
+ */
+export const PLAN_PRIORITIES = [
+  { value: "domosdoshme", label: "E domosdoshme", short: "Domosdoshme", ngjyra: "#f43f5e", rendi: 0 },
+  { value: "normale", label: "Normale", short: "Normale", ngjyra: "#06b6d4", rendi: 1 },
+  { value: "opsionale", label: "Opsionale", short: "Opsionale", ngjyra: "#94a3b8", rendi: 2 },
+];
+
+/** Never returns undefined, so a plan holding a priority that was removed still renders. */
+export function planPriorityMeta(value) {
+  return (
+    PLAN_PRIORITIES.find((p) => p.value === value) || {
+      value,
+      label: value || "Normale",
+      short: value || "Normale",
+      ngjyra: "#06b6d4",
+      rendi: 1,
+    }
+  );
+}
+
 export const TRANSACTION_TYPES = [
   { value: "hyrje", label: "Hyrje", sign: 1 },
   { value: "shpenzim", label: "Shpenzim", sign: -1 },

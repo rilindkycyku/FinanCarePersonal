@@ -17,6 +17,7 @@ const EMPTY = {
   goals: [],
   recurring: [],
   borxhet: [],
+  planet: [],
 };
 
 /**

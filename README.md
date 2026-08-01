@@ -11,8 +11,22 @@ sa shpenzohet, sa mbetet dhe sa po kursesh.
 ## Funksionet
 
 - **Paneli** — bilanci total, hyrjet/shpenzimet e muajit, norma e kursimit ndaj objektivit tuaj,
-  kartelat e llogarive, transaksionet e fundit, ecuria e buxheteve e qëllimeve, dhe pagesat që kanë
-  arritur datën.
+  sa mund të shpenzoni sot, kartelat e llogarive, transaksionet e fundit, ecuria e buxheteve e
+  qëllimeve, dhe pagesat që kanë arritur datën.
+- **Sa mund të shpenzoj sot** — një shifër e vetme për ditën, e ndarë hapur në pjesët që e prodhojnë:
+  bilanci i shpenzueshëm (kursimet dhe investimet nuk hyjnë), plus hyrjet që priten ende këtë muaj,
+  minus pagesat e përsëritura të pakonfirmuara dhe shpenzimet e planifikuara që nuk janë blerë ende.
+  Ajo që mbetet ndahet me ditët e mbetura të muajit, dhe sa keni shpenzuar sot zbritet nga kufiri i
+  ditës. Numri matet nga fillimi i sotmes, pra një blerje e mëngjesit zë vendin e vet te dita e sotme
+  në vend që t&apos;i vogëlojë të gjitha ditët e mbetura; dhe kësti apo plani që paguhet sot nuk
+  numërohet dy herë, sepse ishte lënë mënjanë që në fillim.
+- **Shpenzimet e Planifikuara** — çka dini se do ta blini këtë muaj por nuk e keni blerë ende (një
+  frigorifer, gomat e dimrit, një dhuratë). Plani nuk është buxhet: nuk vendos kufi për një kategori,
+  por rezervon vlerën e vet nga paratë e lira derisa ta blini, pra shpenzimi ditor nuk ju ofron para
+  që i keni premtuar tashmë. Kur e blini, plani bëhet transaksion i vërtetë me një klikim dhe pastaj
+  e lexon vlerën prej tij — nëse e korrigjoni transaksionin, plani nuk mbetet me një çmim që nuk u
+  pagua kurrë. Çdo plan i takon një muaji; ata që mbeten pa u blerë nuk hyjnë vetë në muajin tjetër,
+  por shfaqen veçmas dhe zhvendosen me një buton.
 - **Transaksionet** — hyrje, shpenzime dhe transfere, me kërkim, renditje, filtrim sipas datës e
   llojit, paginim dhe eksport në Excel. Një transfer lëviz para mes llogarive tuaja, pra nuk
   llogaritet as si hyrje as si shpenzim.
@@ -100,11 +114,13 @@ src/
   lib/        db.js (IndexedDB), finance.js (çdo kalkulim), format.js, options.js, exportExcel.js
   Components/ NavBar, Footer, Tabela (kërkim/renditje/eksport), modalet e shtimit, Ui.jsx
   Pages/      Paneli, Transaksionet, Llogaritë, Borxhet & Kartelat, Kategoritë, Buxhetet,
-              Qëllimet, Pagesat e Përsëritura, Statistikat, Cilësimet, Eksporto/Importo
+              Qëllimet, Shpenzimet e Planifikuara, Pagesat e Përsëritura, Statistikat,
+              Cilësimet, Eksporto/Importo
 ```
 
 Kalkulimet financiare janë të gjitha funksione të pastra në `src/lib/finance.js` — bilancet,
-rrjedha e parasë, ndarjet sipas kategorive, ecuria e buxheteve/qëllimeve dhe skedulimi i pagesave
-të përsëritura — pra faqet mbeten të hollra dhe të gjitha numrat vijnë nga një burim i vetëm.
+rrjedha e parasë, ndarjet sipas kategorive, ecuria e buxheteve/qëllimeve, skedulimi i pagesave
+të përsëritura, shpenzimet e planifikuara dhe shpenzimi ditor — pra faqet mbeten të hollra dhe
+të gjitha numrat vijnë nga një burim i vetëm.
 Borxhet janë ndarje e qëllimshme: ruhen në një `objectStore` të vetin dhe asnjë funksion i
 bilancit nuk i lexon, prandaj një shënim borxhi nuk mund ta prekë bilancin edhe nëse do të donte.

@@ -4,7 +4,7 @@ import { Container, Row, Col, Button, Alert } from "react-bootstrap";
 import {
   LayoutDashboard, Wallet, TrendingUp, TrendingDown, PiggyBank, Percent, PlusCircle,
   ArrowRightLeft, Tags, Target, Repeat, BarChart3, Settings, DatabaseBackup, CalendarClock,
-  Receipt, Gauge,
+  Receipt, ClipboardList,
 } from "lucide-react";
 import NavBar from "../Components/NavBar";
 import PageTitle from "../Components/PageTitle";
@@ -12,16 +12,17 @@ import PageLoading from "../Components/PageLoading";
 import Footer from "../Components/Footer";
 import ShtoTransaksionin from "../Components/ShtoTransaksionin";
 import ButonPasqyra from "../Components/ButonPasqyra";
+import ShpenzimiDitor from "../Components/ShpenzimiDitor";
 import { Kpi, Panel, ProgressBar, Empty } from "../Components/Ui";
 import { useData } from "../Context/DataContext";
 import { getIcon } from "../lib/icons";
 import {
-  accountsWithBalances, budgetProgress, cashflow, dailyLimit, debtProgress, debtTotals, dueRecurring,
-  filterByRange, goalProgress, monthBounds, sortByDateDesc, totalBalance, totalsByCategory,
-  upcomingRecurring,
+  accountsWithBalances, budgetProgress, cashflow, debtProgress, debtTotals, dueRecurring,
+  filterByRange, goalProgress, monthBounds, overduePlans, planTotals, plansForMonth,
+  sortByDateDesc, totalBalance, totalsByCategory, upcomingRecurring,
 } from "../lib/finance";
 import { formatDate, formatMoney, formatPercent, monthKey, monthLabel, todayISO } from "../lib/format";
-import { accountTypeMeta, debtTypeMeta, DAYS_LONG, MONTHS_LONG } from "../lib/options";
+import { accountTypeMeta, debtTypeMeta, planPriorityMeta, DAYS_LONG, MONTHS_LONG } from "../lib/options";
 import "./Styles/PremiumTheme.css";
 import "./Styles/DizajniPergjithshem.css";
 import "./Styles/Dashboard.css";
@@ -32,6 +33,7 @@ const QUICK_ACTIONS = [
   { to: "/llogarite", label: "Llogaritë", icon: Wallet },
   { to: "/borxhet", label: "Borxhet & Kartelat", icon: Receipt },
   { to: "/kategorite", label: "Kategoritë", icon: Tags },
+  { to: "/planifikuara", label: "Shpenzimet e Planifikuara", icon: ClipboardList },
   { to: "/buxhetet", label: "Buxhetet", icon: PiggyBank },
   { to: "/qellimet", label: "Qëllimet e Kursimit", icon: Target },
   { to: "/te-perseritura", label: "Pagesat e Përsëritura", icon: Repeat },
@@ -41,8 +43,8 @@ const QUICK_ACTIONS = [
 ];
 
 function Dashboard() {
-  const { profile, accounts, categories, transactions, budgets, goals, recurring, borxhet, loading, error, money,
-    signedMoney, njeLlogari, llogariaKryesore } = useData();
+  const { profile, accounts, categories, transactions, budgets, goals, recurring, borxhet, planet, loading, error,
+    money, signedMoney, njeLlogari, llogariaKryesore } = useData();
   const [showTx, setShowTx] = useState(false);
 
   const today = todayISO();
@@ -69,14 +71,14 @@ function Dashboard() {
         .sort((a, b) => b.mbetur - a.mbetur)
         .slice(0, 4),
       borxhetTotal: debtTotals(borxhet),
+      // Planned purchases that have not been made yet — the money the daily figure has set aside.
+      planet: plansForMonth(planet, muajiKey, transactions)
+        .filter((p) => !p.kryer)
+        .slice(0, 5),
+      planetTotal: planTotals(planet, muajiKey, transactions),
+      planetTeMbartura: overduePlans(planet, muajiKey).length,
     };
-  }, [accounts, categories, transactions, budgets, goals, recurring, borxhet, muajiKey, today]);
-
-  // Kept out of `stats` because it is the one figure that depends on the profile as well.
-  const limiti = useMemo(
-    () => dailyLimit(transactions, today, profile.limitiDitor),
-    [transactions, today, profile.limitiDitor]
-  );
+  }, [accounts, categories, transactions, budgets, goals, recurring, borxhet, planet, muajiKey, today]);
 
   const pershendetja = profile.emri || "përdorues";
   // Both are optional targets set in Cilësimet; when unset the KPIs fall back to plain figures.
@@ -192,39 +194,68 @@ function Dashboard() {
           />
         </Row>
 
-        {/* A "today" figure among four month-and-total tiles, so it gets its own strip rather than
-            a fifth cell that would leave the grid ragged on every screen size. */}
-        <div className="mt-2 mb-4">
-          <Panel title="Limiti i Shpenzimeve Ditore" icon={Gauge} action="Cakto" actionTo="/cilesimet">
-            {limiti.caktuar ? (
-              <>
-                <div className="d-flex justify-content-between align-items-center mb-1">
-                  <span className="fcp-row-title">
-                    {money(limiti.shpenzuarSot)} / {money(limiti.limiti)}
-                  </span>
-                  <span className={`fcp-row-sub ${limiti.tejkaluar ? "fcp-neg" : ""}`}>
-                    {limiti.tejkaluar
-                      ? `Tejkaluar me ${money(Math.abs(limiti.mbetur))}`
-                      : `Mbeten ${money(limiti.mbetur)} për sot`}
-                  </span>
-                </div>
-                <ProgressBar value={limiti.perqindja} color="var(--sp-cyan)" over={limiti.tejkaluar} />
-                <div className="fcp-row-sub mt-1">
-                  {limiti.manual
-                    ? "Limit i caktuar nga ju te Cilësimet."
-                    : `${money(limiti.disponueshme)} të mbetura nga hyrjet e muajit, ndarë mbi ${limiti.ditetMbetura} ${
-                        limiti.ditetMbetura === 1 ? "ditë të mbetur" : "ditë të mbetura"
-                      }.`}
-                </div>
-              </>
-            ) : (
-              <Empty>
-                Nuk ka ende hyrje këtë muaj për të ndarë mbi ditët e mbetura.{" "}
-                <Link to="/cilesimet">Caktoni një limit ditor</Link> nëse doni një shifër fikse.
-              </Empty>
-            )}
-          </Panel>
-        </div>
+        {/* The two halves of the same question — what today's money is, and what is already
+            promised away from it — so the daily figure is never a number without a reason. */}
+        <Row className="g-3 g-md-4 mt-0 mb-2">
+          <Col xl={6}>
+            <ShpenzimiDitor />
+          </Col>
+          <Col xl={6}>
+            <Panel
+              title={`Shpenzimet e Planifikuara — ${monthLabel(muajiKey)}`}
+              icon={ClipboardList}
+              action="Të gjitha"
+              actionTo="/planifikuara"
+            >
+              {stats.planet.length === 0 ? (
+                <Empty>
+                  {stats.planetTotal.numri > 0 ? (
+                    <>Gjithçka e planifikuar për këtë muaj është blerë 🎉</>
+                  ) : (
+                    <>
+                      Nuk ka plane për këtë muaj. <Link to="/planifikuara">Shtoni çka do të blini</Link> — p.sh. diçka
+                      për shtëpinë — dhe vlera lihet mënjanë nga shpenzimi ditor.
+                    </>
+                  )}
+                </Empty>
+              ) : (
+                <>
+                  {stats.planet.map((p) => {
+                    const kategoria = categories.find((c) => c.id === p.kategoriaId);
+                    const prioriteti = planPriorityMeta(p.prioriteti);
+                    const Icon = getIcon(kategoria?.ikona || "ShoppingCart");
+                    return (
+                      <div className="fcp-row" key={p.id}>
+                        <div className="fcp-row-icon" style={{ color: kategoria?.ngjyra || prioriteti.ngjyra }}>
+                          <Icon size={16} />
+                        </div>
+                        <div className="fcp-row-main">
+                          <div className="fcp-row-title">{p.emri}</div>
+                          <div className="fcp-row-sub">
+                            {[
+                              prioriteti.short,
+                              kategoria?.emri,
+                              p.afati ? `afati ${formatDate(p.afati)}` : null,
+                            ]
+                              .filter(Boolean)
+                              .join(" · ")}
+                          </div>
+                        </div>
+                        <div className="fcp-row-value fcp-neg">{money(p.vlera)}</div>
+                      </div>
+                    );
+                  })}
+                  <div className="fcp-row-sub">
+                    Të rezervuara gjithsej: <strong>{money(stats.planetTotal.mbetur)}</strong> — zbriten nga paratë e
+                    lira derisa t&apos;i blini.
+                    {stats.planetTeMbartura > 0 &&
+                      ` Edhe ${stats.planetTeMbartura} nga muajt e kaluar presin zhvendosje.`}
+                  </div>
+                </>
+              )}
+            </Panel>
+          </Col>
+        </Row>
 
         {/* With a single account the grid would only repeat the "Bilanci Total" tile above it, so
             the section appears when there is more than one balance to compare. */}

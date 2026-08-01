@@ -47,8 +47,8 @@ function ShtoTransaksionin({
   qellimiFiksuar,
   destinacioniFillestar,
 }) {
-  const { accounts, categories, goals, transactions, save, saveProfile, profile, monedha, simboli, njeLlogari, llogariaKryesore } =
-    useData();
+  const { accounts, categories, goals, transactions, planet, recurring, save, saveProfile, profile, monedha,
+    simboli, njeLlogari, llogariaKryesore } = useData();
   const [tx, setTx] = useState(blank(llojiFillestar));
   const [error, setError] = useState("");
 
@@ -190,6 +190,8 @@ function ShtoTransaksionin({
       // Carried through explicitly: without it, editing a payment booked against a debt note from
       // the Transaksionet page silently unlinked the two and the note stopped counting it paid.
       borxhiId: tx.borxhiId || null,
+      // Same for a planned purchase, which additionally reads its real price back off this record.
+      planiId: tx.planiId || null,
       // Only ever set once: two transactions on the same date are ordered by when they were
       // entered (finance.js), so re-stamping this on an edit would move an old row to the top.
       krijuar: tx.krijuar || new Date().toISOString(),
@@ -203,8 +205,9 @@ function ShtoTransaksionin({
     if (profile.njoftimeLimiti) {
       const sot = todayISO();
       const tjeret = transactions.filter((t) => t.id !== rekordi.id);
-      const para = dailyLimit(tjeret, sot, profile.limitiDitor);
-      const pas = dailyLimit([...tjeret, rekordi], sot, profile.limitiDitor);
+      const bazat = { accounts, plans: planet, recurring, today: sot, limitiManual: profile.limitiDitor };
+      const para = dailyLimit({ ...bazat, transactions: tjeret });
+      const pas = dailyLimit({ ...bazat, transactions: [...tjeret, rekordi] });
       if (!para.tejkaluar && pas.tejkaluar) {
         njofto(
           "Limiti ditor u tejkalua",
