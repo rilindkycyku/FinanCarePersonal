@@ -1,0 +1,398 @@
+import { useMemo, useState } from "react";
+import { Container, Row, Button, Alert } from "react-bootstrap";
+import { differenceInCalendarDays, parseISO } from "date-fns";
+import {
+  Receipt, Plus, Edit3, Trash2, Archive, ArchiveRestore, CheckCircle2, CalendarClock,
+  ChevronDown, ChevronUp, HandCoins, Wallet, Info, Hash,
+} from "lucide-react";
+import NavBar from "../Components/NavBar";
+import Footer from "../Components/Footer";
+import PageTitle from "../Components/PageTitle";
+import PageLoading from "../Components/PageLoading";
+import ShtoBorxhin from "../Components/ShtoBorxhin";
+import ShtoPagesenBorxhit from "../Components/ShtoPagesenBorxhit";
+import Tabela from "../Components/Tabela/Tabela";
+import { Kpi, ProgressBar, Empty } from "../Components/Ui";
+import { useData } from "../Context/DataContext";
+import { useDialog } from "../Context/DialogContext";
+import { STORES } from "../lib/db";
+import { debtProgress, debtTotals } from "../lib/finance";
+import { formatDate, formatPercent, plainAmount, todayISO } from "../lib/format";
+import { debtTypeMeta } from "../lib/options";
+import { getIcon } from "../lib/icons";
+import "./Styles/PremiumTheme.css";
+import "./Styles/DizajniPergjithshem.css";
+import "./Styles/Personal.css";
+
+/** Days left until the deadline, or null when the note has none. */
+function daysLeft(dataMbarimit) {
+  if (!dataMbarimit) return null;
+  return differenceInCalendarDays(parseISO(dataMbarimit), parseISO(todayISO()));
+}
+
+/**
+ * Debts, credit cards and money lent out — kept as notes on purpose. Nothing on this page is part
+ * of "Bilanci Total", the monthly cashflow or the statistics: a card you still owe 900 € on shows
+ * up here and nowhere else. Payments bring the note down, and only the ones explicitly marked
+ * "zbrite edhe nga llogaria" also produce a real transaction.
+ */
+function Borxhet() {
+  const { borxhet, accounts, transactions, save, destroy, destroyMany, money, simboli, loading } = useData();
+  const dialog = useDialog();
+  const [showDebt, setShowDebt] = useState(false);
+  const [editing, setEditing] = useState(null);
+  const [payingFor, setPayingFor] = useState(null);
+  const [editingEntry, setEditingEntry] = useState(null);
+  const [openId, setOpenId] = useState(null);
+
+  const progress = useMemo(
+    () =>
+      borxhet
+        .map((d) => debtProgress(d))
+        .sort(
+          (a, b) =>
+            Number(a.arkivuar) - Number(b.arkivuar) ||
+            Number(a.perfunduar) - Number(b.perfunduar) ||
+            b.mbetur - a.mbetur
+        ),
+    [borxhet]
+  );
+
+  const totals = useMemo(() => debtTotals(borxhet), [borxhet]);
+
+  const aktive = progress.filter((d) => !d.arkivuar);
+  const arkivuara = progress.filter((d) => d.arkivuar);
+
+  const openNew = () => {
+    setEditing(null);
+    setShowDebt(true);
+  };
+
+  const openEdit = (debt) => {
+    setEditing(borxhet.find((d) => d.id === debt.id) || null);
+    setShowDebt(true);
+  };
+
+  const openPayment = (debt, entry = null) => {
+    setPayingFor(borxhet.find((d) => d.id === debt.id) || null);
+    setEditingEntry(entry);
+  };
+
+  const toggleArchive = async (debt) => {
+    const record = borxhet.find((d) => d.id === debt.id);
+    if (record) await save(STORES.borxhet, { ...record, arkivuar: !record.arkivuar });
+  };
+
+  const onDelete = async (debt) => {
+    // The real transactions some payments created are actual money that left the account, so they
+    // stay in the ledger — only the note goes, exactly like deleting a savings goal.
+    const lidhura = (debt.pagesat || []).filter(
+      (p) => p.transaksioniId && transactions.some((tx) => tx.id === p.transaksioniId)
+    ).length;
+    const ok = await dialog.confirm(
+      lidhura
+        ? `Ta fshij borxhin "${debt.emri}" me ${debt.pagesat.length} rreshta? ${lidhura} transaksione të vërteta mbeten në historik, sepse ato para kanë dalë vërtet nga llogaria.`
+        : `Ta fshij borxhin "${debt.emri}"? Historiku i pagesave shkon bashkë me të.`,
+      { title: "Fshi Borxhin" }
+    );
+    if (!ok) return;
+    await destroy(STORES.borxhet, debt.id);
+  };
+
+  const onDeleteEntry = async (debt, entry) => {
+    const record = borxhet.find((d) => d.id === debt.id);
+    if (!record) return;
+    const tx = entry.transaksioniId ? transactions.find((t) => t.id === entry.transaksioniId) : null;
+    const llogaria = accounts.find((a) => a.id === tx?.llogariaId)?.emri;
+    const ok = await dialog.confirm(
+      tx
+        ? `Ta fshij këtë rresht prej ${plainAmount(entry.vlera)} ${simboli}? Fshihet edhe transaksioni i lidhur${
+            llogaria ? ` në llogarinë "${llogaria}"` : ""
+          }, pra bilanci i llogarisë rritet përsëri.`
+        : `Ta fshij këtë rresht prej ${plainAmount(entry.vlera)} ${simboli}?`,
+      { title: "Fshi Rreshtin" }
+    );
+    if (!ok) return;
+
+    const mbetur = { ...record, pagesat: (record.pagesat || []).filter((p) => p.id !== entry.id) };
+    if (tx) {
+      await destroyMany([[STORES.transactions, tx.id]]);
+    }
+    await save(STORES.borxhet, mbetur);
+  };
+
+  const rows = progress.map((d) => ({
+    ID: d.id,
+    Emri: d.emri,
+    Lloji: debtTypeMeta(d.lloji).short,
+    Statusi: d.arkivuar ? "Arkivuar" : d.perfunduar ? "Mbyllur" : "Aktiv",
+    Pala: d.kreditori || "-",
+    Afati: d.dataMbarimit ? formatDate(d.dataMbarimit) : "-",
+    [`Totali (${simboli})`]: plainAmount(d.totali),
+    [`Paguar (${simboli})`]: plainAmount(d.paguar),
+    [`Mbetur (${simboli})`]: `<span class="${d.mbetur > 0 ? "fcp-neg" : "fcp-pos"}">${plainAmount(d.mbetur)}</span>`,
+    Përqindja: formatPercent(d.perqindja),
+  }));
+
+  const renderDebt = (d) => {
+    const meta = debtTypeMeta(d.lloji);
+    const Icon = getIcon(meta.icon);
+    const kerkese = d.drejtimi === "kerkese";
+    const ditet = daysLeft(d.dataMbarimit);
+    const hapur = openId === d.id;
+
+    return (
+      <div className={`fcp-tracked${d.arkivuar ? " fcp-debt-archived" : ""}`} key={d.id}>
+        <div className="fcp-tracked-head">
+          <div className="fcp-row-icon" style={{ color: d.ngjyra }}>
+            {d.perfunduar ? <CheckCircle2 size={16} /> : <Icon size={16} />}
+          </div>
+          <div className="fcp-row-main">
+            <div className="fcp-row-title">
+              {d.emri}
+              <span className="fcp-pill ms-2" style={{ color: d.ngjyra }}>
+                {meta.short}
+              </span>
+            </div>
+            <div className="fcp-row-sub">
+              {money(d.paguar)} nga {money(d.totali)} · {formatPercent(d.perqindja)}
+              {d.kreditori && ` · ${kerkese ? "nga" : "te"} ${d.kreditori}`}
+            </div>
+          </div>
+          <div className="fcp-tracked-actions">
+            {!d.arkivuar && (
+              <button
+                type="button"
+                className="fcp-icon-action add"
+                title={kerkese ? "Shto kthim ose shtesë" : "Shto pagesë ose shtesë"}
+                onClick={() => openPayment(d)}
+              >
+                <Plus size={14} />
+              </button>
+            )}
+            <button
+              type="button"
+              className="fcp-icon-action"
+              title={hapur ? "Fsheh rreshtat" : "Shiko rreshtat"}
+              onClick={() => setOpenId(hapur ? null : d.id)}
+            >
+              {hapur ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+            </button>
+            <button type="button" className="fcp-icon-action edit" title="Ndrysho" onClick={() => openEdit(d)}>
+              <Edit3 size={14} />
+            </button>
+            <button
+              type="button"
+              className="fcp-icon-action"
+              title={d.arkivuar ? "Kthe nga arkiva" : "Arkivo"}
+              onClick={() => toggleArchive(d)}
+            >
+              {d.arkivuar ? <ArchiveRestore size={14} /> : <Archive size={14} />}
+            </button>
+            <button type="button" className="fcp-icon-action delete" title="Fshij" onClick={() => onDelete(d)}>
+              <Trash2 size={14} />
+            </button>
+          </div>
+        </div>
+
+        <ProgressBar value={d.perqindja} color={d.ngjyra} />
+
+        <div className="fcp-tracked-foot">
+          <span className={d.perfunduar ? "fcp-pos" : "fcp-neg"}>
+            {d.perfunduar
+              ? kerkese
+                ? "U kthye i plotë 🎉"
+                : "Borxhi u mbyll 🎉"
+              : `${kerkese ? "Për t'u marrë" : "Mbeten"} ${money(d.mbetur)}`}
+          </span>
+          <span className="d-flex align-items-center gap-3 flex-wrap">
+            {d.shtuar > 0 && <span>Shtesa: {money(d.shtuar)}</span>}
+            {d.dataMbarimit && (
+              <span className={ditet !== null && ditet < 0 && !d.perfunduar ? "fcp-neg" : ""}>
+                <CalendarClock size={12} className="me-1" />
+                {ditet === null
+                  ? formatDate(d.dataMbarimit)
+                  : ditet < 0
+                    ? `Afati kaloi më ${formatDate(d.dataMbarimit)}`
+                    : `${ditet} ditë deri më ${formatDate(d.dataMbarimit)}`}
+              </span>
+            )}
+          </span>
+        </div>
+
+        {d.shenim && <div className="fcp-row-sub mt-2">{d.shenim}</div>}
+
+        {hapur && (
+          <div className="fcp-debt-entries">
+            {d.pagesat.length === 0 ? (
+              <div className="fcp-row-sub">
+                Ende asnjë rresht. Shtoni një {kerkese ? "kthim" : "pagesë"} për ta zbritur borxhin.
+              </div>
+            ) : (
+              d.pagesat.map((p) => {
+                const shtese = p.lloji === "shtese";
+                // A payment whose transaction was later deleted from the Transaksionet page falls
+                // back to being what it always was underneath: a plain note.
+                const tx = p.transaksioniId ? transactions.find((t) => t.id === p.transaksioniId) : null;
+                const llogaria = accounts.find((a) => a.id === tx?.llogariaId)?.emri;
+                return (
+                  <div className="fcp-row" key={p.id}>
+                    <div className="fcp-row-icon" style={{ color: shtese ? "var(--sp-red)" : "var(--sp-emerald)" }}>
+                      {shtese ? <Plus size={14} /> : <HandCoins size={14} />}
+                    </div>
+                    <div className="fcp-row-main">
+                      <div className="fcp-row-title">
+                        {shtese ? "Shtesë" : kerkese ? "Kthim" : "Pagesë"}
+                        {p.shenim && ` · ${p.shenim}`}
+                      </div>
+                      <div className="fcp-row-sub">
+                        {formatDate(p.data)}
+                        {tx ? ` · ${llogaria ? `nga ${llogaria}` : "e zbritur nga llogaria"}` : " · vetëm shënim"}
+                      </div>
+                    </div>
+                    <div className={`fcp-row-value ${shtese ? "fcp-neg" : "fcp-pos"}`}>
+                      {shtese ? "+" : "−"}
+                      {money(p.vlera)}
+                    </div>
+                    <div className="fcp-debt-entry-actions">
+                      <button
+                        type="button"
+                        className="fcp-icon-action edit"
+                        title="Ndrysho rreshtin"
+                        onClick={() => openPayment(d, p)}
+                      >
+                        <Edit3 size={13} />
+                      </button>
+                      <button
+                        type="button"
+                        className="fcp-icon-action delete"
+                        title="Fshij rreshtin"
+                        onClick={() => onDeleteEntry(d, p)}
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  if (loading) return <PageLoading title="Borxhet & Kartelat" />;
+
+  return (
+    <div className="fcp-page">
+      <PageTitle title="Borxhet & Kartelat" />
+      <NavBar />
+
+      <Container className="pt-4">
+        <div className="fcp-page-head">
+          <div>
+            <h2>Borxhet & Kartelat</h2>
+            <p>Kartelat e kreditit, kreditë dhe huatë — të mbajtura si shënim, jashtë bilancit tuaj.</p>
+          </div>
+          <Button className="btn-primary" onClick={openNew}>
+            <Plus size={16} className="me-1" /> Shto Borxh
+          </Button>
+        </div>
+
+        <Alert variant="info" className="d-flex align-items-start gap-2">
+          <Info size={16} className="flex-shrink-0 mt-1" />
+          <span>
+            Këto janë vetëm shënime: nuk hyjnë në <strong>Bilancin Total</strong>, as në hyrjet,
+            shpenzimet apo statistikat e muajit. Një pagesë e zbret borxhin këtu, dhe vetëm nëse e
+            shënjoni <em>&quot;Zbrite edhe nga llogaria&quot;</em> krijohet edhe një transaksion i vërtetë.
+          </span>
+        </Alert>
+
+        <Row className="g-2 g-md-4">
+          <Kpi
+            label="Borxh i Mbetur"
+            value={money(totals.detyrimet.mbetur)}
+            sub={`${totals.detyrimet.numri} borxhe · ${totals.detyrimet.perfunduara} të mbyllura`}
+            icon={Receipt}
+            color="danger"
+          />
+          <Kpi
+            label="Paguar Gjithsej"
+            value={money(totals.detyrimet.paguar)}
+            sub={
+              totals.detyrimet.totali > 0
+                ? `${formatPercent((totals.detyrimet.paguar / totals.detyrimet.totali) * 100, 1)} e borxhit total`
+                : undefined
+            }
+            icon={CheckCircle2}
+            color="emerald"
+          />
+          <Kpi
+            label="Për t'u Marrë"
+            value={money(totals.kerkesat.mbetur)}
+            sub={`${totals.kerkesat.numri} hua të dhëna`}
+            icon={HandCoins}
+            color="cyan"
+          />
+          <Kpi label="Rreshta Gjithsej" value={progress.reduce((s, d) => s + d.pagesat.length, 0)} icon={Hash} color="violet" />
+        </Row>
+
+        <section className="mb-4">
+          <h4 className="fcp-section-title">
+            <Receipt size={20} className="text-primary" />
+            Borxhet Aktive
+          </h4>
+          {aktive.length === 0 ? (
+            <Empty>
+              Nuk ka borxhe të regjistruara. Shtoni një kartelë ose një borxh dhe ndiqni sa ju ka mbetur
+              — pa e prekur bilancin e llogarive.
+            </Empty>
+          ) : (
+            aktive.map(renderDebt)
+          )}
+        </section>
+
+        {arkivuara.length > 0 && (
+          <section className="mb-4">
+            <h4 className="fcp-section-title">
+              <Archive size={20} className="text-primary" />
+              Të Arkivuara
+            </h4>
+            {arkivuara.map(renderDebt)}
+          </section>
+        )}
+
+        <div className="fcp-row-sub mb-4">
+          <Wallet size={13} className="me-1" />
+          Bilanci i llogarive nuk ndryshon nga kjo faqe — shikojeni te <strong>Llogaritë</strong>.
+        </div>
+      </Container>
+
+      {rows.length > 0 && <Tabela data={rows} tableName="Borxhet & Kartelat" filterField="Statusi" mosShfaqID />}
+
+      <ShtoBorxhin
+        show={showDebt}
+        onHide={() => {
+          setShowDebt(false);
+          setEditing(null);
+        }}
+        initial={editing}
+      />
+
+      <ShtoPagesenBorxhit
+        show={Boolean(payingFor)}
+        onHide={() => {
+          setPayingFor(null);
+          setEditingEntry(null);
+        }}
+        borxhi={payingFor}
+        initial={editingEntry}
+      />
+
+      <Footer />
+    </div>
+  );
+}
+
+export default Borxhet;

@@ -18,8 +18,8 @@ import "./Styles/Dashboard.css";
 import "./Styles/Personal.css";
 
 function Cilesimet() {
-  const { profile, transactions, accounts, categories, budgets, goals, recurring, saveProfile, reload, loading, njeLlogari } =
-    useData();
+  const { profile, transactions, accounts, categories, budgets, goals, recurring, borxhet, saveProfile, reload,
+    loading, njeLlogari } = useData();
   const dialog = useDialog();
   const { theme, toggleTheme } = useTheme();
   const [form, setForm] = useState({ emri: "", monedha: DEFAULT_CURRENCY, teArdhuratMujore: "", objektiviKursimit: "" });
@@ -45,6 +45,7 @@ function Cilesimet() {
     ["Buxhete", budgets.length],
     ["Qëllime", goals.length],
     ["Pagesa të përsëritura", recurring.length],
+    ["Borxhe & kartela", borxhet.length],
   ].filter(([, value]) => value > 0);
 
   const handleSave = async (e) => {
@@ -99,10 +100,15 @@ function Cilesimet() {
     if (!ok) return;
 
     await wipeAllData();
+    // Seeded here rather than left to a second button press: an app with no accounts and no
+    // categories cannot record anything, so "e pastër" has to mean the starter lists are back. The
+    // wipe takes the profile with it, which turns single-account mode off, so the full defaults
+    // (kesh + bankë) are the right thing to restore.
+    await seedDefaults();
     await reload();
     setMessage({
       type: "success",
-      text: "Të gjitha të dhënat u fshinë. Përdorni \"Kthe listat e parazgjedhura\" për të nisur me llogaritë dhe kategoritë fillestare.",
+      text: "Të gjitha të dhënat u fshinë dhe listat e parazgjedhura u kthyen — gati për të filluar nga e para.",
     });
   };
 
@@ -221,8 +227,8 @@ function Cilesimet() {
           <p className="text-muted small mb-3">
             Të dhënat ruhen vetëm në IndexedDB të këtij shfletuesi - asnjë server, asnjë llogari. Pastrimi i të
             dhënave të faqes i fshin ato, pra mbani një kopje JSON te faqja <strong>Eksporto / Importo</strong>.
-            Aktualisht ruhen {transactions.length} transaksione, {accounts.length} llogari dhe{" "}
-            {categories.length} kategori.
+            Aktualisht ruhen {transactions.length} transaksione, {accounts.length} llogari,{" "}
+            {categories.length} kategori dhe {borxhet.length} borxhe.
           </p>
           <div>
             <Button variant="outline-light" onClick={handleReseed}>
@@ -239,9 +245,10 @@ function Cilesimet() {
             Zona e Rrezikut
           </h5>
           <p className="text-muted small mb-3">
-            Pastrimi fshin çdo transaksion, llogari, kategori, buxhet, qëllim, pagesë të përsëritur dhe vetë
-            profilin - gjithçka nga ky shfletues. Nuk ka kopje diku tjetër dhe nuk zhbëhet dot: merrni një kopje
-            JSON te <strong>Eksporto / Importo</strong> para se ta prekni. Do t&apos;ju kërkohen dy konfirmime.
+            Pastrimi fshin çdo transaksion, llogari, kategori, buxhet, qëllim, pagesë të përsëritur, borxh dhe
+            vetë profilin - gjithçka nga ky shfletues. Nuk ka kopje diku tjetër dhe nuk zhbëhet dot: merrni një
+            kopje JSON te <strong>Eksporto / Importo</strong> para se ta prekni. Do t&apos;ju kërkohen dy
+            konfirmime, dhe në fund mbeteni me llogaritë e kategoritë e parazgjedhura, gati për t&apos;u përdorur.
           </p>
           <div>
             <Button variant="danger" onClick={handleWipe}>

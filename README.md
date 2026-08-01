@@ -23,6 +23,14 @@ sa shpenzohet, sa mbetet dhe sa po kursesh.
   kesh e bankë veç e veç, aktivizoni çelësin dhe gjithçka shkon te një llogari e vetme kryesore:
   llogaritë ekzistuese bashkohen në të (bilancet fillestare mblidhen, transaksionet, pagesat e
   përsëritura dhe qëllimet zhvendosen), dhe formularët nuk pyesin më për llogarinë.
+- **Borxhet & Kartelat** — kartelat e kreditit, kreditë, blerjet me këste, borxhet te dikush dhe
+  huatë e dhëna, të mbajtura **vetëm si shënim**: nuk hyjnë në Bilancin Total, as në hyrjet,
+  shpenzimet apo statistikat e muajit, pra një kartelë me 900 € të pashlyera nuk e nxin bilancin
+  tuaj. Çdo borxh ka rreshtat e vet — një *pagesë* e zbret dhe një *shtesë* (blerje e re me kartelë,
+  kamatë, tarifë) e rrit — me ecuri, afat dhe arkivim. Pagesa mbetet vetëm shënim, përveç kur e
+  shënjoni <em>&laquo;Zbrite edhe nga llogaria&raquo;</em>: atëherë krijohet edhe një transaksion i
+  vërtetë, sepse ato para dolën vërtet nga banka. Të dy anët mbahen në hap — heqja e shënjimit ose
+  fshirja e rreshtit e heq edhe transaksionin.
 - **Kategoritë** — kategori të veçanta për hyrje dhe shpenzime, me ngjyrë e ikonë, dhe me numërimin
   e përdorimit real të secilës.
 - **Buxhetet** — kufi mujor shpenzimi për kategori, me ecuri, sinjalizim kur teprohet, lëvizje nga
@@ -82,10 +90,12 @@ src/
   Context/    DataContext (ngarkon dhe ruan gjithçka), ThemeContext, DialogContext
   lib/        db.js (IndexedDB), finance.js (çdo kalkulim), format.js, options.js, exportExcel.js
   Components/ NavBar, Footer, Tabela (kërkim/renditje/eksport), modalet e shtimit, Ui.jsx
-  Pages/      Paneli, Transaksionet, Llogaritë, Kategoritë, Buxhetet, Qëllimet,
-              Pagesat e Përsëritura, Statistikat, Cilësimet, Eksporto/Importo
+  Pages/      Paneli, Transaksionet, Llogaritë, Borxhet & Kartelat, Kategoritë, Buxhetet,
+              Qëllimet, Pagesat e Përsëritura, Statistikat, Cilësimet, Eksporto/Importo
 ```
 
 Kalkulimet financiare janë të gjitha funksione të pastra në `src/lib/finance.js` — bilancet,
 rrjedha e parasë, ndarjet sipas kategorive, ecuria e buxheteve/qëllimeve dhe skedulimi i pagesave
 të përsëritura — pra faqet mbeten të hollra dhe të gjitha numrat vijnë nga një burim i vetëm.
+Borxhet janë ndarje e qëllimshme: ruhen në një `objectStore` të vetin dhe asnjë funksion i
+bilancit nuk i lexon, prandaj një shënim borxhi nuk mund ta prekë bilancin edhe nëse do të donte.
