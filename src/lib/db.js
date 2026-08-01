@@ -209,8 +209,9 @@ export async function importAllData(data) {
 }
 
 /** Wipes every store (used by "Fshi të gjitha të dhënat" in Cilësimet). Defaults are seeded on
- * store *creation* only, so after this the user starts from a genuinely empty database — the
- * caller re-seeds accounts/categories if it wants the starter lists back. */
+ * store *creation* only, so this leaves a genuinely empty database; Cilësimet follows it straight
+ * away with `seedDefaults()` so the user lands on the usable starter lists instead of on an app
+ * with nowhere left to record anything. */
 export async function wipeAllData() {
   await Promise.all(Object.values(STORES).map((store) => clearStore(store)));
 }

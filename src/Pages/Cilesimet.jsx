@@ -49,13 +49,21 @@ function Cilesimet() {
 
   const handleWipe = async () => {
     const ok = await dialog.confirm(
-      `Kjo fshin PËRGJITHMONË të gjitha të dhënat në këtë shfletues: ${transactions.length} transaksione, ${accounts.length} llogari, ${categories.length} kategori, ${borxhet.length} borxhe, buxhetet, qëllimet dhe pagesat e përsëritura. Eksportoni një kopje JSON para se të vazhdoni. Ta fshij gjithçka?`,
+      `Kjo fshin PËRGJITHMONË të gjitha të dhënat në këtë shfletues: ${transactions.length} transaksione, ${accounts.length} llogari, ${categories.length} kategori, ${borxhet.length} borxhe, buxhetet, qëllimet dhe pagesat e përsëritura. Në fund kthehen vetë llogaritë dhe kategoritë e parazgjedhura, pra mbeteni me një listë të pastër e të gatshme. Eksportoni një kopje JSON para se të vazhdoni. Ta fshij gjithçka?`,
       { title: "Fshi Të Gjitha Të Dhënat", confirmLabel: "Fshi gjithçka" }
     );
     if (!ok) return;
     await wipeAllData();
+    // Seeded right here rather than leaving it to a second button press: an app with no accounts
+    // and no categories can't record anything, so "e pastër" has to mean the starter lists are
+    // back. The wipe takes the profile with it, which turns single-account mode off again, so the
+    // full defaults (kesh + bankë) are the right thing to restore.
+    await seedDefaults();
     await reload();
-    setMessage({ type: "success", text: "Të gjitha të dhënat u fshinë." });
+    setMessage({
+      type: "success",
+      text: "Të gjitha të dhënat u fshinë dhe listat e parazgjedhura u kthyen — gati për të filluar nga e para.",
+    });
   };
 
   const handleReseed = async () => {
@@ -173,8 +181,9 @@ function Cilesimet() {
           <p className="text-muted small mb-3">
             Të dhënat ruhen vetëm në IndexedDB të këtij shfletuesi — asnjë server, asnjë llogari. Pastrimi i të
             dhënave të faqes i fshin ato, pra mbani një kopje JSON te faqja <strong>Eksporto / Importo</strong>.
-            Aktualisht ruhen {transactions.length} transaksione, {accounts.length} llogari dhe{" "}
-            {categories.length} kategori.
+            Aktualisht ruhen {transactions.length} transaksione, {accounts.length} llogari,{" "}
+            {categories.length} kategori dhe {borxhet.length} borxhe. Fshirja e plotë e lë
+            aplikacionin me llogaritë dhe kategoritë e parazgjedhura, gati për t&apos;u përdorur.
           </p>
           <div className="d-flex gap-2 flex-wrap">
             <Button variant="outline-light" onClick={handleReseed}>
