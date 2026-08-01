@@ -108,7 +108,7 @@ function Cilesimet() {
     await reload();
     setMessage({
       type: "success",
-      text: "Të gjitha të dhënat u fshinë dhe listat e parazgjedhura u kthyen — gati për të filluar nga e para.",
+      text: "Të gjitha të dhënat u fshinë dhe listat e parazgjedhura u kthyen - gati për të filluar nga e para.",
     });
   };
 

@@ -234,7 +234,7 @@ function Llogarite() {
                 <strong className="fcp-pos">{money(borxhetTotal.kerkesat.mbetur)}</strong> për t&apos;u marrë
               </>
             )}{" "}
-            — mbahen si shënim te <Link to="/borxhet">Borxhet &amp; Kartelat</Link>.
+            - mbahen si shënim te <Link to="/borxhet">Borxhet &amp; Kartelat</Link>.
           </div>
         )}
 

@@ -103,7 +103,7 @@ function ShtoBorxhin({ show, onHide, initial, llojiFillestar }) {
           )}
 
           <div className="fcp-modal-hint mb-3">
-            Borxhet mbahen vetëm si shënim — nuk hyjnë në bilancin e llogarive dhe as në hyrjet apo
+            Borxhet mbahen vetëm si shënim - nuk hyjnë në bilancin e llogarive dhe as në hyrjet apo
             shpenzimet e muajit. Pagesat i zbritni më pas nga vetë borxhi.
           </div>
 

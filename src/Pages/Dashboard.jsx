@@ -393,7 +393,7 @@ function Dashboard() {
                 })}
                 {/* Said out loud here because the "Bilanci Total" tile sits right above it. */}
                 <div className="fcp-row-sub">
-                  Gjithsej i mbetur: <strong className="fcp-neg">{money(stats.borxhetTotal.detyrimet.mbetur)}</strong> —
+                  Gjithsej i mbetur: <strong className="fcp-neg">{money(stats.borxhetTotal.detyrimet.mbetur)}</strong> -
                   shënim, jashtë Bilancit Total.
                 </div>
               </Panel>

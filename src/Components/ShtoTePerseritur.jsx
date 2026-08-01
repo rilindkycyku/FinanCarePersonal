@@ -321,16 +321,16 @@ function ShtoTePerseritur({ show, onHide, initial }) {
                 <option value="">Pa lidhje me borxh</option>
                 {borxhetERelevante.map((d) => (
                   <option key={d.id} value={d.id}>
-                    {d.emri} — mbeten {formatMoney(d.mbetur, monedha)}
+                    {d.emri} - mbeten {formatMoney(d.mbetur, monedha)}
                   </option>
                 ))}
               </Form.Select>
               <div className="fcp-modal-hint">
                 {borxhetERelevante.length === 0
                   ? rec.lloji === "hyrje"
-                    ? "Nuk ka hua të dhëna të hapura — shtoni një te faqja Borxhet & Kartelat."
-                    : "Nuk ka borxhe të hapura — shtoni një kartelë ose kredi te faqja Borxhet & Kartelat."
-                  : `Kur ta konfirmoni pagesën, ky borxh zbritet vetë me të njëjtën vlerë — p.sh. kësti mujor i një kartele bonus e ul borxhin pa e shënuar dy herë. ${
+                    ? "Nuk ka hua të dhëna të hapura - shtoni një te faqja Borxhet & Kartelat."
+                    : "Nuk ka borxhe të hapura - shtoni një kartelë ose kredi te faqja Borxhet & Kartelat."
+                  : `Kur ta konfirmoni pagesën, ky borxh zbritet vetë me të njëjtën vlerë - p.sh. kësti mujor i një kartele bonus e ul borxhin pa e shënuar dy herë. ${
                       rec.nrKesteve ? "Këstet ndalen vetë pas të fundit." : ""
                     }`}
               </div>

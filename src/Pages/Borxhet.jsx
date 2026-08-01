@@ -315,7 +315,7 @@ function Borxhet() {
         <div className="fcp-page-head">
           <div>
             <h2>Borxhet & Kartelat</h2>
-            <p>Kartelat e kreditit, kreditë dhe huatë — të mbajtura si shënim, jashtë bilancit tuaj.</p>
+            <p>Kartelat e kreditit, kreditë dhe huatë - të mbajtura si shënim, jashtë bilancit tuaj.</p>
           </div>
           <Button className="btn-primary" onClick={() => openNew(null)}>
             <Plus size={16} className="me-1" /> Shto Borxh
@@ -377,7 +377,7 @@ function Borxhet() {
           {miat.length === 0 ? (
             <Empty>
               Nuk ka borxhe të regjistruara. Shtoni një kartelë ose një kredi dhe ndiqni sa ju ka mbetur
-              — pa e prekur bilancin e llogarive.
+              - pa e prekur bilancin e llogarive.
             </Empty>
           ) : (
             miat.map(renderDebt)
@@ -396,7 +396,7 @@ function Borxhet() {
           </div>
           <p className="fcp-row-sub mb-3">
             Paratë që ua keni dhënë të tjerëve. Këtu funksionon anasjelltas: kur ju kthejnë një pjesë,
-            shuma e mbetur zbret dhe — nëse e shënjoni — llogaria juaj <strong>shtohet</strong> në vend
+            shuma e mbetur zbret dhe - nëse e shënjoni - llogaria juaj <strong>shtohet</strong> në vend
             që të zbritet.
           </p>
           {meKane.length === 0 ? (
@@ -421,7 +421,7 @@ function Borxhet() {
 
         <div className="fcp-row-sub mb-4">
           <Wallet size={13} className="me-1" />
-          Bilanci i llogarive nuk ndryshon nga kjo faqe — shikojeni te <strong>Llogaritë</strong>.
+          Bilanci i llogarive nuk ndryshon nga kjo faqe - shikojeni te <strong>Llogaritë</strong>.
         </div>
       </Container>
 

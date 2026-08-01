@@ -219,7 +219,7 @@ function ShtoPagesenBorxhit({ show, onHide, borxhi, initial }) {
             <Col md={12}>
               {isShtese ? (
                 <div className="fcp-modal-hint">
-                  Një shtesë e rrit borxhin — blerje e re me kartelë, kamatë ose tarifë. Mbetet vetëm
+                  Një shtesë e rrit borxhin - blerje e re me kartelë, kamatë ose tarifë. Mbetet vetëm
                   shënim, nuk prek asnjë llogari.
                 </div>
               ) : mundLidhet ? (
@@ -238,12 +238,12 @@ function ShtoPagesenBorxhit({ show, onHide, borxhi, initial }) {
                   <div className="fcp-modal-hint">
                     {lidh
                       ? "Krijohet edhe një transaksion i vërtetë, pra bilanci i llogarisë ndryshon. Borxhi zbritet gjithsesi."
-                      : "E lënë e pashënjuar, pagesa zbret vetëm borxhin — asnjë llogari nuk preket."}
+                      : "E lënë e pashënjuar, pagesa zbret vetëm borxhin - asnjë llogari nuk preket."}
                   </div>
                 </>
               ) : (
                 <div className="fcp-modal-hint">
-                  Pagesa zbret vetëm borxhin — asnjë llogari nuk preket.
+                  Pagesa zbret vetëm borxhin - asnjë llogari nuk preket.
                 </div>
               )}
             </Col>
@@ -292,7 +292,7 @@ function ShtoPagesenBorxhit({ show, onHide, borxhi, initial }) {
                   </Form.Select>
                   {kategoriteERelevante.length === 0 && (
                     <div className="fcp-modal-hint">
-                      Nuk ka kategori për këtë lloj — shtoni një te faqja Kategoritë.
+                      Nuk ka kategori për këtë lloj - shtoni një te faqja Kategoritë.
                     </div>
                   )}
                 </Form.Group>
