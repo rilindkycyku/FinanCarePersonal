@@ -1,9 +1,10 @@
 import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { Container, Row, Button, Alert } from "react-bootstrap";
 import { differenceInCalendarDays, parseISO } from "date-fns";
 import {
   Receipt, Plus, Edit3, Trash2, Archive, ArchiveRestore, CheckCircle2, CalendarClock,
-  ChevronDown, ChevronUp, HandCoins, Wallet, Info, Hash,
+  ChevronDown, ChevronUp, HandCoins, Wallet, Info, Hash, Repeat,
 } from "lucide-react";
 import NavBar from "../Components/NavBar";
 import Footer from "../Components/Footer";
@@ -16,7 +17,7 @@ import { Kpi, ProgressBar, Empty } from "../Components/Ui";
 import { useData } from "../Context/DataContext";
 import { useDialog } from "../Context/DialogContext";
 import { STORES } from "../lib/db";
-import { debtProgress, debtTotals } from "../lib/finance";
+import { debtProgress, debtTotals, frequencyLabel } from "../lib/finance";
 import { formatDate, formatPercent, plainAmount, todayISO } from "../lib/format";
 import { debtTypeMeta } from "../lib/options";
 import { getIcon } from "../lib/icons";
@@ -37,10 +38,11 @@ function daysLeft(dataMbarimit) {
  * "zbrite edhe nga llogaria" also produce a real transaction.
  */
 function Borxhet() {
-  const { borxhet, accounts, transactions, save, destroy, destroyMany, money, simboli, loading } = useData();
+  const { borxhet, accounts, transactions, recurring, save, destroy, destroyMany, money, simboli, loading } = useData();
   const dialog = useDialog();
   const [showDebt, setShowDebt] = useState(false);
   const [editing, setEditing] = useState(null);
+  const [llojiFillestar, setLlojiFillestar] = useState(null);
   const [payingFor, setPayingFor] = useState(null);
   const [editingEntry, setEditingEntry] = useState(null);
   const [openId, setOpenId] = useState(null);
@@ -60,16 +62,22 @@ function Borxhet() {
 
   const totals = useMemo(() => debtTotals(borxhet), [borxhet]);
 
-  const aktive = progress.filter((d) => !d.arkivuar);
+  // Split by direction rather than mixed into one list: "what I owe" and "what people owe me" are
+  // opposite kinds of number and each has its own add button, so the section makes the direction
+  // obvious before the type picker ever comes up.
+  const miat = progress.filter((d) => !d.arkivuar && d.drejtimi === "detyrim");
+  const meKane = progress.filter((d) => !d.arkivuar && d.drejtimi === "kerkese");
   const arkivuara = progress.filter((d) => d.arkivuar);
 
-  const openNew = () => {
+  const openNew = (lloji) => {
     setEditing(null);
+    setLlojiFillestar(lloji);
     setShowDebt(true);
   };
 
   const openEdit = (debt) => {
     setEditing(borxhet.find((d) => d.id === debt.id) || null);
+    setLlojiFillestar(null);
     setShowDebt(true);
   };
 
@@ -140,6 +148,7 @@ function Borxhet() {
     const kerkese = d.drejtimi === "kerkese";
     const ditet = daysLeft(d.dataMbarimit);
     const hapur = openId === d.id;
+    const lidhura = recurring.filter((r) => r.borxhiId === d.id && r.aktiv !== false);
 
     return (
       <div className={`fcp-tracked${d.arkivuar ? " fcp-debt-archived" : ""}`} key={d.id}>
@@ -222,6 +231,19 @@ function Borxhet() {
 
         {d.shenim && <div className="fcp-row-sub mt-2">{d.shenim}</div>}
 
+        {/* Visible from this end too, so a card whose instalment is already scheduled does not get
+            a second, hand-entered payment on top of the automatic one. */}
+        {lidhura.length > 0 && (
+          <div className="fcp-row-sub mt-2">
+            <Repeat size={12} className="me-1" />
+            {kerkese ? "Kthehet vetë nga" : "Zbritet vetë nga"}:{" "}
+            {lidhura
+              .map((r) => `${r.emri} (${money(r.vlera)} ${frequencyLabel(r.frekuenca).toLowerCase()})`)
+              .join(", ")}
+            . <Link to="/te-perseritura">Shiko pagesat</Link>
+          </div>
+        )}
+
         {hapur && (
           <div className="fcp-debt-entries">
             {d.pagesat.length === 0 ? (
@@ -295,7 +317,7 @@ function Borxhet() {
             <h2>Borxhet & Kartelat</h2>
             <p>Kartelat e kreditit, kreditë dhe huatë — të mbajtura si shënim, jashtë bilancit tuaj.</p>
           </div>
-          <Button className="btn-primary" onClick={openNew}>
+          <Button className="btn-primary" onClick={() => openNew(null)}>
             <Plus size={16} className="me-1" /> Shto Borxh
           </Button>
         </div>
@@ -339,17 +361,51 @@ function Borxhet() {
         </Row>
 
         <section className="mb-4">
-          <h4 className="fcp-section-title">
-            <Receipt size={20} className="text-primary" />
-            Borxhet Aktive
-          </h4>
-          {aktive.length === 0 ? (
+          <div className="fcp-section-head">
+            <h4 className="fcp-section-title mb-0">
+              <Receipt size={20} className="text-primary" />
+              Borxhet e Mia
+            </h4>
+            <Button size="sm" variant="outline-light" onClick={() => openNew("karte")}>
+              <Plus size={14} className="me-1" /> Kartelë, kredi ose borxh
+            </Button>
+          </div>
+          <p className="fcp-row-sub mb-3">
+            Sa u keni borxh të tjerëve. Një pagesë e zbret borxhin, dhe nëse e shënjoni, ua zbret edhe
+            llogarinë.
+          </p>
+          {miat.length === 0 ? (
             <Empty>
-              Nuk ka borxhe të regjistruara. Shtoni një kartelë ose një borxh dhe ndiqni sa ju ka mbetur
+              Nuk ka borxhe të regjistruara. Shtoni një kartelë ose një kredi dhe ndiqni sa ju ka mbetur
               — pa e prekur bilancin e llogarive.
             </Empty>
           ) : (
-            aktive.map(renderDebt)
+            miat.map(renderDebt)
+          )}
+        </section>
+
+        <section className="mb-4">
+          <div className="fcp-section-head">
+            <h4 className="fcp-section-title mb-0">
+              <HandCoins size={20} className="text-primary" />
+              Më Kanë Borxh
+            </h4>
+            <Button size="sm" variant="outline-light" onClick={() => openNew("huadhene")}>
+              <Plus size={14} className="me-1" /> Hua e dhënë
+            </Button>
+          </div>
+          <p className="fcp-row-sub mb-3">
+            Paratë që ua keni dhënë të tjerëve. Këtu funksionon anasjelltas: kur ju kthejnë një pjesë,
+            shuma e mbetur zbret dhe — nëse e shënjoni — llogaria juaj <strong>shtohet</strong> në vend
+            që të zbritet.
+          </p>
+          {meKane.length === 0 ? (
+            <Empty>
+              Askush nuk ju ka borxh për momentin. Shtoni një hua të dhënë për të mbajtur shënim se kush
+              ju ka marrë para dhe sa ju ka kthyer.
+            </Empty>
+          ) : (
+            meKane.map(renderDebt)
           )}
         </section>
 
@@ -376,8 +432,10 @@ function Borxhet() {
         onHide={() => {
           setShowDebt(false);
           setEditing(null);
+          setLlojiFillestar(null);
         }}
         initial={editing}
+        llojiFillestar={llojiFillestar}
       />
 
       <ShtoPagesenBorxhit
