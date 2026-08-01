@@ -67,7 +67,7 @@ function Tabela({
   const filteredData =
     filterField && filterValue ? data.filter((d) => cellText(d[filterField]) === filterValue) : data;
 
-  const { items, requestSort, sortConfig, currentPage, pageCount, goToPage } = useSortableData(
+  const { items, requestSort, sortConfig, currentPage, pageCount, goToPage, total } = useSortableData(
     filteredData,
     null,
     searchQuery,
@@ -284,7 +284,9 @@ function Tabela({
             <div className="premium-scroll-hint">← Rrëshqit për të parë më shumë →</div>
           </div>
 
-          {data.length === 0 && (
+          {/* `total` and not `data.length`: a search that matches nothing still leaves rows in
+              `data`, and without this the table showed an empty grid with no explanation. */}
+          {total === 0 && (
             <div className="premium-empty-state">
               <div className="empty-icon-wrapper">
                 <Search size={48} />
@@ -294,10 +296,10 @@ function Tabela({
             </div>
           )}
 
-          {data.length > 0 && !mosShfaqPaginimin && (
+          {total > 0 && !mosShfaqPaginimin && (
             <div className="premium-pagination-wrapper mt-4">
               <div className="pagination-info">
-                Duke shfaqur <strong>{currentPage * itemsPerPage + 1}</strong> deri <strong>{Math.min((currentPage + 1) * itemsPerPage, data.length)}</strong> nga {data.length} rezultate
+                Duke shfaqur <strong>{currentPage * itemsPerPage + 1}</strong> deri <strong>{Math.min((currentPage + 1) * itemsPerPage, total)}</strong> nga {total} rezultate
               </div>
               {pageCount > 1 && (
                 <Pagination className="premium-pagination">

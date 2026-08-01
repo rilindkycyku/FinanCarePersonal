@@ -63,9 +63,15 @@ function Transaksionet() {
   const flows = useMemo(() => cashflow(teFiltruara), [teFiltruara]);
 
   const rows = useMemo(() => {
-    const accountName = (id) => accounts.find((a) => a.id === id)?.emri || "-";
-    const category = (id) => categories.find((c) => c.id === id);
-    const goalName = (id) => goals.find((g) => g.id === id)?.emri;
+    // Indexed once instead of a linear scan per row: with a few thousand transactions the three
+    // `.find`s below ran tens of thousands of comparisons every time the list was rebuilt.
+    const accountsById = new Map(accounts.map((a) => [a.id, a]));
+    const categoriesById = new Map(categories.map((c) => [c.id, c]));
+    const goalsById = new Map(goals.map((g) => [g.id, g]));
+
+    const accountName = (id) => accountsById.get(id)?.emri || "-";
+    const category = (id) => categoriesById.get(id);
+    const goalName = (id) => goalsById.get(id)?.emri;
 
     return sortByDateDesc(teFiltruara).map((tx) => {
       const kat = category(tx.kategoriaId);
