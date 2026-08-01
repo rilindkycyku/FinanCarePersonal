@@ -26,6 +26,37 @@ export const STORES = {
 
 const PROFILE_KEY = "main";
 
+/**
+ * A version upgrade cannot start while another tab, window or the installed app still holds the
+ * database open at the older version. The browser reports that with `blocked` and then simply keeps
+ * the request waiting — so the app used to sit on "Duke ngarkuar të dhënat..." forever with nothing
+ * to explain it.
+ *
+ * The request is deliberately left waiting, because that is what eventually succeeds: the moment
+ * the other side closes, `success` fires on this very request and the app carries on. Abandoning it
+ * and opening a fresh one is worse than useless — the abandoned request stays pending in the
+ * browser and every later open() queues behind it, which is a hang with extra steps.
+ *
+ * So instead of failing, the wait is announced to whoever is listening (the UI), and un-announced
+ * when it clears.
+ */
+const degjuesitBllokimit = new Set();
+
+/** Subscribe to "the database is held open elsewhere" / "it just cleared". Returns an unsubscribe. */
+export function onBllokimBaze(fn) {
+  degjuesitBllokimit.add(fn);
+  return () => degjuesitBllokimit.delete(fn);
+}
+
+function njoftoBllokimin(bllokuar) {
+  degjuesitBllokimit.forEach((fn) => fn(bllokuar));
+}
+
+/** A phone can freeze the other tab so thoroughly that the browser never gets round to firing
+ * `blocked`. Waiting this long with no answer means the same thing to the user, so it is reported
+ * the same way. Opening a personal ledger is otherwise instant. */
+const AFATI_BLLOKIMIT = 5000;
+
 let dbPromise = null;
 
 function openDb() {
@@ -70,23 +101,34 @@ function openDb() {
         db.createObjectStore(STORES.borxhet, { keyPath: "id" });
       }
     };
+    // The request keeps waiting either way; these only decide whether the user is told about it.
+    let njoftuar = false;
+    const raportoBllokimin = () => {
+      if (njoftuar) return;
+      njoftuar = true;
+      njoftoBllokimin(true);
+    };
+    const pastro = () => {
+      clearTimeout(roja);
+      if (njoftuar) njoftoBllokimin(false);
+    };
+    const roja = setTimeout(raportoBllokimin, AFATI_BLLOKIMIT);
+
     req.onsuccess = () => {
       const db = req.result;
       // Without this, an older tab left open from before a DB_VERSION bump holds its connection
       // open forever and every new tab/reload's indexedDB.open() blocks silently — the app just
       // hangs on "Duke ngarkuar...". Closing on versionchange lets the newer connection proceed.
       db.onversionchange = () => db.close();
+      pastro();
       resolve(db);
     };
     req.onerror = () => {
+      pastro();
       dbPromise = null;
       reject(req.error);
     };
-    req.onblocked = () => {
-      console.warn(
-        "FinanCarePersonal: databaza është e bllokuar nga një skedë tjetër e hapur më parë. Mbyllni skedat e tjera dhe rifreskoni."
-      );
-    };
+    req.onblocked = raportoBllokimin;
   });
   return dbPromise;
 }
