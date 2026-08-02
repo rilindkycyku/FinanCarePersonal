@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button, Alert, Row, Col, Card, Form, Spinner } from "react-bootstrap";
-import { Download, Upload, DatabaseBackup, ShieldCheck, FileText, Sheet, GitMerge, FileSpreadsheet } from "lucide-react";
+import { Download, Upload, DatabaseBackup, ShieldCheck, FileText, Sheet, GitMerge, FileSpreadsheet,
+  HardDrive } from "lucide-react";
 import NavBar from "../Components/NavBar";
 import Footer from "../Components/Footer";
 import PageTitle from "../Components/PageTitle";
@@ -9,12 +10,13 @@ import PageLoading from "../Components/PageLoading";
 import Ndaje from "../Components/Ndaje";
 import { useData } from "../Context/DataContext";
 import { useDialog } from "../Context/DialogContext";
-import { exportAllData, importAllData, shenoKopjen } from "../lib/db";
+import { exportAllData, hapesiraRuajtjes, importAllData, shenoKopjen } from "../lib/db";
 import { exportListExcel, exportStatementExcel } from "../lib/exportExcel";
 import { exportStatementPdf, statementFilename } from "../lib/exportPdf";
 import PdfViewerModal from "../Components/PdfViewerModal";
 import { backupStatus, periodBounds, sortByDateDesc } from "../lib/finance";
 import { formatDate, plainAmount } from "../lib/format";
+import { formatBytes } from "../lib/images";
 import { STATEMENT_PERIODS, TRANSACTION_TYPE_LABELS } from "../lib/options";
 import "./Styles/PremiumTheme.css";
 import "./Styles/DizajniPergjithshem.css";
@@ -22,10 +24,12 @@ import "./Styles/Dashboard.css";
 import "./Styles/Personal.css";
 
 function TeDhena() {
-  const { profile, accounts, categories, transactions, budgets, goals, recurring, borxhet, planet, reload, simboli,
-    loading, njeLlogari } = useData();
+  const { profile, accounts, categories, transactions, budgets, goals, recurring, borxhet, planet, faturat, reload,
+    simboli, loading, njeLlogari } = useData();
   const dialog = useDialog();
   const [message, setMessage] = useState(null);
+  const [perfshiFaturat, setPerfshiFaturat] = useState(true);
+  const [hapesira, setHapesira] = useState(null);
   const [periudha, setPeriudha] = useState("muaji");
   const [llogariaPdf, setLlogariaPdf] = useState("");
   const [pdf, setPdf] = useState(null);
@@ -47,11 +51,17 @@ function TeDhena() {
     if (message) messageRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
   }, [message]);
 
+  // Nothing here is stored on a server, so the browser's own quota is the only ceiling there is —
+  // and invoice photos are the first thing that gets anywhere near it.
+  useEffect(() => {
+    hapesiraRuajtjes().then(setHapesira);
+  }, [faturat]);
+
   const handleExportJson = async () => {
     if (duke) return;
     setDuke("json");
     try {
-      const data = await exportAllData();
+      const data = await exportAllData({ perfshiFaturat });
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
@@ -206,7 +216,10 @@ function TeDhena() {
     ["Pagesa të përsëritura", recurring.length],
     ["Borxhe & kartela", borxhet.length],
     ["Shpenzime të planifikuara", planet.length],
+    ["Fatura (foto)", faturat.length],
   ];
+
+  const madhesiaFaturave = faturat.reduce((sum, f) => sum + (f.madhesia || 0), 0);
 
   if (loading) return <PageLoading title="Eksporto / Importo" />;
 
@@ -266,6 +279,26 @@ function TeDhena() {
                   </>
                 )}
               </div>
+              {/* The photos are base64 inside the JSON and outweigh the whole ledger many times
+                  over, so carrying them is a choice rather than a surprise. */}
+              <Form.Check
+                type="switch"
+                id="perfshi-faturat"
+                className="mb-3"
+                label={
+                  <span className="small">
+                    Përfshi edhe fotot e faturave
+                    {faturat.length > 0 && (
+                      <span className="text-muted">
+                        {" "}
+                        ({faturat.length} foto · rreth {formatBytes(madhesiaFaturave * 1.37)})
+                      </span>
+                    )}
+                  </span>
+                }
+                checked={perfshiFaturat}
+                onChange={(e) => setPerfshiFaturat(e.target.checked)}
+              />
               <div className="d-flex gap-2 flex-wrap mt-auto">
                 <Button className="btn-primary" onClick={handleExportJson} disabled={Boolean(duke)}>
                   {duke === "json" ? <Spinner as="span" animation="border" size="sm" className="me-1" /> : <Download size={16} className="me-1" />}
@@ -390,6 +423,19 @@ function TeDhena() {
               </Col>
             ))}
           </Row>
+
+          {(faturat.length > 0 || hapesira) && (
+            <div className="text-muted small mt-3 d-flex align-items-center gap-2 flex-wrap">
+              <HardDrive size={14} />
+              {faturat.length > 0 && <span>Fotot e faturave zënë {formatBytes(madhesiaFaturave)}.</span>}
+              {hapesira?.kuota > 0 && (
+                <span>
+                  Ky shfletues ka lënë në dispozicion rreth {formatBytes(hapesira.kuota)}, nga të cilat po
+                  përdoren {formatBytes(hapesira.perdorur)}.
+                </span>
+              )}
+            </div>
+          )}
         </Card>
       </div>
 

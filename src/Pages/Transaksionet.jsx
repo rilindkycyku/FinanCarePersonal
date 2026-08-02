@@ -1,13 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Container, Row, Col, Form, Button } from "react-bootstrap";
-import { TrendingUp, TrendingDown, Percent, Hash, Filter, X, CopyPlus } from "lucide-react";
+import { TrendingUp, TrendingDown, Percent, Hash, Filter, X, CopyPlus, Paperclip } from "lucide-react";
 import NavBar from "../Components/NavBar";
 import Footer from "../Components/Footer";
 import PageTitle from "../Components/PageTitle";
 import PageLoading from "../Components/PageLoading";
 import Tabela from "../Components/Tabela/Tabela";
 import ShtoTransaksionin from "../Components/ShtoTransaksionin";
+import FaturatModal from "../Components/Faturat/FaturatModal";
 import { Kpi } from "../Components/Ui";
 import { useData } from "../Context/DataContext";
 import { useDialog } from "../Context/DialogContext";
@@ -22,12 +23,14 @@ import "./Styles/Personal.css";
 const TYPE_PILL_COLORS = { hyrje: "var(--sp-emerald)", shpenzim: "var(--sp-red)", transfer: "var(--sp-cyan)" };
 
 function Transaksionet() {
-  const { accounts, categories, goals, transactions, destroy, simboli, money, loading, njeLlogari } = useData();
+  const { accounts, categories, goals, transactions, faturat, destroy, simboli, money, loading, njeLlogari } =
+    useData();
   const [filtri, setFiltri] = useState({ kategoria: "", llogaria: "", min: "", max: "" });
   const dialog = useDialog();
   const [searchParams, setSearchParams] = useSearchParams();
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState(null);
+  const [faturaTx, setFaturaTx] = useState(null);
 
   // `?shto=1` opens the form straight away (handy as a bookmark/home-screen shortcut for logging
   // an expense), then drops the param so a refresh or back-navigation doesn't reopen it.
@@ -61,6 +64,15 @@ function Transaksionet() {
 
   const kaFiltra = Object.values(filtri).some(Boolean);
   const flows = useMemo(() => cashflow(teFiltruara), [teFiltruara]);
+
+  const numriFaturave = useMemo(
+    () =>
+      faturat.reduce((acc, f) => {
+        acc[f.transaksioniId] = (acc[f.transaksioniId] || 0) + 1;
+        return acc;
+      }, {}),
+    [faturat]
+  );
 
   const rows = useMemo(() => {
     // Indexed once instead of a linear scan per row: with a few thousand transactions the three
@@ -104,10 +116,15 @@ function Transaksionet() {
           ]
             .filter(Boolean)
             .join(" ") || "-",
+        // Its own column rather than a marker glued to the description, so the count stays a plain
+        // number in the Excel/PDF export.
+        Fatura: numriFaturave[tx.id]
+          ? `<span class="fcp-fatura-nb">${numriFaturave[tx.id]}</span>`
+          : "—",
         [`Vlera (${simboli})`]: `<span class="${klasa}">${plainAmount(shenja === 0 ? tx.vlera : shenja * tx.vlera)}</span>`,
       };
     });
-  }, [teFiltruara, accounts, categories, goals, simboli, njeLlogari]);
+  }, [teFiltruara, accounts, categories, goals, numriFaturave, simboli, njeLlogari]);
 
   const onEdit = (id) => {
     setEditing(transactions.find((t) => t.id === id) || null);
@@ -130,8 +147,10 @@ function Transaksionet() {
 
   const onDelete = async (id) => {
     const tx = transactions.find((t) => t.id === id);
+    const foto = numriFaturave[id] || 0;
     const ok = await dialog.confirm(
-      `Ta fshij transaksionin${tx?.pershkrimi ? ` "${tx.pershkrimi}"` : ""}? Bilancet do të rikalkulohen.`,
+      `Ta fshij transaksionin${tx?.pershkrimi ? ` "${tx.pershkrimi}"` : ""}? Bilancet do të rikalkulohen.` +
+        (foto ? ` Bashkë me të fshihen edhe ${foto} foto të faturës.` : ""),
       { title: "Fshi Transaksionin" }
     );
     if (!ok) return;
@@ -261,6 +280,9 @@ function Transaksionet() {
         funksionButonExtra={onRepeat}
         titulliButonitExtra="Përsërit këtë transaksion"
         ikonaButonitExtra={<CopyPlus size={16} />}
+        funksionButonExtra2={(id) => setFaturaTx(transactions.find((t) => t.id === id) || null)}
+        ikonaButonitExtra2={<Paperclip size={16} />}
+        titulliButonitExtra2="Faturat (foto)"
         dateField="Data"
         filterField="Lloji"
         mosShfaqID
@@ -274,6 +296,8 @@ function Transaksionet() {
         }}
         initial={editing}
       />
+
+      <FaturatModal show={Boolean(faturaTx)} transaksioni={faturaTx} onHide={() => setFaturaTx(null)} />
 
       <Footer />
     </div>

@@ -1,0 +1,236 @@
+/* The invoice photos attached to a transaction: a thumbnail grid inside the forms, and a
+   full-screen viewer for reading the picture itself. */
+
+.fcp-fatura-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+  gap: 0.6rem;
+}
+
+.fcp-fatura-cell {
+  position: relative;
+  border: 1px solid var(--sp-border);
+  border-radius: 12px;
+  background: var(--sp-surface-2);
+  overflow: hidden;
+}
+
+.fcp-fatura-thumb {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  padding: 0;
+  border: none;
+  background: var(--sp-surface-3);
+  cursor: zoom-in;
+}
+
+.fcp-fatura-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.fcp-fatura-meta {
+  padding: 0.35rem 0.45rem;
+  border-top: 1px solid var(--sp-border);
+}
+
+.fcp-fatura-emri {
+  font-size: 0.66rem;
+  font-weight: 700;
+  color: var(--sp-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fcp-fatura-madhesia {
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: var(--sp-text-muted);
+}
+
+/* Sits on the picture rather than under it, so the tile stays the same size whether or not the
+   list can be edited. */
+.fcp-fatura-hiq {
+  position: absolute;
+  top: 0.3rem;
+  right: 0.3rem;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: rgba(15, 23, 42, 0.75);
+  color: #fff;
+  cursor: pointer;
+}
+
+.fcp-fatura-hiq:hover {
+  background: var(--sp-red);
+}
+
+/* The add tile keeps the grid's shape, so "one more picture" is always the next cell rather than a
+   button somewhere else on the form. */
+.fcp-fatura-shto {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  aspect-ratio: 1;
+  border: 1px dashed var(--sp-border);
+  border-radius: 12px;
+  background: var(--sp-surface);
+  color: var(--sp-text-muted);
+  font-size: 0.66rem;
+  font-weight: 800;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.fcp-fatura-shto:hover {
+  border-color: var(--sp-emerald);
+  color: var(--sp-emerald);
+}
+
+.fcp-fatura-shto.duke-punuar {
+  cursor: progress;
+  opacity: 0.6;
+}
+
+.fcp-fatura-bosh {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.72rem;
+  color: var(--sp-text-muted);
+}
+
+/* ── Viewer ───────────────────────────────────────────────────
+   Same neutral backdrop as the PDF preview: the photo is the document, everything else recedes. */
+.fcp-fatura-modal .modal-body {
+  background: var(--sp-bg);
+  padding: 0.75rem;
+  max-height: 78vh;
+  overflow: auto;
+}
+
+.fcp-fatura-pamje {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  min-height: 200px;
+}
+
+.fcp-fatura-pamje.zoomuar {
+  justify-content: flex-start;
+}
+
+.fcp-fatura-pamje img {
+  width: calc(100% * var(--fcp-fatura-zoom, 1));
+  max-width: calc(900px * var(--fcp-fatura-zoom, 1));
+  height: auto;
+  border-radius: 8px;
+  border: 1px solid var(--sp-border);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  background: #fff;
+}
+
+.fcp-fatura-shirit {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: fit-content;
+  margin: 0 auto 0.5rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid var(--sp-border);
+  background: var(--sp-surface-2);
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: var(--sp-text-muted);
+}
+
+.fcp-fatura-shirit button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1px solid var(--sp-border);
+  background: var(--sp-surface);
+  color: var(--sp-text);
+  cursor: pointer;
+}
+
+.fcp-fatura-shirit button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.fcp-fatura-gjendje {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5rem 1rem;
+  color: var(--sp-text-muted);
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.fcp-fatura-gjendje.gabim {
+  color: var(--sp-red);
+}
+
+.fcp-fatura-footer .btn {
+  display: inline-flex;
+  align-items: center;
+}
+
+/* The paperclip count on a transaction row. */
+.fcp-fatura-nb {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  margin-left: 0.35rem;
+  padding: 0.1rem 0.4rem;
+  border-radius: 6px;
+  border: 1px solid var(--sp-border);
+  background: var(--sp-surface-3);
+  color: var(--sp-text-soft);
+  font-size: 0.62rem;
+  font-weight: 800;
+  vertical-align: middle;
+}
+
+@media (max-width: 575.98px) {
+  .fcp-fatura-grid {
+    grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
+    gap: 0.45rem;
+  }
+
+  .fcp-fatura-modal .modal-body {
+    padding: 0.5rem;
+    max-height: none;
+  }
+
+  /* Three buttons plus the file name never fit one phone row. */
+  .fcp-fatura-footer {
+    flex-wrap: wrap;
+  }
+
+  .fcp-fatura-footer .fcp-row-sub {
+    width: 100%;
+    margin-bottom: 0.35rem;
+  }
+}

@@ -7,9 +7,10 @@
 import { DEFAULT_CATEGORIES, DEFAULT_ACCOUNTS } from "./options";
 import { generateDueTransactions } from "./finance";
 import { todayISO } from "./format";
+import { blobNeDataUrl, dataUrlNeBlob } from "./images";
 
 const DB_NAME = "financarepersonal";
-const DB_VERSION = 3;
+const DB_VERSION = 4;
 
 export const STORES = {
   profile: "profile",
@@ -26,6 +27,13 @@ export const STORES = {
   // debts they are not transactions, so they never move a balance — they only reserve part of the
   // month's money so the daily allowance stops handing it out (finance.js).
   planet: "planet",
+  // Invoice photos, split in two on purpose: `faturat` holds only the small metadata record (name,
+  // size, thumbnail, which transaction it belongs to) and is loaded with everything else, while the
+  // full-size image sits in `faturaSkedaret` keyed by the same id and is read only when a picture is
+  // actually opened. Keeping the pictures out of the in-memory snapshot is what lets the app go on
+  // loading its whole database at startup.
+  faturat: "faturat",
+  faturaSkedaret: "faturaSkedaret",
 };
 
 const PROFILE_KEY = "main";
@@ -108,6 +116,18 @@ function openDb() {
       if (!db.objectStoreNames.contains(STORES.planet)) {
         db.createObjectStore(STORES.planet, { keyPath: "id" });
       }
+      // Added in DB_VERSION 4, which is why the guards matter: a database already at 3 has the
+      // planned purchases above and gains only these two on the next open.
+      if (!db.objectStoreNames.contains(STORES.faturat)) {
+        const store = db.createObjectStore(STORES.faturat, { keyPath: "id" });
+        // Every lookup is "the invoices of this transaction", so it goes through an index rather
+        // than a full scan of every picture ever attached.
+        store.createIndex("transaksioniId", "transaksioniId", { unique: false });
+      }
+      if (!db.objectStoreNames.contains(STORES.faturaSkedaret)) {
+        // Plain blobs, keyed by the invoice id — a Blob has no fields to use as a keyPath.
+        db.createObjectStore(STORES.faturaSkedaret);
+      }
     };
     // The request keeps waiting either way; these only decide whether the user is told about it.
     let njoftuar = false;
@@ -150,6 +170,21 @@ function withStore(store, mode, body) {
         let result;
         if (req) req.onsuccess = () => (result = req.result);
         tx.oncomplete = () => resolve(result);
+        tx.onerror = () => reject(tx.error);
+        tx.onabort = () => reject(tx.error);
+      })
+  );
+}
+
+/** Same as `withStore`, for the writes that must land in two stores or in neither — an invoice
+ * record without its picture (or the other way round) would be a dead row. */
+function withStores(stores, mode, body) {
+  return openDb().then(
+    (db) =>
+      new Promise((resolve, reject) => {
+        const tx = db.transaction(stores, mode);
+        body(...stores.map((name) => tx.objectStore(name)));
+        tx.oncomplete = () => resolve();
         tx.onerror = () => reject(tx.error);
         tx.onabort = () => reject(tx.error);
       })
@@ -237,17 +272,88 @@ export function getAllData() {
     getAll(STORES.recurring),
     getAll(STORES.borxhet),
     getAll(STORES.planet),
-  ]).then(([profile, accounts, categories, transactions, budgets, goals, recurring, borxhet, planet]) => ({
-    profile: profile ?? {},
-    accounts,
-    categories,
-    transactions,
-    budgets,
-    goals,
-    recurring,
-    borxhet,
-    planet,
-  }));
+    // Metadata only — the pictures themselves stay on disk until one is opened.
+    getAll(STORES.faturat),
+  ]).then(
+    ([profile, accounts, categories, transactions, budgets, goals, recurring, borxhet, planet, faturat]) => ({
+      profile: profile ?? {},
+      accounts,
+      categories,
+      transactions,
+      budgets,
+      goals,
+      recurring,
+      borxhet,
+      planet,
+      faturat,
+    })
+  );
+}
+
+// ---- invoice photos ----
+
+/** Metadata + picture in one transaction, so a half-written invoice can never be left behind. */
+export function ruajFaturen(meta, blob) {
+  return withStores([STORES.faturat, STORES.faturaSkedaret], "readwrite", (faturat, skedaret) => {
+    faturat.put(meta);
+    skedaret.put(blob, meta.id);
+  }).then(() => meta);
+}
+
+/** The full-size image, read on demand when a picture is opened. */
+export function getFaturaBlob(id) {
+  return withStore(STORES.faturaSkedaret, "readonly", (s) => s.get(id));
+}
+
+export function fshiFaturen(id) {
+  return withStores([STORES.faturat, STORES.faturaSkedaret], "readwrite", (faturat, skedaret) => {
+    faturat.delete(id);
+    skedaret.delete(id);
+  });
+}
+
+export function faturatPerTransaksion(transaksioniId) {
+  return withStore(STORES.faturat, "readonly", (s) =>
+    s.index("transaksioniId").getAll(transaksioniId)
+  ).then((all) => all ?? []);
+}
+
+/**
+ * Applies the list a form was editing to what is actually stored: pictures the user removed are
+ * deleted and the newly picked ones (the entries still carrying a `blob`) are written. Nothing is
+ * touched until the transaction itself is saved, so cancelling the dialog leaves no orphans.
+ */
+export async function sinkronizoFaturat(transaksioniId, faturat) {
+  const ekzistuese = await faturatPerTransaksion(transaksioniId);
+  const mbeten = new Set(faturat.map((f) => f.id));
+  await Promise.all(ekzistuese.filter((f) => !mbeten.has(f.id)).map((f) => fshiFaturen(f.id)));
+  await Promise.all(
+    faturat
+      .filter((f) => f.blob)
+      .map(({ blob, ...meta }) => ruajFaturen({ ...meta, transaksioniId }, blob))
+  );
+}
+
+/** Deleting a transaction from any of the places that can delete one leaves its pictures behind,
+ * so the load path sweeps up whatever no longer belongs to anything. */
+export async function fshiFaturatJetime(faturat, transactions) {
+  const idte = new Set(transactions.map((t) => t.id));
+  const jetime = faturat.filter((f) => !idte.has(f.transaksioniId));
+  if (jetime.length === 0) return faturat;
+  await Promise.all(jetime.map((f) => fshiFaturen(f.id)));
+  return faturat.filter((f) => idte.has(f.transaksioniId));
+}
+
+/** How much room the browser has given this origin and how much is left — the only warning a
+ * user gets before writes start failing, since nothing here is stored anywhere else. */
+export async function hapesiraRuajtjes() {
+  if (!navigator.storage?.estimate) return null;
+  try {
+    const { usage, quota } = await navigator.storage.estimate();
+    return { perdorur: usage ?? 0, kuota: quota ?? 0 };
+  } catch {
+    return null;
+  }
 }
 
 // ---- profile: single record keyed by a constant ----
@@ -262,8 +368,24 @@ export function putProfile(record) {
 
 // ---- whole-database export / import (JSON backup) ----
 
-export async function exportAllData() {
+/**
+ * `perfshiFaturat: false` leaves the invoice photos out. They are base64 inside the JSON and dwarf
+ * everything else in it, so a backup meant only to carry the ledger to another browser does not
+ * have to drag tens of megabytes of pictures along with it.
+ */
+export async function exportAllData({ perfshiFaturat = true } = {}) {
   const data = await getAllData();
+  const faturat = perfshiFaturat
+    ? await Promise.all(
+        data.faturat.map(async (fatura) => {
+          const blob = await getFaturaBlob(fatura.id);
+          // A metadata row whose picture went missing is dropped rather than exported as a
+          // thumbnail pointing at nothing.
+          return blob ? { ...fatura, dataUrl: await blobNeDataUrl(blob) } : null;
+        })
+      ).then((lista) => lista.filter(Boolean))
+    : [];
+
   return {
     app: "FinanCarePersonal",
     version: 3,
@@ -277,6 +399,7 @@ export async function exportAllData() {
     recurring: data.recurring,
     borxhet: data.borxhet,
     planet: data.planet,
+    faturat,
   };
 }
 
@@ -313,9 +436,16 @@ export async function importAllData(data, { mode = "zevendeso" } = {}) {
     throw new Error("Skedari i importuar nuk është JSON i vlefshëm.");
   }
   const bashko = mode === "bashko";
+  // Photos ride in the file as base64 and are the one thing written through `ruajFaturen`, since
+  // each lands in two stores at once — so they are handled beside the loop rather than inside it.
+  const faturat = (data.faturat ?? []).filter((f) => f?.dataUrl);
 
   if (!bashko) {
-    await Promise.all(IMPORT_STORES.map(([store]) => clearStore(store)));
+    await Promise.all([
+      ...IMPORT_STORES.map(([store]) => clearStore(store)),
+      clearStore(STORES.faturat),
+      clearStore(STORES.faturaSkedaret),
+    ]);
     if (data.profile) await putProfile(data.profile);
   }
 
@@ -331,6 +461,16 @@ export async function importAllData(data, { mode = "zevendeso" } = {}) {
     permbledhja.ekzistuese += rreshtat.length - teShkruara.length;
     await Promise.all(teShkruara.map((record) => put(store, record)));
   }
+
+  // Same rule as every other store, applied to the pictures: a merge adds only the ones this
+  // device has never seen and leaves the rest untouched.
+  const ekzistueseFoto = bashko ? new Set((await getAll(STORES.faturat)).map((f) => f.id)) : null;
+  const fotoTeShkruara = bashko ? faturat.filter((f) => f.id && !ekzistueseFoto.has(f.id)) : faturat;
+  permbledhja.shtuar += fotoTeShkruara.length;
+  permbledhja.ekzistuese += faturat.length - fotoTeShkruara.length;
+  await Promise.all(
+    fotoTeShkruara.map(({ dataUrl, ...meta }) => ruajFaturen(meta, dataUrlNeBlob(dataUrl)))
+  );
 
   // A restore leaves the database matching the file the user is holding, so that file *is* a
   // current backup and the reminder should not go off the moment the import finishes. A merge

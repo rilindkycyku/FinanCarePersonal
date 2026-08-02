@@ -4,7 +4,7 @@ import { Container, Row, Col, Button, Alert } from "react-bootstrap";
 import {
   LayoutDashboard, Wallet, TrendingUp, TrendingDown, PiggyBank, Percent, PlusCircle,
   ArrowRightLeft, Tags, Target, Repeat, BarChart3, Settings, DatabaseBackup, CalendarClock,
-  Receipt, ClipboardList, ShieldAlert, LineChart, TriangleAlert, FileSpreadsheet,
+  Receipt, ClipboardList, ShieldAlert, LineChart, TriangleAlert, FileSpreadsheet, Paperclip,
 } from "lucide-react";
 import NavBar from "../Components/NavBar";
 import PageTitle from "../Components/PageTitle";
@@ -44,7 +44,8 @@ const QUICK_ACTIONS = [
 ];
 
 function Dashboard() {
-  const { profile, accounts, categories, transactions, budgets, goals, recurring, borxhet, planet, loading, error,
+  const { profile, accounts, categories, transactions, budgets, goals, recurring, borxhet, planet, faturat, loading,
+    error,
     money, signedMoney, njeLlogari, llogariaKryesore } = useData();
   const [showTx, setShowTx] = useState(false);
 
@@ -351,6 +352,11 @@ function Dashboard() {
                           {tx.pershkrimi ||
                             kategoria?.emri ||
                             (qellimi ? `Kontribut: ${qellimi.emri}` : "Transfer")}
+                          {/* A receipt is attached — the picture itself is opened from the
+                              transactions list, this is only the sign that there is one. */}
+                          {faturat.some((f) => f.transaksioniId === tx.id) && (
+                            <Paperclip size={12} className="ms-1 text-muted" />
+                          )}
                         </div>
                         <div className="fcp-row-sub">
                           {formatDate(tx.data)} ·{" "}

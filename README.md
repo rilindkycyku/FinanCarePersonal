@@ -70,6 +70,14 @@ sa shpenzohet, sa mbetet dhe sa po kursesh.
   bien më vonë atë muaj), tregon ecurinë e çdo plani (kësti 3/6) dhe totalin që del nga llogaria.
   Çdo rresht ka fushën <em>Shto / Zbrit</em> — p.sh. −7.50 kur bonuset zbriten nga pagesa minimale
   ose +25 kur bie tarifa vjetore e kartelës — pa e prishur vlerën e planifikuar të skedulës.
+- **Faturat si foto** — çdo transaksioni mund t&apos;i bashkëngjiten fotot e faturës ose të kuponit,
+  nga galeria e telefonit ose drejtpërdrejt nga kamera. Meqë nuk ka server, fotoja përpunohet vetë
+  në shfletues përpara se të ruhet: kthehet në pozicionin e duhur (rrotullimi EXIF i një fotoje me
+  telefon), zvogëlohet në 1600px dhe rikodohet në WebP/JPEG — një foto 4 MB zë rreth 200 KB. Fotot
+  shtohen kur regjistrohet transaksioni ose më vonë, nga ikona e kapëses te rreshti i tij, dhe
+  hapen brenda aplikacionit me zmadhim e shkarkim. Ndryshimet ruhen vetëm kur konfirmohet
+  formulari, pra mbyllja e dritares nuk prek asgjë; fshirja e transaksionit i merr me vete edhe
+  fotot e tij.
 - **Monedhë tjetër për një shpenzim** — një abonim që faturohet në $ ndërsa profili juaj është në €:
   shkruani vlerën e faturës, monedhën dhe kursin — ruhet vlera e kthyer në monedhën tuaj (vlera
   origjinale mbahet për krahasim me ekstraktin e kartelës). Kursi i fundit për çdo monedhë mbahet
@@ -110,6 +118,9 @@ sa shpenzohet, sa mbetet dhe sa po kursesh.
   periudhës me bilancin përfundimtar, një unazë me kategoritë kryesore (të tjerat mblidhen në një
   fetë të vetme) dhe shumën që mbetet me këste. Seksionet me dhjetëra rreshta vazhdojnë në faqet
   pasuese me titullin dhe kokën e tabelës të përsëritur.
+  <br />Fotot e faturave hyjnë në JSON të koduara në base64, prandaj kanë çelësin e vet: hiqeni kur
+  doni vetëm librin e llogarive dhe jo dhjetëra megabajt fotografi. Faqja tregon edhe sa hapësirë
+  zënë fotot dhe sa i ka lënë në dispozicion shfletuesi.
 - **Tema e errët / e bardhë**, dizajn responsiv për telefon, dhe monedhë e konfigurueshme.
 
 ## Konfigurimi
@@ -132,9 +143,15 @@ publikohet si faqe statike kudo.
 
 ## Të dhënat & privatësia
 
-Të gjitha të dhënat ndodhen **vetëm** në IndexedDB të shfletuesit tuaj (`financarepersonal`).
-Asgjë nuk dërgohet në ndonjë server dhe nuk kërkohet llogari. Pastrimi i të dhënave të faqes i
-fshin ato — përdorni **Eksporto / Importo** për të mbajtur një kopje JSON.
+Të gjitha të dhënat ndodhen **vetëm** në IndexedDB të shfletuesit tuaj (`financarepersonal`),
+përfshirë fotot e faturave — asnjë foto nuk ngarkohet askund. Asgjë nuk dërgohet në ndonjë server
+dhe nuk kërkohet llogari. Pastrimi i të dhënave të faqes i fshin ato — përdorni
+**Eksporto / Importo** për të mbajtur një kopje JSON.
+
+Kufiri i vetëm është kuota që shfletuesi i jep kësaj faqeje, dhe fotot janë e vetmja gjë që i
+afrohet asaj; prandaj ato zvogëlohen para se të ruhen, ndahen nga pjesa tjetër e bazës (vetëm
+miniatura mbahet në memorie, fotoja e plotë lexohet kur hapet), dhe faqja **Eksporto / Importo**
+tregon sa hapësirë ka mbetur.
 
 ## Struktura
 
@@ -142,8 +159,10 @@ fshin ato — përdorni **Eksporto / Importo** për të mbajtur një kopje JSON.
 src/
   Context/    DataContext (ngarkon dhe ruan gjithçka), ThemeContext, DialogContext
   lib/        db.js (IndexedDB), finance.js (çdo kalkulim), csv.js (leximi i ekstraktit),
-              rregullat.js (kujtesa e kategorive), format.js, options.js, exportExcel.js
-  Components/ NavBar, Footer, Tabela (kërkim/renditje/eksport), modalet e shtimit, Ui.jsx
+              rregullat.js (kujtesa e kategorive), images.js (përpunimi i fotove të faturave),
+              format.js, options.js, exportExcel.js
+  Components/ NavBar, Footer, Tabela (kërkim/renditje/eksport), modalet e shtimit, Ui.jsx,
+              Faturat/ (fusha e fotove, galeria e një transaksioni, shikuesi)
   Pages/      Paneli, Transaksionet, Llogaritë, Borxhet & Kartelat, Kategoritë, Buxhetet,
               Qëllimet, Shpenzimet e Planifikuara, Pagesat e Përsëritura, Statistikat,
               Cilësimet, Eksporto/Importo, Importo nga CSV
@@ -155,3 +174,6 @@ të përsëritura, shpenzimet e planifikuara, shpenzimi ditor, parashikimi i bil
 vjetore — pra faqet mbeten të hollra dhe të gjitha numrat vijnë nga një burim i vetëm.
 Borxhet janë ndarje e qëllimshme: ruhen në një `objectStore` të vetin dhe asnjë funksion i
 bilancit nuk i lexon, prandaj një shënim borxhi nuk mund ta prekë bilancin edhe nëse do të donte.
+Fotot e faturave ndahen për një arsye tjetër: `faturat` mban vetëm të dhënat e vogla me miniaturën,
+kurse `faturaSkedaret` fotot e plota, të cilat lexohen vetëm kur hapet njëra — kështu aplikacioni
+vazhdon ta ngarkojë të gjithë bazën në memorie ashtu siç e bënte më parë.

@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import {
-  bookAutomaticRecurring, ensureDefaultCategories, getAllData, onBllokimBaze, put, putProfile, remove,
+  bookAutomaticRecurring, ensureDefaultCategories, fshiFaturatJetime, getAllData, onBllokimBaze, put,
+  putProfile, remove,
 } from "../lib/db";
 import { DEFAULT_CURRENCY } from "../lib/options";
 import { currencySymbol, formatMoney, formatSignedMoney } from "../lib/format";
@@ -18,6 +19,7 @@ const EMPTY = {
   recurring: [],
   borxhet: [],
   planet: [],
+  faturat: [],
 };
 
 /**
@@ -41,6 +43,10 @@ export function DataProvider({ children }) {
   const reload = useCallback(async () => {
     try {
       const fresh = await getAllData();
+      // A transaction can be deleted from several places (the list, a debt payment being undone),
+      // so rather than remembering to clean up at each one, any invoice left without its
+      // transaction is dropped here — the single point every change already passes through.
+      fresh.faturat = await fshiFaturatJetime(fresh.faturat, fresh.transactions);
       setData(fresh);
       setError(null);
       return fresh;
