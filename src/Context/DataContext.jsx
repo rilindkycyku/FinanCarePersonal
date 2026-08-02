@@ -1,13 +1,27 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import {
-  bookAutomaticRecurring, ensureDefaultCategories, fshiFaturatJetime, getAllData, onBllokimBaze, put,
-  putProfile, remove,
+  bookAutomaticRecurring, ensureDefaultCategories, fshiFaturatJetime, getAllData, kerkoRuajtjeQendrueshme,
+  onBllokimBaze, put, putProfile, remove, ruajtjaEshteQendrueshme,
 } from "../lib/db";
 import { DEFAULT_CURRENCY } from "../lib/options";
 import { currencySymbol, formatMoney, formatSignedMoney } from "../lib/format";
 import BazaEBllokuar from "../Components/BazaEBllokuar";
 
 const DataContext = createContext(null);
+
+/**
+ * Asks the browser to treat this app's storage as persistent, so it is not evicted when the device
+ * runs low or the user goes a week without visiting. Only asked once the user actually has
+ * something to lose: Firefox turns this into a permission prompt, and a prompt on an empty app
+ * nobody has typed anything into yet is exactly the kind of thing that gets a site closed. Chrome
+ * and Edge answer silently from engagement, Safari ignores it (there the answer is the home
+ * screen — see the Eksporto / Importo page).
+ */
+async function kerkoQendrueshmerine(data) {
+  const kaTeDhena = (data?.transactions?.length || 0) > 0 || (data?.faturat?.length || 0) > 0;
+  if (!kaTeDhena) return;
+  if ((await ruajtjaEshteQendrueshme()) === false) await kerkoRuajtjeQendrueshme();
+}
 
 const EMPTY = {
   profile: {},
@@ -66,6 +80,7 @@ export function DataProvider({ children }) {
       .catch(() => undefined)
       .then(() => bookAutomaticRecurring().catch(() => undefined))
       .then(reload)
+      .then(kerkoQendrueshmerine)
       .finally(() => setLoading(false));
   }, [reload]);
 

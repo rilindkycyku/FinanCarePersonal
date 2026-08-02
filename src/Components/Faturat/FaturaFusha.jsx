@@ -3,7 +3,7 @@ import { Alert, Spinner } from "react-bootstrap";
 import { Camera, ImagePlus, X } from "lucide-react";
 import FaturaViewer from "./FaturaViewer";
 import { useData } from "../../Context/DataContext";
-import { makeId } from "../../lib/db";
+import { hapesiraRuajtjes, makeId } from "../../lib/db";
 import { PRANO_FOTO, formatBytes, pergatitFaturen } from "../../lib/images";
 import "./Faturat.css";
 
@@ -46,6 +46,7 @@ function FaturaFusha({ faturat = [], onChange, ndihma }) {
   const [duke, setDuke] = useState(false);
   const [gabimet, setGabimet] = useState([]);
   const [hapur, setHapur] = useState(-1);
+  const [ngushte, setNgushte] = useState(null);
   const galeriaRef = useRef(null);
   const kameraRef = useRef(null);
 
@@ -72,6 +73,11 @@ function FaturaFusha({ faturat = [], onChange, ndihma }) {
     setDuke(false);
     setGabimet(problemet);
     if (teReja.length > 0) onChange([...faturat, ...teReja]);
+
+    // Checked after picking rather than on every render: the moment a photo is added is the moment
+    // the warning is useful, and it is better to hear it now than to have the save fail later.
+    const hapesira = await hapesiraRuajtjes();
+    setNgushte(hapesira?.kuota > 0 && hapesira.perdorur / hapesira.kuota >= 0.8 ? hapesira : null);
   };
 
   const hiq = (id) => {
@@ -88,6 +94,13 @@ function FaturaFusha({ faturat = [], onChange, ndihma }) {
           {gabimet.map((g) => (
             <div key={g}>{g}</div>
           ))}
+        </Alert>
+      )}
+
+      {ngushte && (
+        <Alert variant="warning" className="py-2 small" onClose={() => setNgushte(null)} dismissible>
+          Hapësira e shfletuesit po mbaron ({formatBytes(ngushte.perdorur)} nga {formatBytes(ngushte.kuota)}). Te
+          faqja Eksporto / Importo mund t&apos;i ngjeshni fotot ekzistuese për të liruar vend.
         </Alert>
       )}
 

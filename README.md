@@ -109,12 +109,20 @@ sa shpenzohet, sa mbetet dhe sa po kursesh.
   të tërë. Rregulla ngushtohet vetë te fjalët që përsëriten: pas «SPAR PRISHTINE» dhe «SPAR FUSHË
   KOSOVË» mbetet thjesht «spar», i cili njeh edhe një degë të re. Rregullat shihen dhe fshihen te
   Cilësimet.
-- **Eksporto / Importo** — kopje e plotë JSON (për arkivim ose bartje në pajisje tjetër) dhe eksport
-  Excel i të gjitha transaksioneve. Data e kopjes së fundit mbahet mend dhe Paneli e kujton kur ajo
-  ka mbetur pas — i matur me sa transaksione janë shtuar që atëherë, sepse dy javë pa regjistruar
-  asgjë nuk janë i njëjti rrezik me dy javë punë. Importimi ka dy sjellje: **zëvendëso**, që e kthen
-  bazën saktësisht siç ishte në skedar, dhe **bashko**, që shton vetëm rreshtat që mungojnë e nuk
-  prek asgjë ekzistuese — pra një kopje e vjetër e hapur gabimisht nuk fshin punën e muajve të fundit.
+- **Eksporto / Importo** — tri formate: një **arkiv ZIP** me gjithçka (të dhënat në `backup.json`
+  dhe fotot si skedarë të veçantë brenda tij), një **JSON** vetëm me librin e llogarive, dhe një
+  **Excel** me transaksionet. Importi i pranon të dyja, ZIP-in dhe JSON-in, i dalluar sipas bajtëve
+  të parë të skedarit e jo sipas emrit, dhe të dyja sjelljet vlejnë për të dyja: **zëvendëso** e
+  kthen bazën saktësisht siç ishte në skedar, **bashko** shton vetëm rreshtat që mungojnë e nuk prek
+  asgjë ekzistuese — pra një kopje e vjetër e hapur gabimisht nuk fshin punën e muajve të fundit.
+  Data e kopjes së fundit mbahet mend dhe Paneli e kujton kur ajo ka mbetur pas — i matur me sa
+  transaksione janë shtuar që atëherë, sepse dy javë pa regjistruar asgjë nuk janë i njëjti rrezik
+  me dy javë punë. ZIP-i është ai që duhet mbajtur kur ka foto: fotot hyjnë ashtu siç janë ruajtur,
+  ndërsa në JSON do të duhej t'i koduar në base64 — një vit faturash bëhet një varg 222 MB që një
+  telefon nuk e mban dot në memorie, kurse i njëjti arkiv ZIP zë 163 MB dhe krijohet pa e rritur
+  memorien fare. Faqja tregon edhe sa hapësirë zënë fotot, sa i ka lënë në dispozicion shfletuesi,
+  dhe paralajmëron kur i afrohet fundit.
+
 - **Pasqyrë PDF** — e ndërtuar si pasqyra e bankës, për një periudhë (ky muaj, muaji i kaluar, ky
   vit, gjithë historiku) dhe opsionalisht për një llogari të vetme. Kolona kryesore ndahet në
   seksione sipas asaj që bënë paratë — hyrjet, blerjet, blerjet me këste (me numrin e kësti, p.sh.
@@ -155,7 +163,20 @@ dhe nuk kërkohet llogari. Pastrimi i të dhënave të faqes i fshin ato — pë
 Kufiri i vetëm është kuota që shfletuesi i jep kësaj faqeje, dhe fotot janë e vetmja gjë që i
 afrohet asaj; prandaj ato zvogëlohen para se të ruhen, ndahen nga pjesa tjetër e bazës (vetëm
 miniatura mbahet në memorie, fotoja e plotë lexohet kur hapet), dhe faqja **Eksporto / Importo**
-tregon sa hapësirë ka mbetur.
+tregon sa hapësirë ka mbetur e paralajmëron kur kalohet 80%.
+
+Për ta matur: një vit me 3–4 fatura në ditë (≈1.278 foto) zë rreth **167 MB** me cilësinë
+*Normale* dhe **134 MB** me *Kursim hapësire* — mbingarkesa e vetë IndexedDB është 0,6%, pra
+bajtët e fotove janë praktikisht gjithë kostoja. Në atë shkallë aplikacioni ngarkohet po njësoj
+(rreth 1,1 s deri sa faqja bëhet e përdorshme, sepse në memorie hyjnë vetëm miniaturat).
+
+Meqë nuk ka server, «shfletuesi i fshiu» do të thoshte humbje e plotë. Prandaj aplikacioni kërkon
+**ruajtje të qëndrueshme** (`navigator.storage.persist()`) sapo të keni të dhëna për të humbur —
+jo në hapjen e parë, që të mos dalë një kërkesë leje mbi një aplikacion ende bosh. Chrome-i dhe
+Edge-i vendosin vetë, Firefox-i pyet, kurse Safari e shpërfill: atje mbrojtja e vërtetë është ta
+shtoni aplikacionin te **ekrani bazë**, sepse WebKit-i i fshin të dhënat e një faqeje të
+pavizituar për shtatë ditë shfletimi — bashkë me transaksionet, jo vetëm me fotot — ndërsa një
+aplikacion i shtuar te ekrani bazë ka numëruesin e vet dhe nuk preket.
 
 ## Struktura
 
@@ -164,7 +185,9 @@ src/
   Context/    DataContext (ngarkon dhe ruan gjithçka), ThemeContext, DialogContext
   lib/        db.js (IndexedDB), finance.js (çdo kalkulim), csv.js (leximi i ekstraktit),
               rregullat.js (kujtesa e kategorive), images.js (përpunimi i fotove të faturave),
-              format.js, options.js, exportExcel.js
+              zip.js (arkivi i kopjes së plotë), format.js, options.js, exportExcel.js
+  Components/ NavBar, Footer, Tabela (kërkim/renditje/eksport), modalet e shtimit, Ui.jsx,
+              Faturat/ (fusha e fotove, galeria e një transaksioni, shikuesi)
   Components/ NavBar, Footer, Tabela (kërkim/renditje/eksport), modalet e shtimit, Ui.jsx,
               Faturat/ (fusha e fotove, galeria e një transaksioni, shikuesi)
   Pages/      Paneli, Transaksionet, Llogaritë, Borxhet & Kartelat, Kategoritë, Buxhetet,

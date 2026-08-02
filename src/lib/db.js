@@ -7,7 +7,8 @@
 import { DEFAULT_CATEGORIES, DEFAULT_ACCOUNTS } from "./options";
 import { generateDueTransactions } from "./finance";
 import { todayISO } from "./format";
-import { blobNeDataUrl, dataUrlNeBlob, ringjeshFaturen, thumbNeDataUrl } from "./images";
+import { blobNeDataUrl, dataUrlNeBlob, emriSkedarit, ringjeshFaturen, thumbNeDataUrl } from "./images";
+import { krijoZip, lexoZip } from "./zip";
 
 const DB_NAME = "financarepersonal";
 const DB_VERSION = 4;
@@ -385,6 +386,33 @@ export async function hapesiraRuajtjes() {
   }
 }
 
+// ---- durability ----
+// Without a backend, "the browser deleted it" is total loss. Browsers evict ordinary site storage
+// when a device runs low, and WebKit clears script-writable storage for a site left unvisited for
+// seven days of browsing — which would take the whole ledger, not only the photos. Persistent
+// storage is the standard way to ask to be exempt from that.
+
+export async function ruajtjaEshteQendrueshme() {
+  if (!navigator.storage?.persisted) return null;
+  try {
+    return await navigator.storage.persisted();
+  } catch {
+    return null;
+  }
+}
+
+/** Chrome and Edge decide silently from how engaged the user is with the site, Firefox asks. Safari
+ * ignores the request, and there the equivalent is adding the app to the home screen — a
+ * home-screen web app keeps its own counter and is not subject to the seven-day sweep. */
+export async function kerkoRuajtjeQendrueshme() {
+  if (!navigator.storage?.persist) return false;
+  try {
+    return await navigator.storage.persist();
+  } catch {
+    return false;
+  }
+}
+
 // ---- profile: single record keyed by a constant ----
 
 export function getProfile() {
@@ -398,11 +426,13 @@ export function putProfile(record) {
 // ---- whole-database export / import (JSON backup) ----
 
 /**
- * `perfshiFaturat: false` leaves the invoice photos out. They are base64 inside the JSON and dwarf
- * everything else in it, so a backup meant only to carry the ledger to another browser does not
- * have to drag tens of megabytes of pictures along with it.
+ * The ledger as one JSON file. Photos are left out by default and belong in the ZIP backup below:
+ * inside JSON they have to be base64, which means the entire backup exists as a single string in
+ * memory, and a year of invoices makes that string hundreds of megabytes. `perfshiFaturat: true`
+ * still produces the old single-file shape for a handful of pictures, and is what older backups
+ * look like on the way back in.
  */
-export async function exportAllData({ perfshiFaturat = true } = {}) {
+export async function exportAllData({ perfshiFaturat = false } = {}) {
   const data = await getAllData();
   // Both the picture and its thumbnail are stored as binary and have to be base64-encoded to fit
   // in JSON at all — the one place in the app where that cost is unavoidable.
@@ -433,6 +463,72 @@ export async function exportAllData({ perfshiFaturat = true } = {}) {
     planet: data.planet,
     faturat,
   };
+}
+
+/** File names inside the archive come from what the user called the picture, so the folder is
+ * readable when opened outside the app — but only after everything a path could choke on is gone. */
+function emriISigurt(tekst) {
+  return String(tekst).replace(/[^\w.-]+/g, "_").slice(0, 60);
+}
+
+/**
+ * The whole database as a ZIP: `backup.json` with every record, and the photos as ordinary image
+ * files beside it. This is the backup that works at any size — the pictures go in as blobs rather
+ * than base64 text, so nothing is held in memory but the one being checksummed, and the archive
+ * opens in any file manager if the user ever wants the pictures without this app.
+ */
+export async function exportZipData(onProgres) {
+  // The manifest is the JSON export itself, minus the photos — so a store added to one backup can
+  // never go missing from the other.
+  const json = await exportAllData();
+  const faturat = await getAll(STORES.faturat);
+  const hyrjet = [];
+  const rreshtat = [];
+
+  for (let i = 0; i < faturat.length; i++) {
+    const { thumb, ...meta } = faturat[i];
+    onProgres?.(i, faturat.length);
+    const blob = await getFaturaBlob(meta.id);
+    // A metadata row whose picture went missing is dropped rather than archived as a name
+    // pointing at nothing.
+    if (!blob) continue;
+
+    const skedari = `faturat/${meta.id}-${emriISigurt(emriSkedarit(meta))}`;
+    hyrjet.push({ emri: skedari, blob });
+
+    let miniatura = null;
+    if (thumb && typeof thumb !== "string") {
+      miniatura = `miniaturat/${meta.id}.${(thumb.type.split("/")[1] || "jpg").replace("jpeg", "jpg")}`;
+      hyrjet.push({ emri: miniatura, blob: thumb });
+    }
+    rreshtat.push({ ...meta, skedari, miniatura });
+  }
+  onProgres?.(faturat.length, faturat.length);
+
+  json.faturat = rreshtat;
+  hyrjet.unshift({
+    emri: "backup.json",
+    blob: new Blob([JSON.stringify(json, null, 2)], { type: "application/json" }),
+  });
+
+  return krijoZip(hyrjet);
+}
+
+export async function importZipData(zipBlob, opsionet) {
+  const skedaret = await lexoZip(zipBlob);
+  const json = skedaret.get("backup.json");
+  if (!json) throw new Error("arkivi nuk përmban skedarin backup.json");
+  const data = JSON.parse(await json.text());
+  if (data.app && data.app !== "FinanCarePersonal") {
+    throw new Error(`arkivi është një kopje e "${data.app}", nuk përputhet me FinanCarePersonal`);
+  }
+  // The pictures are handed over as blobs, exactly as they will be stored.
+  data.faturat = (data.faturat ?? []).map((f) => ({
+    ...f,
+    blob: skedaret.get(f.skedari),
+    thumbBlob: f.miniatura ? skedaret.get(f.miniatura) : null,
+  }));
+  return importAllData(data, opsionet);
 }
 
 /** The list stores a backup carries, in the order they are written back. */
@@ -468,15 +564,20 @@ export async function importAllData(data, { mode = "zevendeso" } = {}) {
     throw new Error("Skedari i importuar nuk është JSON i vlefshëm.");
   }
   const bashko = mode === "bashko";
-  // Photos ride in the file as base64 and are the one thing written through `ruajFaturen`, since
-  // each lands in two stores at once — so they are handled beside the loop rather than inside it.
-  const faturat = (data.faturat ?? []).filter((f) => f?.dataUrl);
+  // Photos are the one thing written through `ruajFaturen`, since each lands in two stores at
+  // once — so they are handled beside the loop rather than inside it. They arrive either as blobs
+  // (from a ZIP archive) or as base64 (from a JSON backup that carried them).
+  const faturat = (data.faturat ?? []).filter((f) => f?.dataUrl || f?.blob);
 
   if (!bashko) {
+    // A backup that carries photos replaces the photos too. One that does not — the plain JSON
+    // export of the ledger — leaves them where they are: wiping every picture because the user
+    // moved their ledger between browsers would destroy the one thing here that cannot be
+    // retyped. Whatever is left belonging to a transaction the import did not bring back is swept
+    // on the next load.
     await Promise.all([
       ...IMPORT_STORES.map(([store]) => clearStore(store)),
-      clearStore(STORES.faturat),
-      clearStore(STORES.faturaSkedaret),
+      ...(faturat.length > 0 ? [clearStore(STORES.faturat), clearStore(STORES.faturaSkedaret)] : []),
     ]);
     if (data.profile) await putProfile(data.profile);
   }
@@ -497,14 +598,36 @@ export async function importAllData(data, { mode = "zevendeso" } = {}) {
   // Same rule as every other store, applied to the pictures: a merge adds only the ones this
   // device has never seen and leaves the rest untouched.
   const ekzistueseFoto = bashko ? new Set((await getAll(STORES.faturat)).map((f) => f.id)) : null;
-  const fotoTeShkruara = bashko ? faturat.filter((f) => f.id && !ekzistueseFoto.has(f.id)) : faturat;
+  const fotoTeShkruara = (bashko ? faturat.filter((f) => f.id && !ekzistueseFoto.has(f.id)) : faturat)
+    // A ZIP whose image file is missing leaves the record out rather than storing a row with no
+    // picture behind it.
+    .filter((f) => f.blob || f.dataUrl);
   permbledhja.shtuar += fotoTeShkruara.length;
   permbledhja.ekzistuese += faturat.length - fotoTeShkruara.length;
   await Promise.all(
-    fotoTeShkruara.map(({ dataUrl, thumb, ...meta }) =>
-      // Both pictures go back to binary on the way in — nothing is kept as base64 in the database.
-      ruajFaturen({ ...meta, thumb: thumb ? dataUrlNeBlob(thumb) : null }, dataUrlNeBlob(dataUrl))
-    )
+    fotoTeShkruara.map((f) => {
+      // Whichever shape it arrived in, what lands in the database is binary.
+      const plot = f.blob || dataUrlNeBlob(f.dataUrl);
+      const vogel = f.thumbBlob || (typeof f.thumb === "string" && f.thumb ? dataUrlNeBlob(f.thumb) : null);
+      // Rebuilt field by field rather than spread: it drops the archive-only file names, keeps a
+      // hand-edited backup from injecting stray fields, and takes the size and type from the
+      // picture itself instead of trusting what the file claims about it.
+      return ruajFaturen(
+        {
+          id: f.id,
+          transaksioniId: f.transaksioniId,
+          emri: f.emri,
+          krijuar: f.krijuar,
+          gjeresia: f.gjeresia,
+          lartesia: f.lartesia,
+          madhesiaOrigjinale: f.madhesiaOrigjinale,
+          tipi: plot.type || f.tipi,
+          madhesia: plot.size,
+          thumb: vogel,
+        },
+        plot
+      );
+    })
   );
 
   // A restore leaves the database matching the file the user is holding, so that file *is* a
