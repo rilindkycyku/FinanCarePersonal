@@ -70,6 +70,18 @@ sa shpenzohet, sa mbetet dhe sa po kursesh.
   bien më vonë atë muaj), tregon ecurinë e çdo plani (kësti 3/6) dhe totalin që del nga llogaria.
   Çdo rresht ka fushën <em>Shto / Zbrit</em> — p.sh. −7.50 kur bonuset zbriten nga pagesa minimale
   ose +25 kur bie tarifa vjetore e kartelës — pa e prishur vlerën e planifikuar të skedulës.
+- **Faturat si foto** — çdo transaksioni mund t&apos;i bashkëngjiten fotot e faturës ose të kuponit,
+  nga galeria e telefonit ose drejtpërdrejt nga kamera. Meqë nuk ka server, fotoja përpunohet vetë
+  në shfletues përpara se të ruhet: kthehet në pozicionin e duhur (rrotullimi EXIF i një fotoje me
+  telefon), zvogëlohet dhe rikodohet në WebP (ose JPEG, kur shfletuesi nuk e kodon dot WebP-në) —
+  një foto 2,3 MB e një fature zë rreth 130 KB, dhe rreth 76 KB me cilësinë kursyese. Gjithçka
+  ruhet **binare**, edhe miniaturat, pra asnjë byte nuk shpenzohet për base64. Cilësia zgjidhet te
+  **Cilësimet** (E lartë 2000px / Normale 1600px / Kursim hapësire 1200px); ajo vlen për fotot e
+  reja, kurse butoni *Ngjesh fotot ekzistuese* te faqja Eksporto / Importo i rikodon edhe ato që i
+  keni ruajtur më parë. Fotot shtohen kur regjistrohet transaksioni ose më vonë, nga ikona e
+  kapëses te rreshti i tij, dhe hapen brenda aplikacionit me zmadhim e shkarkim. Ndryshimet ruhen
+  vetëm kur konfirmohet formulari, pra mbyllja e dritares nuk prek asgjë; fshirja e transaksionit i
+  merr me vete edhe fotot e tij.
 - **Monedhë tjetër për një shpenzim** — një abonim që faturohet në $ ndërsa profili juaj është në €:
   shkruani vlerën e faturës, monedhën dhe kursin — ruhet vlera e kthyer në monedhën tuaj (vlera
   origjinale mbahet për krahasim me ekstraktin e kartelës). Kursi i fundit për çdo monedhë mbahet
@@ -97,12 +109,20 @@ sa shpenzohet, sa mbetet dhe sa po kursesh.
   të tërë. Rregulla ngushtohet vetë te fjalët që përsëriten: pas «SPAR PRISHTINE» dhe «SPAR FUSHË
   KOSOVË» mbetet thjesht «spar», i cili njeh edhe një degë të re. Rregullat shihen dhe fshihen te
   Cilësimet.
-- **Eksporto / Importo** — kopje e plotë JSON (për arkivim ose bartje në pajisje tjetër) dhe eksport
-  Excel i të gjitha transaksioneve. Data e kopjes së fundit mbahet mend dhe Paneli e kujton kur ajo
-  ka mbetur pas — i matur me sa transaksione janë shtuar që atëherë, sepse dy javë pa regjistruar
-  asgjë nuk janë i njëjti rrezik me dy javë punë. Importimi ka dy sjellje: **zëvendëso**, që e kthen
-  bazën saktësisht siç ishte në skedar, dhe **bashko**, që shton vetëm rreshtat që mungojnë e nuk
-  prek asgjë ekzistuese — pra një kopje e vjetër e hapur gabimisht nuk fshin punën e muajve të fundit.
+- **Eksporto / Importo** — tri formate: një **arkiv ZIP** me gjithçka (të dhënat në `backup.json`
+  dhe fotot si skedarë të veçantë brenda tij), një **JSON** vetëm me librin e llogarive, dhe një
+  **Excel** me transaksionet. Importi i pranon të dyja, ZIP-in dhe JSON-in, i dalluar sipas bajtëve
+  të parë të skedarit e jo sipas emrit, dhe të dyja sjelljet vlejnë për të dyja: **zëvendëso** e
+  kthen bazën saktësisht siç ishte në skedar, **bashko** shton vetëm rreshtat që mungojnë e nuk prek
+  asgjë ekzistuese — pra një kopje e vjetër e hapur gabimisht nuk fshin punën e muajve të fundit.
+  Data e kopjes së fundit mbahet mend dhe Paneli e kujton kur ajo ka mbetur pas — i matur me sa
+  transaksione janë shtuar që atëherë, sepse dy javë pa regjistruar asgjë nuk janë i njëjti rrezik
+  me dy javë punë. ZIP-i është ai që duhet mbajtur kur ka foto: fotot hyjnë ashtu siç janë ruajtur,
+  ndërsa në JSON do të duhej t'i koduar në base64 — një vit faturash bëhet një varg 222 MB që një
+  telefon nuk e mban dot në memorie, kurse i njëjti arkiv ZIP zë 163 MB dhe krijohet pa e rritur
+  memorien fare. Faqja tregon edhe sa hapësirë zënë fotot, sa i ka lënë në dispozicion shfletuesi,
+  dhe paralajmëron kur i afrohet fundit.
+
 - **Pasqyrë PDF** — e ndërtuar si pasqyra e bankës, për një periudhë (ky muaj, muaji i kaluar, ky
   vit, gjithë historiku) dhe opsionalisht për një llogari të vetme. Kolona kryesore ndahet në
   seksione sipas asaj që bënë paratë — hyrjet, blerjet, blerjet me këste (me numrin e kësti, p.sh.
@@ -110,6 +130,9 @@ sa shpenzohet, sa mbetet dhe sa po kursesh.
   periudhës me bilancin përfundimtar, një unazë me kategoritë kryesore (të tjerat mblidhen në një
   fetë të vetme) dhe shumën që mbetet me këste. Seksionet me dhjetëra rreshta vazhdojnë në faqet
   pasuese me titullin dhe kokën e tabelës të përsëritur.
+  <br />Fotot e faturave hyjnë në JSON të koduara në base64, prandaj kanë çelësin e vet: hiqeni kur
+  doni vetëm librin e llogarive dhe jo dhjetëra megabajt fotografi. Faqja tregon edhe sa hapësirë
+  zënë fotot dhe sa i ka lënë në dispozicion shfletuesi.
 - **Tema e errët / e bardhë**, dizajn responsiv për telefon, dhe monedhë e konfigurueshme.
 
 ## Konfigurimi
@@ -132,9 +155,28 @@ publikohet si faqe statike kudo.
 
 ## Të dhënat & privatësia
 
-Të gjitha të dhënat ndodhen **vetëm** në IndexedDB të shfletuesit tuaj (`financarepersonal`).
-Asgjë nuk dërgohet në ndonjë server dhe nuk kërkohet llogari. Pastrimi i të dhënave të faqes i
-fshin ato — përdorni **Eksporto / Importo** për të mbajtur një kopje JSON.
+Të gjitha të dhënat ndodhen **vetëm** në IndexedDB të shfletuesit tuaj (`financarepersonal`),
+përfshirë fotot e faturave — asnjë foto nuk ngarkohet askund. Asgjë nuk dërgohet në ndonjë server
+dhe nuk kërkohet llogari. Pastrimi i të dhënave të faqes i fshin ato — përdorni
+**Eksporto / Importo** për të mbajtur një kopje JSON.
+
+Kufiri i vetëm është kuota që shfletuesi i jep kësaj faqeje, dhe fotot janë e vetmja gjë që i
+afrohet asaj; prandaj ato zvogëlohen para se të ruhen, ndahen nga pjesa tjetër e bazës (vetëm
+miniatura mbahet në memorie, fotoja e plotë lexohet kur hapet), dhe faqja **Eksporto / Importo**
+tregon sa hapësirë ka mbetur e paralajmëron kur kalohet 80%.
+
+Për ta matur: një vit me 3–4 fatura në ditë (≈1.278 foto) zë rreth **167 MB** me cilësinë
+*Normale* dhe **134 MB** me *Kursim hapësire* — mbingarkesa e vetë IndexedDB është 0,6%, pra
+bajtët e fotove janë praktikisht gjithë kostoja. Në atë shkallë aplikacioni ngarkohet po njësoj
+(rreth 1,1 s deri sa faqja bëhet e përdorshme, sepse në memorie hyjnë vetëm miniaturat).
+
+Meqë nuk ka server, «shfletuesi i fshiu» do të thoshte humbje e plotë. Prandaj aplikacioni kërkon
+**ruajtje të qëndrueshme** (`navigator.storage.persist()`) sapo të keni të dhëna për të humbur —
+jo në hapjen e parë, që të mos dalë një kërkesë leje mbi një aplikacion ende bosh. Chrome-i dhe
+Edge-i vendosin vetë, Firefox-i pyet, kurse Safari e shpërfill: atje mbrojtja e vërtetë është ta
+shtoni aplikacionin te **ekrani bazë**, sepse WebKit-i i fshin të dhënat e një faqeje të
+pavizituar për shtatë ditë shfletimi — bashkë me transaksionet, jo vetëm me fotot — ndërsa një
+aplikacion i shtuar te ekrani bazë ka numëruesin e vet dhe nuk preket.
 
 ## Struktura
 
@@ -142,8 +184,12 @@ fshin ato — përdorni **Eksporto / Importo** për të mbajtur një kopje JSON.
 src/
   Context/    DataContext (ngarkon dhe ruan gjithçka), ThemeContext, DialogContext
   lib/        db.js (IndexedDB), finance.js (çdo kalkulim), csv.js (leximi i ekstraktit),
-              rregullat.js (kujtesa e kategorive), format.js, options.js, exportExcel.js
-  Components/ NavBar, Footer, Tabela (kërkim/renditje/eksport), modalet e shtimit, Ui.jsx
+              rregullat.js (kujtesa e kategorive), images.js (përpunimi i fotove të faturave),
+              zip.js (arkivi i kopjes së plotë), format.js, options.js, exportExcel.js
+  Components/ NavBar, Footer, Tabela (kërkim/renditje/eksport), modalet e shtimit, Ui.jsx,
+              Faturat/ (fusha e fotove, galeria e një transaksioni, shikuesi)
+  Components/ NavBar, Footer, Tabela (kërkim/renditje/eksport), modalet e shtimit, Ui.jsx,
+              Faturat/ (fusha e fotove, galeria e një transaksioni, shikuesi)
   Pages/      Paneli, Transaksionet, Llogaritë, Borxhet & Kartelat, Kategoritë, Buxhetet,
               Qëllimet, Shpenzimet e Planifikuara, Pagesat e Përsëritura, Statistikat,
               Cilësimet, Eksporto/Importo, Importo nga CSV
@@ -155,3 +201,8 @@ të përsëritura, shpenzimet e planifikuara, shpenzimi ditor, parashikimi i bil
 vjetore — pra faqet mbeten të hollra dhe të gjitha numrat vijnë nga një burim i vetëm.
 Borxhet janë ndarje e qëllimshme: ruhen në një `objectStore` të vetin dhe asnjë funksion i
 bilancit nuk i lexon, prandaj një shënim borxhi nuk mund ta prekë bilancin edhe nëse do të donte.
+Fotot e faturave ndahen për një arsye tjetër: `faturat` mban vetëm të dhënat e vogla me miniaturën,
+kurse `faturaSkedaret` fotot e plota, të cilat lexohen vetëm kur hapet njëra — kështu aplikacioni
+vazhdon ta ngarkojë të gjithë bazën në memorie ashtu siç e bënte më parë. Të dyja janë `Blob`, jo
+tekst: base64 do t&apos;i shtonte një të tretën çdo fotoje në disk dhe do të mbante një varg për
+çdo miniaturë në memorie. E vetmja pikë ku base64 është i pashmangshëm mbetet eksporti JSON.

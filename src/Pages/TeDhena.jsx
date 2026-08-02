@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button, Alert, Row, Col, Card, Form, Spinner } from "react-bootstrap";
-import { Download, Upload, DatabaseBackup, ShieldCheck, FileText, Sheet, GitMerge, FileSpreadsheet } from "lucide-react";
+import { Download, Upload, DatabaseBackup, ShieldCheck, FileText, Sheet, GitMerge, FileSpreadsheet,
+  HardDrive, Minimize2, FileArchive, Lock, AlertTriangle, Smartphone } from "lucide-react";
 import NavBar from "../Components/NavBar";
 import Footer from "../Components/Footer";
 import PageTitle from "../Components/PageTitle";
@@ -9,12 +10,15 @@ import PageLoading from "../Components/PageLoading";
 import Ndaje from "../Components/Ndaje";
 import { useData } from "../Context/DataContext";
 import { useDialog } from "../Context/DialogContext";
-import { exportAllData, importAllData, shenoKopjen } from "../lib/db";
+import { exportAllData, exportZipData, hapesiraRuajtjes, importAllData, importZipData,
+  kerkoRuajtjeQendrueshme, ringjeshFaturat, ruajtjaEshteQendrueshme, shenoKopjen } from "../lib/db";
+import { eshteZip } from "../lib/zip";
 import { exportListExcel, exportStatementExcel } from "../lib/exportExcel";
 import { exportStatementPdf, statementFilename } from "../lib/exportPdf";
 import PdfViewerModal from "../Components/PdfViewerModal";
 import { backupStatus, periodBounds, sortByDateDesc } from "../lib/finance";
 import { formatDate, plainAmount } from "../lib/format";
+import { cilesiaFaturave, formatBytes } from "../lib/images";
 import { STATEMENT_PERIODS, TRANSACTION_TYPE_LABELS } from "../lib/options";
 import "./Styles/PremiumTheme.css";
 import "./Styles/DizajniPergjithshem.css";
@@ -22,13 +26,17 @@ import "./Styles/Dashboard.css";
 import "./Styles/Personal.css";
 
 function TeDhena() {
-  const { profile, accounts, categories, transactions, budgets, goals, recurring, borxhet, planet, reload, simboli,
-    loading, njeLlogari } = useData();
+  const { profile, accounts, categories, transactions, budgets, goals, recurring, borxhet, planet, faturat, reload,
+    simboli, loading, njeLlogari } = useData();
   const dialog = useDialog();
   const [message, setMessage] = useState(null);
+  const [hapesira, setHapesira] = useState(null);
   const [periudha, setPeriudha] = useState("muaji");
   const [llogariaPdf, setLlogariaPdf] = useState("");
   const [pdf, setPdf] = useState(null);
+  const [ngjeshja, setNgjeshja] = useState(null);
+  const [zipi, setZipi] = useState(null);
+  const [qendrueshme, setQendrueshme] = useState(null);
   // Which export is running, if any. Building a statement pulls in jsPDF and its fonts and then
   // lays out every movement, which on a phone is seconds of nothing — long enough that the button
   // looks broken and gets tapped again, starting the whole thing a second time.
@@ -47,18 +55,43 @@ function TeDhena() {
     if (message) messageRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
   }, [message]);
 
+  // Nothing here is stored on a server, so the browser's own quota is the only ceiling there is —
+  // and invoice photos are the first thing that gets anywhere near it.
+  useEffect(() => {
+    hapesiraRuajtjes().then(setHapesira);
+    ruajtjaEshteQendrueshme().then(setQendrueshme);
+  }, [faturat]);
+
+  const madhesiaFaturave = faturat.reduce((sum, f) => sum + (f.madhesia || 0), 0);
+  const perdorimi = hapesira?.kuota > 0 ? hapesira.perdorur / hapesira.kuota : 0;
+  const afroPlot = perdorimi >= 0.8;
+  // iOS is where a lost database hurts most, and where the fix is not a permission but an install.
+  const eshteIOS =
+    typeof navigator !== "undefined" &&
+    /iP(hone|ad|od)/.test(navigator.userAgent) &&
+    !window.matchMedia?.("(display-mode: standalone)").matches &&
+    !window.navigator.standalone;
+
+  const shkarko = (blob, emri) => {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = emri;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  /** The ledger without the photos: small, fast, and enough to carry everything that can only be
+   * retyped by hand. */
   const handleExportJson = async () => {
     if (duke) return;
     setDuke("json");
     try {
       const data = await exportAllData();
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `financarepersonal-backup-${new Date().toISOString().slice(0, 10)}.json`;
-      link.click();
-      URL.revokeObjectURL(url);
+      shkarko(
+        new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }),
+        `financarepersonal-backup-${new Date().toISOString().slice(0, 10)}.json`
+      );
       // The whole database is now in a file outside this browser — the one thing the reminder on
       // the Panel is watching for.
       await shenoKopjen(data.exportedAt);
@@ -68,6 +101,40 @@ function TeDhena() {
     } finally {
       setDuke(null);
     }
+  };
+
+  /** The backup that also carries the photos. They go in as image files rather than base64 text,
+   * which is what keeps it working on a phone no matter how many invoices there are. */
+  const handleExportZip = async () => {
+    if (duke) return;
+    setDuke("zip");
+    setZipi({ bere: 0, gjithsej: faturat.length });
+    try {
+      const blob = await exportZipData((bere, gjithsej) => setZipi({ bere, gjithsej }));
+      shkarko(blob, `financarepersonal-backup-${new Date().toISOString().slice(0, 10)}.zip`);
+      // A ZIP is the fuller copy of the two, so it counts as *the* backup just as much.
+      await shenoKopjen();
+      await reload();
+      setMessage({ type: "success", text: `Arkivi u krijua — ${formatBytes(blob.size)} me ${faturat.length} foto.` });
+    } catch (err) {
+      setMessage({ type: "danger", text: `Arkivi nuk u krijua: ${err.message}` });
+    } finally {
+      setZipi(null);
+      setDuke(null);
+    }
+  };
+
+  const handleQendrueshme = async () => {
+    const dhene = await kerkoRuajtjeQendrueshme();
+    setQendrueshme(dhene);
+    setMessage(
+      dhene
+        ? { type: "success", text: "Shfletuesi e shënoi ruajtjen si të qëndrueshme — të dhënat nuk fshihen automatikisht." }
+        : {
+            type: "info",
+            text: "Shfletuesi nuk e dha (ende) ruajtjen e qëndrueshme. Përdorimi i rregullt i aplikacionit, shtimi te faqeshënuesit ose te ekrani bazë e bën më të mundshme.",
+          }
+    );
   };
 
   /** One flat sheet of every transaction — the format worth handing to a spreadsheet or an
@@ -166,6 +233,33 @@ function TeDhena() {
     fileInputRef.current?.click();
   };
 
+  /** Re-encodes the photos already stored, so a lowered quality setting also reclaims space from
+   * the invoices taken before it was lowered. */
+  const handleNgjesh = async () => {
+    const cilesia = cilesiaFaturave(profile.cilesiaFaturave);
+    const ok = await dialog.confirm(
+      `Të gjitha ${faturat.length} fotot rikodohen me cilësinë "${cilesia.etiketa}" (${cilesia.maxAne}px). ` +
+        "Fotot që janë tashmë më të vogla nuk preken. Ngjeshja nuk kthehet mbrapsht — nëse doni cilësinë e " +
+        "plotë, eksportoni një arkiv ZIP para se të vazhdoni. Vazhdo?",
+      { title: "Ngjesh Fotot Ekzistuese", confirmLabel: "Ngjesh fotot" }
+    );
+    if (!ok) return;
+    setMessage(null);
+    setNgjeshja({ bere: 0, gjithsej: faturat.length });
+    const { ngjeshur, uKursye } = await ringjeshFaturat(faturat, profile.cilesiaFaturave, (bere, gjithsej) =>
+      setNgjeshja({ bere, gjithsej })
+    );
+    setNgjeshja(null);
+    await reload();
+    setMessage({
+      type: ngjeshur > 0 ? "success" : "info",
+      text:
+        ngjeshur > 0
+          ? `U ngjeshën ${ngjeshur} foto dhe u liruan ${formatBytes(uKursye)}.`
+          : "Asnjë foto nuk u ngjesh — të gjitha janë tashmë brenda cilësisë së zgjedhur.",
+    });
+  };
+
   const handleImportFile = async (e) => {
     const file = e.target.files?.[0];
     e.target.value = "";
@@ -174,17 +268,27 @@ function TeDhena() {
     const proceed = await dialog.confirm(
       bashko
         ? "Bashkimi shton vetëm rreshtat që mungojnë këtu dhe nuk prek asgjë ekzistuese - as profilin, monedhën apo objektivat. Një kopje e vjetër, pra, nuk mund t'ju fshijë punën e muajve të fundit. Vazhdo?"
-        : "Importimi zëvendëson TË GJITHA të dhënat aktuale (llogaritë, kategoritë, transaksionet, buxhetet, qëllimet, pagesat e përsëritura, borxhet dhe shpenzimet e planifikuara). Nëse skedari është i vjetër, gjithçka e regjistruar pas tij humbet - për atë rast përdorni Bashko. Vazhdo?",
+        : "Importimi zëvendëson TË GJITHA të dhënat aktuale (llogaritë, kategoritë, transaksionet, buxhetet, " +
+          "qëllimet, pagesat e përsëritura, borxhet dhe shpenzimet e planifikuara). Fotot e faturave " +
+          "zëvendësohen vetëm nëse skedari i sjell vetë (arkivi ZIP); një JSON pa foto i lë fotot ekzistuese aty " +
+          "ku janë. Nëse skedari është i vjetër, gjithçka e regjistruar pas tij humbet - për atë rast përdorni " +
+          "Bashko. Vazhdo?",
       { title: bashko ? "Bashko me të Dhënat Aktuale" : "Konfirmo Importimin" }
     );
     if (!proceed) return;
     try {
-      const text = await file.text();
-      const data = JSON.parse(text);
-      if (data.app && data.app !== "FinanCarePersonal") {
-        throw new Error(`skedari është një kopje e "${data.app}", nuk përputhet me FinanCarePersonal`);
+      // Told apart by the file's own first bytes rather than by its name, so a renamed backup
+      // still imports as whatever it actually is.
+      let permbledhja;
+      if (await eshteZip(file)) {
+        permbledhja = await importZipData(file, { mode: importModeRef.current });
+      } else {
+        const data = JSON.parse(await file.text());
+        if (data.app && data.app !== "FinanCarePersonal") {
+          throw new Error(`skedari është një kopje e "${data.app}", nuk përputhet me FinanCarePersonal`);
+        }
+        permbledhja = await importAllData(data, { mode: importModeRef.current });
       }
-      const permbledhja = await importAllData(data, { mode: importModeRef.current });
       await reload();
       setMessage({
         type: "success",
@@ -206,6 +310,7 @@ function TeDhena() {
     ["Pagesa të përsëritura", recurring.length],
     ["Borxhe & kartela", borxhet.length],
     ["Shpenzime të planifikuara", planet.length],
+    ["Fatura (foto)", faturat.length],
   ];
 
   if (loading) return <PageLoading title="Eksporto / Importo" />;
@@ -221,8 +326,8 @@ function TeDhena() {
           Eksporto / Importo Të Dhënat
         </h4>
         <p className="text-muted mb-4">
-          Të gjitha të dhënat ruhen vetëm në këtë shfletues. Eksportoni një kopje JSON për arkivim ose për t&apos;i
-          bartur në një shfletues/pajisje tjetër, dhe një skedar Excel kur doni t&apos;i analizoni jashtë aplikacionit.
+          Të gjitha të dhënat ruhen vetëm në këtë shfletues. Mbani një arkiv ZIP kur keni foto faturash, një JSON kur
+          doni vetëm librin e llogarive, dhe një skedar Excel kur doni t&apos;i analizoni jashtë aplikacionit.
         </p>
 
         <div ref={messageRef}>
@@ -233,14 +338,29 @@ function TeDhena() {
           )}
         </div>
 
+        {afroPlot && (
+          <Alert variant="warning" className="d-flex align-items-start gap-2">
+            <AlertTriangle size={18} className="flex-shrink-0 mt-1" />
+            <div>
+              <strong>Hapësira e këtij shfletuesi po mbaron.</strong> Po përdoren{" "}
+              {formatBytes(hapesira.perdorur)} nga rreth {formatBytes(hapesira.kuota)} ({Math.round(perdorimi * 100)}%).
+              Kur mbushet, foto të reja nuk do të ruhen dot. Ngjishni fotot ekzistuese më poshtë, fshini ndonjë
+              faturë që nuk ju duhet më, ose mbani një arkiv ZIP dhe lironi vend.
+            </div>
+          </Alert>
+        )}
+
         <Row className="g-3 mb-4">
-          <Col md={6}>
+          <Col md={6} lg={4}>
             <Card className="profile-card border-0 p-4 h-100">
-              <h5 className="fw-bold mb-2">Kopje e Plotë (JSON)</h5>
+              <h5 className="fw-bold mb-2">Kopje e Plotë (ZIP, me foto)</h5>
               <p className="text-muted small">
-                Përfshin çdo gjë: profilin, llogaritë, kategoritë, transaksionet, buxhetet, qëllimet, pagesat e
-                përsëritura, borxhet me pagesat e tyre dhe shpenzimet e planifikuara. Ky është skedari që importohet
-                përsëri këtu.
+                Gjithçka: të dhënat në <code>backup.json</code> dhe fotot e faturave si skedarë të veçantë brenda
+                arkivit. Ky është arkivi që duhet mbajtur nëse keni foto — fotot hyjnë ashtu siç janë, pra funksionon
+                edhe në telefon dhe edhe me mijëra fatura.
+                {faturat.length > 0 && (
+                  <> Aktualisht {faturat.length} foto · rreth {formatBytes(madhesiaFaturave)}.</>
+                )}
               </p>
               <div className="fcp-row-sub mb-3">
                 {kopja.kurre ? (
@@ -267,9 +387,13 @@ function TeDhena() {
                 )}
               </div>
               <div className="d-flex gap-2 flex-wrap mt-auto">
-                <Button className="btn-primary" onClick={handleExportJson} disabled={Boolean(duke)}>
-                  {duke === "json" ? <Spinner as="span" animation="border" size="sm" className="me-1" /> : <Download size={16} className="me-1" />}
-                  {duke === "json" ? "Duke përgatitur..." : "Eksporto JSON"}
+                <Button className="btn-primary" onClick={handleExportZip} disabled={Boolean(duke)}>
+                  {duke === "zip" ? (
+                    <Spinner as="span" animation="border" size="sm" className="me-1" />
+                  ) : (
+                    <FileArchive size={16} className="me-1" />
+                  )}
+                  {zipi ? `Duke paketuar... ${zipi.bere}/${zipi.gjithsej}` : "Eksporto ZIP"}
                 </Button>
                 <Button variant="outline-light" onClick={() => handleImportClick("zevendeso")} disabled={Boolean(duke)}>
                   <Upload size={16} className="me-1" /> Importo (zëvendëso)
@@ -277,7 +401,13 @@ function TeDhena() {
                 <Button variant="outline-light" onClick={() => handleImportClick("bashko")} disabled={Boolean(duke)}>
                   <GitMerge size={16} className="me-1" /> Bashko
                 </Button>
-                <input ref={fileInputRef} type="file" accept="application/json" hidden onChange={handleImportFile} />
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".zip,application/zip,.json,application/json"
+                  hidden
+                  onChange={handleImportFile}
+                />
               </div>
               <div className="fcp-row-sub mt-2">
                 <strong>Zëvendëso</strong> e kthen bazën saktësisht siç ishte në skedar. <strong>Bashko</strong> shton
@@ -287,7 +417,23 @@ function TeDhena() {
             </Card>
           </Col>
 
-          <Col md={6}>
+          <Col md={6} lg={4}>
+            <Card className="profile-card border-0 p-4 h-100">
+              <h5 className="fw-bold mb-2">Vetëm Të Dhënat (JSON)</h5>
+              <p className="text-muted small">
+                Profili, llogaritë, kategoritë, transaksionet, buxhetet, qëllimet, pagesat e përsëritura dhe borxhet —
+                pa fotot. Skedar i vogël dhe i shpejtë, i mjaftueshëm kur doni vetëm librin e llogarive në një pajisje
+                tjetër. Importohet po ashtu me butonin ngjitur.
+              </p>
+              <div className="mt-auto">
+                <Button className="btn-primary" onClick={handleExportJson}>
+                  <Download size={16} className="me-1" /> Eksporto JSON
+                </Button>
+              </div>
+            </Card>
+          </Col>
+
+          <Col md={6} lg={4}>
             <Card className="profile-card border-0 p-4 h-100">
               <h5 className="fw-bold mb-2">Transaksionet (Excel)</h5>
               <p className="text-muted small">
@@ -390,6 +536,68 @@ function TeDhena() {
               </Col>
             ))}
           </Row>
+
+          {(faturat.length > 0 || hapesira) && (
+            <div className="text-muted small mt-3 d-flex align-items-center gap-2 flex-wrap">
+              <HardDrive size={14} />
+              {faturat.length > 0 && <span>Fotot e faturave zënë {formatBytes(madhesiaFaturave)}.</span>}
+              {hapesira?.kuota > 0 && (
+                <span>
+                  Ky shfletues ka lënë në dispozicion rreth {formatBytes(hapesira.kuota)}, nga të cilat po
+                  përdoren {formatBytes(hapesira.perdorur)}.
+                </span>
+              )}
+            </div>
+          )}
+
+          {faturat.length > 0 && (
+            <div className="mt-3">
+              <Button variant="outline-light" onClick={handleNgjesh} disabled={Boolean(ngjeshja)}>
+                <Minimize2 size={16} className="me-1" />
+                {ngjeshja
+                  ? `Duke ngjeshur... ${ngjeshja.bere}/${ngjeshja.gjithsej}`
+                  : "Ngjesh fotot ekzistuese"}
+              </Button>
+              <div className="text-muted small mt-2">
+                I rikodon fotot e ruajtura me cilësinë e zgjedhur te Cilësimet ({cilesiaFaturave(profile.cilesiaFaturave).etiketa}
+                , {cilesiaFaturave(profile.cilesiaFaturave).maxAne}px) — e dobishme pasi e ulni atë cilësi.
+              </div>
+            </div>
+          )}
+        </Card>
+
+        {/* Without a server, "the browser threw it away" is total loss — so the app asks not to be
+            thrown away, and says plainly where that request has no effect. */}
+        <Card className="profile-card border-0 p-4 mt-4">
+          <h5 className="fw-bold mb-3">
+            <Lock size={18} className="me-2 text-emerald" />
+            Qëndrueshmëria e Të Dhënave
+          </h5>
+          <p className="text-muted small mb-3">
+            Shfletuesit i fshijnë vetë të dhënat e faqeve kur pajisja mbetet pa hapësirë, dhe Safari i fshin ato të një
+            faqeje që nuk vizitohet për shtatë ditë shfletimi — bashkë me transaksionet, jo vetëm me fotot. Ruajtja e
+            qëndrueshme e përjashton aplikacionin nga kjo.
+            {qendrueshme === true && <strong> Aktualisht është aktive.</strong>}
+          </p>
+          <div className="d-flex gap-2 flex-wrap align-items-center">
+            <Button variant={qendrueshme ? "outline-light" : "primary"} className={qendrueshme ? "" : "btn-primary"} onClick={handleQendrueshme}>
+              <ShieldCheck size={16} className="me-1" />
+              {qendrueshme ? "Kontrollo përsëri" : "Kërko ruajtje të qëndrueshme"}
+            </Button>
+            {qendrueshme === false && (
+              <span className="text-muted small">Ende jo e aktivizuar nga shfletuesi.</span>
+            )}
+          </div>
+          {eshteIOS && (
+            <div className="text-muted small mt-3 d-flex align-items-start gap-2">
+              <Smartphone size={14} className="flex-shrink-0 mt-1" />
+              <span>
+                Në iPhone kjo kërkesë nuk ka efekt: mbrojtja e vërtetë është ta shtoni aplikacionin te{" "}
+                <strong>ekrani bazë</strong> (Share → Add to Home Screen). Një aplikacion i shtuar atje ka numëruesin e
+                vet dhe nuk i preket ruajtja.
+              </span>
+            </div>
+          )}
         </Card>
       </div>
 

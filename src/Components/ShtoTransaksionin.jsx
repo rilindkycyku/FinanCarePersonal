@@ -3,7 +3,8 @@ import { Modal, Button, Form, Row, Col, Alert } from "react-bootstrap";
 import { TrendingUp, TrendingDown, ArrowRightLeft, Wand2 } from "lucide-react";
 import { useData } from "../Context/DataContext";
 import MonedhaTjeter from "./MonedhaTjeter";
-import { makeId, STORES } from "../lib/db";
+import FaturaFusha from "./Faturat/FaturaFusha";
+import { makeId, sinkronizoFaturat, STORES } from "../lib/db";
 import { currencySymbol, formatMoney, toNumber, todayISO } from "../lib/format";
 import { convertedAmount, currencyFields, dailyLimit, goalProgress } from "../lib/finance";
 import { njofto } from "../lib/njoftimet";
@@ -48,14 +49,18 @@ function ShtoTransaksionin({
   qellimiFiksuar,
   destinacioniFillestar,
 }) {
-  const { accounts, categories, goals, transactions, planet, recurring, save, saveProfile, profile, monedha,
-    simboli, njeLlogari, llogariaKryesore } = useData();
+  const { accounts, categories, goals, transactions, planet, recurring, faturat, save, saveProfile, reload,
+    profile, monedha, simboli, njeLlogari, llogariaKryesore } = useData();
   const [tx, setTx] = useState(blank(llojiFillestar));
+  // Invoice photos are staged here and only written once the transaction itself is saved, so a
+  // cancelled form leaves nothing behind (see sinkronizoFaturat).
+  const [faturaLista, setFaturaLista] = useState([]);
   const [error, setError] = useState("");
 
   useEffect(() => {
     if (!show) return;
     setError("");
+    setFaturaLista(initial ? faturat.filter((f) => f.transaksioniId === initial.id) : []);
     if (initial) {
       // In single-account mode the pickers are hidden, so an id pointing at an account that no
       // longer exists could never be corrected by hand — it falls back to the main account.
@@ -104,7 +109,7 @@ function ShtoTransaksionin({
       llogariaDestinacionId: destinacioni,
       qellimiId: qellimiFiksuar || "",
     });
-  }, [show, initial, llojiFillestar, qellimiFiksuar, destinacioniFillestar, accounts, njeLlogari, llogariaKryesore]);
+  }, [show, initial, llojiFillestar, qellimiFiksuar, destinacioniFillestar, accounts, faturat, njeLlogari, llogariaKryesore]);
 
   const aktive = useMemo(() => accounts.filter((a) => !a.arkivuar), [accounts]);
 
@@ -196,6 +201,7 @@ function ShtoTransaksionin({
     setError("");
 
     const rekordi = {
+      // Fixed before the write so the pictures can be attached to it right after.
       id: tx.id || makeId("tx"),
       data: tx.data,
       lloji: tx.lloji,
@@ -247,6 +253,21 @@ function ShtoTransaksionin({
 
     if (rregullaTeReja !== profile.rregullatKategorive || kursetENdryshuara !== profile.kurset) {
       await saveProfile({ ...profile, kurset: kursetENdryshuara, rregullatKategorive: rregullaTeReja });
+    }
+
+    // The transaction is already safe at this point, so a failure here (a full storage quota, in
+    // practice) costs the photos and says so, rather than the record the user came to write.
+    const kaFatura = faturaLista.length > 0 || faturat.some((f) => f.transaksioniId === rekordi.id);
+    if (kaFatura) {
+      try {
+        await sinkronizoFaturat(rekordi.id, faturaLista);
+      } catch (err) {
+        return setError(
+          `Transaksioni u ruajt, por fotot e faturës jo: ${err?.message || "hapësira e shfletuesit mund të jetë plot"}.`
+        );
+      } finally {
+        await reload();
+      }
     }
 
     onHide();
@@ -465,6 +486,11 @@ function ShtoTransaksionin({
                 onChange={(e) => setField("shenim", e.target.value)}
               />
             </Form.Group>
+
+            <Col md={12}>
+              <Form.Label>Faturat (foto)</Form.Label>
+              <FaturaFusha faturat={faturaLista} onChange={setFaturaLista} />
+            </Col>
           </Row>
         </Modal.Body>
 

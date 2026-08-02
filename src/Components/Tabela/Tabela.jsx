@@ -41,6 +41,9 @@ function Tabela({
   funksionButonExtra,
   ikonaButonitExtra,
   titulliButonitExtra,
+  funksionButonExtra2,
+  ikonaButonitExtra2,
+  titulliButonitExtra2,
   funksionEshteEditimDisabled,
   funksionEshteShikimDisabled,
   funksionEshteFshirjeDisabled,
@@ -271,6 +274,19 @@ function Tabela({
                                 title={titulliButonitExtra || "Veprim"}
                               >
                                 {ikonaButonitExtra || <Plus size={16} />}
+                              </button>
+                            )}
+                            {/* A second slot, because a row can have two actions that are neither
+                                editing nor deleting — Transaksionet wants both "repeat this one"
+                                and "its invoice photos". */}
+                            {funksionButonExtra2 && (
+                              <button
+                                type="button"
+                                className="btn-action info"
+                                onClick={() => funksionButonExtra2(item.ID)}
+                                title={titulliButonitExtra2 || "Veprim"}
+                              >
+                                {ikonaButonitExtra2 || <Plus size={16} />}
                               </button>
                             )}
                           </div>

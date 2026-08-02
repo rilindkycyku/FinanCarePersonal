@@ -14,6 +14,7 @@ import { CURRENCIES, DEFAULT_CURRENCY } from "../lib/options";
 import { pastroRregullat } from "../lib/rregullat";
 import { toNumber } from "../lib/format";
 import { kerkoLeje, lejaAktuale } from "../lib/njoftimet";
+import { CILESITE_FATURAVE, CILESIA_PARAZGJEDHUR } from "../lib/images";
 import "./Styles/PremiumTheme.css";
 import "./Styles/DizajniPergjithshem.css";
 import "./Styles/Dashboard.css";
@@ -26,7 +27,7 @@ function Cilesimet() {
   const { theme, toggleTheme } = useTheme();
   const [form, setForm] = useState({
     emri: "", monedha: DEFAULT_CURRENCY, teArdhuratMujore: "", objektiviKursimit: "", limitiDitor: "",
-    njoftimeLimiti: false,
+    njoftimeLimiti: false, cilesiaFaturave: CILESIA_PARAZGJEDHUR,
   });
   // Read once on mount and refreshed after asking: the browser answer can only change through the
   // button below or through the site settings, which reload the page anyway.
@@ -41,6 +42,7 @@ function Cilesimet() {
       objektiviKursimit: profile.objektiviKursimit ? String(profile.objektiviKursimit) : "",
       limitiDitor: profile.limitiDitor ? String(profile.limitiDitor) : "",
       njoftimeLimiti: Boolean(profile.njoftimeLimiti),
+      cilesiaFaturave: profile.cilesiaFaturave || CILESIA_PARAZGJEDHUR,
     });
   }, [profile]);
 
@@ -68,6 +70,7 @@ function Cilesimet() {
       objektiviKursimit: toNumber(form.objektiviKursimit),
       limitiDitor: toNumber(form.limitiDitor),
       njoftimeLimiti: form.njoftimeLimiti,
+      cilesiaFaturave: form.cilesiaFaturave,
     });
     setMessage({ type: "success", text: "Cilësimet u ruajtën." });
   };
@@ -267,6 +270,24 @@ function Cilesimet() {
                     <BellRing size={15} className="me-1" /> Lejo njoftimet
                   </Button>
                 )}
+              </Form.Group>
+
+              <Form.Group as={Col} md={6} controlId="form-cilesiafaturave">
+                <Form.Label>Cilësia e Fotove të Faturave</Form.Label>
+                <Form.Select
+                  value={form.cilesiaFaturave}
+                  onChange={(e) => setField("cilesiaFaturave", e.target.value)}
+                >
+                  {Object.entries(CILESITE_FATURAVE).map(([celes, c]) => (
+                    <option key={celes} value={celes}>
+                      {c.etiketa} — {c.maxAne}px
+                    </option>
+                  ))}
+                </Form.Select>
+                <div className="fcp-row-sub mt-1">
+                  {CILESITE_FATURAVE[form.cilesiaFaturave]?.ndihma} Vlen për fotot e reja; ato ekzistuese
+                  ngjishen me butonin te faqja Eksporto / Importo.
+                </div>
               </Form.Group>
 
               <Col md={12}>
