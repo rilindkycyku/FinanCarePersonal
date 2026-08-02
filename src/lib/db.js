@@ -7,7 +7,7 @@
 import { DEFAULT_CATEGORIES, DEFAULT_ACCOUNTS } from "./options";
 import { generateDueTransactions } from "./finance";
 import { todayISO } from "./format";
-import { blobNeDataUrl, dataUrlNeBlob } from "./images";
+import { blobNeDataUrl, dataUrlNeBlob, ringjeshFaturen, thumbNeDataUrl } from "./images";
 
 const DB_NAME = "financarepersonal";
 const DB_VERSION = 4;
@@ -344,6 +344,35 @@ export async function fshiFaturatJetime(faturat, transactions) {
   return faturat.filter((f) => idte.has(f.transaksioniId));
 }
 
+/**
+ * Re-encodes every stored photo at the given setting — what makes lowering the quality worth
+ * anything to someone who already has a year of invoices. Each one is read, squeezed and written
+ * back on its own, so a run that is interrupted (a closed tab, a full quota) still leaves every
+ * picture it already reached smaller and every other one untouched.
+ */
+export async function ringjeshFaturat(faturat, celesiCilesise, onProgres) {
+  let uKursye = 0;
+  let ngjeshur = 0;
+  for (let i = 0; i < faturat.length; i++) {
+    const fatura = faturat[i];
+    onProgres?.(i, faturat.length);
+    try {
+      const blob = await getFaturaBlob(fatura.id);
+      if (!blob) continue;
+      const re = await ringjeshFaturen(blob, celesiCilesise);
+      if (!re) continue;
+      const { blob: iRi, ...meta } = re;
+      await ruajFaturen({ ...fatura, ...meta }, iRi);
+      uKursye += blob.size - iRi.size;
+      ngjeshur++;
+    } catch {
+      // One unreadable picture must not stop the rest of the run.
+    }
+  }
+  onProgres?.(faturat.length, faturat.length);
+  return { ngjeshur, uKursye };
+}
+
 /** How much room the browser has given this origin and how much is left — the only warning a
  * user gets before writes start failing, since nothing here is stored anywhere else. */
 export async function hapesiraRuajtjes() {
@@ -375,13 +404,16 @@ export function putProfile(record) {
  */
 export async function exportAllData({ perfshiFaturat = true } = {}) {
   const data = await getAllData();
+  // Both the picture and its thumbnail are stored as binary and have to be base64-encoded to fit
+  // in JSON at all — the one place in the app where that cost is unavoidable.
   const faturat = perfshiFaturat
     ? await Promise.all(
         data.faturat.map(async (fatura) => {
           const blob = await getFaturaBlob(fatura.id);
           // A metadata row whose picture went missing is dropped rather than exported as a
           // thumbnail pointing at nothing.
-          return blob ? { ...fatura, dataUrl: await blobNeDataUrl(blob) } : null;
+          if (!blob) return null;
+          return { ...fatura, thumb: await thumbNeDataUrl(fatura.thumb), dataUrl: await blobNeDataUrl(blob) };
         })
       ).then((lista) => lista.filter(Boolean))
     : [];
@@ -469,7 +501,10 @@ export async function importAllData(data, { mode = "zevendeso" } = {}) {
   permbledhja.shtuar += fotoTeShkruara.length;
   permbledhja.ekzistuese += faturat.length - fotoTeShkruara.length;
   await Promise.all(
-    fotoTeShkruara.map(({ dataUrl, ...meta }) => ruajFaturen(meta, dataUrlNeBlob(dataUrl)))
+    fotoTeShkruara.map(({ dataUrl, thumb, ...meta }) =>
+      // Both pictures go back to binary on the way in — nothing is kept as base64 in the database.
+      ruajFaturen({ ...meta, thumb: thumb ? dataUrlNeBlob(thumb) : null }, dataUrlNeBlob(dataUrl))
+    )
   );
 
   // A restore leaves the database matching the file the user is holding, so that file *is* a

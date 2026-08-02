@@ -6,13 +6,28 @@
  * and once it is full every write fails, not just the pictures.
  */
 
-// A receipt is read, not printed — 1600px on the long side keeps the small print legible while
-// costing a fraction of the original.
-const MAX_ANE = 1600;
-const CILESIA = 0.82;
+/**
+ * How hard a photo is squeezed. A receipt is read, not printed, so even the top setting is far
+ * below what a phone camera produces. The middle one is the default: on a photographed bill, WebP
+ * at 0.75 is indistinguishable from 0.82 when zoomed to 1:1 on the item lines, and a quarter
+ * smaller — quality nobody can see is only storage nobody gets back.
+ */
+export const CILESITE_FATURAVE = {
+  larte: { etiketa: "E lartë", maxAne: 2000, cilesia: 0.8, ndihma: "Për fatura me shkrim shumë të imët." },
+  normale: { etiketa: "Normale", maxAne: 1600, cilesia: 0.75, ndihma: "Rreth 130 KB për foto — zgjedhja e parazgjedhur." },
+  kursim: { etiketa: "Kursim hapësire", maxAne: 1200, cilesia: 0.7, ndihma: "Rreth 100 KB për foto, ende e lexueshme." },
+};
 
-// Thumbnails live inside the metadata record (as a data URL) so a grid of invoices renders without
-// touching the full-size files at all.
+export const CILESIA_PARAZGJEDHUR = "normale";
+
+export function cilesiaFaturave(celes) {
+  return CILESITE_FATURAVE[celes] || CILESITE_FATURAVE[CILESIA_PARAZGJEDHUR];
+}
+
+// Thumbnails live inside the metadata record — the only part of an invoice kept in memory — so a
+// grid of invoices renders without touching the full-size files at all. Stored as a Blob rather
+// than a base64 data URL: base64 costs a third more bytes on disk and, worse, is a string sitting
+// in the JS heap for every invoice the app has ever taken.
 const THUMB_ANE = 240;
 const THUMB_CILESIA = 0.6;
 
@@ -25,8 +40,13 @@ export const PRANO_FOTO = "image/*,.heic,.heif";
 
 let webpMbeshtetet = null;
 
-/** WebP where the browser can encode it (roughly a third smaller than JPEG at the same quality),
- * JPEG everywhere else. */
+/**
+ * WebP where the browser can encode it (on a photographed receipt it is ~40% smaller than JPEG at
+ * the same quality), JPEG everywhere else. The check is made against what `toDataURL` actually
+ * returns and not against a version number, because a canvas asked for a format it cannot encode
+ * does not fail — it quietly hands back PNG. That is not a theoretical worry: asking Chromium for
+ * AVIF here yields a PNG *ten times larger* than the WebP, which is why AVIF is not attempted.
+ */
 function tipiDales() {
   if (webpMbeshtetet === null) {
     const canvas = document.createElement("canvas");
@@ -95,6 +115,13 @@ export function blobNeDataUrl(blob) {
   });
 }
 
+/** Thumbnails are Blobs, but the first version of this feature stored them as data URL strings —
+ * both shapes are read, so a database written by it keeps showing its pictures. */
+export function thumbNeDataUrl(thumb) {
+  if (!thumb) return Promise.resolve(null);
+  return typeof thumb === "string" ? Promise.resolve(thumb) : blobNeDataUrl(thumb);
+}
+
 export function dataUrlNeBlob(dataUrl) {
   const [koka, base64] = String(dataUrl).split(",");
   const tipi = /data:([^;]+)/.exec(koka)?.[1] || "application/octet-stream";
@@ -105,11 +132,11 @@ export function dataUrlNeBlob(dataUrl) {
 }
 
 /**
- * Turns a picked file into everything an invoice record needs: the stored (shrunk) image, a
- * thumbnail data URL, and the metadata shown in the list. Throws with a message meant to be put in
- * front of the user, since the whole operation happens on their own device.
+ * Turns a picked file into everything an invoice record needs: the stored (shrunk) image, its
+ * thumbnail and the metadata shown in the list — all binary. Throws with a message meant to be put
+ * in front of the user, since the whole operation happens on their own device.
  */
-export async function pergatitFaturen(file) {
+export async function pergatitFaturen(file, celesiCilesise) {
   if (!file) throw new Error("Nuk u zgjodh asnjë skedar.");
   const eshteFoto = file.type.startsWith("image/") || /\.(heic|heif)$/i.test(file.name);
   if (!eshteFoto) {
@@ -128,17 +155,47 @@ export async function pergatitFaturen(file) {
 
   try {
     const tipi = tipiDales();
+    const { maxAne, cilesia } = cilesiaFaturave(celesiCilesise);
     const [plot, vogel] = await Promise.all([
-      vizato(burimi, MAX_ANE, tipi, CILESIA),
-      vizato(burimi, THUMB_ANE, "image/jpeg", THUMB_CILESIA),
+      vizato(burimi, maxAne, tipi, cilesia),
+      vizato(burimi, THUMB_ANE, tipi, THUMB_CILESIA),
     ]);
     return {
       blob: plot.blob,
-      thumb: await blobNeDataUrl(vogel.blob),
+      thumb: vogel.blob,
       emri: file.name,
       tipi: plot.blob.type,
       madhesia: plot.blob.size,
       madhesiaOrigjinale: file.size,
+      gjeresia: plot.gjeresia,
+      lartesia: plot.lartesia,
+    };
+  } finally {
+    burimi.close?.();
+  }
+}
+
+/**
+ * Squeezes a photo that is already stored, so lowering the setting also reclaims space from the
+ * invoices taken before it was lowered. Returns `null` when the result would not be meaningfully
+ * smaller: re-encoding a lossy image always costs a little more quality, so it is only worth doing
+ * when it actually buys something back.
+ */
+export async function ringjeshFaturen(blob, celesiCilesise) {
+  const burimi = await dekodo(blob);
+  try {
+    const tipi = tipiDales();
+    const { maxAne, cilesia } = cilesiaFaturave(celesiCilesise);
+    const [plot, vogel] = await Promise.all([
+      vizato(burimi, maxAne, tipi, cilesia),
+      vizato(burimi, THUMB_ANE, tipi, THUMB_CILESIA),
+    ]);
+    if (plot.blob.size > blob.size * 0.9) return null;
+    return {
+      blob: plot.blob,
+      thumb: vogel.blob,
+      tipi: plot.blob.type,
+      madhesia: plot.blob.size,
       gjeresia: plot.gjeresia,
       lartesia: plot.lartesia,
     };

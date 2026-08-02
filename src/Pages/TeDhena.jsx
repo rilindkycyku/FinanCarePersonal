@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button, Alert, Row, Col, Card, Form, Spinner } from "react-bootstrap";
 import { Download, Upload, DatabaseBackup, ShieldCheck, FileText, Sheet, GitMerge, FileSpreadsheet,
-  HardDrive } from "lucide-react";
+  HardDrive, Minimize2 } from "lucide-react";
 import NavBar from "../Components/NavBar";
 import Footer from "../Components/Footer";
 import PageTitle from "../Components/PageTitle";
@@ -10,13 +10,13 @@ import PageLoading from "../Components/PageLoading";
 import Ndaje from "../Components/Ndaje";
 import { useData } from "../Context/DataContext";
 import { useDialog } from "../Context/DialogContext";
-import { exportAllData, hapesiraRuajtjes, importAllData, shenoKopjen } from "../lib/db";
+import { exportAllData, hapesiraRuajtjes, importAllData, ringjeshFaturat, shenoKopjen } from "../lib/db";
 import { exportListExcel, exportStatementExcel } from "../lib/exportExcel";
 import { exportStatementPdf, statementFilename } from "../lib/exportPdf";
 import PdfViewerModal from "../Components/PdfViewerModal";
 import { backupStatus, periodBounds, sortByDateDesc } from "../lib/finance";
 import { formatDate, plainAmount } from "../lib/format";
-import { formatBytes } from "../lib/images";
+import { cilesiaFaturave, formatBytes } from "../lib/images";
 import { STATEMENT_PERIODS, TRANSACTION_TYPE_LABELS } from "../lib/options";
 import "./Styles/PremiumTheme.css";
 import "./Styles/DizajniPergjithshem.css";
@@ -33,6 +33,7 @@ function TeDhena() {
   const [periudha, setPeriudha] = useState("muaji");
   const [llogariaPdf, setLlogariaPdf] = useState("");
   const [pdf, setPdf] = useState(null);
+  const [ngjeshja, setNgjeshja] = useState(null);
   // Which export is running, if any. Building a statement pulls in jsPDF and its fonts and then
   // lays out every movement, which on a phone is seconds of nothing — long enough that the button
   // looks broken and gets tapped again, starting the whole thing a second time.
@@ -174,6 +175,33 @@ function TeDhena() {
   const handleImportClick = (mode) => {
     importModeRef.current = mode;
     fileInputRef.current?.click();
+  };
+
+  /** Re-encodes the photos already stored, so a lowered quality setting also reclaims space from
+   * the invoices taken before it was lowered. */
+  const handleNgjesh = async () => {
+    const cilesia = cilesiaFaturave(profile.cilesiaFaturave);
+    const ok = await dialog.confirm(
+      `Të gjitha ${faturat.length} fotot rikodohen me cilësinë "${cilesia.etiketa}" (${cilesia.maxAne}px). ` +
+        "Fotot që janë tashmë më të vogla nuk preken. Ngjeshja nuk kthehet mbrapsht — nëse doni cilësinë e " +
+        "plotë, eksportoni një kopje JSON me fotot para se të vazhdoni. Vazhdo?",
+      { title: "Ngjesh Fotot Ekzistuese", confirmLabel: "Ngjesh fotot" }
+    );
+    if (!ok) return;
+    setMessage(null);
+    setNgjeshja({ bere: 0, gjithsej: faturat.length });
+    const { ngjeshur, uKursye } = await ringjeshFaturat(faturat, profile.cilesiaFaturave, (bere, gjithsej) =>
+      setNgjeshja({ bere, gjithsej })
+    );
+    setNgjeshja(null);
+    await reload();
+    setMessage({
+      type: ngjeshur > 0 ? "success" : "info",
+      text:
+        ngjeshur > 0
+          ? `U ngjeshën ${ngjeshur} foto dhe u liruan ${formatBytes(uKursye)}.`
+          : "Asnjë foto nuk u ngjesh — të gjitha janë tashmë brenda cilësisë së zgjedhur.",
+    });
   };
 
   const handleImportFile = async (e) => {
@@ -434,6 +462,21 @@ function TeDhena() {
                   përdoren {formatBytes(hapesira.perdorur)}.
                 </span>
               )}
+            </div>
+          )}
+
+          {faturat.length > 0 && (
+            <div className="mt-3">
+              <Button variant="outline-light" onClick={handleNgjesh} disabled={Boolean(ngjeshja)}>
+                <Minimize2 size={16} className="me-1" />
+                {ngjeshja
+                  ? `Duke ngjeshur... ${ngjeshja.bere}/${ngjeshja.gjithsej}`
+                  : "Ngjesh fotot ekzistuese"}
+              </Button>
+              <div className="text-muted small mt-2">
+                I rikodon fotot e ruajtura me cilësinë e zgjedhur te Cilësimet ({cilesiaFaturave(profile.cilesiaFaturave).etiketa}
+                , {cilesiaFaturave(profile.cilesiaFaturave).maxAne}px) — e dobishme pasi e ulni atë cilësi.
+              </div>
             </div>
           )}
         </Card>

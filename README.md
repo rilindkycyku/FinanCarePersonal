@@ -73,11 +73,15 @@ sa shpenzohet, sa mbetet dhe sa po kursesh.
 - **Faturat si foto** — çdo transaksioni mund t&apos;i bashkëngjiten fotot e faturës ose të kuponit,
   nga galeria e telefonit ose drejtpërdrejt nga kamera. Meqë nuk ka server, fotoja përpunohet vetë
   në shfletues përpara se të ruhet: kthehet në pozicionin e duhur (rrotullimi EXIF i një fotoje me
-  telefon), zvogëlohet në 1600px dhe rikodohet në WebP/JPEG — një foto 4 MB zë rreth 200 KB. Fotot
-  shtohen kur regjistrohet transaksioni ose më vonë, nga ikona e kapëses te rreshti i tij, dhe
-  hapen brenda aplikacionit me zmadhim e shkarkim. Ndryshimet ruhen vetëm kur konfirmohet
-  formulari, pra mbyllja e dritares nuk prek asgjë; fshirja e transaksionit i merr me vete edhe
-  fotot e tij.
+  telefon), zvogëlohet dhe rikodohet në WebP (ose JPEG, kur shfletuesi nuk e kodon dot WebP-në) —
+  një foto 2,3 MB e një fature zë rreth 130 KB, dhe rreth 76 KB me cilësinë kursyese. Gjithçka
+  ruhet **binare**, edhe miniaturat, pra asnjë byte nuk shpenzohet për base64. Cilësia zgjidhet te
+  **Cilësimet** (E lartë 2000px / Normale 1600px / Kursim hapësire 1200px); ajo vlen për fotot e
+  reja, kurse butoni *Ngjesh fotot ekzistuese* te faqja Eksporto / Importo i rikodon edhe ato që i
+  keni ruajtur më parë. Fotot shtohen kur regjistrohet transaksioni ose më vonë, nga ikona e
+  kapëses te rreshti i tij, dhe hapen brenda aplikacionit me zmadhim e shkarkim. Ndryshimet ruhen
+  vetëm kur konfirmohet formulari, pra mbyllja e dritares nuk prek asgjë; fshirja e transaksionit i
+  merr me vete edhe fotot e tij.
 - **Monedhë tjetër për një shpenzim** — një abonim që faturohet në $ ndërsa profili juaj është në €:
   shkruani vlerën e faturës, monedhën dhe kursin — ruhet vlera e kthyer në monedhën tuaj (vlera
   origjinale mbahet për krahasim me ekstraktin e kartelës). Kursi i fundit për çdo monedhë mbahet
@@ -176,4 +180,6 @@ Borxhet janë ndarje e qëllimshme: ruhen në një `objectStore` të vetin dhe a
 bilancit nuk i lexon, prandaj një shënim borxhi nuk mund ta prekë bilancin edhe nëse do të donte.
 Fotot e faturave ndahen për një arsye tjetër: `faturat` mban vetëm të dhënat e vogla me miniaturën,
 kurse `faturaSkedaret` fotot e plota, të cilat lexohen vetëm kur hapet njëra — kështu aplikacioni
-vazhdon ta ngarkojë të gjithë bazën në memorie ashtu siç e bënte më parë.
+vazhdon ta ngarkojë të gjithë bazën në memorie ashtu siç e bënte më parë. Të dyja janë `Blob`, jo
+tekst: base64 do t&apos;i shtonte një të tretën çdo fotoje në disk dhe do të mbante një varg për
+çdo miniaturë në memorie. E vetmja pikë ku base64 është i pashmangshëm mbetet eksporti JSON.

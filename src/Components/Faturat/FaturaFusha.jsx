@@ -1,7 +1,8 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Alert, Spinner } from "react-bootstrap";
 import { Camera, ImagePlus, X } from "lucide-react";
 import FaturaViewer from "./FaturaViewer";
+import { useData } from "../../Context/DataContext";
 import { makeId } from "../../lib/db";
 import { PRANO_FOTO, formatBytes, pergatitFaturen } from "../../lib/images";
 import "./Faturat.css";
@@ -9,6 +10,28 @@ import "./Faturat.css";
 // A camera tile only makes sense where there is a camera — on a laptop `capture` just opens the
 // same file dialog as the tile next to it, which reads as a broken duplicate.
 const KA_KAMERE = typeof window !== "undefined" && window.matchMedia?.("(pointer: coarse)").matches;
+
+/**
+ * One thumbnail. Thumbnails are stored as binary, so each needs an object URL for as long as it is
+ * on screen and released the moment it is not — left alone they would pile up until the tab is
+ * reloaded. (A thumbnail written by the first version of this feature is a data URL string and is
+ * used as-is.)
+ */
+function Miniatura({ thumb, alt }) {
+  const [url, setUrl] = useState(() => (typeof thumb === "string" ? thumb : null));
+
+  useEffect(() => {
+    if (!thumb || typeof thumb === "string") {
+      setUrl(thumb || null);
+      return undefined;
+    }
+    const objectUrl = URL.createObjectURL(thumb);
+    setUrl(objectUrl);
+    return () => URL.revokeObjectURL(objectUrl);
+  }, [thumb]);
+
+  return url ? <img src={url} alt={alt} loading="lazy" /> : null;
+}
 
 /**
  * The invoice-photo field: a grid of thumbnails with tiles for adding more, either from the phone's
@@ -19,6 +42,7 @@ const KA_KAMERE = typeof window !== "undefined" && window.matchMedia?.("(pointer
  * the form calls `sinkronizoFaturat(txId, faturat)` once the record itself is written.
  */
 function FaturaFusha({ faturat = [], onChange, ndihma }) {
+  const { profile } = useData();
   const [duke, setDuke] = useState(false);
   const [gabimet, setGabimet] = useState([]);
   const [hapur, setHapur] = useState(-1);
@@ -39,7 +63,7 @@ function FaturaFusha({ faturat = [], onChange, ndihma }) {
     // browser runs out of memory mid-import.
     for (const file of files) {
       try {
-        const pergatitur = await pergatitFaturen(file);
+        const pergatitur = await pergatitFaturen(file, profile.cilesiaFaturave);
         teReja.push({ id: makeId("fat"), krijuar: new Date().toISOString(), ...pergatitur });
       } catch (err) {
         problemet.push(err.message);
@@ -76,7 +100,7 @@ function FaturaFusha({ faturat = [], onChange, ndihma }) {
               onClick={() => setHapur(i)}
               title="Shiko foton"
             >
-              <img src={fatura.thumb} alt={fatura.emri} loading="lazy" />
+              <Miniatura thumb={fatura.thumb} alt={fatura.emri} />
             </button>
             <button type="button" className="fcp-fatura-hiq" onClick={() => hiq(fatura.id)} title="Hiq foton">
               <X size={12} />
