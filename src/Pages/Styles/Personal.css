@@ -244,6 +244,19 @@
   white-space: nowrap;
 }
 
+/* A tag as it appears on a transaction row and in the statistics list. Coloured from the tag's own
+   name (etiketat.js), so the same tag is the same colour everywhere without a colour to store. */
+.fcp-etiketa-tag {
+  display: inline-block;
+  padding: 0.14rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid var(--etiketa-color, var(--sp-border));
+  color: var(--etiketa-color, var(--sp-text-soft));
+  font-size: 0.66rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
 .fcp-dot {
   width: 10px;
   height: 10px;

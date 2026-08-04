@@ -44,6 +44,21 @@ export function formatPercent(value, decimals = 0) {
   return `${toNumber(value).toFixed(decimals)}%`;
 }
 
+/**
+ * Text made safe to put inside a table cell's markup.
+ *
+ * The list pages hand Tabela strings that carry their own markup (the coloured pills), which it
+ * renders as HTML — so anything the *user* typed and that ends up inside one has to be escaped
+ * first, or a tag like `<b>` would silently rewrite the row it sits in.
+ */
+export function escapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
 export function formatDate(dateStr) {
   if (!dateStr) return "-";
   try {
