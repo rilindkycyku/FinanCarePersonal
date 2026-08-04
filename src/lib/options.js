@@ -148,7 +148,7 @@ export const CATEGORY_ICONS = [
   "Bus", "HeartPulse", "Pill", "Film", "Music", "Shirt", "GraduationCap", "BookOpen",
   "Plane", "Dumbbell", "Gift", "PawPrint", "Baby", "Scissors", "Wrench", "CreditCard",
   "Briefcase", "Coins", "Laptop", "TrendingUp", "Landmark", "Banknote", "PiggyBank",
-  "Sparkles", "Receipt", "MoreHorizontal",
+  "Sparkles", "Shield", "Receipt", "MoreHorizontal",
 ];
 
 export const DEFAULT_CATEGORIES = [
@@ -170,6 +170,20 @@ export const DEFAULT_CATEGORIES = [
   { id: "cat_default_dhurata", emri: "Dhurata", lloji: "shpenzim", ngjyra: "#ef4444", ikona: "Gift" },
   { id: "cat_default_kredi", emri: "Kredi & Kamata", lloji: "shpenzim", ngjyra: "#64748b", ikona: "CreditCard" },
   { id: "cat_default_keste", emri: "Këste të Kartelës (Bonus)", lloji: "shpenzim", ngjyra: "#3b82f6", ikona: "Receipt" },
+  // Added after the first release: everyday baskets the original list sent to "Shpenzime të Tjera",
+  // where they stopped saying anything. A drogeri run (DM, Bipa) is the clearest case — it is not
+  // food and not a household purchase, and it happens every other week.
+  { id: "cat_default_higjiene", emri: "Higjienë & Kozmetikë", lloji: "shpenzim", ngjyra: "#ec4899", ikona: "Sparkles" },
+  { id: "cat_default_barna", emri: "Barna & Farmaci", lloji: "shpenzim", ngjyra: "#14b8a6", ikona: "Pill" },
+  { id: "cat_default_femijet", emri: "Fëmijët", lloji: "shpenzim", ngjyra: "#f97316", ikona: "Baby" },
+  { id: "cat_default_kafshet", emri: "Kafshët Shtëpiake", lloji: "shpenzim", ngjyra: "#84cc16", ikona: "PawPrint" },
+  { id: "cat_default_abonime", emri: "Abonime & Aplikacione", lloji: "shpenzim", ngjyra: "#8b5cf6", ikona: "Music" },
+  { id: "cat_default_bukuri", emri: "Bukuri & Parukeri", lloji: "shpenzim", ngjyra: "#a855f7", ikona: "Scissors" },
+  { id: "cat_default_riparime", emri: "Riparime & Mirëmbajtje", lloji: "shpenzim", ngjyra: "#eab308", ikona: "Wrench" },
+  { id: "cat_default_teknologji", emri: "Teknologji & Pajisje", lloji: "shpenzim", ngjyra: "#3b82f6", ikona: "Laptop" },
+  { id: "cat_default_sigurime", emri: "Sigurime", lloji: "shpenzim", ngjyra: "#0ea5e9", ikona: "Shield" },
+  { id: "cat_default_taksa", emri: "Taksa & Tatime", lloji: "shpenzim", ngjyra: "#64748b", ikona: "Landmark" },
+  // Kept last: it is the bucket for whatever the list above still does not name.
   { id: "cat_default_tjera_shp", emri: "Shpenzime të Tjera", lloji: "shpenzim", ngjyra: "#94a3b8", ikona: "MoreHorizontal" },
 
   // ── Hyrjet ──────────────────────────────────────────────────
@@ -179,6 +193,10 @@ export const DEFAULT_CATEGORIES = [
   { id: "cat_default_investime", emri: "Investime & Dividendë", lloji: "hyrje", ngjyra: "#8b5cf6", ikona: "TrendingUp" },
   { id: "cat_default_qira_marre", emri: "Qira e Marrë", lloji: "hyrje", ngjyra: "#f59e0b", ikona: "Landmark" },
   { id: "cat_default_dhurata_hyrje", emri: "Dhurata të Marra", lloji: "hyrje", ngjyra: "#ec4899", ikona: "Gift" },
+  // A refund booked as income is what keeps a returned purchase from looking like money spent, and
+  // selling something second-hand is not a salary, a gift or an investment.
+  { id: "cat_default_rimbursim", emri: "Rimbursim & Kthim Parash", lloji: "hyrje", ngjyra: "#14b8a6", ikona: "Receipt" },
+  { id: "cat_default_shitje", emri: "Shitje (dorë e dytë)", lloji: "hyrje", ngjyra: "#06b6d4", ikona: "Banknote" },
   { id: "cat_default_tjera_hyrje", emri: "Hyrje të Tjera", lloji: "hyrje", ngjyra: "#94a3b8", ikona: "MoreHorizontal" },
 ];
 

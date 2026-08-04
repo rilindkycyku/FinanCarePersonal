@@ -9,7 +9,7 @@ import {
   HeartPulse, Pill, Film, Music, Shirt, GraduationCap, BookOpen, Plane,
   Dumbbell, Gift, PawPrint, Baby, Scissors, Wrench, CreditCard, Briefcase,
   Coins, Laptop, TrendingUp, Landmark, Banknote, PiggyBank, Sparkles, Receipt,
-  MoreHorizontal, Wallet, ArrowRightLeft, Circle,
+  MoreHorizontal, Wallet, ArrowRightLeft, Shield, Circle,
 } from "lucide-react";
 
 export const ICONS = {
@@ -17,7 +17,7 @@ export const ICONS = {
   HeartPulse, Pill, Film, Music, Shirt, GraduationCap, BookOpen, Plane,
   Dumbbell, Gift, PawPrint, Baby, Scissors, Wrench, CreditCard, Briefcase,
   Coins, Laptop, TrendingUp, Landmark, Banknote, PiggyBank, Sparkles, Receipt,
-  MoreHorizontal, Wallet, ArrowRightLeft,
+  MoreHorizontal, Wallet, ArrowRightLeft, Shield,
 };
 
 export function getIcon(name) {
