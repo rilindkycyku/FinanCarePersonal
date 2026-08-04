@@ -3,9 +3,11 @@ import { Modal, Button, Form, Row, Col, Alert } from "react-bootstrap";
 import { TrendingUp, TrendingDown, ArrowRightLeft, Wand2 } from "lucide-react";
 import { useData } from "../Context/DataContext";
 import MonedhaTjeter from "./MonedhaTjeter";
+import EtiketaFusha from "./EtiketaFusha";
 import FaturaFusha from "./Faturat/FaturaFusha";
 import { makeId, sinkronizoFaturat, STORES } from "../lib/db";
 import { currencySymbol, formatMoney, toNumber, todayISO } from "../lib/format";
+import { etiketatE, pastroEtiketat, perdorimiEtiketave } from "../lib/etiketat";
 import { convertedAmount, currencyFields, dailyLimit, goalProgress } from "../lib/finance";
 import { njofto } from "../lib/njoftimet";
 import { mesoRregullen, sugjeroKategorine } from "../lib/rregullat";
@@ -27,6 +29,7 @@ const blank = (lloji = "shpenzim") => ({
   pershkrimi: "",
   shenim: "",
   qellimiId: "",
+  etiketat: [],
   monedhaOrigjinale: "",
   kursi: "",
 });
@@ -79,6 +82,9 @@ function ShtoTransaksionin({
         qellimiId: initial.qellimiId || "",
         pershkrimi: initial.pershkrimi || "",
         shenim: initial.shenim || "",
+        // Cleaned on the way in as well as on the way out, so a record that predates tags (or one
+        // restored from a hand-edited backup) opens as untagged instead of breaking the field.
+        etiketat: etiketatE(initial),
       });
       return;
     }
@@ -127,6 +133,10 @@ function ShtoTransaksionin({
         .filter((g) => !g.perfunduar || g.id === tx.qellimiId),
     [goals, transactions, tx.qellimiId]
   );
+
+  // Every tag already in use, most used first. There is no store of tags to read: the ones offered
+  // under the field are simply the ones other transactions carry (etiketat.js).
+  const etiketatEPerdorura = useMemo(() => perdorimiEtiketave(transactions), [transactions]);
 
   const isTransfer = tx.lloji === "transfer";
 
@@ -212,6 +222,9 @@ function ShtoTransaksionin({
       pershkrimi: tx.pershkrimi.trim(),
       shenim: tx.shenim.trim(),
       qellimiId: tx.qellimiId || null,
+      // Cleaned rather than trusted: the field commits whatever was still half-typed when the form
+      // was submitted, and that is exactly where a duplicate or an empty tag would come from.
+      etiketat: pastroEtiketat(tx.etiketat),
       perseritjaId: tx.perseritjaId || null,
       // Carried through explicitly: without it, editing a payment booked against a debt note from
       // the Transaksionet page silently unlinked the two and the note stopped counting it paid.
@@ -455,6 +468,15 @@ function ShtoTransaksionin({
                 onChange={(e) => ndryshoPershkrimin(e.target.value)}
               />
             </Form.Group>
+
+            <Col md={12}>
+              <Form.Label>Etiketat</Form.Label>
+              <EtiketaFusha
+                etiketat={tx.etiketat}
+                sugjerime={etiketatEPerdorura}
+                onChange={(etiketat) => setField("etiketat", etiketat)}
+              />
+            </Col>
 
             {tx.lloji !== "hyrje" && qellimetAktive.length > 0 && (
               <Form.Group as={Col} md={12} controlId="tx-qellimiid">

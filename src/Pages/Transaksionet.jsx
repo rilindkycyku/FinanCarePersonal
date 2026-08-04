@@ -14,7 +14,8 @@ import { useData } from "../Context/DataContext";
 import { useDialog } from "../Context/DialogContext";
 import { STORES } from "../lib/db";
 import { cashflow, sortByDateDesc } from "../lib/finance";
-import { formatMoney, formatPercent, plainAmount, todayISO, toNumber } from "../lib/format";
+import { etiketatE, kaEtiketen, ngjyraEtiketes, perdorimiEtiketave } from "../lib/etiketat";
+import { escapeHtml, formatMoney, formatPercent, plainAmount, todayISO, toNumber } from "../lib/format";
 import { TRANSACTION_TYPE_LABELS } from "../lib/options";
 import "./Styles/PremiumTheme.css";
 import "./Styles/DizajniPergjithshem.css";
@@ -25,7 +26,7 @@ const TYPE_PILL_COLORS = { hyrje: "var(--sp-emerald)", shpenzim: "var(--sp-red)"
 function Transaksionet() {
   const { accounts, categories, goals, transactions, faturat, destroy, simboli, money, loading, njeLlogari } =
     useData();
-  const [filtri, setFiltri] = useState({ kategoria: "", llogaria: "", min: "", max: "" });
+  const [filtri, setFiltri] = useState({ kategoria: "", llogaria: "", etiketa: "", min: "", max: "" });
   const dialog = useDialog();
   const [searchParams, setSearchParams] = useSearchParams();
   const [showModal, setShowModal] = useState(false);
@@ -55,6 +56,7 @@ function Transaksionet() {
       if (filtri.llogaria && tx.llogariaId !== filtri.llogaria && tx.llogariaDestinacionId !== filtri.llogaria) {
         return false;
       }
+      if (!kaEtiketen(tx, filtri.etiketa)) return false;
       const vlera = toNumber(tx.vlera);
       if (min !== null && vlera < min) return false;
       if (max !== null && vlera > max) return false;
@@ -73,6 +75,10 @@ function Transaksionet() {
       }, {}),
     [faturat]
   );
+
+  // Offered by the filter regardless of the other filters in force, so narrowing by category never
+  // empties the tag list and leaves no way back.
+  const etiketatEPerdorura = useMemo(() => perdorimiEtiketave(transactions), [transactions]);
 
   const rows = useMemo(() => {
     // Indexed once instead of a linear scan per row: with a few thousand transactions the three
@@ -116,6 +122,18 @@ function Transaksionet() {
           ]
             .filter(Boolean)
             .join(" ") || "-",
+        // Escaped, unlike the columns above it: a tag is free text the user typed, and this cell is
+        // rendered as markup. Separated by spaces rather than by commas because the export strips
+        // the chips back to their text content.
+        Etiketat:
+          etiketatE(tx)
+            .map(
+              (emri) =>
+                `<span class="fcp-etiketa-tag" style="--etiketa-color:${ngjyraEtiketes(emri)}">${escapeHtml(
+                  emri
+                )}</span>`
+            )
+            .join(" ") || "—",
         // Its own column rather than a marker glued to the description, so the count stays a plain
         // number in the Excel/PDF export.
         Fatura: numriFaturave[tx.id]
@@ -211,6 +229,25 @@ function Transaksionet() {
             </Form.Select>
           </Form.Group>
 
+          {/* Only worth a slot once something is tagged — until then it would be an empty picker
+              explaining nothing. */}
+          {etiketatEPerdorura.length > 0 && (
+            <Form.Group as={Col} xs={6} md={3} controlId="filtri-etiketa">
+              <Form.Label className="fcp-row-sub mb-1">Etiketa</Form.Label>
+              <Form.Select
+                value={filtri.etiketa}
+                onChange={(e) => setFiltri((f) => ({ ...f, etiketa: e.target.value }))}
+              >
+                <option value="">Të gjitha</option>
+                {etiketatEPerdorura.map((et) => (
+                  <option key={et.celesi} value={et.celesi}>
+                    {et.emri} ({et.numri})
+                  </option>
+                ))}
+              </Form.Select>
+            </Form.Group>
+          )}
+
           {!njeLlogari && accounts.length > 1 && (
             <Form.Group as={Col} xs={6} md={3} controlId="filtri-llogaria">
               <Form.Label className="fcp-row-sub mb-1">Llogaria</Form.Label>
@@ -257,7 +294,7 @@ function Transaksionet() {
               <Button
                 variant="outline-light"
                 className="w-100"
-                onClick={() => setFiltri({ kategoria: "", llogaria: "", min: "", max: "" })}
+                onClick={() => setFiltri({ kategoria: "", llogaria: "", etiketa: "", min: "", max: "" })}
               >
                 <X size={14} className="me-1" /> Pastro
               </Button>

@@ -2,8 +2,8 @@ import { useMemo, useState } from "react";
 import { Container, Row, Col, Form } from "react-bootstrap";
 import { subMonths } from "date-fns";
 import {
-  BarChart3, TrendingUp, TrendingDown, Percent, Wallet, Tags, ArrowRightLeft, CalendarRange, Hash,
-  GitCompareArrows, LineChart, TriangleAlert,
+  BarChart3, TrendingUp, TrendingDown, Percent, Wallet, Tag, Tags, ArrowRightLeft, CalendarRange,
+  Hash, GitCompareArrows, LineChart, TriangleAlert,
 } from "lucide-react";
 import NavBar from "../Components/NavBar";
 import Footer from "../Components/Footer";
@@ -16,6 +16,7 @@ import {
   accountBalance, balanceHistory, cashflow, categoryComparison, filterByRange, forecast, monthBounds,
   monthlyTrend, previousMonthKey, totalsByAccount, totalsByCategory, yearBounds,
 } from "../lib/finance";
+import { totalsByTag } from "../lib/etiketat";
 import { formatDate, formatPercent, monthKey, monthLabel, todayISO } from "../lib/format";
 import { accountTypeMeta } from "../lib/options";
 import { getIcon } from "../lib/icons";
@@ -58,6 +59,7 @@ function Statistika() {
       flows: cashflow(periudha),
       shpenzimet: totalsByCategory(periudha, categories, "shpenzim"),
       hyrjet: totalsByCategory(periudha, categories, "hyrje"),
+      etiketat: totalsByTag(periudha, "shpenzim"),
       llogarite: totalsByAccount(periudha, accounts.filter((a) => !a.arkivuar)),
       trendi: monthlyTrend(transactions, 6),
       meTeMadhat: periudha
@@ -95,6 +97,7 @@ function Statistika() {
   const maxTrend = Math.max(...stats.trendi.map((m) => Math.max(m.hyrjet, m.shpenzimet)), 1);
   const maxShpenzim = stats.shpenzimet[0]?.vlera || 1;
   const maxHyrje = stats.hyrjet[0]?.vlera || 1;
+  const maxEtiketa = stats.etiketat[0]?.vlera || 1;
 
   const mesatarjaDitore = useMemo(() => {
     // Average daily spend across the days the period actually covers, so "Ky muaj" isn't
@@ -368,6 +371,33 @@ function Statistika() {
               {rankedRows(stats.hyrjet, maxHyrje, "fcp-pos")}
             </Panel>
           </Col>
+
+          {/* The panel appears once something is tagged: a transaction can carry several tags, so
+              this is the one breakdown here that is deliberately not a share-out of the period —
+              each tag counts its transactions in full, and the percentages need not come to 100. */}
+          {stats.etiketat.length > 0 && (
+            <Col xl={6}>
+              <Panel title="Shpenzimet sipas Etiketave" icon={Tag}>
+                {stats.etiketat.map((et) => (
+                  <div className="fcp-row" key={et.celesi}>
+                    <div className="fcp-row-icon" style={{ color: et.ngjyra }}>
+                      <Tag size={16} />
+                    </div>
+                    <div className="fcp-row-main">
+                      <div className="fcp-row-title">{et.emri}</div>
+                      <div className="fcp-row-sub">
+                        {et.numri} × · {formatPercent(et.perqindja, 1)} e shpenzimeve
+                      </div>
+                    </div>
+                    <div className="fcp-row-bar">
+                      <ProgressBar value={(et.vlera / maxEtiketa) * 100} color={et.ngjyra} small />
+                    </div>
+                    <div className="fcp-row-value fcp-neg">{money(et.vlera)}</div>
+                  </div>
+                ))}
+              </Panel>
+            </Col>
+          )}
 
           {!(njeLlogari && stats.llogarite.length <= 1) && (
           <Col xl={6}>
