@@ -12,7 +12,8 @@ import { useTheme } from "../Context/ThemeContext";
 import { seedDefaults, wipeAllData } from "../lib/db";
 import { CURRENCIES, DEFAULT_CURRENCY } from "../lib/options";
 import { pastroRregullat } from "../lib/rregullat";
-import { toNumber } from "../lib/format";
+import { currencySymbol, toNumber } from "../lib/format";
+import VleraInput from "../Components/VleraInput";
 import { kerkoLeje, lejaAktuale } from "../lib/njoftimet";
 import { CILESITE_FATURAVE, CILESIA_PARAZGJEDHUR } from "../lib/images";
 import "./Styles/PremiumTheme.css";
@@ -204,13 +205,12 @@ function Cilesimet() {
 
               <Form.Group as={Col} md={6} controlId="form-teardhuratmujore">
                 <Form.Label>Të Ardhurat Mujore të Planifikuara</Form.Label>
-                <Form.Control
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  placeholder="0.00"
+                <VleraInput
                   value={form.teArdhuratMujore}
-                  onChange={(e) => setField("teArdhuratMujore", e.target.value)}
+                  onChange={(vlera) => setField("teArdhuratMujore", vlera)}
+                  simboli={currencySymbol(form.monedha)}
+                  titulliKalkulatorit="Të ardhurat mujore"
+                  compact
                 />
               </Form.Group>
 
@@ -229,13 +229,13 @@ function Cilesimet() {
 
               <Form.Group as={Col} md={6} controlId="form-limitiditor">
                 <Form.Label>Limiti i Shpenzimeve Ditore (opsional)</Form.Label>
-                <Form.Control
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  placeholder="p.sh. 20.00"
+                <VleraInput
                   value={form.limitiDitor}
-                  onChange={(e) => setField("limitiDitor", e.target.value)}
+                  onChange={(vlera) => setField("limitiDitor", vlera)}
+                  simboli={currencySymbol(form.monedha)}
+                  titulliKalkulatorit="Limiti ditor"
+                  placeholder="p.sh. 20.00"
+                  compact
                 />
                 <div className="fcp-row-sub mt-1">
                   Lëreni bosh dhe limiti llogaritet vetë: bilanci që keni për të shpenzuar (pa kursimet e

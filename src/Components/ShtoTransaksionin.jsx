@@ -3,6 +3,7 @@ import { Modal, Button, Form, Row, Col, Alert } from "react-bootstrap";
 import { TrendingUp, TrendingDown, ArrowRightLeft, Wand2 } from "lucide-react";
 import { useData } from "../Context/DataContext";
 import MonedhaTjeter from "./MonedhaTjeter";
+import VleraInput from "./VleraInput";
 import EtiketaFusha from "./EtiketaFusha";
 import FaturaFusha from "./Faturat/FaturaFusha";
 import { makeId, sinkronizoFaturat, STORES } from "../lib/db";
@@ -350,22 +351,14 @@ function ShtoTransaksionin({
               <Form.Label>
                 Vlera <span className="text-danger">*</span>
               </Form.Label>
-              <div className="fcp-amount-wrap">
-                <Form.Control
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  inputMode="decimal"
-                  placeholder="0.00"
-                  value={tx.vlera}
-                  onChange={(e) => setField("vlera", e.target.value)}
-                  autoFocus
-                  required
-                />
-                <span className="fcp-amount-symbol">
-                  {tx.monedhaOrigjinale ? currencySymbol(tx.monedhaOrigjinale) : simboli}
-                </span>
-              </div>
+              <VleraInput
+                value={tx.vlera}
+                onChange={(vlera) => setField("vlera", vlera)}
+                simboli={tx.monedhaOrigjinale ? currencySymbol(tx.monedhaOrigjinale) : simboli}
+                titulliKalkulatorit="Vlera e transaksionit"
+                autoFocus
+                required
+              />
             </Form.Group>
 
             <Form.Group as={Col} md={6} controlId="tx-data">

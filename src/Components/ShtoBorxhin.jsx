@@ -4,6 +4,7 @@ import { useData } from "../Context/DataContext";
 import { makeId, STORES } from "../lib/db";
 import { toNumber, todayISO } from "../lib/format";
 import { DEBT_TYPES, debtTypeMeta } from "../lib/options";
+import VleraInput from "./VleraInput";
 import { ColorPicker } from "./Pickers";
 import "./ModalForms.css";
 
@@ -134,16 +135,13 @@ function ShtoBorxhin({ show, onHide, initial, llojiFillestar }) {
 
             <Form.Group as={Col} md={6} controlId="debt-vleratotale">
               <Form.Label>
-                {kerkese ? "Shuma e dhënë" : "Shuma e plotë"} ({simboli}) <span className="text-danger">*</span>
+                {kerkese ? "Shuma e dhënë" : "Shuma e plotë"} <span className="text-danger">*</span>
               </Form.Label>
-              <Form.Control
-                type="number"
-                step="0.01"
-                min="0"
-                inputMode="decimal"
-                placeholder="0.00"
+              <VleraInput
                 value={debt.vleraTotale}
-                onChange={(e) => setField("vleraTotale", e.target.value)}
+                onChange={(vlera) => setField("vleraTotale", vlera)}
+                simboli={simboli}
+                titulliKalkulatorit={kerkese ? "Shuma e dhënë" : "Shuma e plotë"}
                 required
               />
               <div className="fcp-modal-hint">

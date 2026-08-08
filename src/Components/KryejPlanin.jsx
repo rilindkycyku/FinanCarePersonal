@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Modal, Button, Form, Row, Col, Alert } from "react-bootstrap";
 import { useData } from "../Context/DataContext";
+import VleraInput from "./VleraInput";
 import { makeId, STORES } from "../lib/db";
 import { toNumber, todayISO } from "../lib/format";
 import "./ModalForms.css";
@@ -127,20 +128,14 @@ function KryejPlanin({ show, onHide, plani }) {
               <Form.Label>
                 Sa kushtoi vërtet <span className="text-danger">*</span>
               </Form.Label>
-              <div className="fcp-amount-wrap">
-                <Form.Control
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  inputMode="decimal"
-                  placeholder="0.00"
-                  value={form.vlera}
-                  onChange={(e) => setField("vlera", e.target.value)}
-                  autoFocus
-                  required
-                />
-                <span className="fcp-amount-symbol">{simboli}</span>
-              </div>
+              <VleraInput
+                value={form.vlera}
+                onChange={(vlera) => setField("vlera", vlera)}
+                simboli={simboli}
+                titulliKalkulatorit="Vlera e blerjes"
+                autoFocus
+                required
+              />
             </Form.Group>
 
             <Form.Group as={Col} md={6} controlId="plankryer-data">

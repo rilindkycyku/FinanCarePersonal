@@ -27,6 +27,12 @@ sa shpenzohet, sa mbetet dhe sa po kursesh.
   e lexon vlerën prej tij — nëse e korrigjoni transaksionin, plani nuk mbetet me një çmim që nuk u
   pagua kurrë. Çdo plan i takon një muaji; ata që mbeten pa u blerë nuk hyjnë vetë në muajin tjetër,
   por shfaqen veçmas dhe zhvendosen me një buton.
+- **Llogaritësi te çdo fushë vlere** — vlerat rrallë vijnë të gatshme: një faturë ka disa artikuj,
+  një pagesë ndahet me dikë. Prandaj çdo fushë ku shkruhen para ka pranë një buton llogaritësi që
+  hap një tastierë me numra dhe veprime (`+`, `−`, `×`, `÷`, kllapa), me rezultatin që shihet
+  ndërsa shkruani. Shprehja nis nga vlera që keni tashmë në fushë, dhe **Apliko** e kthen rezultatin
+  aty. Në kompjuter mund të shkruhet edhe drejtpërdrejt nga tastiera: Enter aplikon, Escape mbyll
+  vetëm llogaritësin.
 - **Transaksionet** — hyrje, shpenzime dhe transfere, me kërkim, renditje, filtrim sipas datës e
   llojit, paginim dhe eksport në Excel. Një transfer lëviz para mes llogarive tuaja, pra nuk
   llogaritet as si hyrje as si shpenzim.
@@ -185,7 +191,8 @@ src/
   Context/    DataContext (ngarkon dhe ruan gjithçka), ThemeContext, DialogContext
   lib/        db.js (IndexedDB), finance.js (çdo kalkulim), csv.js (leximi i ekstraktit),
               rregullat.js (kujtesa e kategorive), images.js (përpunimi i fotove të faturave),
-              zip.js (arkivi i kopjes së plotë), format.js, options.js, exportExcel.js
+              zip.js (arkivi i kopjes së plotë), calc.js (llogaritësi i fushave të vlerës),
+              format.js, options.js, exportExcel.js
   Components/ NavBar, Footer, Tabela (kërkim/renditje/eksport), modalet e shtimit, Ui.jsx,
               Faturat/ (fusha e fotove, galeria e një transaksioni, shikuesi)
   Components/ NavBar, Footer, Tabela (kërkim/renditje/eksport), modalet e shtimit, Ui.jsx,
