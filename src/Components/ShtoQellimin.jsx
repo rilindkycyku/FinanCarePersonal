@@ -3,6 +3,7 @@ import { Modal, Button, Form, Row, Col, Alert } from "react-bootstrap";
 import { useData } from "../Context/DataContext";
 import { makeId, STORES } from "../lib/db";
 import { toNumber } from "../lib/format";
+import VleraInput from "./VleraInput";
 import { ColorPicker } from "./Pickers";
 import "./ModalForms.css";
 
@@ -92,28 +93,24 @@ function ShtoQellimin({ show, onHide, initial }) {
 
             <Form.Group as={Col} md={6} controlId="goal-vlerasynim">
               <Form.Label>
-                Vlera e Synuar ({simboli}) <span className="text-danger">*</span>
+                Vlera e Synuar <span className="text-danger">*</span>
               </Form.Label>
-              <Form.Control
-                type="number"
-                step="0.01"
-                min="0"
-                placeholder="0.00"
+              <VleraInput
                 value={goal.vleraSynim}
-                onChange={(e) => setField("vleraSynim", e.target.value)}
+                onChange={(vlera) => setField("vleraSynim", vlera)}
+                simboli={simboli}
+                titulliKalkulatorit="Vlera e synuar"
                 required
               />
             </Form.Group>
 
             <Form.Group as={Col} md={6} controlId="goal-vlerafillestare">
-              <Form.Label>Kursuar Deri Tani ({simboli})</Form.Label>
-              <Form.Control
-                type="number"
-                step="0.01"
-                min="0"
-                placeholder="0.00"
+              <Form.Label>Kursuar Deri Tani</Form.Label>
+              <VleraInput
                 value={goal.vleraFillestare}
-                onChange={(e) => setField("vleraFillestare", e.target.value)}
+                onChange={(vlera) => setField("vleraFillestare", vlera)}
+                simboli={simboli}
+                titulliKalkulatorit="Kursuar deri tani"
               />
               <div className="fcp-modal-hint">
                 Paratë e ndara para se ta shtonit qëllimin. Kontributet e mëvonshme shtohen automatikisht.

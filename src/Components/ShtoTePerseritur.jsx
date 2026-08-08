@@ -3,6 +3,7 @@ import { Modal, Button, Form, Row, Col, Alert } from "react-bootstrap";
 import { TrendingUp, TrendingDown } from "lucide-react";
 import { useData } from "../Context/DataContext";
 import MonedhaTjeter from "./MonedhaTjeter";
+import VleraInput from "./VleraInput";
 import { makeId, STORES } from "../lib/db";
 import { currencySymbol, formatMoney, toNumber, todayISO } from "../lib/format";
 import { convertedAmount, currencyFields, debtProgress, lastInstallmentDate } from "../lib/finance";
@@ -208,16 +209,13 @@ function ShtoTePerseritur({ show, onHide, initial }) {
 
             <Form.Group as={Col} md={6} controlId="rec-vlera">
               <Form.Label>
-                Vlera ({rec.monedhaOrigjinale ? currencySymbol(rec.monedhaOrigjinale) : simboli}){" "}
-                <span className="text-danger">*</span>
+                Vlera <span className="text-danger">*</span>
               </Form.Label>
-              <Form.Control
-                type="number"
-                step="0.01"
-                min="0"
-                placeholder="0.00"
+              <VleraInput
                 value={rec.vlera}
-                onChange={(e) => setField("vlera", e.target.value)}
+                onChange={(vlera) => setField("vlera", vlera)}
+                simboli={rec.monedhaOrigjinale ? currencySymbol(rec.monedhaOrigjinale) : simboli}
+                titulliKalkulatorit="Vlera e pagesës"
                 required
               />
             </Form.Group>

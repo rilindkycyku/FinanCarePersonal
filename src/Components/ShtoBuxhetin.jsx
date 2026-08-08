@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Modal, Button, Form, Row, Col, Alert } from "react-bootstrap";
 import { useData } from "../Context/DataContext";
+import VleraInput from "./VleraInput";
 import { makeId, STORES } from "../lib/db";
 import { monthLabel, toNumber } from "../lib/format";
 import "./ModalForms.css";
@@ -107,18 +108,13 @@ function ShtoBuxhetin({ show, onHide, initial, muajiAktual, kategoriaFillestare 
               <Form.Label>
                 Kufiri Mujor ({simboli}) <span className="text-danger">*</span>
               </Form.Label>
-              <div className="fcp-amount-wrap">
-                <Form.Control
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  placeholder="0.00"
-                  value={budget.vlera}
-                  onChange={(e) => setField("vlera", e.target.value)}
-                  required
-                />
-                <span className="fcp-amount-symbol">{simboli}</span>
-              </div>
+              <VleraInput
+                value={budget.vlera}
+                onChange={(vlera) => setField("vlera", vlera)}
+                simboli={simboli}
+                titulliKalkulatorit="Limiti i buxhetit"
+                required
+              />
             </Form.Group>
 
             <Col md={12}>

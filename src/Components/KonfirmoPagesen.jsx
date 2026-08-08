@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Modal, Button, Form, Row, Col, Alert, Table } from "react-bootstrap";
 import { Pencil, X } from "lucide-react";
 import { useData } from "../Context/DataContext";
+import VleraInput from "./VleraInput";
 import { makeId, STORES } from "../lib/db";
 import {
   convertedAmount, debtPaymentsFromTransactions, generateDueTransactions, monthBounds,
@@ -348,15 +349,15 @@ function KonfirmoPagesen({ show, rec, onHide, gjithcka = false }) {
                     </div>
                     <div className="fcp-adjust-fields">
                       <Form.Group controlId={`rregullim-${r.id}`}>
-                        <Form.Label>Shto / Zbrit ({r.fx || simboli})</Form.Label>
-                        <Form.Control
-                          type="number"
-                          step="0.01"
-                          inputMode="decimal"
-                          placeholder="0.00"
-                          size="sm"
+                        <Form.Label>Shto / Zbrit</Form.Label>
+                        <VleraInput
                           value={r.rregullim}
-                          onChange={(e) => setField(r.id, "rregullim", e.target.value)}
+                          onChange={(vlera) => setField(r.id, "rregullim", vlera)}
+                          simboli={r.fx || simboli}
+                          titulliKalkulatorit={`Rregullimi - ${r.emri}`}
+                          lejoNegativ
+                          compact
+                          size="sm"
                         />
                       </Form.Group>
                       {r.fx && (

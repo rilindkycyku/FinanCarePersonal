@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Modal, Button, Form, Row, Col, Alert } from "react-bootstrap";
 import { TrendingDown, PlusCircle } from "lucide-react";
 import { useData } from "../Context/DataContext";
+import VleraInput from "./VleraInput";
 import { makeId, STORES } from "../lib/db";
 import { toNumber, todayISO } from "../lib/format";
 import { debtTypeMeta } from "../lib/options";
@@ -192,20 +193,14 @@ function ShtoPagesenBorxhit({ show, onHide, borxhi, initial }) {
               <Form.Label>
                 Vlera <span className="text-danger">*</span>
               </Form.Label>
-              <div className="fcp-amount-wrap">
-                <Form.Control
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  inputMode="decimal"
-                  placeholder="0.00"
-                  value={entry.vlera}
-                  onChange={(e) => setField("vlera", e.target.value)}
-                  autoFocus
-                  required
-                />
-                <span className="fcp-amount-symbol">{simboli}</span>
-              </div>
+              <VleraInput
+                value={entry.vlera}
+                onChange={(vlera) => setField("vlera", vlera)}
+                simboli={simboli}
+                titulliKalkulatorit="Vlera e pagesës"
+                autoFocus
+                required
+              />
             </Form.Group>
 
             <Form.Group as={Col} md={6} controlId="dpay-data">

@@ -1,0 +1,283 @@
+/* ── Amount field with a calculator ───────────────────────────
+   The amount is right-aligned with the currency symbol pinned to the right edge, which leaves the
+   left of the field empty — that is where the calculator button lives, so it never fights the
+   number for space. */
+
+.fcp-amount-calc-wrap {
+  position: relative;
+}
+
+/* Deliberately more specific than the `.fcp-amount-wrap .form-control` padding in ModalForms.css,
+   so the room for the button is reserved no matter which stylesheet the bundler emits first. */
+.fcp-amount-wrap.fcp-amount-calc-wrap .form-control {
+  padding-left: 2.9rem !important;
+}
+
+/* Compact variant: the ordinary-sized fields (settings, per-payment adjustments) keep their own
+   type scale and only gain the button and the symbol. */
+.fcp-amount-calc-wrap-compact .form-control {
+  padding-left: 2.2rem !important;
+  padding-right: 1.9rem !important;
+  text-align: right;
+}
+
+.fcp-amount-calc-wrap-compact .fcp-amount-calc-btn {
+  width: 26px;
+  height: 26px;
+  left: 0.3rem;
+  border-radius: 7px;
+}
+
+.fcp-amount-calc-wrap-compact .fcp-amount-symbol {
+  right: 0.55rem;
+  font-size: 0.8rem;
+}
+
+.fcp-amount-calc-btn {
+  position: absolute;
+  left: 0.45rem;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: 9px;
+  border: 1px solid var(--sp-border);
+  background: var(--sp-surface-2);
+  color: var(--sp-text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.fcp-amount-calc-btn:hover,
+.fcp-amount-calc-btn:focus-visible {
+  background: var(--sp-emerald-glow);
+  border-color: var(--sp-emerald);
+  color: var(--sp-emerald);
+  outline: none;
+}
+
+.fcp-amount-calc-btn:active {
+  transform: translateY(-50%) scale(0.94);
+}
+
+/* ── The keypad ───────────────────────────────────────────────
+   Rendered into <body> and pinned to the bottom of the viewport: it has to sit above a Bootstrap
+   modal (z-index 1055) without joining its backdrop stack, and a sheet at thumb height beats a
+   centred dialog on the phone where most amounts get typed. */
+
+.fcp-calc-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(2px);
+  animation: fcp-calc-fade 0.15s ease;
+}
+
+.fcp-calc-sheet {
+  width: 100%;
+  max-width: 420px;
+  max-height: 92vh;
+  overflow-y: auto;
+  padding: 0.85rem 0.9rem calc(0.9rem + env(safe-area-inset-bottom));
+  background: var(--sp-surface-2);
+  border: 1px solid var(--sp-border);
+  border-bottom: none;
+  border-radius: var(--sp-radius-lg) var(--sp-radius-lg) 0 0;
+  box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.45);
+  animation: fcp-calc-rise 0.18s ease;
+}
+
+.fcp-calc-sheet:focus {
+  outline: none;
+}
+
+.fcp-calc-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.6rem;
+}
+
+.fcp-calc-title {
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: var(--sp-text);
+}
+
+.fcp-calc-close {
+  width: 30px;
+  height: 30px;
+  line-height: 1;
+  font-size: 1.35rem;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--sp-text-muted);
+  cursor: pointer;
+}
+
+.fcp-calc-close:hover {
+  color: var(--sp-text);
+  background: var(--sp-surface-3);
+}
+
+.fcp-calc-display {
+  padding: 0.65rem 0.85rem;
+  border: 1px solid var(--sp-border);
+  border-radius: var(--sp-radius-md);
+  background: var(--sp-surface);
+  text-align: right;
+  margin-bottom: 0.6rem;
+}
+
+.fcp-calc-expression {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--sp-text);
+  min-height: 1.9rem;
+  word-break: break-all;
+}
+
+.fcp-calc-result {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--sp-emerald);
+  margin-top: 0.15rem;
+}
+
+.fcp-calc-result-idle {
+  color: var(--sp-text-muted);
+}
+
+.fcp-calc-error {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--sp-red);
+  margin-bottom: 0.5rem;
+}
+
+.fcp-calc-keys {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.45rem;
+}
+
+.fcp-calc-key {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 50px;
+  font-size: 1.1rem;
+  font-weight: 800;
+  border-radius: var(--sp-radius-md);
+  border: 1px solid var(--sp-border);
+  background: var(--sp-surface-3);
+  color: var(--sp-text);
+  cursor: pointer;
+  user-select: none;
+  transition: transform 0.1s ease, background 0.15s ease;
+}
+
+.fcp-calc-key:hover {
+  background: var(--sp-surface);
+}
+
+.fcp-calc-key:active {
+  transform: scale(0.95);
+}
+
+.fcp-calc-key-op {
+  background: var(--sp-emerald-glow);
+  border-color: var(--sp-border-glow);
+  color: var(--sp-emerald);
+}
+
+.fcp-calc-key-muted {
+  color: var(--sp-text-muted);
+  background: var(--sp-surface);
+}
+
+.fcp-calc-apply {
+  grid-column: span 3;
+  height: 50px;
+  font-size: 0.95rem;
+  font-weight: 800;
+  border: none;
+  border-radius: var(--sp-radius-md);
+  background: var(--sp-emerald);
+  color: #062f22;
+  cursor: pointer;
+  transition: transform 0.1s ease, filter 0.15s ease;
+}
+
+.fcp-calc-apply:hover {
+  filter: brightness(1.08);
+}
+
+.fcp-calc-apply:active {
+  transform: scale(0.98);
+}
+
+.fcp-calc-hint {
+  font-size: 0.7rem;
+  color: var(--sp-text-muted);
+  text-align: center;
+  margin-top: 0.6rem;
+}
+
+@keyframes fcp-calc-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fcp-calc-rise {
+  from { transform: translateY(14%); }
+  to { transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fcp-calc-scrim,
+  .fcp-calc-sheet {
+    animation: none;
+  }
+}
+
+/* On a wide screen the sheet is centred as an ordinary dialog instead of hugging the bottom. */
+@media (min-width: 768px) {
+  .fcp-calc-scrim {
+    align-items: center;
+  }
+
+  .fcp-calc-sheet {
+    border-bottom: 1px solid var(--sp-border);
+    border-radius: var(--sp-radius-lg);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+  }
+}
+
+@media (max-width: 575.98px) {
+  .fcp-amount-wrap.fcp-amount-calc-wrap .form-control {
+    padding-left: 2.5rem !important;
+  }
+
+  .fcp-amount-calc-btn {
+    width: 28px;
+    height: 28px;
+    left: 0.35rem;
+  }
+
+  .fcp-calc-key,
+  .fcp-calc-apply {
+    height: 46px;
+  }
+}

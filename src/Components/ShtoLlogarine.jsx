@@ -4,6 +4,7 @@ import { useData } from "../Context/DataContext";
 import { makeId, STORES } from "../lib/db";
 import { toNumber } from "../lib/format";
 import { ACCOUNT_TYPES } from "../lib/options";
+import VleraInput from "./VleraInput";
 import { ColorPicker } from "./Pickers";
 
 const BLANK = {
@@ -95,13 +96,13 @@ function ShtoLlogarine({ show, onHide, initial }) {
             </Form.Group>
 
             <Form.Group as={Col} md={6} controlId="account-bilancifillestar">
-              <Form.Label>Bilanci Fillestar ({simboli})</Form.Label>
-              <Form.Control
-                type="number"
-                step="0.01"
-                placeholder="0.00"
+              <Form.Label>Bilanci Fillestar</Form.Label>
+              <VleraInput
                 value={account.bilanciFillestar}
-                onChange={(e) => setField("bilanciFillestar", e.target.value)}
+                onChange={(vlera) => setField("bilanciFillestar", vlera)}
+                simboli={simboli}
+                titulliKalkulatorit="Bilanci fillestar"
+                lejoNegativ
               />
               <div className="fcp-modal-hint">
                 Sa para kishte kjo llogari në momentin që e shtuat. Për kartela krediti ose kredi, shkruani një
