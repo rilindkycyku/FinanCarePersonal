@@ -3,7 +3,7 @@
  * breakdowns, budget usage, savings-goal progress, recurring-payment schedules, planned spending
  * and the daily allowance.
  *
- * All functions are pure — they take the raw IndexedDB records and return plain results, so the
+ * All functions are pure - they take the raw IndexedDB records and return plain results, so the
  * pages stay thin and the same maths is shared by the dashboard, the statistics page and the
  * Excel exports.
  *
@@ -11,7 +11,7 @@
  *  - `tx.data` is a date-only ISO string ("YYYY-MM-DD"), so string comparison is chronological.
  *  - `tx.vlera` is always a positive number; the direction comes from `tx.lloji`.
  *  - A `transfer` moves money between two of the user's own accounts, so it is neither income
- *    nor expense — it only shifts balances.
+ *    nor expense - it only shifts balances.
  */
 
 import { addDays, addMonths, addWeeks, addYears, format, parseISO } from "date-fns";
@@ -53,7 +53,7 @@ export function totalBalance(accounts, transactions) {
 const SAVINGS_ACCOUNT_TYPES = ["kursim", "investim"];
 
 /**
- * The part of the net worth that is actually there to be spent — everything except savings and
+ * The part of the net worth that is actually there to be spent - everything except savings and
  * investment accounts, so the daily allowance never hands out the emergency fund. When those are
  * the only accounts there are, the full balance is used instead: the user clearly lives off them,
  * and reporting "0 € për sot" would be wrong rather than careful.
@@ -72,7 +72,7 @@ export function accountsWithBalances(accounts, transactions) {
 }
 
 /**
- * Everything needed to fold every account into the one with id `targetId` — what single-account
+ * Everything needed to fold every account into the one with id `targetId` - what single-account
  * mode does so cash, bank and card stop being tracked separately.
  *
  * Pure: it only computes the records, the caller persists them. Opening balances are summed into
@@ -103,7 +103,7 @@ export function consolidateAccounts({ accounts, transactions, recurring = [], go
     recurring: recurring.filter((r) => r.llogariaId !== targetId).map((r) => ({ ...r, llogariaId: targetId })),
     goals: goals.filter((g) => g.llogariaId && g.llogariaId !== targetId).map((g) => ({ ...g, llogariaId: targetId })),
     removeIds: accounts.filter((a) => a.id !== targetId).map((a) => a.id),
-    // Transfers between two accounts that are about to become one — reported to the user because
+    // Transfers between two accounts that are about to become one - reported to the user because
     // they stop moving money once merged.
     nrTransfereve: transactions.filter(
       (tx) => tx.lloji === "transfer" && tx.llogariaId !== tx.llogariaDestinacionId
@@ -180,13 +180,13 @@ export function filterByRange(transactions, start, end) {
 }
 
 /**
- * When a record was entered, as a comparable number — the tie-breaker `data` cannot provide.
+ * When a record was entered, as a comparable number - the tie-breaker `data` cannot provide.
  * `data` is a date-only string, so everything booked today looks equal to it and the list falls
  * back to whatever order IndexedDB returns (oldest first), which is why a row just added showed
  * up at the bottom of its day instead of on top.
  *
  * `krijuar` is stamped when the record is created. Rows saved before that field existed still
- * order correctly because `makeId()` starts every id with `Date.now()` in base 36 — eight
+ * order correctly because `makeId()` starts every id with `Date.now()` in base 36 - eight
  * characters, from 2004 until well past 2059.
  */
 export function enteredAt(record) {
@@ -197,7 +197,7 @@ export function enteredAt(record) {
   return Number.isFinite(encoded) ? encoded : 0;
 }
 
-/** Newest first: by date, then — within the same date — by when the row was entered. */
+/** Newest first: by date, then - within the same date - by when the row was entered. */
 export function sortByDateDesc(transactions) {
   return [...transactions].sort((a, b) => {
     if (a.data !== b.data) return a.data < b.data ? 1 : -1;
@@ -214,7 +214,7 @@ export function sumByType(transactions, lloji) {
 }
 
 /** Income, expense, net and savings rate for a set of transactions. Transfers are excluded
- * from all four — moving money between your own accounts is not earning or spending it. */
+ * from all four - moving money between your own accounts is not earning or spending it. */
 export function cashflow(transactions) {
   const hyrjet = sumByType(transactions, "hyrje");
   const shpenzimet = sumByType(transactions, "shpenzim");
@@ -228,7 +228,7 @@ export function cashflow(transactions) {
 }
 
 /**
- * Today's spending allowance — the figure that answers "sa mund të shpenzoj sot".
+ * Today's spending allowance - the figure that answers "sa mund të shpenzoj sot".
  *
  * The money left to live on is what you actually hold and can spend (savings and investment
  * accounts left out, `spendableBalance`), plus the income still expected this month, minus
@@ -267,7 +267,7 @@ export function dailyLimit({
     .reduce((sum, tx) => sum + toNumber(tx.vlera), 0);
 
   // The whole month is the window on purpose: `shumaPritur` is what is still unbooked, which for a
-  // payment that fell due last week and is still waiting for confirmation is exactly right — that
+  // payment that fell due last week and is still waiting for confirmation is exactly right - that
   // money has not left the account yet, but it is going to.
   const perseritjet = monthlyRecurringBreakdown(recurring, transactions, start, end);
   const priturNga = (lloji) =>
@@ -309,7 +309,7 @@ export function dailyLimit({
 }
 
 /**
- * One month against the one before it, category by category, biggest swing first — the view that
+ * One month against the one before it, category by category, biggest swing first - the view that
  * says *what changed* rather than what the month cost.
  *
  * Categories present in only one of the two months are kept with a zero on the missing side: a
@@ -425,7 +425,7 @@ function netEffect(tx, accountIds) {
 }
 
 /**
- * Closing net worth at the end of each of the last `months` months, oldest first — the curve behind
+ * Closing net worth at the end of each of the last `months` months, oldest first - the curve behind
  * "am I actually getting anywhere", which a month-by-month income-vs-expense bar cannot show.
  *
  * Built the same way every balance in the app is: opening balances plus every movement up to that
@@ -447,13 +447,13 @@ export function balanceHistory(accounts, transactions, months = 6, reference = n
 }
 
 /**
- * Where the balance is heading — the same question `dailyLimit` answers for today, asked of the
+ * Where the balance is heading - the same question `dailyLimit` answers for today, asked of the
  * months ahead.
  *
  * It starts from what is actually there today and then walks forward one day at a time, applying
  * only what is already known: transactions the user has already entered with a future date, the
  * occurrences each recurring schedule still owes, and planned purchases not bought yet. Nothing is
- * extrapolated from past habits — a forecast that invents an "average month" would be a guess
+ * extrapolated from past habits - a forecast that invents an "average month" would be a guess
  * wearing the clothes of a number, and this one can be checked line by line.
  *
  * Two choices worth knowing about:
@@ -487,7 +487,7 @@ export function forecast({
   const levizjet = new Map();
   const shto = (data, vlera, lloji, emri) => {
     if (!data || data > fundi) return;
-    // Anything already overdue is still ahead of us — it just has not been booked yet.
+    // Anything already overdue is still ahead of us - it just has not been booked yet.
     const dita = data < nesër ? nesër : data;
     if (!levizjet.has(dita)) levizjet.set(dita, []);
     levizjet.get(dita).push({ vlera, lloji, emri });
@@ -534,7 +534,7 @@ export function forecast({
 
   return {
     fillimi,
-    // Every recorded transaction, whatever its date — the figure the dashboard shows as "Bilanci
+    // Every recorded transaction, whatever its date - the figure the dashboard shows as "Bilanci
     // Total". It differs from `fillimi` exactly when something is entered ahead of its date, and
     // the two are reported side by side so that difference reads as a fact, not a discrepancy.
     regjistruar: transactions.reduce((sum, tx) => sum + netEffect(tx, ids), hapja),
@@ -547,7 +547,7 @@ export function forecast({
       viti: Number(m.key.slice(0, 4)),
       neto: m.hyrje - m.shpenzime,
     })),
-    // The tightest point ahead, and the day the balance would first go negative — the two things
+    // The tightest point ahead, and the day the balance would first go negative - the two things
     // worth knowing before the month happens.
     meUleta,
     nenZeros,
@@ -681,11 +681,11 @@ export function goalProgress(goal, transactions) {
  * store, and nothing in this section is read by `accountBalance` / `totalBalance` / `cashflow`,
  * so a card with 900 € still owed on it never turns up as −900 € in "Bilanci Total". The only
  * thing that touches the real ledger is a payment the user explicitly asked to also book against
- * an account — and that one is a plain expense transaction like any other.
+ * an account - and that one is a plain expense transaction like any other.
  *
  * A note carries its own lines in `pagesat`: `{ id, data, vlera, lloji, shenim, llogariaId,
  * transaksioniId }`, where `lloji` is "pagese" (brings the balance down) or "shtese" (a new
- * purchase on the card, interest, a fee — puts it back up).
+ * purchase on the card, interest, a fee - puts it back up).
  */
 
 /** The lines of one note, newest first. Tolerates a record saved before `pagesat` existed. */
@@ -729,10 +729,10 @@ export function debtProgress(debt) {
  * The debt lines implied by a batch of transactions that were just booked. A recurring payment
  * carrying `borxhiId` (a card instalment plan, a monthly loan payment, someone repaying you by
  * standing order) both leaves the account *and* pays the note down, and this turns the second half
- * into records — one updated note per debt touched.
+ * into records - one updated note per debt touched.
  *
  * Pure: the caller persists the result. Each line keeps its transaction's id, so it behaves like
- * any hand-entered linked payment — delete the line and the transaction goes with it.
+ * any hand-entered linked payment - delete the line and the transaction goes with it.
  */
 export function debtPaymentsFromTransactions(debts, transactions, makeIdFn) {
   const byDebt = new Map();
@@ -768,7 +768,7 @@ export function debtPaymentsFromTransactions(debts, transactions, makeIdFn) {
     .filter(Boolean);
 }
 
-/** Totals across the notes, split by direction — what you owe vs. what is owed to you. Archived
+/** Totals across the notes, split by direction - what you owe vs. what is owed to you. Archived
  * notes are left out, the same way archived accounts are left out of the net worth. */
 export function debtTotals(debts) {
   const empty = () => ({ totali: 0, paguar: 0, mbetur: 0, numri: 0, perfunduara: 0 });
@@ -811,7 +811,7 @@ export function nextOccurrence(dateStr, frekuenca) {
 }
 
 /**
- * Last due date of an instalment plan of `nrKesteve` payments starting on `dateStr` — a card
+ * Last due date of an instalment plan of `nrKesteve` payments starting on `dateStr` - a card
  * purchase split over N months is a normal recurring payment that simply has to stop by itself,
  * which it does once this date is stored as `dataFundit`.
  */
@@ -862,7 +862,7 @@ export function scheduledOccurrences(rec, start, end) {
 /**
  * What every recurring payment costs in one month, itemised: what has already been booked from it
  * and what it is still expected to cost. This is the "so what does this card actually come to this
- * month" view — several instalment plans on the same card each carry their own monthly payment,
+ * month" view - several instalment plans on the same card each carry their own monthly payment,
  * and only the sum of them is the month's real obligation.
  */
 export function monthlyRecurringBreakdown(recurring, transactions, start, end) {
@@ -892,7 +892,7 @@ export function monthlyRecurringBreakdown(recurring, transactions, start, end) {
 }
 
 /**
- * What every schedule costs over the next twelve months — the view that answers "so what do all
+ * What every schedule costs over the next twelve months - the view that answers "so what do all
  * these subscriptions actually come to a year".
  *
  * The figure is counted, not multiplied by a frequency factor: each schedule is stepped through the
@@ -901,7 +901,7 @@ export function monthlyRecurringBreakdown(recurring, transactions, start, end) {
  * not twelve, and a schedule that stops in March stops in March. Paused schedules cost nothing.
  *
  * `mujore` is the annual figure spread over the window, so a yearly subscription can be compared
- * with the rent on the same scale — it is a monthly average, not what any one month bills.
+ * with the rent on the same scale - it is a monthly average, not what any one month bills.
  */
 export function annualOutlook(recurring, todayStr = format(new Date(), "yyyy-MM-dd"), muaj = 12) {
   // Inclusive end one day short of the anniversary, so a yearly payment due today is counted once.
@@ -925,7 +925,7 @@ export function annualOutlook(recurring, todayStr = format(new Date(), "yyyy-MM-
         nrPagesave: datat.length,
         dataEPare: datat[0] || null,
         dataEFundit: datat[datat.length - 1] || null,
-        // Set only when the schedule runs out inside the window — the reason its yearly figure is
+        // Set only when the schedule runs out inside the window - the reason its yearly figure is
         // smaller than its frequency alone would suggest.
         perfundon: rec.dataFundit && rec.dataFundit <= end ? rec.dataFundit : null,
         vjetore,
@@ -983,7 +983,7 @@ export function upcomingRecurring(recurring, todayStr, days = 30) {
 
 /**
  * Turns everything a schedule owes up to `todayStr` into real transactions and returns the
- * schedule advanced past them. Pure — the caller persists both halves.
+ * schedule advanced past them. Pure - the caller persists both halves.
  *
  * It loops rather than posting a single transaction so a schedule left untouched for months
  * catches up in full on the next visit. `maxCatchUp` stops a mis-entered start date decades in
@@ -1011,7 +1011,7 @@ export function generateDueTransactions(rec, todayStr, makeIdFn, maxCatchUp = 60
       qellimiId: null,
       perseritjaId: updated.id,
       // Carried onto the transaction so whichever path books it can pay the linked note down with
-      // `debtPaymentsFromTransactions` — no separate bookkeeping to keep in step.
+      // `debtPaymentsFromTransactions` - no separate bookkeeping to keep in step.
       borxhiId: updated.borxhiId || null,
       // Carried over so a $-billed subscription still shows what was charged; the confirmation
       // dialog is where the month's real rate (and amount) can be corrected.
@@ -1038,12 +1038,12 @@ export function generateDueTransactions(rec, todayStr, makeIdFn, maxCatchUp = 60
 // ── Backups ─────────────────────────────────────────────────────────────────
 
 /**
- * How exposed the ledger is right now — everything lives in one browser's IndexedDB, and clearing
+ * How exposed the ledger is right now - everything lives in one browser's IndexedDB, and clearing
  * site data takes it with it, so the only real protection is a file the user keeps somewhere else.
  *
  * `teReja` counts the transactions entered since that file was written, which is the honest measure
  * of what a wipe would cost: three weeks with nothing recorded is not the same risk as three weeks
- * of daily entries. `duhet` is deliberately quiet on an empty or barely-used ledger — a brand new
+ * of daily entries. `duhet` is deliberately quiet on an empty or barely-used ledger - a brand new
  * database has nothing to lose and being nagged on day one only teaches the user to ignore it.
  */
 export function backupStatus({ profile = {}, transactions = [], sot = new Date(), afati = 30, minimumi = 10 } = {}) {
@@ -1072,7 +1072,7 @@ export function backupStatus({ profile = {}, transactions = [], sot = new Date()
 // ── Planned spending ────────────────────────────────────────────────────────
 
 /**
- * A plan is a purchase the user already knows about but has not made yet — "shelves for the living
+ * A plan is a purchase the user already knows about but has not made yet - "shelves for the living
  * room, some time this month". It is neither a transaction nor a budget: it moves no money and sets
  * no per-category limit. It belongs to one month (`muaji`, a "YYYY-MM" key) and its whole job is to
  * be set aside before it is spent, so the daily allowance below stops offering money that is
@@ -1102,7 +1102,7 @@ export function planProgress(plan, transactions = []) {
   };
 }
 
-/** The plans of one month — still to buy first, then by priority, then largest first. */
+/** The plans of one month - still to buy first, then by priority, then largest first. */
 export function plansForMonth(plans, key, transactions = []) {
   return plans
     .filter((p) => p.muaji === key)
@@ -1134,7 +1134,7 @@ export function planTotals(plans, key, transactions = []) {
 
 /**
  * Plans left unbought in months that have already gone by, oldest first. They are deliberately
- * *not* folded into the current month's totals — a plan belongs to the month it was made for, and
+ * *not* folded into the current month's totals - a plan belongs to the month it was made for, and
  * moving it forward is the user's decision, one button away on the Planet page.
  */
 export function overduePlans(plans, key, transactions = []) {

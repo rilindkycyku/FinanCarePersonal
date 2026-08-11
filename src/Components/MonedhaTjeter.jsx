@@ -7,7 +7,7 @@ import "./ModalForms.css";
 
 /**
  * Optional "this amount is in another currency" block for the transaction and recurring-payment
- * forms — an Anthropic or Google subscription billed in $ while the profile runs in €.
+ * forms - an Anthropic or Google subscription billed in $ while the profile runs in €.
  *
  * The form keeps entering the amount in the chosen currency; what gets stored is that amount times
  * `kursi`, so every balance and chart stays in the profile currency. The rate is typed by hand

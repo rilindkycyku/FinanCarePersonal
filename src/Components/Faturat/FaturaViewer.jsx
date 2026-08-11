@@ -8,7 +8,7 @@ import "./Faturat.css";
 
 /**
  * Reads one invoice photo full size. The picture is fetched from IndexedDB only when it is opened
- * — the grids everywhere else run on the thumbnail carried in the metadata — and an image just
+ * - the grids everywhere else run on the thumbnail carried in the metadata - and an image just
  * picked in a form is shown straight from the blob it already holds, before anything is saved.
  */
 function FaturaViewer({ show, faturat = [], indeksi = 0, onHide, onNdrysho }) {
@@ -40,7 +40,7 @@ function FaturaViewer({ show, faturat = [], indeksi = 0, onHide, onNdrysho }) {
 
     return () => {
       anuluar = true;
-      // Revoked as soon as the picture is swapped or the dialog closes — object URLs live until
+      // Revoked as soon as the picture is swapped or the dialog closes - object URLs live until
       // the tab is reloaded otherwise, and a browsed folder of invoices would hold every one.
       if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
@@ -62,7 +62,7 @@ function FaturaViewer({ show, faturat = [], indeksi = 0, onHide, onNdrysho }) {
 
       <Modal.Body>
         {gabim ? (
-          <div className="fcp-fatura-gjendje gabim">Fotoja nuk mund të shfaqet — {gabim}.</div>
+          <div className="fcp-fatura-gjendje gabim">Fotoja nuk mund të shfaqet - {gabim}.</div>
         ) : (
           <>
             <div className="fcp-fatura-shirit">

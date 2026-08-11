@@ -5,12 +5,12 @@ import "../Pages/Styles/Personal.css";
 /**
  * Shown when the database is held open elsewhere at an older version, which stops this tab's
  * upgrade before it starts. Nothing in the app works until it clears, so this covers the screen
- * rather than sitting in a corner — and because it is the one failure with an obvious remedy, it
+ * rather than sitting in a corner - and because it is the one failure with an obvious remedy, it
  * says the remedy instead of reporting an error.
  *
  * No data is at risk: the ledger is untouched on disk, only unreadable from here for the moment.
  * The read stays queued behind the block, so closing the other tab makes this disappear on its own
- * with nothing to press — the button is only for anyone who would rather start over.
+ * with nothing to press - the button is only for anyone who would rather start over.
  */
 function BazaEBllokuar() {
   return (

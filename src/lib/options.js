@@ -1,6 +1,6 @@
 /**
  * Static option lists and the defaults seeded into IndexedDB the first time a browser opens
- * FinanCarePersonal. Everything here is a starting point only — once seeded, the user owns the
+ * FinanCarePersonal. Everything here is a starting point only - once seeded, the user owns the
  * list and can rename, recolor, add to or delete every row (same pattern FinanCareLite uses for
  * its TVSH types / units).
  */
@@ -50,8 +50,8 @@ export function accountTypeMeta(value) {
 /**
  * Kinds of debt note. A debt is *not* an account: it lives in its own store and never reaches
  * `accountBalance`/`totalBalance`, so a card you still owe on cannot drag the real balance
- * negative. `drejtimi` says which way it points — `detyrim` is money you owe, `kerkese` is money
- * someone owes you — which is all that changes in the wording ("paguar" vs "kthyer").
+ * negative. `drejtimi` says which way it points - `detyrim` is money you owe, `kerkese` is money
+ * someone owes you - which is all that changes in the wording ("paguar" vs "kthyer").
  */
 export const DEBT_TYPES = [
   { value: "karte", label: "Kartelë Krediti", short: "Kartelë", icon: "CreditCard", drejtimi: "detyrim" },
@@ -82,7 +82,7 @@ export const DEBT_ENTRY_TYPES = [
 ];
 
 /**
- * How urgent a planned purchase is. The priority only sorts the list and colours the badge — every
+ * How urgent a planned purchase is. The priority only sorts the list and colours the badge - every
  * unfinished plan is set aside from the daily allowance all the same, because an "opsionale" plan
  * you still intend to buy takes the same money out of the month as any other.
  */
@@ -171,7 +171,7 @@ export const DEFAULT_CATEGORIES = [
   { id: "cat_default_kredi", emri: "Kredi & Kamata", lloji: "shpenzim", ngjyra: "#64748b", ikona: "CreditCard" },
   { id: "cat_default_keste", emri: "Këste të Kartelës (Bonus)", lloji: "shpenzim", ngjyra: "#3b82f6", ikona: "Receipt" },
   // Added after the first release: everyday baskets the original list sent to "Shpenzime të Tjera",
-  // where they stopped saying anything. A drogeri run (DM, Bipa) is the clearest case — it is not
+  // where they stopped saying anything. A drogeri run (DM, Bipa) is the clearest case - it is not
   // food and not a household purchase, and it happens every other week.
   { id: "cat_default_higjiene", emri: "Higjienë & Kozmetikë", lloji: "shpenzim", ngjyra: "#ec4899", ikona: "Sparkles" },
   { id: "cat_default_barna", emri: "Barna & Farmaci", lloji: "shpenzim", ngjyra: "#14b8a6", ikona: "Pill" },

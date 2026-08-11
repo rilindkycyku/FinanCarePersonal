@@ -1,5 +1,5 @@
 /* Shared look for the small "settings list" sections (Kurset e Këmbimit, Llojet e TVSH,
-   Njësitë Matëse, Llojet e Faturave) — a read-only table of existing rows plus an "add new"
+   Njësitë Matëse, Llojet e Faturave) - a read-only table of existing rows plus an "add new"
    bar underneath. */
 
 .settings-list-intro {
@@ -54,7 +54,7 @@
 }
 
 /* Desktop: plain table. The narrow-column widths only make sense once each cell sits in a
-   fixed-width table column — on mobile these become full-width labeled rows instead (below),
+   fixed-width table column - on mobile these become full-width labeled rows instead (below),
    where a maxWidth would just clip the value, so it's scoped to this breakpoint only. */
 .settings-table td,
 .settings-table th {

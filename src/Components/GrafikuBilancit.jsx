@@ -4,7 +4,7 @@ import "../Pages/Styles/Personal.css";
 /**
  * The balance as a line: months already lived drawn solid, months still ahead dashed.
  *
- * The two halves share one scale and one path on purpose — a forecast shown on its own chart
+ * The two halves share one scale and one path on purpose - a forecast shown on its own chart
  * invites the eye to read it as a separate, sturdier thing, when the honest picture is that it is
  * the same line continuing on thinner evidence. Where the line would cross zero, a marked axis is
  * drawn so "below the line" means what it looks like.
@@ -47,7 +47,7 @@ function GrafikuBilancit({ pikat, money, height = 190 }) {
       koordinatat,
       kaluara: line(kaluara),
       ardhmja: line(ardhmja),
-      // Filled underneath the past only — the shaded area reads as "this happened".
+      // Filled underneath the past only - the shaded area reads as "this happened".
       zona: `${line(kaluara)} ${kaluara.at(-1).x.toFixed(1)},${H} ${kaluara[0].x.toFixed(1)},${H}`,
       zeroja: min < 0 ? y(0) : null,
     };

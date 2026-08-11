@@ -137,7 +137,7 @@
   }
 
   /* The button is a flex container, so without this its icon is what gives way when the label is
-     wide — the action loses its icon instead of the row losing a few pixels. */
+     wide - the action loses its icon instead of the row losing a few pixels. */
   .fcp-pdf-footer .btn svg {
     flex-shrink: 0;
   }

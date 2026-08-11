@@ -3,7 +3,7 @@
  *
  * Typing "Spar" and picking "Ushqim & Pije" for the two hundredth time is work the app can do
  * itself, and it is the difference between a bank import being useful and being a chore. The
- * memory is learned from what the user actually does — every saved transaction teaches it — rather
+ * memory is learned from what the user actually does - every saved transaction teaches it - rather
  * than shipped as a list of merchant names that would only ever fit one country.
  *
  * Rules live on the profile as `rregullatKategorive: [{ fjalet, kategoriaId, lloji, numri }]`, so
@@ -21,7 +21,7 @@ const FJALE_TE_ZAKONSHME = new Set([
 /**
  * The words of a description worth remembering: letters only, at least three of them, nothing that
  * every second line already says. Bank descriptions bury a stable merchant name in noise that
- * changes every time — card numbers, terminal ids, dates — and this keeps the words that could
+ * changes every time - card numbers, terminal ids, dates - and this keeps the words that could
  * carry meaning without deciding yet which of them does.
  */
 export function fjaletKryesore(pershkrimi) {
@@ -50,9 +50,9 @@ function perputhja(rregull, fjalet) {
  * The category to suggest for a description, or null.
  *
  * Matching is on shared words rather than on the whole string, which is what lets "POS 4415 SPAR
- * PRISHTINE 12.03" and "SPAR MARKET" find each other. A rule only applies to its own direction — a
+ * PRISHTINE 12.03" and "SPAR MARKET" find each other. A rule only applies to its own direction - a
  * "Spar" learned from an expense must not categorise an incoming payment that happens to mention
- * it — and a rule whose category has since been deleted is ignored rather than suggesting a name
+ * it - and a rule whose category has since been deleted is ignored rather than suggesting a name
  * that is no longer there. Where two rules match, the one sharing more words wins, then the one
  * confirmed more often.
  */
@@ -77,8 +77,8 @@ export function sugjeroKategorine(pershkrimi, profile, categories = [], lloji = 
  *
  * Confirming an existing rule narrows it to the words the two descriptions have in common, which
  * is how a rule finds the merchant by itself: "SPAR PRISHTINE" then "SPAR FUSHE KOSOVE" leaves
- * "spar" and drops the branch. Choosing a different category replaces the rule — the last thing
- * the user did is what they meant — and the confirmation count starts again, because it belonged
+ * "spar" and drops the branch. Choosing a different category replaces the rule - the last thing
+ * the user did is what they meant - and the confirmation count starts again, because it belonged
  * to the answer that was just overruled.
  */
 export function mesoRregullen(profile, { pershkrimi, kategoriaId, lloji }) {
@@ -103,7 +103,7 @@ export function mesoRregullen(profile, { pershkrimi, kategoriaId, lloji }) {
   );
 }
 
-/** Rules for categories that no longer exist, dropped — what Cilësimet uses to keep the list tidy. */
+/** Rules for categories that no longer exist, dropped - what Cilësimet uses to keep the list tidy. */
 export function pastroRregullat(profile, categories = []) {
   return rregullat(profile).filter((r) => categories.some((c) => c.id === r.kategoriaId));
 }

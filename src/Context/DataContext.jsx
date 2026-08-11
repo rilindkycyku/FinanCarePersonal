@@ -15,7 +15,7 @@ const DataContext = createContext(null);
  * something to lose: Firefox turns this into a permission prompt, and a prompt on an empty app
  * nobody has typed anything into yet is exactly the kind of thing that gets a site closed. Chrome
  * and Edge answer silently from engagement, Safari ignores it (there the answer is the home
- * screen — see the Eksporto / Importo page).
+ * screen - see the Eksporto / Importo page).
  */
 async function kerkoQendrueshmerine(data) {
   const kaTeDhena = (data?.transactions?.length || 0) > 0 || (data?.faturat?.length || 0) > 0;
@@ -50,7 +50,7 @@ export function DataProvider({ children }) {
   const [error, setError] = useState(null);
   // Not an error: the database is intact, just held open at an older version by another tab, and
   // the read is still queued behind it. db.js announces both the wait and the moment it clears, so
-  // there is nothing to retry here — closing the other tab lets the pending read finish by itself.
+  // there is nothing to retry here - closing the other tab lets the pending read finish by itself.
   const [bllokuar, setBllokuar] = useState(false);
   useEffect(() => onBllokimBaze(setBllokuar), []);
 
@@ -59,13 +59,13 @@ export function DataProvider({ children }) {
       const fresh = await getAllData();
       // A transaction can be deleted from several places (the list, a debt payment being undone),
       // so rather than remembering to clean up at each one, any invoice left without its
-      // transaction is dropped here — the single point every change already passes through.
+      // transaction is dropped here - the single point every change already passes through.
       fresh.faturat = await fshiFaturatJetime(fresh.faturat, fresh.transactions);
       setData(fresh);
       setError(null);
       return fresh;
     } catch (err) {
-      // Typically a browser with IndexedDB disabled (some private-browsing modes) — the app
+      // Typically a browser with IndexedDB disabled (some private-browsing modes) - the app
       // stays usable/read-only rather than rendering an empty page with no explanation.
       setError(err?.message || "Të dhënat nuk mund të lexohen nga shfletuesi.");
       return EMPTY;

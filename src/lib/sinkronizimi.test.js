@@ -2,7 +2,7 @@
  * Tests for the merge rules in sinkronizimi.js.
  *
  * These decide which of two copies of the same transaction survives, and whether a deletion made
- * on the phone reaches the laptop or is quietly undone by it — the two ways a sync can lose
+ * on the phone reaches the laptop or is quietly undone by it - the two ways a sync can lose
  * somebody's money data rather than move it. Everything tested here is pure: no database, no
  * network, and above all no clock, since not trusting the device clock is the point of half of it.
  * Timestamps are small integers so "which is newer" is visible in the test.
@@ -16,7 +16,7 @@ import {
 
 /** A record that has been through the cloud: settled, dated by the server. */
 const tx = (id, perditesuar, extra = {}) => ({ id, vlera: 10, perditesuar, ...extra });
-/** A record changed on this device and not yet sent — what `put()` in db.js writes. */
+/** A record changed on this device and not yet sent - what `put()` in db.js writes. */
 const pezull = (id, perditesuar, extra = {}) => tx(id, perditesuar, { sinkPezull: true, ...extra });
 const varr = (store, id, perditesuar, extra = {}) => ({ store, id, perditesuar, ...extra });
 const remote = (store, id, perditesuar, extra = {}) => ({
@@ -93,7 +93,7 @@ describe("planiIAplikimit", () => {
 
   it("takes the cloud row for a settled record, whichever way the dates fall", () => {
     // An incremental pull only returns rows changed since this device's watermark, so a row that
-    // arrives while the local copy is settled is news — even if it carries an older timestamp,
+    // arrives while the local copy is settled is news - even if it carries an older timestamp,
     // which is precisely what a device with a slow clock produces.
     const meRe = planiIAplikimit([remote("transactions", "t1", 900)], gjendja({ "transactions:t1": 400 }));
     expect(meRe.shkruaj).toHaveLength(1);
@@ -103,7 +103,7 @@ describe("planiIAplikimit", () => {
   });
 
   it("never overwrites a local change that has not been sent yet", () => {
-    // Even though the cloud row is dated later — which is exactly what a slow clock produces.
+    // Even though the cloud row is dated later - which is exactly what a slow clock produces.
     const plani = planiIAplikimit(
       [remote("transactions", "t1", 9000)],
       gjendja({ "transactions:t1": 5 }, ["transactions:t1"])
@@ -174,7 +174,7 @@ describe("planiIAplikimit", () => {
 describe("një pajisje e re që lidhet me një kopje ekzistuese", () => {
   // A fresh install seeds the default categories with the same fixed ids the real device has been
   // renaming for months. They are written by the database's own upgrade step, so they carry no
-  // timestamp and no unsent flag — which is what stops them winning anything.
+  // timestamp and no unsent flag - which is what stops them winning anything.
   const kategoriaEParazgjedhur = { id: "kat_ushqim", emri: "Ushqim", perditesuar: KOHA_PARA_SINKRONIZIMIT };
   const eRiemeruar = {
     store: "categories",

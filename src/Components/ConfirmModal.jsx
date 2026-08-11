@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Modal, Button, Form } from "react-bootstrap";
 import { AlertTriangle, CheckCircle2, Info, ShieldAlert } from "lucide-react";
 
-/** Icon, tint and button colour per variant. `danger` is for the steps that destroy data — amber
+/** Icon, tint and button colour per variant. `danger` is for the steps that destroy data - amber
  * reads as "careful", red as "this one you cannot take back". */
 const VARIANTS = {
   info: { Icon: Info, color: "#4f46e5", bg: "rgba(79, 70, 229, 0.15)", btn: "primary" },

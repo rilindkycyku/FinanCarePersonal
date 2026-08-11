@@ -4,8 +4,8 @@ import "./PunaNeVazhdim.css";
 /**
  * Covers the screen while a long job runs, so it cannot be interrupted halfway.
  *
- * The jobs it guards — building a ZIP of a year of invoice photos, restoring a backup, re-encoding
- * every picture, laying out a PDF statement — take seconds on a phone and share one property: a
+ * The jobs it guards - building a ZIP of a year of invoice photos, restoring a backup, re-encoding
+ * every picture, laying out a PDF statement - take seconds on a phone and share one property: a
  * second tap in the middle makes things worse rather than faster. Starting the export twice builds
  * it twice on a device that was already struggling; navigating away mid-import leaves the database
  * half replaced. A spinner on the button alone does not prevent either, because the rest of the

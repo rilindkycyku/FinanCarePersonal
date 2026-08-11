@@ -8,7 +8,7 @@ import { monthLabel, todayISO } from "../lib/format";
 import "../Pages/Styles/Personal.css";
 
 /**
- * "Sa mund të shpenzoj sot" — the single figure the rest of the month has to be shared out into,
+ * "Sa mund të shpenzoj sot" - the single figure the rest of the month has to be shared out into,
  * with the breakdown that produced it right underneath. The breakdown is the point: a daily number
  * on its own is a number to distrust, so the card always says which balance it started from, what
  * income it counted on and what it set aside for plans and instalments.
@@ -50,7 +50,7 @@ function ShpenzimiDitor({ action = "Planifiko", actionTo = "/planifikuara" }) {
           <ProgressBar value={d.perqindja} color="var(--sp-cyan)" over={d.tejkaluar} />
           <div className="fcp-daily-note">
             {d.tejkaluar
-              ? `Kufiri i sotëm u tejkalua me ${money(Math.abs(d.mbetur))} — nesër fondi ndahet nga e para.`
+              ? `Kufiri i sotëm u tejkalua me ${money(Math.abs(d.mbetur))} - nesër fondi ndahet nga e para.`
               : d.manual
                 ? `Limit i caktuar nga ju te Cilësimet. Të lira këtë muaj keni ${money(d.disponueshme)}.`
                 : `${money(d.disponueshme)} të lira, të ndara në ${d.ditetMbetura} ${
@@ -62,7 +62,7 @@ function ShpenzimiDitor({ action = "Planifiko", actionTo = "/planifikuara" }) {
         <Empty>
           {d.disponueshme < 0 ? (
             <>
-              Detyrimet e këtij muaji — pagesat e përsëritura dhe planet — kalojnë me{" "}
+              Detyrimet e këtij muaji - pagesat e përsëritura dhe planet - kalojnë me{" "}
               <strong>{money(Math.abs(d.disponueshme))}</strong> paratë që keni. Zhvendosni ndonjë plan për muajin
               tjetër ose rishikoni <Link to="/te-perseritura">pagesat e përsëritura</Link>.
             </>

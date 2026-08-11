@@ -1,5 +1,5 @@
 /**
- * IndexedDB-backed persistence for FinanCarePersonal. There is no backend — the profile,
+ * IndexedDB-backed persistence for FinanCarePersonal. There is no backend - the profile,
  * accounts, categories, transactions, budgets, savings goals and recurring payments all live
  * entirely in this browser. Same hand-rolled openDb/withStore wrapper shape FinanCareLite uses.
  */
@@ -23,10 +23,10 @@ export const STORES = {
   goals: "goals",
   recurring: "recurring",
   // Debt notes (cards, loans, money lent out). Deliberately a store of its own and never read by
-  // the balance maths — see finance.js.
+  // the balance maths - see finance.js.
   borxhet: "borxhet",
   // Planned purchases for a month: money the user knows will go out but has not spent yet. Like
-  // debts they are not transactions, so they never move a balance — they only reserve part of the
+  // debts they are not transactions, so they never move a balance - they only reserve part of the
   // month's money so the daily allowance stops handing it out (finance.js).
   planet: "planet",
   // Invoice photos, split in two on purpose: `faturat` holds only the small metadata record (name,
@@ -37,7 +37,7 @@ export const STORES = {
   faturat: "faturat",
   faturaSkedaret: "faturaSkedaret",
   // Tombstones: `${store}:${id}` of every record deleted on this device, with the moment it went.
-  // Nothing else in the app reads them — they exist so that sync (lib/sinkronizimi.js) can tell
+  // Nothing else in the app reads them - they exist so that sync (lib/sinkronizimi.js) can tell
   // "this record was deleted here" apart from "this device has never seen that record", which is
   // the same absence to look at and the difference between a delete travelling to the other
   // device and the other device putting the record straight back.
@@ -49,7 +49,7 @@ const PROFILE_KEY = "main";
 /**
  * The stores whose records take part in sync, and the id of the profile record inside it. Invoice
  * photos are deliberately absent: they are binary, they are by far the largest thing here, and
- * they would need Supabase Storage rather than a table — the ZIP backup remains the way to move
+ * they would need Supabase Storage rather than a table - the ZIP backup remains the way to move
  * pictures between devices.
  */
 export const SINK_STORES = [
@@ -68,12 +68,12 @@ export const SINK_PROFILE_ID = PROFILE_KEY;
 /**
  * A version upgrade cannot start while another tab, window or the installed app still holds the
  * database open at the older version. The browser reports that with `blocked` and then simply keeps
- * the request waiting — so the app used to sit on "Duke ngarkuar të dhënat..." forever with nothing
+ * the request waiting - so the app used to sit on "Duke ngarkuar të dhënat..." forever with nothing
  * to explain it.
  *
  * The request is deliberately left waiting, because that is what eventually succeeds: the moment
  * the other side closes, `success` fires on this very request and the app carries on. Abandoning it
- * and opening a fresh one is worse than useless — the abandoned request stays pending in the
+ * and opening a fresh one is worse than useless - the abandoned request stays pending in the
  * browser and every later open() queues behind it, which is a hang with extra steps.
  *
  * So instead of failing, the wait is announced to whoever is listening (the UI), and un-announced
@@ -131,7 +131,7 @@ function openDb() {
       if (!db.objectStoreNames.contains(STORES.profile)) {
         db.createObjectStore(STORES.profile);
       }
-      // Accounts and categories are seeded only at first creation — from then on the user fully
+      // Accounts and categories are seeded only at first creation - from then on the user fully
       // owns both lists (can rename, recolor or delete every default row without it coming back
       // on the next load).
       if (!db.objectStoreNames.contains(STORES.accounts)) {
@@ -172,7 +172,7 @@ function openDb() {
         store.createIndex("transaksioniId", "transaksioniId", { unique: false });
       }
       if (!db.objectStoreNames.contains(STORES.faturaSkedaret)) {
-        // Plain blobs, keyed by the invoice id — a Blob has no fields to use as a keyPath.
+        // Plain blobs, keyed by the invoice id - a Blob has no fields to use as a keyPath.
         db.createObjectStore(STORES.faturaSkedaret);
       }
       // Added in DB_VERSION 5, for sync. A database that never syncs simply keeps an empty store.
@@ -196,7 +196,7 @@ function openDb() {
     req.onsuccess = () => {
       const db = req.result;
       // Without this, an older tab left open from before a DB_VERSION bump holds its connection
-      // open forever and every new tab/reload's indexedDB.open() blocks silently — the app just
+      // open forever and every new tab/reload's indexedDB.open() blocks silently - the app just
       // hangs on "Duke ngarkuar...". Closing on versionchange lets the newer connection proceed.
       db.onversionchange = () => db.close();
       pastro();
@@ -227,7 +227,7 @@ function withStore(store, mode, body) {
   );
 }
 
-/** Same as `withStore`, for the writes that must land in two stores or in neither — an invoice
+/** Same as `withStore`, for the writes that must land in two stores or in neither - an invoice
  * record without its picture (or the other way round) would be a dead row. */
 function withStores(stores, mode, body) {
   return openDb().then(
@@ -259,8 +259,8 @@ export function getOne(store, id) {
 /**
  * Writes a record and stamps it with the moment it was written.
  *
- * Two fields make sync possible, and both are written here — at the single point every ordinary
- * change already passes through — so no form, page or importer has to remember them.
+ * Two fields make sync possible, and both are written here - at the single point every ordinary
+ * change already passes through - so no form, page or importer has to remember them.
  *
  * `sinkPezull` means "changed on this device and not yet accepted by the cloud". It is a flag
  * rather than a comparison of timestamps, and that is the whole point: a phone whose clock is an
@@ -271,7 +271,7 @@ export function getOne(store, id) {
  * cloud it holds the time the *server* gave it (sinkronizimi.js writes that back), so comparisons
  * between two devices are made in one clock rather than in two.
  *
- * The one path that must *not* be stamped is sync applying what came down from the cloud — that
+ * The one path that must *not* be stamped is sync applying what came down from the cloud - that
  * record already has a timestamp, the one it was given on the device where it was edited, and
  * replacing it with "now" would make an old edit look like the newest one everywhere. That path
  * uses `putRaw`.
@@ -291,7 +291,7 @@ export function putRaw(store, record) {
 /**
  * Deletes a record and leaves a tombstone behind, so the deletion can travel to the other devices.
  * Without one, the next sync would see a record present in the cloud and absent here, conclude
- * this device had simply never received it, and download it again — deleting anything would be
+ * this device had simply never received it, and download it again - deleting anything would be
  * impossible on a synced ledger.
  */
 export function remove(store, id) {
@@ -322,7 +322,7 @@ export function getFshirjet() {
 /**
  * Withdraws tombstones for records that exist again.
  *
- * Ids are unique, so a deleted record normally never comes back — except for the two places that
+ * Ids are unique, so a deleted record normally never comes back - except for the two places that
  * write a record whose id is chosen rather than generated: restoring the default categories (their
  * ids are fixed, so deleting "Ushqim" and asking for the defaults back re-creates that very id)
  * and importing a backup taken before the deletion. Leaving the tombstone in place would let the
@@ -346,7 +346,7 @@ export function clearStore(store) {
  * that release (this is how "Këste të Kartelës" reached existing installs).
  *
  * Deleting a default records its id in `kategoriTeHequra` on the profile, so a category the user
- * threw away stays gone — only genuinely new ones appear.
+ * threw away stays gone - only genuinely new ones appear.
  */
 export async function ensureDefaultCategories() {
   const [categories, profile] = await Promise.all([getAll(STORES.categories), getProfile()]);
@@ -395,7 +395,7 @@ export function getAllData() {
     getAll(STORES.recurring),
     getAll(STORES.borxhet),
     getAll(STORES.planet),
-    // Metadata only — the pictures themselves stay on disk until one is opened.
+    // Metadata only - the pictures themselves stay on disk until one is opened.
     getAll(STORES.faturat),
   ]).then(
     ([profile, accounts, categories, transactions, budgets, goals, recurring, borxhet, planet, faturat]) => ({
@@ -468,7 +468,7 @@ export async function fshiFaturatJetime(faturat, transactions) {
 }
 
 /**
- * Re-encodes every stored photo at the given setting — what makes lowering the quality worth
+ * Re-encodes every stored photo at the given setting - what makes lowering the quality worth
  * anything to someone who already has a year of invoices. Each one is read, squeezed and written
  * back on its own, so a run that is interrupted (a closed tab, a full quota) still leaves every
  * picture it already reached smaller and every other one untouched.
@@ -496,7 +496,7 @@ export async function ringjeshFaturat(faturat, celesiCilesise, onProgres) {
   return { ngjeshur, uKursye };
 }
 
-/** How much room the browser has given this origin and how much is left — the only warning a
+/** How much room the browser has given this origin and how much is left - the only warning a
  * user gets before writes start failing, since nothing here is stored anywhere else. */
 export async function hapesiraRuajtjes() {
   if (!navigator.storage?.estimate) return null;
@@ -511,7 +511,7 @@ export async function hapesiraRuajtjes() {
 // ---- durability ----
 // Without a backend, "the browser deleted it" is total loss. Browsers evict ordinary site storage
 // when a device runs low, and WebKit clears script-writable storage for a site left unvisited for
-// seven days of browsing — which would take the whole ledger, not only the photos. Persistent
+// seven days of browsing - which would take the whole ledger, not only the photos. Persistent
 // storage is the standard way to ask to be exempt from that.
 
 export async function ruajtjaEshteQendrueshme() {
@@ -524,7 +524,7 @@ export async function ruajtjaEshteQendrueshme() {
 }
 
 /** Chrome and Edge decide silently from how engaged the user is with the site, Firefox asks. Safari
- * ignores the request, and there the equivalent is adding the app to the home screen — a
+ * ignores the request, and there the equivalent is adding the app to the home screen - a
  * home-screen web app keeps its own counter and is not subject to the seven-day sweep. */
 export async function kerkoRuajtjeQendrueshme() {
   if (!navigator.storage?.persist) return false;
@@ -548,7 +548,7 @@ export function putProfile(record) {
     .then(() => stamped);
 }
 
-/** The profile as it came down from the cloud, keeping its own timestamp — see `putRaw`. */
+/** The profile as it came down from the cloud, keeping its own timestamp - see `putRaw`. */
 export function putProfileRaw(record) {
   return withStore(STORES.profile, "readwrite", (s) => s.put(record, PROFILE_KEY)).then(() => record);
 }
@@ -565,7 +565,7 @@ export function putProfileRaw(record) {
 export async function exportAllData({ perfshiFaturat = false } = {}) {
   const data = await getAllData();
   // Both the picture and its thumbnail are stored as binary and have to be base64-encoded to fit
-  // in JSON at all — the one place in the app where that cost is unavoidable.
+  // in JSON at all - the one place in the app where that cost is unavoidable.
   const faturat = perfshiFaturat
     ? await Promise.all(
         data.faturat.map(async (fatura) => {
@@ -596,19 +596,19 @@ export async function exportAllData({ perfshiFaturat = false } = {}) {
 }
 
 /** File names inside the archive come from what the user called the picture, so the folder is
- * readable when opened outside the app — but only after everything a path could choke on is gone. */
+ * readable when opened outside the app - but only after everything a path could choke on is gone. */
 function emriISigurt(tekst) {
   return String(tekst).replace(/[^\w.-]+/g, "_").slice(0, 60);
 }
 
 /**
  * The whole database as a ZIP: `backup.json` with every record, and the photos as ordinary image
- * files beside it. This is the backup that works at any size — the pictures go in as blobs rather
+ * files beside it. This is the backup that works at any size - the pictures go in as blobs rather
  * than base64 text, so nothing is held in memory but the one being checksummed, and the archive
  * opens in any file manager if the user ever wants the pictures without this app.
  */
 export async function exportZipData(onProgres) {
-  // The manifest is the JSON export itself, minus the photos — so a store added to one backup can
+  // The manifest is the JSON export itself, minus the photos - so a store added to one backup can
   // never go missing from the other.
   const json = await exportAllData();
   const faturat = await getAll(STORES.faturat);
@@ -681,7 +681,7 @@ const IMPORT_STORES = [
  * `zevendeso` (the default) is a restore: every store is emptied first, so what is on screen
  * afterwards is exactly what is in the file.
  *
- * `bashko` is for the other case entirely — a backup from another device, or an old one opened by
+ * `bashko` is for the other case entirely - a backup from another device, or an old one opened by
  * mistake. It adds only the records whose id is not here yet and never touches one that is, so a
  * file from three months ago cannot quietly undo three months of work. The profile is left alone
  * too: currency, targets and the single-account setting belong to this device.
@@ -695,13 +695,13 @@ export async function importAllData(data, { mode = "zevendeso" } = {}) {
   }
   const bashko = mode === "bashko";
   // Photos are the one thing written through `ruajFaturen`, since each lands in two stores at
-  // once — so they are handled beside the loop rather than inside it. They arrive either as blobs
+  // once - so they are handled beside the loop rather than inside it. They arrive either as blobs
   // (from a ZIP archive) or as base64 (from a JSON backup that carried them).
   const faturat = (data.faturat ?? []).filter((f) => f?.dataUrl || f?.blob);
 
   if (!bashko) {
-    // A backup that carries photos replaces the photos too. One that does not — the plain JSON
-    // export of the ledger — leaves them where they are: wiping every picture because the user
+    // A backup that carries photos replaces the photos too. One that does not - the plain JSON
+    // export of the ledger - leaves them where they are: wiping every picture because the user
     // moved their ledger between browsers would destroy the one thing here that cannot be
     // retyped. Whatever is left belonging to a transaction the import did not bring back is swept
     // on the next load.
@@ -726,7 +726,7 @@ export async function importAllData(data, { mode = "zevendeso" } = {}) {
     permbledhja.shtuar += teShkruara.length;
     permbledhja.ekzistuese += rreshtat.length - teShkruara.length;
     await Promise.all(teShkruara.map((record) => put(store, record)));
-    // A merge brings back only what is missing here — which may include a record deleted on this
+    // A merge brings back only what is missing here - which may include a record deleted on this
     // device, whose tombstone has to be withdrawn now that the record exists again.
     if (bashko) await hiqFshirjet(teShkruara.map((r) => `${store}:${r.id}`));
   }
@@ -775,7 +775,7 @@ export async function importAllData(data, { mode = "zevendeso" } = {}) {
 }
 
 /**
- * Records when the whole database was last written out to a file — the only thing standing between
+ * Records when the whole database was last written out to a file - the only thing standing between
  * this browser's storage and a cleared cache. Written by the JSON export, the shared copy and the
  * device-to-device transfer, and read by `backupStatus()` in finance.js.
  */
@@ -786,7 +786,7 @@ export async function shenoKopjen(kur = new Date().toISOString()) {
 }
 
 /** Wipes every store (used by "Pastro të gjitha të dhënat" in Cilësimet). Defaults are seeded on
- * store *creation* only, so after this the user starts from a genuinely empty database — the
+ * store *creation* only, so after this the user starts from a genuinely empty database - the
  * caller re-seeds accounts/categories if it wants the starter lists back. */
 export async function wipeAllData() {
   await Promise.all(Object.values(STORES).map((store) => clearStore(store)));
@@ -794,7 +794,7 @@ export async function wipeAllData() {
   // browser, and "pastro të gjitha të dhënat" that leaves credentials behind is not what it says
   // it is. And it is the only way the wipe can mean anything on a synced device: left connected,
   // the next sync would look at an empty ledger, find the whole cloud copy missing from it, and
-  // download every last transaction back. The cloud copy is left untouched — reconnecting brings
+  // download every last transaction back. The cloud copy is left untouched - reconnecting brings
   // it back deliberately, which is a different act from a wipe undoing itself.
   pastroKonfigurimin();
   // `ensureDefaultCategories()` runs at every startup, so without this the 25 starter categories
@@ -804,7 +804,7 @@ export async function wipeAllData() {
   await putProfile({ kategoriTeHequra: DEFAULT_CATEGORIES.map((c) => c.id) });
 }
 
-/** `perfshiLlogarite: false` restores only the categories — single-account mode has one account on
+/** `perfshiLlogarite: false` restores only the categories - single-account mode has one account on
  * purpose, and re-adding "Kesh" / "Llogaria Bankare" would split the ledger again. */
 export async function seedDefaults({ perfshiLlogarite = true } = {}) {
   await Promise.all([
@@ -812,12 +812,12 @@ export async function seedDefaults({ perfshiLlogarite = true } = {}) {
     ...DEFAULT_CATEGORIES.map((c) => put(STORES.categories, c)),
   ]);
   // The starter lists have fixed ids, so these rows may be re-creating exactly what a tombstone
-  // says was deleted — see `hiqFshirjet`.
+  // says was deleted - see `hiqFshirjet`.
   await hiqFshirjet([
     ...(perfshiLlogarite ? DEFAULT_ACCOUNTS.map((a) => `${STORES.accounts}:${a.id}`) : []),
     ...DEFAULT_CATEGORIES.map((c) => `${STORES.categories}:${c.id}`),
   ]);
-  // Asking for the default lists back also withdraws every "I threw this one away" marker — the
+  // Asking for the default lists back also withdraws every "I threw this one away" marker - the
   // whole set is on the screen again, so nothing is left recorded as removed.
   const profile = await getProfile();
   if (profile?.kategoriTeHequra?.length) await putProfile({ ...profile, kategoriTeHequra: [] });

@@ -349,7 +349,7 @@
 }
 
 /* ══════════════════════════════════════════════════════════════
-   DASHBOARD – LIGHT MODE OVERRIDES
+   DASHBOARD - LIGHT MODE OVERRIDES
    ══════════════════════════════════════════════════════════════ */
 
 body.light-mode .dashboard-wrapper {
@@ -459,7 +459,7 @@ body.light-mode .data-value {
   color: #0f172a;
 }
 
-/* Secondary hero action — the statement download beside "Transaksion i Ri". */
+/* Secondary hero action - the statement download beside "Transaksion i Ri". */
 .hero-cta.ghost {
   background: rgba(255, 255, 255, 0.12);
   border: 1px solid rgba(255, 255, 255, 0.25);

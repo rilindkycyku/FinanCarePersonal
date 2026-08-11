@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { parseISO, isValid, isWithinInterval } from "date-fns";
 
 // Cells may carry markup (the coloured amount/type pills), and money columns must sort by value
-// rather than alphabetically — "-45.00" is less than "9.00", which a string compare gets wrong.
+// rather than alphabetically - "-45.00" is less than "9.00", which a string compare gets wrong.
 const cellText = (value) => String(value ?? "").replace(/<[^>]*>/g, "").trim();
 
 const cellNumber = (value) => {
@@ -20,8 +20,8 @@ const compareCells = (a, b) => {
 };
 
 /** Search/sort/paginate/date-filter a flat array of display-row objects. Ported from FinanCare's
- * useSortableData.js — the row-object shape (title-cased Albanian keys) is what Tabela.jsx
- * expects — with a value-aware comparator so numeric columns sort as numbers. */
+ * useSortableData.js - the row-object shape (title-cased Albanian keys) is what Tabela.jsx
+ * expects - with a value-aware comparator so numeric columns sort as numbers. */
 const useSortableData = (items, config = null, search = "", itemsPerPage = 10, dateField = null, startDate = null, endDate = null) => {
   const [sortConfig, setSortConfig] = useState(config);
   const [currentPage, setCurrentPage] = useState(0);
@@ -74,7 +74,7 @@ const useSortableData = (items, config = null, search = "", itemsPerPage = 10, d
 
   // Searching or filtering can leave fewer pages than the one being read. Clamping here (rather
   // than resetting on every keystroke) keeps the view on the last page that still has rows instead
-  // of rendering a slice past the end of the results — an empty table with a full pager under it.
+  // of rendering a slice past the end of the results - an empty table with a full pager under it.
   const page = Math.min(currentPage, Math.max(pageCount - 1, 0));
   const sliceStart = page * itemsPerPage;
   const visibleItems = processed.slice(sliceStart, sliceStart + itemsPerPage);
@@ -90,7 +90,7 @@ const useSortableData = (items, config = null, search = "", itemsPerPage = 10, d
     currentPage: page,
     pageCount,
     goToPage,
-    // How many rows survived the search/filter — what the "nga N rezultate" line has to count.
+    // How many rows survived the search/filter - what the "nga N rezultate" line has to count.
     total: processed.length,
   };
 };

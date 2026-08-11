@@ -42,8 +42,8 @@ function Llogarite() {
     };
   }, [accounts, transactions]);
 
-  // Single-account mode: one card for the account everything is booked into, and — only after an
-  // import or a mode switch — the leftovers still waiting to be merged into it.
+  // Single-account mode: one card for the account everything is booked into, and - only after an
+  // import or a mode switch - the leftovers still waiting to be merged into it.
   const tjera = accounts.filter((a) => a.id !== llogariaKryesore?.id);
   const kryesorja = stats.detajet.find((a) => a.id === llogariaKryesore?.id);
 
@@ -96,7 +96,7 @@ function Llogarite() {
 
   const renderCard = (account) => {
     // The main account of single-account mode can be renamed and recoloured, but not archived or
-    // deleted — every form writes into it.
+    // deleted - every form writes into it.
     const mbrojtur = njeLlogari && account.id === llogariaKryesore?.id;
     const tipi = accountTypeMeta(account.lloji);
     const Icon = getIcon(tipi.icon);

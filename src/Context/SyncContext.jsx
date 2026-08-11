@@ -6,7 +6,7 @@ import { useData } from "./DataContext";
 
 const SyncContext = createContext(null);
 
-/** A change is almost never alone — confirming a card's instalments writes a transaction per row,
+/** A change is almost never alone - confirming a card's instalments writes a transaction per row,
  * and a form saves the record plus the profile. Waiting a few seconds turns a burst into one sync
  * instead of one per write. */
 const PRITJA_PAS_NDRYSHIMIT = 4000;
@@ -22,10 +22,10 @@ const FRESKIA = 60_000;
  * anything, so this syncs on four occasions: when the app opens, a few seconds after any change is
  * saved, when the tab is looked at again, and when the device comes back online. Each of those is
  * a moment where the other device may have moved on; between them nothing happens, because there
- * is nothing to notice — a personal ledger changes a few times a day, not continuously.
+ * is nothing to notice - a personal ledger changes a few times a day, not continuously.
  *
  * The switch that turns all of it off is on the sync page. With it off nothing leaves the browser
- * except when the user presses "Sinkronizo tani" — which is the whole point of the setting: some
+ * except when the user presses "Sinkronizo tani" - which is the whole point of the setting: some
  * people want their money in a database only at the moments they choose.
  */
 export function SyncProvider({ children }) {

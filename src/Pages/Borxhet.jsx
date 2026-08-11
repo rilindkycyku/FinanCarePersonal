@@ -32,7 +32,7 @@ function daysLeft(dataMbarimit) {
 }
 
 /**
- * Debts, credit cards and money lent out — kept as notes on purpose. Nothing on this page is part
+ * Debts, credit cards and money lent out - kept as notes on purpose. Nothing on this page is part
  * of "Bilanci Total", the monthly cashflow or the statistics: a card you still owe 900 € on shows
  * up here and nowhere else. Payments bring the note down, and only the ones explicitly marked
  * "zbrite edhe nga llogaria" also produce a real transaction.
@@ -93,7 +93,7 @@ function Borxhet() {
 
   const onDelete = async (debt) => {
     // The real transactions some payments created are actual money that left the account, so they
-    // stay in the ledger — only the note goes, exactly like deleting a savings goal.
+    // stay in the ledger - only the note goes, exactly like deleting a savings goal.
     const lidhura = (debt.pagesat || []).filter(
       (p) => p.transaksioniId && transactions.some((tx) => tx.id === p.transaksioniId)
     ).length;

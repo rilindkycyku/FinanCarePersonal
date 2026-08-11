@@ -68,7 +68,7 @@ function Dashboard() {
       // Six months ahead, but only the first month and the low point are shown here.
       parashikimi: forecast({ accounts, transactions, recurring, plans: planet, today, muaj: 6 }),
       neVijim: upcomingRecurring(recurring, today, 14),
-      // Notes only — deliberately not folded into `bilanci` above (see finance.js).
+      // Notes only - deliberately not folded into `bilanci` above (see finance.js).
       borxhet: borxhet
         .filter((d) => !d.arkivuar)
         .map((d) => debtProgress(d))
@@ -76,7 +76,7 @@ function Dashboard() {
         .sort((a, b) => b.mbetur - a.mbetur)
         .slice(0, 4),
       borxhetTotal: debtTotals(borxhet),
-      // Planned purchases that have not been made yet — the money the daily figure has set aside.
+      // Planned purchases that have not been made yet - the money the daily figure has set aside.
       planet: plansForMonth(planet, muajiKey, transactions)
         .filter((p) => !p.kryer)
         .slice(0, 5),
@@ -135,7 +135,7 @@ function Dashboard() {
             <span>
               <CalendarClock size={16} className="me-2" />
               Ka <strong>{stats.dueTani.length}</strong>{" "}
-              {/* The verbs agree with the count too — "1 pagesë ... kanë arritur ... presin" reads
+              {/* The verbs agree with the count too - "1 pagesë ... kanë arritur ... presin" reads
                   as broken Albanian, so the whole tail is inflected, not just the noun. */}
               {stats.dueTani.length === 1
                 ? "pagesë të përsëritur që ka arritur datën dhe pret konfirmim."
@@ -149,7 +149,7 @@ function Dashboard() {
 
         {/* Everything is in this browser and nowhere else, so the only thing that survives a
             cleared cache is a file kept somewhere else. Shown only when there is something to
-            lose — see `backupStatus` in finance.js. */}
+            lose - see `backupStatus` in finance.js. */}
         {stats.kopja.duhet && (
           <Alert variant="secondary" className="d-flex align-items-center justify-content-between flex-wrap gap-2">
             <span>
@@ -226,15 +226,15 @@ function Dashboard() {
           />
         </Row>
 
-        {/* The two halves of the same question — what today's money is, and what is already
-            promised away from it — so the daily figure is never a number without a reason. */}
+        {/* The two halves of the same question - what today's money is, and what is already
+            promised away from it - so the daily figure is never a number without a reason. */}
         <Row className="g-3 g-md-4 mt-0 mb-2">
           <Col xl={6}>
             <ShpenzimiDitor />
           </Col>
           <Col xl={6}>
             <Panel
-              title={`Shpenzimet e Planifikuara — ${monthLabel(muajiKey)}`}
+              title={`Shpenzimet e Planifikuara - ${monthLabel(muajiKey)}`}
               icon={ClipboardList}
               action="Të gjitha"
               actionTo="/planifikuara"
@@ -245,8 +245,8 @@ function Dashboard() {
                     <>Gjithçka e planifikuar për këtë muaj është blerë 🎉</>
                   ) : (
                     <>
-                      Nuk ka plane për këtë muaj. <Link to="/planifikuara">Shtoni çka do të blini</Link> — p.sh. diçka
-                      për shtëpinë — dhe vlera lihet mënjanë nga shpenzimi ditor.
+                      Nuk ka plane për këtë muaj. <Link to="/planifikuara">Shtoni çka do të blini</Link> - p.sh. diçka
+                      për shtëpinë - dhe vlera lihet mënjanë nga shpenzimi ditor.
                     </>
                   )}
                 </Empty>
@@ -278,7 +278,7 @@ function Dashboard() {
                     );
                   })}
                   <div className="fcp-row-sub">
-                    Të rezervuara gjithsej: <strong>{money(stats.planetTotal.mbetur)}</strong> — zbriten nga paratë e
+                    Të rezervuara gjithsej: <strong>{money(stats.planetTotal.mbetur)}</strong> - zbriten nga paratë e
                     lira derisa t&apos;i blini.
                     {stats.planetTeMbartura > 0 &&
                       ` Edhe ${stats.planetTeMbartura} nga muajt e kaluar presin zhvendosje.`}
@@ -352,7 +352,7 @@ function Dashboard() {
                           {tx.pershkrimi ||
                             kategoria?.emri ||
                             (qellimi ? `Kontribut: ${qellimi.emri}` : "Transfer")}
-                          {/* A receipt is attached — the picture itself is opened from the
+                          {/* A receipt is attached - the picture itself is opened from the
                               transactions list, this is only the sign that there is one. */}
                           {faturat.some((f) => f.transaksioniId === tx.id) && (
                             <Paperclip size={12} className="ms-1 text-muted" />

@@ -7,7 +7,7 @@ import "../ModalForms.css";
 import "./Faturat.css";
 
 /**
- * The invoices of one transaction, opened from its row — for looking at a receipt long after the
+ * The invoices of one transaction, opened from its row - for looking at a receipt long after the
  * transaction was recorded, and for adding one that was photographed later.
  *
  * Edits are staged in the same way as inside the transaction form and written only on "Ruaj", so
@@ -39,7 +39,7 @@ function FaturatModal({ show, transaksioni, onHide }) {
       await reload();
       onHide();
     } catch (err) {
-      // Almost always the browser's storage quota — worth naming, since there is no server to
+      // Almost always the browser's storage quota - worth naming, since there is no server to
       // fall back on and the user is the one who has to free the space.
       setGabim(`Fotot nuk u ruajtën: ${err?.message || "hapësira e shfletuesit mund të jetë plot"}.`);
     } finally {
@@ -72,7 +72,7 @@ function FaturatModal({ show, transaksioni, onHide }) {
         <FaturaFusha
           faturat={lista}
           onChange={setLista}
-          ndihma="Bashkëngjitni foton e faturës ose të kuponit — ruhet vetëm në këtë pajisje."
+          ndihma="Bashkëngjitni foton e faturës ose të kuponit - ruhet vetëm në këtë pajisje."
         />
       </Modal.Body>
 

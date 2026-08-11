@@ -22,7 +22,7 @@ export function ThemeProvider({ children }) {
     try {
       localStorage.setItem(THEME_KEY, theme);
     } catch {
-      /* localStorage unavailable — theme still applies for this session */
+      /* localStorage unavailable - theme still applies for this session */
     }
   }, [theme]);
 

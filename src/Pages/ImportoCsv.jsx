@@ -30,7 +30,7 @@ const KOLONAT = [
 /**
  * Reading a bank or card statement into the ledger.
  *
- * The file is parsed in the browser and nothing is written until the last button — everything up to
+ * The file is parsed in the browser and nothing is written until the last button - everything up to
  * then is the user checking the app's guesses. That order is the whole point: a statement has
  * hundreds of rows, and an import that writes first and asks later is a mess nobody can unpick.
  *

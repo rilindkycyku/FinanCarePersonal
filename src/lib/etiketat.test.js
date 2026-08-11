@@ -1,8 +1,8 @@
 /**
  * Tests for the tag helpers.
  *
- * The whole feature rests on two rules — a tag is the text the user typed, and two tags are the
- * same when they differ only by case or spacing — so these check that cleaning, de-duplication and
+ * The whole feature rests on two rules - a tag is the text the user typed, and two tags are the
+ * same when they differ only by case or spacing - so these check that cleaning, de-duplication and
  * matching agree with each other everywhere, and that records written before tags existed are
  * simply untagged rather than a crash.
  */

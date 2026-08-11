@@ -1,7 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap');
 
 /* ══════════════════════════════════════════════════════════════
-   FINANCARE – Premium Core Theme System
+   FINANCARE - Premium Core Theme System
    ══════════════════════════════════════════════════════════════ */
 
 :root {
@@ -216,7 +216,7 @@ body {
   box-shadow: 0 0 0 3px var(--sp-emerald-glow) !important;
 }
 
-/* ── SP-TABLE – Premium Dark Table ────────────────────────────── */
+/* ── SP-TABLE - Premium Dark Table ────────────────────────────── */
 .sp-table {
   border-collapse: separate !important;
   border-spacing: 0 4px !important;
@@ -502,7 +502,7 @@ body {
 }
 
 /* ══════════════════════════════════════════════════════════════
-   LIGHT MODE — scoped to body.light-mode
+   LIGHT MODE - scoped to body.light-mode
    All --sp-* variables are overridden here. Every component that
    uses these tokens automatically picks up the correct colors.
    ══════════════════════════════════════════════════════════════ */

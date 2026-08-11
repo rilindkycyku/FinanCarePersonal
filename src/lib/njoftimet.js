@@ -3,8 +3,8 @@
  *
  * Opt-in twice over: the switch in Cilësimet has to be on *and* the browser permission granted, so
  * a permission prompt only ever appears because the user pressed the button that asks for it.
- * Every entry point is a no-op when the API is missing — an older browser, or an app added to the
- * iOS home screen before 16.4 — which keeps the callers free of feature checks.
+ * Every entry point is a no-op when the API is missing - an older browser, or an app added to the
+ * iOS home screen before 16.4 - which keeps the callers free of feature checks.
  */
 
 const IKONA = "/img/web/apple-touch-icon.png";
@@ -13,7 +13,7 @@ export function njoftimetSupported() {
   return typeof window !== "undefined" && "Notification" in window;
 }
 
-/** "granted" | "denied" | "default" | "unsupported" — the last one is what the UI explains away. */
+/** "granted" | "denied" | "default" | "unsupported" - the last one is what the UI explains away. */
 export function lejaAktuale() {
   return njoftimetSupported() ? Notification.permission : "unsupported";
 }

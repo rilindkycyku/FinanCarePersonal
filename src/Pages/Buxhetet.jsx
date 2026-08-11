@@ -38,7 +38,7 @@ function Buxhetet() {
   );
 
   /**
-   * The daily read of a monthly budget — what is actually left per day from here to the end of the
+   * The daily read of a monthly budget - what is actually left per day from here to the end of the
    * month, plus what today has already taken out of it. A monthly figure says whether you are over;
    * this says what today is allowed to look like.
    *
@@ -83,7 +83,7 @@ function Buxhetet() {
     };
   }, [progress]);
 
-  // Expense categories with no budget for this month — offered as one-click chips.
+  // Expense categories with no budget for this month - offered as one-click chips.
   const paBuxhet = useMemo(() => {
     const mbuluara = new Set(effectiveBudgets(budgets, muaji).map((b) => b.kategoriaId));
     return categories

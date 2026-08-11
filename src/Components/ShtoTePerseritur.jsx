@@ -30,7 +30,7 @@ const BLANK = {
 
 /**
  * Add/edit a recurring payment or income (rent, subscriptions, salary…). The schedule itself never
- * changes a balance — `dataETjetres` is the next date it comes due, and the user turns each due
+ * changes a balance - `dataETjetres` is the next date it comes due, and the user turns each due
  * occurrence into a real transaction from the "Pagesat e Përsëritura" page (or the dashboard),
  * which is what advances the date.
  */
@@ -88,7 +88,7 @@ function ShtoTePerseritur({ show, onHide, initial }) {
   );
 
   /** With an instalment count the end date is derived, so a card purchase split over N months
-   * stops on its own — the user never has to remember to switch it off. */
+   * stops on its own - the user never has to remember to switch it off. */
   const setField = (name, value) =>
     setRec((prev) => {
       const next = { ...prev, [name]: value };
@@ -103,7 +103,7 @@ function ShtoTePerseritur({ show, onHide, initial }) {
     setRec((prev) => {
       const keepCategory = categories.find((c) => c.id === prev.kategoriaId)?.lloji === lloji;
       // A debt points one way only, so a link made while this was an expense is meaningless once
-      // it becomes an income (and the other way round) — dropped rather than left dangling.
+      // it becomes an income (and the other way round) - dropped rather than left dangling.
       const borxhi = borxhet.find((d) => d.id === prev.borxhiId);
       const keepDebt =
         borxhi && debtProgress(borxhi).drejtimi === (lloji === "hyrje" ? "kerkese" : "detyrim");

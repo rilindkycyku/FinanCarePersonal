@@ -11,7 +11,7 @@ import "./ModalForms.css";
  * transaction carrying `planiId` and ticks the plan off with that transaction's id, in a single
  * write, so the plan and the ledger can never disagree about whether it was bought.
  *
- * The amount is prefilled with what was planned but stays editable — a plan is an estimate, and the
+ * The amount is prefilled with what was planned but stays editable - a plan is an estimate, and the
  * figure that counts from here on is what the shop actually charged. The plan keeps reading it back
  * from the transaction, so correcting the transaction later corrects the plan too.
  */
@@ -119,7 +119,7 @@ function KryejPlanin({ show, onHide, plani }) {
           )}
 
           <div className="fcp-modal-hint mb-3">
-            <strong>{plani?.emri}</strong> — krijohet një shpenzim i vërtetë dhe plani hiqet nga paratë e rezervuara
+            <strong>{plani?.emri}</strong> - krijohet një shpenzim i vërtetë dhe plani hiqet nga paratë e rezervuara
             të muajit.
           </div>
 
@@ -185,7 +185,7 @@ function KryejPlanin({ show, onHide, plani }) {
                 ))}
               </Form.Select>
               {kategorite.length === 0 && (
-                <div className="fcp-modal-hint">Nuk ka kategori shpenzimi — shtoni një te faqja Kategoritë.</div>
+                <div className="fcp-modal-hint">Nuk ka kategori shpenzimi - shtoni një te faqja Kategoritë.</div>
               )}
             </Form.Group>
 

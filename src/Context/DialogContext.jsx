@@ -3,7 +3,7 @@ import ConfirmModal from "../Components/ConfirmModal";
 
 const DialogContext = createContext(null);
 
-/** App-wide replacement for window.alert()/confirm() — same custom modal everywhere
+/** App-wide replacement for window.alert()/confirm() - same custom modal everywhere
  * instead of the browser's native "localhost:5173 says" dialog. Both return a Promise
  * so call sites just `await dialog.confirm(...)` where they used to call confirm(...). */
 export function DialogProvider({ children }) {

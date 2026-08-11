@@ -1,5 +1,5 @@
 /**
- * Free-form labels on a transaction — "pushime2026", "makina", "besa" — kept as a plain
+ * Free-form labels on a transaction - "pushime2026", "makina", "besa" - kept as a plain
  * `etiketat: string[]` on the record itself.
  *
  * Deliberately *not* a store of its own: a tag is only ever the word the user typed, so there is no
@@ -9,7 +9,7 @@
  * worked out by `perdorimiEtiketave`.
  *
  * A tag is a second dimension next to the category: "Ushqim & Pije" says what was bought, while
- * "pushime2026" says what it was part of — the same expense is honestly both, which is why the
+ * "pushime2026" says what it was part of - the same expense is honestly both, which is why the
  * category stays single-choice and this does not.
  *
  * Pure functions only; the caller saves the record.
@@ -38,8 +38,8 @@ export function normalizoEtiketen(raw) {
 }
 
 /**
- * What decides whether two tags are the same one. Case is presentation — someone who typed "Besa"
- * in June and "besa" in July meant one tag both times — so it is folded away for comparison while
+ * What decides whether two tags are the same one. Case is presentation - someone who typed "Besa"
+ * in June and "besa" in July meant one tag both times - so it is folded away for comparison while
  * the record keeps whatever was actually typed.
  */
 export function celesiEtiketes(raw) {
@@ -74,7 +74,7 @@ export function ndajEtiketat(text) {
 
 /**
  * Every tag in use, most used first, with the spelling the user chose most often (ties keep the
- * first one seen). This is the whole "tag list" — there is nowhere else tags are declared, so a tag
+ * first one seen). This is the whole "tag list" - there is nowhere else tags are declared, so a tag
  * disappears from the pickers by itself once nothing carries it any more.
  */
 export function perdorimiEtiketave(transactions = []) {
@@ -120,12 +120,12 @@ export function ngjyraEtiketes(emri) {
 }
 
 /**
- * Totals per tag for one direction, largest first — what the statistics panel ranks.
+ * Totals per tag for one direction, largest first - what the statistics panel ranks.
  *
  * A transaction with several tags counts in full under each of them, because that is the question
  * being asked ("what did 'pushime2026' cost me?"), not a share-out. The consequence is that the
  * totals can add up to more than the period's spending, so `perqindja` is measured against *all*
- * transactions of that direction — tagged or not — and reads as "this share of the month went to
+ * transactions of that direction - tagged or not - and reads as "this share of the month went to
  * this tag" rather than as a slice of a pie that must come to 100.
  */
 export function totalsByTag(transactions = [], lloji = "shpenzim") {

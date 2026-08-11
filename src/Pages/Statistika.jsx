@@ -72,8 +72,8 @@ function Statistika() {
 
   /**
    * The one view that ignores the period picker: where the balance has been and where what is
-   * already scheduled takes it. The current month belongs to the forecast half — most of it has
-   * not happened yet — so the history's copy of it is dropped rather than drawn twice.
+   * already scheduled takes it. The current month belongs to the forecast half - most of it has
+   * not happened yet - so the history's copy of it is dropped rather than drawn twice.
    */
   const ecuria = useMemo(() => {
     const sot = todayISO();
@@ -265,7 +265,7 @@ function Statistika() {
                 </div>
               </div>
 
-              {/* The month's closing figure can look healthy while the middle of it does not — the
+              {/* The month's closing figure can look healthy while the middle of it does not - the
                   low point is the number that decides whether a payment bounces. */}
               {ecuria.parashikimi.meUleta.data !== ecuria.parashikimi.start && (
                 <div className="fcp-row">
@@ -373,7 +373,7 @@ function Statistika() {
           </Col>
 
           {/* The panel appears once something is tagged: a transaction can carry several tags, so
-              this is the one breakdown here that is deliberately not a share-out of the period —
+              this is the one breakdown here that is deliberately not a share-out of the period -
               each tag counts its transactions in full, and the percentages need not come to 100. */}
           {stats.etiketat.length > 0 && (
             <Col xl={6}>

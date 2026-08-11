@@ -37,7 +37,7 @@ const font = (bold = false, color = CLR.valueFg, size = 11) => ({
 });
 
 // Table cells are allowed to carry markup (coloured amount pills, type badges), so the export
-// takes the text content only — otherwise the spreadsheet would show raw `<span>` tags.
+// takes the text content only - otherwise the spreadsheet would show raw `<span>` tags.
 const stripTags = (value) => String(value ?? "").replace(/<[^>]*>/g, "").trim();
 
 // Column headers that hold identifiers or dates: never summed, even though they parse as numbers.
@@ -94,7 +94,7 @@ export async function exportListExcel(title, headers, data, filename = "Eksport.
       try {
         ws.mergeCells(rowNum, startCol, rowNum, endCol);
       } catch {
-        /* header too narrow to merge — value still gets written to the first cell */
+        /* header too narrow to merge - value still gets written to the first cell */
       }
     }
   };
@@ -134,7 +134,7 @@ export async function exportListExcel(title, headers, data, filename = "Eksport.
     cell.alignment = { vertical: "middle", horizontal: "center" };
   });
 
-  // 4. Data rows — numeric cells are written as real numbers so Excel can chart/sum them.
+  // 4. Data rows - numeric cells are written as real numbers so Excel can chart/sum them.
   data.forEach((r, idx) => {
     const bgArgb = idx % 2 === 0 ? CLR.rowEven : CLR.rowAlt;
     const values = headers.map((h) => {
@@ -300,7 +300,7 @@ function statementSheet(wb, titulli, headers, rows, { totali } = {}) {
 
 /**
  * The statement as a workbook: the same figures the PDF prints, but in sheets you can sort, filter
- * and total yourself — a summary, every movement, the categories behind them, and where each
+ * and total yourself - a summary, every movement, the categories behind them, and where each
  * instalment plan stands.
  */
 export async function exportStatementExcel({
@@ -330,7 +330,7 @@ export async function exportStatementExcel({
   wb.creator = "FinanCarePersonal";
   wb.created = new Date();
 
-  // 1. Summary — the figures, then where the money went.
+  // 1. Summary - the figures, then where the money went.
   statementSheet(
     wb,
     titulli,

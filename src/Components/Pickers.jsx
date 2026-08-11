@@ -2,7 +2,7 @@ import { CATEGORY_COLORS, CATEGORY_ICONS } from "../lib/options";
 import { getIcon } from "../lib/icons";
 import "./ModalForms.css";
 
-/** Fixed palette swatch row — used by categories, accounts and savings goals. */
+/** Fixed palette swatch row - used by categories, accounts and savings goals. */
 export function ColorPicker({ value, onChange, label = "Ngjyra" }) {
   return (
     <div>

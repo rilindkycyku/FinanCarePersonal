@@ -33,7 +33,7 @@ function daysLeft(afati) {
 }
 
 /**
- * Planned spending: what the user already knows they will buy this month but has not bought yet —
+ * Planned spending: what the user already knows they will buy this month but has not bought yet -
  * a fridge, winter tyres, a birthday present. A plan books no money and sets no per-category limit
  * (that is what Buxhetet is for). Its whole purpose is to be set aside up front, so "sa mund të
  * shpenzoj sot" stops offering money that is already promised, and to become a real transaction the
@@ -55,7 +55,7 @@ function Planifikuara() {
     [planet, muaji, transactions]
   );
   const totals = useMemo(() => planTotals(planet, muaji, transactions), [planet, muaji, transactions]);
-  // Plans from months already gone by are never folded into this month's numbers — moving one
+  // Plans from months already gone by are never folded into this month's numbers - moving one
   // forward is a decision, and it is one button away.
   const tembartura = useMemo(
     () => overduePlans(planet, monthKey(), transactions),
@@ -76,7 +76,7 @@ function Planifikuara() {
 
   const openBuy = (plan) => setBuying(planet.find((p) => p.id === plan.id) || null);
 
-  /** Moves an unbought plan to another month — the usual fate of "I'll get it next month", and the
+  /** Moves an unbought plan to another month - the usual fate of "I'll get it next month", and the
    *  way a plan left behind in an earlier month is brought back into the current one. */
   const moveTo = async (plan, target) => {
     const record = planet.find((p) => p.id === plan.id);
@@ -315,12 +315,12 @@ function Planifikuara() {
         <section className="mb-4">
           <h4 className="fcp-section-title">
             <ClipboardList size={20} className="text-primary" />
-            Planet — {monthLabel(muaji)}
+            Planet - {monthLabel(muaji)}
           </h4>
 
           {planetEMuajit.length === 0 ? (
             <Empty>
-              Nuk ka plane për {monthLabel(muaji)}. Shtoni çka dini se do ta blini — p.sh. diçka për shtëpinë — dhe
+              Nuk ka plane për {monthLabel(muaji)}. Shtoni çka dini se do ta blini - p.sh. diçka për shtëpinë - dhe
               vlera lihet mënjanë nga paratë e lira të muajit.
             </Empty>
           ) : (

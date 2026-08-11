@@ -4,7 +4,7 @@
  * `kontrolloCelesin` is the one piece of security logic in the client: it stands between a
  * mistyped copy-paste and a browser holding a key that bypasses row-level security. Supabase
  * prints the secret key two lines under the public one, so this is an ordinary mistake with an
- * unpleasant consequence, and it has to fail for both key generations — the legacy JWTs that carry
+ * unpleasant consequence, and it has to fail for both key generations - the legacy JWTs that carry
  * a `role` claim and the newer `sb_publishable_` / `sb_secret_` keys.
  */
 

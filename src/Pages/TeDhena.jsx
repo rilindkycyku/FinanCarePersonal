@@ -28,7 +28,7 @@ import "./Styles/Personal.css";
 
 /**
  * What the blocking overlay says per job. Each of these reads or writes the whole database (or
- * every invoice photo in it), which on a phone is seconds of a page that looks idle — long enough
+ * every invoice photo in it), which on a phone is seconds of a page that looks idle - long enough
  * to be tapped again or navigated away from, and both of those make it worse.
  */
 const PUNET = {
@@ -38,7 +38,7 @@ const PUNET = {
   },
   zip: {
     titulli: "Duke ndërtuar arkivin ZIP...",
-    ndihma: "Fotot e faturave shkruhen një nga një brenda arkivit — me shumë foto kjo zgjat.",
+    ndihma: "Fotot e faturave shkruhen një nga një brenda arkivit - me shumë foto kjo zgjat.",
   },
   txExcel: { titulli: "Duke eksportuar në Excel...", ndihma: "Po shkruhen transaksionet në skedar." },
   pdf: { titulli: "Duke përgatitur pasqyrën PDF...", ndihma: "Po ndërtohen faqet dhe grafikët e periudhës." },
@@ -62,7 +62,7 @@ function TeDhena() {
   const [zipi, setZipi] = useState(null);
   const [qendrueshme, setQendrueshme] = useState(null);
   // Which export is running, if any. Building a statement pulls in jsPDF and its fonts and then
-  // lays out every movement, which on a phone is seconds of nothing — long enough that the button
+  // lays out every movement, which on a phone is seconds of nothing - long enough that the button
   // looks broken and gets tapped again, starting the whole thing a second time.
   const [duke, setDuke] = useState(null);
   const fileInputRef = useRef(null);
@@ -79,7 +79,7 @@ function TeDhena() {
     if (message) messageRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
   }, [message]);
 
-  // Nothing here is stored on a server, so the browser's own quota is the only ceiling there is —
+  // Nothing here is stored on a server, so the browser's own quota is the only ceiling there is -
   // and invoice photos are the first thing that gets anywhere near it.
   useEffect(() => {
     hapesiraRuajtjes().then(setHapesira);
@@ -116,7 +116,7 @@ function TeDhena() {
         new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }),
         `financarepersonal-backup-${new Date().toISOString().slice(0, 10)}.json`
       );
-      // The whole database is now in a file outside this browser — the one thing the reminder on
+      // The whole database is now in a file outside this browser - the one thing the reminder on
       // the Panel is watching for.
       await shenoKopjen(data.exportedAt);
       await reload();
@@ -139,7 +139,7 @@ function TeDhena() {
       // A ZIP is the fuller copy of the two, so it counts as *the* backup just as much.
       await shenoKopjen();
       await reload();
-      setMessage({ type: "success", text: `Arkivi u krijua — ${formatBytes(blob.size)} me ${faturat.length} foto.` });
+      setMessage({ type: "success", text: `Arkivi u krijua - ${formatBytes(blob.size)} me ${faturat.length} foto.` });
     } catch (err) {
       setMessage({ type: "danger", text: `Arkivi nuk u krijua: ${err.message}` });
     } finally {
@@ -153,7 +153,7 @@ function TeDhena() {
     setQendrueshme(dhene);
     setMessage(
       dhene
-        ? { type: "success", text: "Shfletuesi e shënoi ruajtjen si të qëndrueshme — të dhënat nuk fshihen automatikisht." }
+        ? { type: "success", text: "Shfletuesi e shënoi ruajtjen si të qëndrueshme - të dhënat nuk fshihen automatikisht." }
         : {
             type: "info",
             text: "Shfletuesi nuk e dha (ende) ruajtjen e qëndrueshme. Përdorimi i rregullt i aplikacionit, shtimi te faqeshënuesit ose te ekrani bazë e bën më të mundshme.",
@@ -161,7 +161,7 @@ function TeDhena() {
     );
   };
 
-  /** One flat sheet of every transaction — the format worth handing to a spreadsheet or an
+  /** One flat sheet of every transaction - the format worth handing to a spreadsheet or an
    * accountant, as opposed to the JSON backup which is meant for re-importing here. */
   const handleExportExcel = async () => {
     if (duke) return;
@@ -201,7 +201,7 @@ function TeDhena() {
   };
 
   /** A statement for a period (and optionally one account): summary plus every movement, as PDF.
-   * It opens in the viewer first — saving it is a button inside that. */
+   * It opens in the viewer first - saving it is a button inside that. */
   const handleExportPdf = async () => {
     if (duke) return;
     setDuke("pdf");
@@ -251,7 +251,7 @@ function TeDhena() {
     }
   };
 
-  /** Which of the two imports the file picker was opened for — see `importAllData` in db.js. */
+  /** Which of the two imports the file picker was opened for - see `importAllData` in db.js. */
   const handleImportClick = (mode) => {
     importModeRef.current = mode;
     fileInputRef.current?.click();
@@ -263,7 +263,7 @@ function TeDhena() {
     const cilesia = cilesiaFaturave(profile.cilesiaFaturave);
     const ok = await dialog.confirm(
       `Të gjitha ${faturat.length} fotot rikodohen me cilësinë "${cilesia.etiketa}" (${cilesia.maxAne}px). ` +
-        "Fotot që janë tashmë më të vogla nuk preken. Ngjeshja nuk kthehet mbrapsht — nëse doni cilësinë e " +
+        "Fotot që janë tashmë më të vogla nuk preken. Ngjeshja nuk kthehet mbrapsht - nëse doni cilësinë e " +
         "plotë, eksportoni një arkiv ZIP para se të vazhdoni. Vazhdo?",
       { title: "Ngjesh Fotot Ekzistuese", confirmLabel: "Ngjesh fotot" }
     );
@@ -280,7 +280,7 @@ function TeDhena() {
       text:
         ngjeshur > 0
           ? `U ngjeshën ${ngjeshur} foto dhe u liruan ${formatBytes(uKursye)}.`
-          : "Asnjë foto nuk u ngjesh — të gjitha janë tashmë brenda cilësisë së zgjedhur.",
+          : "Asnjë foto nuk u ngjesh - të gjitha janë tashmë brenda cilësisë së zgjedhur.",
     });
   };
 
@@ -395,7 +395,7 @@ function TeDhena() {
               <h5 className="fw-bold mb-2">Kopje e Plotë (ZIP, me foto)</h5>
               <p className="text-muted small">
                 Gjithçka: të dhënat në <code>backup.json</code> dhe fotot e faturave si skedarë të veçantë brenda
-                arkivit. Ky është arkivi që duhet mbajtur nëse keni foto — fotot hyjnë ashtu siç janë, pra funksionon
+                arkivit. Ky është arkivi që duhet mbajtur nëse keni foto - fotot hyjnë ashtu siç janë, pra funksionon
                 edhe në telefon dhe edhe me mijëra fatura.
                 {faturat.length > 0 && (
                   <> Aktualisht {faturat.length} foto · rreth {formatBytes(madhesiaFaturave)}.</>
@@ -460,7 +460,7 @@ function TeDhena() {
             <Card className="profile-card border-0 p-4 h-100">
               <h5 className="fw-bold mb-2">Vetëm Të Dhënat (JSON)</h5>
               <p className="text-muted small">
-                Profili, llogaritë, kategoritë, transaksionet, buxhetet, qëllimet, pagesat e përsëritura dhe borxhet —
+                Profili, llogaritë, kategoritë, transaksionet, buxhetet, qëllimet, pagesat e përsëritura dhe borxhet -
                 pa fotot. Skedar i vogël dhe i shpejtë, i mjaftueshëm kur doni vetëm librin e llogarive në një pajisje
                 tjetër. Importohet po ashtu me butonin ngjitur.
               </p>
@@ -599,13 +599,13 @@ function TeDhena() {
               </Button>
               <div className="text-muted small mt-2">
                 I rikodon fotot e ruajtura me cilësinë e zgjedhur te Cilësimet ({cilesiaFaturave(profile.cilesiaFaturave).etiketa}
-                , {cilesiaFaturave(profile.cilesiaFaturave).maxAne}px) — e dobishme pasi e ulni atë cilësi.
+                , {cilesiaFaturave(profile.cilesiaFaturave).maxAne}px) - e dobishme pasi e ulni atë cilësi.
               </div>
             </div>
           )}
         </Card>
 
-        {/* Without a server, "the browser threw it away" is total loss — so the app asks not to be
+        {/* Without a server, "the browser threw it away" is total loss - so the app asks not to be
             thrown away, and says plainly where that request has no effect. */}
         <Card className="profile-card border-0 p-4 mt-4">
           <h5 className="fw-bold mb-3">
@@ -614,7 +614,7 @@ function TeDhena() {
           </h5>
           <p className="text-muted small mb-3">
             Shfletuesit i fshijnë vetë të dhënat e faqeve kur pajisja mbetet pa hapësirë, dhe Safari i fshin ato të një
-            faqeje që nuk vizitohet për shtatë ditë shfletimi — bashkë me transaksionet, jo vetëm me fotot. Ruajtja e
+            faqeje që nuk vizitohet për shtatë ditë shfletimi - bashkë me transaksionet, jo vetëm me fotot. Ruajtja e
             qëndrueshme e përjashton aplikacionin nga kjo.
             {qendrueshme === true && <strong> Aktualisht është aktive.</strong>}
           </p>

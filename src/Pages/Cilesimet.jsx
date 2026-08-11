@@ -52,7 +52,7 @@ function Cilesimet() {
 
   const setField = (name, value) => setForm((prev) => ({ ...prev, [name]: value }));
 
-  /** What the wipe would take with it, itemised — a warning is only worth reading if it names the
+  /** What the wipe would take with it, itemised - a warning is only worth reading if it names the
    * actual numbers rather than "të gjitha të dhënat". Empty stores are left out. */
   const perNumerim = [
     ["Transaksione", transactions.length],
@@ -82,7 +82,7 @@ function Cilesimet() {
   /**
    * Wipes the database behind two deliberately different gates: the first spells out exactly what
    * disappears, the second only unlocks once the word is typed. A stray double-tap on a phone can
-   * dismiss one dialog, never both — and there is no undo and no server copy behind this.
+   * dismiss one dialog, never both - and there is no undo and no server copy behind this.
    */
   const handleWipe = async () => {
     const vazhdo = await dialog.confirm(
@@ -101,7 +101,7 @@ function Cilesimet() {
         </ul>
         {lidhur ? (
           <>
-            Kopja te projekti juaj Supabase nuk fshihet — por kjo pajisje shkëputet, pra nuk e merr
+            Kopja te projekti juaj Supabase nuk fshihet - por kjo pajisje shkëputet, pra nuk e merr
             dot më vetvetiu. Nëse nuk keni një kopje JSON te faqja{" "}
             <strong>Eksporto / Importo</strong>, anuloni dhe merreni së pari.
           </>
@@ -144,7 +144,7 @@ function Cilesimet() {
     });
   };
 
-  /** Rules whose category still exists — the only ones that can ever fire (rregullat.js). */
+  /** Rules whose category still exists - the only ones that can ever fire (rregullat.js). */
   const rregullaAktive = pastroRregullat(profile, categories);
 
   const handleHarro = async () => {
@@ -256,7 +256,7 @@ function Cilesimet() {
                 <div className="fcp-row-sub mt-1">
                   Lëreni bosh dhe limiti llogaritet vetë: bilanci që keni për të shpenzuar (pa kursimet e
                   investimet), plus hyrjet që priten këtë muaj, minus pagesat e përsëritura të pakonfirmuara dhe
-                  shpenzimet e planifikuara — të ndara mbi ditët që kanë mbetur.
+                  shpenzimet e planifikuara - të ndara mbi ditët që kanë mbetur.
                 </div>
               </Form.Group>
 
@@ -296,7 +296,7 @@ function Cilesimet() {
                 >
                   {Object.entries(CILESITE_FATURAVE).map(([celes, c]) => (
                     <option key={celes} value={celes}>
-                      {c.etiketa} — {c.maxAne}px
+                      {c.etiketa} - {c.maxAne}px
                     </option>
                   ))}
                 </Form.Select>
@@ -318,7 +318,7 @@ function Cilesimet() {
         <CilesimiNjeLlogari onMessage={(text) => setMessage({ type: "success", text })} />
 
         {/* The memory is built from the user's own choices, so they get to see what it learned and
-            throw it away — a suggestion nobody can inspect or undo is just the app being odd. */}
+            throw it away - a suggestion nobody can inspect or undo is just the app being odd. */}
         <Card className="profile-card border-0 p-4 mb-4">
           <h5 className="fw-bold mb-3">Kujtesa e Kategorive</h5>
           {rregullaAktive.length === 0 ? (
@@ -374,7 +374,7 @@ function Cilesimet() {
           <p className="text-muted small mb-3">
             {lidhur ? (
               <>
-                Kjo pajisje sinkronizohet me projektin tuaj Supabase — shihni faqen{" "}
+                Kjo pajisje sinkronizohet me projektin tuaj Supabase - shihni faqen{" "}
                 <Link to="/sinkronizimi">Sinkronizimi</Link>.
               </>
             ) : (

@@ -129,7 +129,7 @@ describe("consolidateAccounts", () => {
     expect(moved.llogariaId).toBe("a");
     expect(moved.llogariaDestinacionId).toBe("a");
     expect(result.nrTransfereve).toBe(1);
-    // Already on the target and not a transfer — nothing to rewrite.
+    // Already on the target and not a transfer - nothing to rewrite.
     expect(result.transactions.some((t) => t.id === "3")).toBe(false);
   });
 
@@ -329,7 +329,7 @@ describe("forecast", () => {
     });
     expect(f.meUleta).toEqual({ data: "2026-08-15", bilanci: -100 });
     expect(f.nenZeros).toBe("2026-08-15");
-    // The month still closes in the black — which is exactly why the low point is worth showing.
+    // The month still closes in the black - which is exactly why the low point is worth showing.
     expect(f.perfundimi).toBe(800);
   });
 
@@ -349,7 +349,7 @@ describe("forecast", () => {
     const txs = [tx("ardhshem", { data: "2026-08-20", vlera: 250 })];
     const f = forecast({ accounts, transactions: txs, today, muaj: 1 });
     expect(f.fillimi).toBe(1000);
-    // What the dashboard shows as "Bilanci Total" — the difference is the future-dated entry.
+    // What the dashboard shows as "Bilanci Total" - the difference is the future-dated entry.
     expect(f.regjistruar).toBe(750);
     expect(f.regjistruar).toBe(totalBalance(accounts, txs));
     expect(f.perfundimi).toBe(750);
@@ -429,7 +429,7 @@ describe("budgets", () => {
   });
 
   it("reports usage against the budget the rollover produced", () => {
-    // Budgets set per month, so the walk back stops at June — which never had one — instead of
+    // Budgets set per month, so the walk back stops at June - which never had one - instead of
     // running into the one-month cap the way a standing budget would.
     const budgets = [
       { id: "b1", kategoriaId: "c1", vlera: 200, muaji: "2026-08", rimbart: true },
@@ -651,7 +651,7 @@ describe("annualOutlook", () => {
       "2026-08-10"
     );
     expect(outlook.end).toBe("2027-08-09");
-    // Twelve months of rent, and the yearly subscription exactly once — not twice.
+    // Twelve months of rent, and the yearly subscription exactly once - not twice.
     expect(outlook.rreshtat.map((r) => [r.id, r.nrPagesave, r.vjetore])).toEqual([
       ["qira", 12, 3600],
       ["netflix", 1, 120],
@@ -807,7 +807,7 @@ describe("dailyLimit", () => {
   it("measures the pool from the start of today, so a morning purchase only eats today", () => {
     const sot = dailyLimit({ ...baza, transactions: [tx("1", { data: "2026-08-10", vlera: 60 })] });
     // The balance is 60 lower but the pool is not: today's spending is added back and then
-    // subtracted from today's allowance alone — which it comfortably outruns.
+    // subtracted from today's allowance alone - which it comfortably outruns.
     expect(sot.disponueshme).toBe(1000);
     expect(sot.shpenzuarSot).toBe(60);
     expect(sot.mbetur).toBeCloseTo(1000 / 22 - 60);

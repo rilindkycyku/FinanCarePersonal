@@ -44,7 +44,7 @@ function appendOperator(expression, operator) {
  * `document.body` rather than a nested modal, so it sits above the form it was opened from without
  * fighting Bootstrap's backdrop stack, and stays reachable with the on-screen keyboard shut.
  *
- * Typing on a physical keyboard works too — the sheet takes focus and handles the keys itself, so
+ * Typing on a physical keyboard works too - the sheet takes focus and handles the keys itself, so
  * Escape closes the calculator rather than the form underneath it.
  */
 function Kalkulatori({ show, titulli = "Llogaritësi", fillestar = "", simboli = "€", lejoNegativ = false, onApply, onClose }) {
@@ -94,7 +94,7 @@ function Kalkulatori({ show, titulli = "Llogaritësi", fillestar = "", simboli =
     setShprehja((prev) => prev.replace(/\s+$/, "").slice(0, -1).replace(/\s+$/, ""));
   }, []);
 
-  // Captured on window so the keys never reach the Bootstrap modal underneath — otherwise Escape
+  // Captured on window so the keys never reach the Bootstrap modal underneath - otherwise Escape
   // would dismiss the whole form while the user only meant to close the calculator.
   useEffect(() => {
     if (!show) return;
@@ -158,7 +158,7 @@ function Kalkulatori({ show, titulli = "Llogaritësi", fillestar = "", simboli =
           <div className="fcp-calc-expression">{shprehja || "0"}</div>
           <div className="fcp-calc-result">
             {rezultati === null ? (
-              <span className="fcp-calc-result-idle">= —</span>
+              <span className="fcp-calc-result-idle">= -</span>
             ) : (
               <>
                 = {formatCalcResult(rezultati)} {simboli}

@@ -6,7 +6,7 @@
  * - Every record carries `perditesuar`, the moment it was last written on some device (db.js
  *   stamps it). Every deletion leaves a tombstone carrying the same. That timestamp is the only
  *   thing this file uses to decide anything.
- * - The cloud side is one table of `(store, record_id, updated_at, deleted, data)` rows — the
+ * - The cloud side is one table of `(store, record_id, updated_at, deleted, data)` rows - the
  *   ledger's own stores flattened into rows of JSON. One table means a user who set this up in
  *   March does not have to run a migration in their own project because April's release added a
  *   store.
@@ -16,7 +16,7 @@
  * Last-write-wins is the honest choice here rather than a shortcut: one person's own ledger on
  * their own phone and laptop, where two devices editing *the same transaction* within the same
  * minute is not a real scenario. What is real is the phone and the laptop each adding different
- * rows all week, and that merges cleanly by construction — different ids never collide.
+ * rows all week, and that merges cleanly by construction - different ids never collide.
  *
  * What it costs: the losing side of a genuine conflict is overwritten with no prompt, and the
  * comparison trusts the two devices' clocks. A phone that is an hour behind will lose edits it
@@ -27,7 +27,7 @@
  * Importo page is still the way to carry pictures to another device.
  *
  * The pure half (what to send, what to apply) is separated from the half that touches the database
- * and the network, so the merge rules can be tested without either — see sinkronizimi.test.js.
+ * and the network, so the merge rules can be tested without either - see sinkronizimi.test.js.
  */
 
 import {
@@ -59,7 +59,7 @@ export function celesiRreshtit(store, id) {
  * Every local record and tombstone that is still waiting to reach the cloud.
  *
  * Waiting is a flag (`sinkPezull`), not a date comparison. A device whose clock is wrong is still
- * perfectly able to know *that* it changed something — it is only wrong about when — so nothing
+ * perfectly able to know *that* it changed something - it is only wrong about when - so nothing
  * here asks the clock anything, and an edit made on a phone an hour behind is sent like any other.
  *
  * `gjithcka` ignores the flag and sends the lot: the "upload everything again" path, for a cloud
@@ -133,13 +133,13 @@ export function gjendjaLokale({ storet = {}, profili = null, fshirjet = [] }) {
  * 2. **Otherwise the cloud row wins.** There is exactly one row per record, so it always holds the
  *    last state anybody pushed; and an incremental pull only returns rows changed since this
  *    device's watermark. A row that arrives while the local copy is settled is therefore news by
- *    construction — no date arithmetic required to know it.
+ *    construction - no date arithmetic required to know it.
  *
  * The one comparison left is equality, and it means "this is my own row coming back": every push
  * records the timestamp the row ended up with, so an echo matches to the millisecond and is
  * skipped instead of being re-applied on every sync.
  *
- * A deletion for a record this device has never had is skipped rather than recorded — there is
+ * A deletion for a record this device has never had is skipped rather than recorded - there is
  * nothing to delete, and a tombstone for a record that never existed here would be pure noise.
  *
  * `maxTs` is the new pull watermark: the newest `updated_at` seen, *including* the rows that were
@@ -193,10 +193,10 @@ export function planiIAplikimit(rreshtat, { kohet, pezull = new Set() }) {
 }
 
 /** The table's columns. `user_id` is sent rather than left to the column default, because a bulk
- * insert through PostgREST fills omitted keys with NULL unless asked otherwise — and NULL is the
+ * insert through PostgREST fills omitted keys with NULL unless asked otherwise - and NULL is the
  * one value the row-level-security check will refuse. */
 export function rreshtiPerServer(rr, userId) {
-  // `sinkPezull` is this device's own bookkeeping — "not sent yet" — and sending it would tell the
+  // `sinkPezull` is this device's own bookkeeping - "not sent yet" - and sending it would tell the
   // next device to send it again, for ever. `updated_at` is sent for a project whose setup script
   // predates the timestamp trigger; where the trigger exists it overrides this with the server's
   // own clock, which is the entire point of it.
@@ -245,7 +245,7 @@ export async function lexoGjendjen() {
  * what happens when a *second* device is added: a fresh install seeds the same default accounts
  * and categories, with the same fixed ids, so stamping them at the moment of its first sync would
  * make the untouched "Ushqim" it just created look newer than the "Ushqime & Pije" the user
- * renamed on their real device — and the first sync of the new device would overwrite the rename
+ * renamed on their real device - and the first sync of the new device would overwrite the rename
  * everywhere.
  *
  * Dated to the epoch instead, an unstamped record loses every comparison and wins nothing it
@@ -312,7 +312,7 @@ async function shkarkoRreshtat(nga) {
  *
  * The read-back is what keeps every device's timestamps in a single clock: a row written here and
  * a row written on the laptop are then both dated by Postgres, so comparing them means something.
- * `select=` keeps the response to three columns — without it the whole `data` payload comes back
+ * `select=` keeps the response to three columns - without it the whole `data` payload comes back
  * and a first sync would pay for itself twice.
  */
 async function dergoRreshtat(rreshtat, userId) {
@@ -347,7 +347,7 @@ async function dergoRreshtat(rreshtat, userId) {
  * changed means the trigger is there, and rows that all came back identical mean it is not.
  *
  * Worth knowing rather than ignoring, because without the trigger the ordering of the whole table
- * is at the mercy of every device's clock — a phone an hour behind writes rows dated an hour ago,
+ * is at the mercy of every device's clock - a phone an hour behind writes rows dated an hour ago,
  * which every other device's watermark has already scrolled past. Returns null when the push had
  * nothing to say.
  */
@@ -401,7 +401,7 @@ async function shenoTeDerguarat(rreshtat, kohet) {
  * One-off for a device that was already syncing before the flag existed.
  *
  * Under the old rule "unsent" meant "changed after the last push", so that is what is converted
- * here — once, guarded by a marker in the configuration. Without it, every local change made
+ * here - once, guarded by a marker in the configuration. Without it, every local change made
  * before the update would look settled and would never be sent.
  */
 async function migroPezullimet(gjendja, k) {
@@ -439,13 +439,13 @@ let nePritje = null;
 /**
  * One sync: pull, apply, push. Returns a summary of what moved.
  *
- * Calls that arrive while one is running join it instead of starting a second — automatic sync is
+ * Calls that arrive while one is running join it instead of starting a second - automatic sync is
  * triggered by several things at once (a save, the tab regaining focus, coming back online) and
  * two overlapping runs would push the same rows twice and race over the watermarks.
  *
  * `ngaFillimi` ignores the watermarks and takes the whole cloud copy from the top. It is what the
  * "download everything again" button does, and what recovers a device whose watermark is ahead of
- * what it actually holds — after a restored backup, for instance.
+ * what it actually holds - after a restored backup, for instance.
  */
 export function sinkronizo(opsionet = {}) {
   if (nePritje) return nePritje;
@@ -463,7 +463,7 @@ async function ekzekuto({ ngaFillimi: kerkuar = false } = {}) {
   const nisi = Date.now();
   try {
     const k = await siguroSesionin();
-    if (!k.userId) throw new Error("Sesioni nuk ka përdorues — hyni sërish.");
+    if (!k.userId) throw new Error("Sesioni nuk ka përdorues - hyni sërish.");
     // Either the user asked for it, or a previous run left the cloud copy empty and owing.
     const ngaFillimi = kerkuar || Boolean(k.ngaFillimiTjeter);
 
@@ -487,7 +487,7 @@ async function ekzekuto({ ngaFillimi: kerkuar = false } = {}) {
     const oraServerit = zbulojOrenELServerit(perDergim, kohetServerit);
 
     // Only ever moved forward by rows actually seen. Advancing it to "now" instead would skip any
-    // row another device wrote while this sync was in flight — the one class of change that would
+    // row another device wrote while this sync was in flight - the one class of change that would
     // then never be downloaded at all.
     const pulledAt = Math.max(plani.maxTs, Date.parse(k.pulledAt) || 0);
     const permbledhja = {
@@ -516,10 +516,10 @@ async function ekzekuto({ ngaFillimi: kerkuar = false } = {}) {
   }
 }
 
-/** How many rows the cloud copy holds — the answer to "did anything actually get up there?". */
+/** How many rows the cloud copy holds - the answer to "did anything actually get up there?". */
 export async function numeroCloud() {
   // `limit=1` keeps the body to one row; the number itself rides in the header. Deliberately no
-  // `Range` header alongside it — a range asking for a row an empty table does not have is
+  // `Range` header alongside it - a range asking for a row an empty table does not have is
   // answered with 416, and an empty cloud copy is exactly the state right after the delete button.
   const res = await rest(`${TABELA}?select=record_id&limit=1`, {
     headers: { Prefer: "count=exact" },
@@ -535,7 +535,7 @@ export async function numeroCloud() {
  * Empties the cloud copy of this user, leaving every device's own ledger untouched.
  *
  * The watermarks go with it. Left in place, this device would consider itself up to date with a
- * table that no longer has anything in it and would never push its ledger back up — so the next
+ * table that no longer has anything in it and would never push its ledger back up - so the next
  * sync starts from nothing, exactly like the first one did.
  */
 export async function fshiCloud() {
@@ -545,12 +545,12 @@ export async function fshiCloud() {
     headers: { Prefer: "return=minimal" },
   });
   // Everything this device holds is now missing from the cloud, though none of it is *flagged* as
-  // unsent — it was sent, to rows that no longer exist. So the next sync is told to send the lot,
+  // unsent - it was sent, to rows that no longer exist. So the next sync is told to send the lot,
   // which is what the button's own description promises.
   ruajKonfigurimin({ pulledAt: "", pushedAt: 0, fundit: null, ngaFillimiTjeter: true });
 }
 
-/** Sync from scratch on the next run without touching anything already stored — used after
+/** Sync from scratch on the next run without touching anything already stored - used after
  * connecting a device, so it takes the whole cloud copy and offers its own ledger back. */
 export function rivendosKufijte() {
   return ruajKonfigurimin({ pulledAt: "", pushedAt: 0 });

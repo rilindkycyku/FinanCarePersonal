@@ -6,8 +6,8 @@ const BAZA = "FinanCarePersonal";
 let pershkrimiFillestar = null;
 
 /**
- * Sets the document title, e.g. "Transaksionet | FinanCarePersonal", and — when the page passes
- * one — its description. Every route is served from the same index.html, so without this a crawler
+ * Sets the document title, e.g. "Transaksionet | FinanCarePersonal", and - when the page passes
+ * one - its description. Every route is served from the same index.html, so without this a crawler
  * (or a shared link) would see the home page's metadata on every page.
  */
 function PageTitle({ title, description }) {

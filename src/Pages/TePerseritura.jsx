@@ -23,7 +23,7 @@ import "./Styles/DizajniPergjithshem.css";
 import "./Styles/Personal.css";
 
 function TePerseritura() {
-  // `borxhet` is only read to name the note a schedule pays down in its list row — the booking
+  // `borxhet` is only read to name the note a schedule pays down in its list row - the booking
   // itself happens in KonfirmoPagesen, which every confirmation now goes through.
   const { accounts, categories, recurring, borxhet, save, destroy, money, signedMoney, simboli, loading,
     njeLlogari } = useData();
@@ -84,7 +84,7 @@ function TePerseritura() {
     setKonfirmimi({ rec });
   };
 
-  /** Same dialog, widened to every schedule that has come due — amounts stay adjustable instead of
+  /** Same dialog, widened to every schedule that has come due - amounts stay adjustable instead of
    * being booked blind at their planned values. */
   const confirmAll = () => {
     if (stats.due.length === 0) return;
@@ -249,7 +249,7 @@ function TePerseritura() {
 
         {stats.viti.rreshtat.length > 0 && (
           <section className="mb-4">
-            <Panel title={`Kostoja e 12 Muajve të Ardhshëm — deri më ${formatDate(stats.viti.end)}`} icon={CalendarRange}>
+            <Panel title={`Kostoja e 12 Muajve të Ardhshëm - deri më ${formatDate(stats.viti.end)}`} icon={CalendarRange}>
               {stats.viti.rreshtat.map((r) => {
                 const kategoria = categories.find((c) => c.id === r.kategoriaId);
                 const Icon = getIcon(kategoria?.ikona);
@@ -304,7 +304,7 @@ function TePerseritura() {
         )}
 
         <p className="fcp-row-sub">
-          Shifra vjetore numëron pagesat që bien vërtet brenda 12 muajve të ardhshëm — jo frekuencën e shumëzuar. Prandaj
+          Shifra vjetore numëron pagesat që bien vërtet brenda 12 muajve të ardhshëm - jo frekuencën e shumëzuar. Prandaj
           një plan me tri këste të mbetura kushton tri këste, një pagesë e pauzuar nuk kushton asgjë, dhe vlera{" "}
           <em>për muaj</em> është mesatare e vitit, jo fatura e një muaji të vetëm.
         </p>

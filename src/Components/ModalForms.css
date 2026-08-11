@@ -440,7 +440,7 @@
   background: rgba(255, 255, 255, 0.06);
 }
 
-/* How often the tag has been used — the hint that says which of two similar tags is the real one. */
+/* How often the tag has been used - the hint that says which of two similar tags is the real one. */
 .fcp-etiketa-numri {
   color: var(--sp-text-muted);
   font-size: 0.62rem;

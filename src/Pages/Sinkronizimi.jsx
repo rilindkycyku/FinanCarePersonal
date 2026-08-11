@@ -23,12 +23,12 @@ import "./Styles/Personal.css";
 
 /** ms epoch / ISO → "10.08.2026, 21:14", or a dash when it never happened. */
 function kohaLexueshme(vlera) {
-  if (!vlera) return "—";
+  if (!vlera) return "-";
   const data = new Date(vlera);
-  return Number.isNaN(data.getTime()) ? "—" : data.toLocaleString("sq-AL");
+  return Number.isNaN(data.getTime()) ? "-" : data.toLocaleString("sq-AL");
 }
 
-/** The project's subdomain, which is what people recognise — the full URL is mostly noise. */
+/** The project's subdomain, which is what people recognise - the full URL is mostly noise. */
 function emriProjektit(url) {
   try {
     return new URL(url).hostname;
@@ -41,7 +41,7 @@ function emriProjektit(url) {
  * The setup script, in a dialog rather than in the page.
  *
  * Inline it was a twelve-line box that a phone renders as a narrow window onto lines it cannot
- * show — the reader scrolls sideways through SQL they are not meant to read anyway, since the
+ * show - the reader scrolls sideways through SQL they are not meant to read anyway, since the
  * whole point is the copy button. In a dialog it gets the width of the screen, wraps instead of
  * clipping, and the button that matters is the one under it.
  */
@@ -63,7 +63,7 @@ function ModaliSql({ show, onHide }) {
   };
 
   // `scrollable` keeps the script scrolling inside the dialog while the header and the copy button
-  // stay put — otherwise a full-screen phone dialog shows a short box floating in an empty screen,
+  // stay put - otherwise a full-screen phone dialog shows a short box floating in an empty screen,
   // and a long script pushes the button off the bottom.
   return (
     <Modal show={show} onHide={onHide} centered scrollable size="lg" fullscreen="sm-down" className="sp-modal">
@@ -73,7 +73,7 @@ function ModaliSql({ show, onHide }) {
       <Modal.Body>
         <p className="text-muted small">
           Te Supabase: <strong>SQL Editor → New query</strong>, ngjiteni dhe shtypni{" "}
-          <strong>Run</strong>. Ekzekutohet një herë, por përsëritja nuk prish gjë — çdo hap i tij e
+          <strong>Run</strong>. Ekzekutohet një herë, por përsëritja nuk prish gjë - çdo hap i tij e
           kontrollon vetë nëse ekziston.
         </p>
         <pre
@@ -94,7 +94,7 @@ function ModaliSql({ show, onHide }) {
         </pre>
         {deshtoi && (
           <div className="fcp-row-sub mt-2">
-            Shfletuesi nuk e lejoi kopjimin automatik — zgjidhni tekstin më sipër dhe kopjojeni vetë.
+            Shfletuesi nuk e lejoi kopjimin automatik - zgjidhni tekstin më sipër dhe kopjojeni vetë.
           </div>
         )}
       </Modal.Body>
@@ -113,7 +113,7 @@ function ModaliSql({ show, onHide }) {
 
 /**
  * A field whose value is hidden until asked for. Both things typed here are long strings copied
- * from somewhere else and impossible to proofread as dots — and a mistyped key fails with
+ * from somewhere else and impossible to proofread as dots - and a mistyped key fails with
  * "the project did not accept it", which does not tell anyone which character went wrong.
  */
 function FushaSekrete({ id, md, label, ndihma, ...props }) {
@@ -166,7 +166,7 @@ function Sinkronizimi() {
 
   const setField = (name, value) => setForm((prev) => ({ ...prev, [name]: value }));
 
-  // How much is up there, asked once per visit — the one number that answers "did it really go?".
+  // How much is up there, asked once per visit - the one number that answers "did it really go?".
   useEffect(() => {
     if (!lidhur) {
       setNCloud(null);
@@ -184,7 +184,7 @@ function Sinkronizimi() {
   const lidhu = async (mode) => {
     const url = normalizoUrl(form.url);
     if (!url) {
-      setMessage({ type: "danger", text: "Adresa e projektit nuk duket e vlefshme — kopjoni «Project URL» nga Supabase (p.sh. https://abcdefgh.supabase.co)." });
+      setMessage({ type: "danger", text: "Adresa e projektit nuk duket e vlefshme - kopjoni «Project URL» nga Supabase (p.sh. https://abcdefgh.supabase.co)." });
       return;
     }
     const celesi = kontrolloCelesin(form.anonKey);
@@ -249,7 +249,7 @@ function Sinkronizimi() {
     try {
       await ndryshoCelesin(celesiIRi);
       setCelesiIRi(null);
-      setMessage({ type: "success", text: "Çelësi u përditësua — kjo pajisje po e përdor atë të riun." });
+      setMessage({ type: "success", text: "Çelësi u përditësua - kjo pajisje po e përdor atë të riun." });
     } catch (err) {
       setMessage({ type: "danger", text: err?.message || "Çelësi nuk u ndryshua." });
     } finally {
@@ -261,7 +261,7 @@ function Sinkronizimi() {
     const ok = await dialog.confirm(
       <>
         Kjo pajisje ndalon së sinkronizuari dhe harron projektin, çelësin dhe sesionin. Të dhënat
-        tuaja mbeten të plota si këtu ashtu edhe në Supabase — mund të rilidheni kur të doni.
+        tuaja mbeten të plota si këtu ashtu edhe në Supabase - mund të rilidheni kur të doni.
       </>,
       { title: "Shkëput sinkronizimin", confirmLabel: "Shkëput" }
     );
@@ -274,12 +274,12 @@ function Sinkronizimi() {
   /**
    * Two gates, like the wipe on the settings page and for the same reason: this one reaches past
    * the device it is pressed on. The first spells out what disappears, the second only unlocks
-   * once the word is typed — a stray double-tap can dismiss one dialog, never both.
+   * once the word is typed - a stray double-tap can dismiss one dialog, never both.
    */
   const handleFshiCloud = async () => {
     const ok = await dialog.confirm(
       <>
-        Fshihen të gjitha rreshtat tuaj në tabelën <code>financare_records</code> të projektit tuaj —
+        Fshihen të gjitha rreshtat tuaj në tabelën <code>financare_records</code> të projektit tuaj -
         aktualisht <strong>{nCloud === null ? "…" : nCloud}</strong> rreshta.
         <ul className="text-start mt-2 mb-2 ps-4">
           <li>Të dhënat në këtë shfletues nuk preken.</li>
@@ -289,7 +289,7 @@ function Sinkronizimi() {
           </li>
           <li>Sinkronizimi i radhës nga kjo pajisje e ringarkon gjithçka që keni këtu.</li>
         </ul>
-        Nëse doni thjesht ta ndalni sinkronizimin, përdorni <strong>Shkëput këtë pajisje</strong> —
+        Nëse doni thjesht ta ndalni sinkronizimin, përdorni <strong>Shkëput këtë pajisje</strong> -
         kopja mbetet e paprekur.
       </>,
       { title: "Fshi kopjen në cloud", confirmLabel: "E kuptoj, vazhdo", variant: "danger" }
@@ -341,7 +341,7 @@ function Sinkronizimi() {
         </h4>
         <p className="text-muted mb-4">
           Aplikacioni nuk ka server. Nëse doni të njëjtat të dhëna në telefon dhe në kompjuter,
-          lidhni një projekt <strong>Supabase tuajin</strong> — falas për një përdorim si ky — dhe
+          lidhni një projekt <strong>Supabase tuajin</strong> - falas për një përdorim si ky - dhe
           të dhënat udhëtojnë mes pajisjeve tuaja përmes <em>bazës suaj</em>. Askush tjetër, as unë
           as ndonjë shërbim i FinanCarePersonal, nuk i sheh dhe nuk i ruan ato.
         </p>
@@ -379,7 +379,7 @@ function Sinkronizimi() {
             the whole table depends on every device's clock being right. */}
         {lidhur && konfigurimi.oraServerit === false && (
           <Alert variant="warning">
-            Projekti juaj nuk po e vendos vetë orën e rreshtave — ka gjasa ta keni konfiguruar para
+            Projekti juaj nuk po e vendos vetë orën e rreshtave - ka gjasa ta keni konfiguruar para
             se skripti ta shtonte atë hap. Ekzekutojeni skriptin sërish (përsëritja është e sigurt):
             pa të, një pajisje me orë të pasaktë mund t&apos;i mbajë ndryshimet e veta pa u parë nga
             të tjerat.
@@ -395,7 +395,7 @@ function Sinkronizimi() {
           <>
             {konfigurimi.url && (
               <Alert variant="warning">
-                Sesioni i kësaj pajisjeje nuk vlen më. Projekti dhe çelësi janë ende këtu — mjafton
+                Sesioni i kësaj pajisjeje nuk vlen më. Projekti dhe çelësi janë ende këtu - mjafton
                 fjalëkalimi dhe <strong>Hyr dhe sinkronizo</strong>; hapin e parë mund ta kaloni.
               </Alert>
             )}
@@ -403,7 +403,7 @@ function Sinkronizimi() {
             <Card className="profile-card border-0 p-4 mb-4">
               <h5 className="fw-bold mb-3">
                 <Database size={18} className="me-2 text-primary" />
-                Hapi 1 — Krijoni projektin dhe tabelën
+                Hapi 1 - Krijoni projektin dhe tabelën
               </h5>
               <ol className="text-muted small ps-3 mb-3" style={{ lineHeight: 1.9 }}>
                 <li>
@@ -411,7 +411,7 @@ function Sinkronizimi() {
                   <a href="https://supabase.com/dashboard" target="_blank" rel="noreferrer">
                     supabase.com/dashboard <ExternalLink size={12} />
                   </a>{" "}
-                  dhe krijoni një projekt të ri (plani falas mjafton — një vit transaksionesh zë
+                  dhe krijoni një projekt të ri (plani falas mjafton - një vit transaksionesh zë
                   disa megabajt).
                 </li>
                 <li>
@@ -421,7 +421,7 @@ function Sinkronizimi() {
                 </li>
                 <li>
                   Te <strong>Project Settings</strong> merrni <strong>Project URL</strong> (te{" "}
-                  <em>Data API</em>) dhe çelësin <strong>publishable</strong> —{" "}
+                  <em>Data API</em>) dhe çelësin <strong>publishable</strong> -{" "}
                   <code>sb_publishable_…</code> te <em>API Keys</em>. Nëse projekti juaj ka ende
                   çelësin e vjetër <em>anon</em> te skeda <em>Legacy</em>, edhe ai punon; i riu është
                   ai që Supabase rekomandon dhe ai që mund ta zëvendësoni vetëm atë kur t&apos;ju
@@ -438,7 +438,7 @@ function Sinkronizimi() {
             <Card className="profile-card border-0 p-4 mb-4">
               <h5 className="fw-bold mb-3">
                 <LogIn size={18} className="me-2 text-primary" />
-                Hapi 2 — Lidhni këtë pajisje
+                Hapi 2 - Lidhni këtë pajisje
               </h5>
               <p className="text-muted small mb-3">
                 Llogaria krijohet brenda projektit tuaj, jo diku tjetër. Përdorni të njëjtin email
@@ -471,7 +471,7 @@ function Sinkronizimi() {
                     value={form.anonKey}
                     onChange={(e) => setField("anonKey", e.target.value)}
                     autoComplete="off"
-                    ndihma="Publishable (ose anon i vjetër) — çelësi i destinuar për shfletues."
+                    ndihma="Publishable (ose anon i vjetër) - çelësi i destinuar për shfletues."
                   />
 
                   <Form.Group as={Col} md={6} controlId="sync-email">
@@ -594,7 +594,7 @@ function Sinkronizimi() {
                       value={celesiIRi}
                       onChange={(e) => setCelesiIRi(e.target.value)}
                       // Opens holding the current key, so it can be revealed and compared with the
-                      // dashboard — but selected on focus, because the reason anyone is here is to
+                      // dashboard - but selected on focus, because the reason anyone is here is to
                       // paste a different one over it.
                       onFocus={(e) => e.target.select()}
                       autoComplete="off"
@@ -649,7 +649,7 @@ function Sinkronizimi() {
           </h5>
           <ul className="text-muted small ps-3 mb-0" style={{ lineHeight: 1.9 }}>
             <li>
-              <strong>Çelësi publik nuk është fjalëkalim.</strong> Ai është publik nga natyra — çdo
+              <strong>Çelësi publik nuk është fjalëkalim.</strong> Ai është publik nga natyra - çdo
               aplikacion Supabase e dërgon te shfletuesi, dhe vetë Supabase-i shkruan se mund të
               ndahet lirisht. Ajo që mbron të dhënat është rregulli RLS i skriptit: pa hyrë me email
               dhe fjalëkalim, çelësi nuk lexon dot asnjë rresht.

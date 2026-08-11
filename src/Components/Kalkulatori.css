@@ -1,6 +1,6 @@
 /* ── Amount field with a calculator ───────────────────────────
    The amount is right-aligned with the currency symbol pinned to the right edge, which leaves the
-   left of the field empty — that is where the calculator button lives, so it never fights the
+   left of the field empty - that is where the calculator button lives, so it never fights the
    number for space. */
 
 .fcp-amount-calc-wrap {
