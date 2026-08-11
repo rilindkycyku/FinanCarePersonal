@@ -15,6 +15,11 @@ const PRITJA_PAS_NDRYSHIMIT = 4000;
  * otherwise fire a request every time the mouse crosses the screen. */
 const FRESKIA = 60_000;
 
+/** How often an open, visible app checks by itself. The other triggers are all events - a save, a
+ * tab switch, coming back online - and none of them fires on the one device that is simply left
+ * open on the dashboard while the day's spending is typed into the phone. */
+const INTERVALI = 10 * 60_000;
+
 /**
  * Runs the sync in the background and holds its state for the UI.
  *
@@ -105,9 +110,13 @@ export function SyncProvider({ children }) {
     };
     document.addEventListener("visibilitychange", provo);
     window.addEventListener("online", provo);
+    // Same guard, on a timer: a hidden tab does nothing, and a visible one that synced a minute
+    // ago does nothing either.
+    const ora = setInterval(provo, INTERVALI);
     return () => {
       document.removeEventListener("visibilitychange", provo);
       window.removeEventListener("online", provo);
+      clearInterval(ora);
     };
   }, [automatik, sinkronizoTani]);
 

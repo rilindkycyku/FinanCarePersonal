@@ -14,7 +14,7 @@ import Tabela from "../Components/Tabela/Tabela";
 import { Kpi, Empty, Panel, ProgressBar } from "../Components/Ui";
 import { useData } from "../Context/DataContext";
 import { useDialog } from "../Context/DialogContext";
-import { makeId, STORES } from "../lib/db";
+import { STORES } from "../lib/db";
 import { annualOutlook, dueRecurring, frequencyLabel, generateDueTransactions, isRecurringDue } from "../lib/finance";
 import { formatDate, formatMoney, plainAmount, todayISO } from "../lib/format";
 import { getIcon } from "../lib/icons";
@@ -79,7 +79,7 @@ function TePerseritura() {
   /** Opens the confirmation modal, where the amount of each due occurrence can still be corrected
    * before it is booked (see KonfirmoPagesen). */
   const confirmOne = (rec) => {
-    const { changed } = generateDueTransactions(rec, today, makeId);
+    const { changed } = generateDueTransactions(rec, today);
     if (!changed) return;
     setKonfirmimi({ rec });
   };

@@ -3,24 +3,28 @@
  *
  * The shape of the thing, before the details:
  *
- * - Every record carries `perditesuar`, the moment it was last written on some device (db.js
- *   stamps it). Every deletion leaves a tombstone carrying the same. That timestamp is the only
- *   thing this file uses to decide anything.
+ * - Every local change is flagged `sinkPezull` - "not sent yet" - and stays flagged until the cloud
+ *   has accepted it (db.js sets it; this file clears it). Deletions leave a tombstone carrying the
+ *   same flag, so a delete travels like any other change.
+ * - Every record also carries `perditesuar`. Once a record has been through the cloud that is the
+ *   time the *server* gave it, read back from the push, so two devices are never compared through
+ *   two different clocks.
  * - The cloud side is one table of `(store, record_id, updated_at, deleted, data)` rows - the
  *   ledger's own stores flattened into rows of JSON. One table means a user who set this up in
  *   March does not have to run a migration in their own project because April's release added a
  *   store.
- * - A sync pulls what changed since the last pull, applies whatever is newer than the local copy,
- *   then pushes whatever changed locally since the last push. **Last write wins, per record.**
+ * - A sync pulls what changed since the last pull, applies it unless this device is holding an
+ *   unsent change to the same record, then pushes what it is holding. **The last device to sync
+ *   wins, per record.**
  *
- * Last-write-wins is the honest choice here rather than a shortcut: one person's own ledger on
- * their own phone and laptop, where two devices editing *the same transaction* within the same
- * minute is not a real scenario. What is real is the phone and the laptop each adding different
- * rows all week, and that merges cleanly by construction - different ids never collide.
+ * That rule is the honest choice here rather than a shortcut: one person's own ledger on their own
+ * phone and laptop, where two devices editing *the same transaction* within the same minute is not
+ * a real scenario. What is real is the phone and the laptop each adding different rows all week,
+ * and that merges cleanly by construction - different ids never collide.
  *
- * What it costs: the losing side of a genuine conflict is overwritten with no prompt, and the
- * comparison trusts the two devices' clocks. A phone that is an hour behind will lose edits it
- * should have won.
+ * What it costs: the losing side of a genuine conflict is overwritten with no prompt. What it no
+ * longer costs is a wrong clock - a phone an hour behind is not asked what time it is, only what
+ * it changed.
  *
  * Invoice photos do not sync. They are binary and by far the largest thing stored, which makes
  * them a Supabase Storage job rather than a row in a table; the ZIP backup on the Eksporto /
@@ -31,8 +35,8 @@
  */
 
 import {
-  SINK_PROFILE_ID, SINK_STORES, getAll, getFshirjet, getProfile, hiqFshirjet, putProfileRaw, putRaw,
-  removeRaw, shenoFshirjen,
+  SINK_PROFILE_ID, SINK_STORES, fshiRawShume, getAll, getFshirjet, getProfile, hiqFshirjet,
+  putProfileRaw, putRaw, putRawShume, shenoFshirjen, shenoFshirjetShume,
 } from "./db";
 import { TABELA, lexoKonfigurimin, rest, ruajKonfigurimin, siguroSesionin } from "./supabase";
 
@@ -276,17 +280,34 @@ export async function stampoPastampuarat(gjendja, kur = KOHA_PARA_SINKRONIZIMIT)
   return punet.length;
 }
 
+/** Groups rows by their store, so each store's writes go down in one transaction. */
+function sipasStoreve(rreshtat) {
+  const grupet = new Map();
+  for (const rr of rreshtat) {
+    if (!grupet.has(rr.store)) grupet.set(rr.store, []);
+    grupet.get(rr.store).push(rr);
+  }
+  return grupet;
+}
+
 async function apliko({ shkruaj, fshi }) {
-  for (const rr of shkruaj) {
+  for (const [store, rreshtat] of sipasStoreve(shkruaj)) {
     // Arrived from the cloud, so by definition it is not waiting to go to the cloud.
-    const rekordi = { ...rr.data, perditesuar: rr.perditesuar, sinkPezull: false };
-    if (rr.store === STORI_PROFILIT) await putProfileRaw(rekordi);
+    if (store === STORI_PROFILIT) {
+      // The profile has no id of its own — it is the single record of a keyless store.
+      const rr = rreshtat[rreshtat.length - 1];
+      await putProfileRaw({ ...rr.data, perditesuar: rr.perditesuar, sinkPezull: false });
+      continue;
+    }
     // The id is taken from the row rather than from the JSON: the row's key is what the whole
     // merge was decided on, so a payload disagreeing with it must not create a second record.
-    else await putRaw(rr.store, { ...rekordi, id: rr.id });
+    await putRawShume(
+      store,
+      rreshtat.map((rr) => ({ ...rr.data, id: rr.id, perditesuar: rr.perditesuar, sinkPezull: false }))
+    );
   }
-  for (const rr of fshi) {
-    await removeRaw(rr.store, rr.id, rr.perditesuar);
+  for (const [store, rreshtat] of sipasStoreve(fshi)) {
+    await fshiRawShume(store, rreshtat.map((rr) => ({ id: rr.id, perditesuar: rr.perditesuar })));
   }
   // Anything written above exists again, so a tombstone this device is still holding for it would
   // otherwise travel back out and delete it everywhere.
@@ -362,11 +383,26 @@ export function zbulojOrenELServerit(rreshtat, kohet) {
   return pare ? false : null;
 }
 
-/** The local record or tombstone a pushed row came from, as it stands *now*. */
-function gjejLokalin(gjendja, rr) {
-  if (rr.fshire) return (gjendja.fshirjet ?? []).find((f) => f.store === rr.store && f.id === rr.id);
-  if (rr.store === STORI_PROFILIT) return gjendja.profili;
-  return (gjendja.storet[rr.store] ?? []).find((r) => r.id === rr.id);
+/**
+ * `${store}:${id}` → the local record or tombstone, built once per pass.
+ *
+ * Looking each one up by scanning its store instead would be a scan per pushed row: fine for the
+ * handful a normal sync sends, quietly quadratic on the first sync of a long ledger, where every
+ * record is pushed and every lookup walks every record.
+ */
+function indeksiLokal(gjendja) {
+  const indeksi = new Map();
+  for (const [store, rekordet] of Object.entries(gjendja.storet ?? {})) {
+    for (const rekordi of rekordet ?? []) {
+      if (rekordi?.id) indeksi.set(celesiRreshtit(store, rekordi.id), rekordi);
+    }
+  }
+  if (gjendja.profili) indeksi.set(celesiRreshtit(STORI_PROFILIT, SINK_PROFILE_ID), gjendja.profili);
+  // Tombstones live in the same map under their own key; a record and its tombstone never coexist.
+  for (const f of gjendja.fshirjet ?? []) {
+    if (f?.store && f?.id) indeksi.set(celesiRreshtit(f.store, f.id), f);
+  }
+  return indeksi;
 }
 
 /**
@@ -380,20 +416,32 @@ function gjejLokalin(gjendja, rr) {
  */
 async function shenoTeDerguarat(rreshtat, kohet) {
   if (rreshtat.length === 0) return 0;
-  const tani = await lexoGjendjen();
+  const indeksi = indeksiLokal(await lexoGjendjen());
+  const perStore = new Map();
+  const varret = [];
   let numri = 0;
 
   for (const rr of rreshtat) {
-    const lokal = gjejLokalin(tani, rr);
+    const celesi = celesiRreshtit(rr.store, rr.id);
+    const lokal = indeksi.get(celesi);
     if (!lokal) continue;
     if ((Number(lokal.perditesuar) || 0) !== rr.perditesuar) continue;
 
-    const koha = kohet.get(celesiRreshtit(rr.store, rr.id)) ?? rr.perditesuar;
-    if (rr.fshire) await shenoFshirjen(rr.store, rr.id, koha, false);
-    else if (rr.store === STORI_PROFILIT) await putProfileRaw({ ...lokal, perditesuar: koha, sinkPezull: false });
-    else await putRaw(rr.store, { ...lokal, perditesuar: koha, sinkPezull: false });
+    const koha = kohet.get(celesi) ?? rr.perditesuar;
+    if (rr.fshire) {
+      varret.push({ store: rr.store, id: rr.id, perditesuar: koha });
+    } else {
+      if (!perStore.has(rr.store)) perStore.set(rr.store, []);
+      perStore.get(rr.store).push({ ...lokal, perditesuar: koha, sinkPezull: false });
+    }
     numri++;
   }
+
+  for (const [store, rekordet] of perStore) {
+    if (store === STORI_PROFILIT) await putProfileRaw(rekordet[rekordet.length - 1]);
+    else await putRawShume(store, rekordet);
+  }
+  await shenoFshirjetShume(varret);
   return numri;
 }
 

@@ -76,7 +76,7 @@ function KonfirmoPagesen({ show, rec, onHide, gjithcka = false }) {
     return recurring
       .filter((r) => r.aktiv !== false && nGrup(r))
       .map((r) => {
-        const { transactions: occ } = generateDueTransactions(r, dataPageses, makeId);
+        const { transactions: occ } = generateDueTransactions(r, dataPageses);
         if (occ.length === 0) return null;
         const fx = r.monedhaOrigjinale || null;
         const njesia = fx ? toNumber(r.vleraOrigjinale) : toNumber(r.vlera);
@@ -167,7 +167,7 @@ function KonfirmoPagesen({ show, rec, onHide, gjithcka = false }) {
     perfshira.forEach((rresht) => {
       // Same pure helper the bulk action uses, so the schedule advances exactly as it would have;
       // only the dates, amounts and note are laid on top.
-      const { transactions: occ, updated } = generateDueTransactions(rresht.rec, dataPageses, makeId);
+      const { transactions: occ, updated } = generateDueTransactions(rresht.rec, dataPageses);
       const rregullim = toNumber(rresht.rregullim);
 
       occ.forEach((tx, i) => {

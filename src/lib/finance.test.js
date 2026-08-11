@@ -12,6 +12,7 @@ import {
   accountBalance, annualOutlook, backupStatus, balanceHistory, budgetProgress, cashflow, categoryComparison, consolidateAccounts,
   convertedAmount, currencyFields, dailyLimit, debtPaymentsFromTransactions, debtProgress,
   debtTotals, dueRecurring, effectiveBudgets, enteredAt, filterByRange, generateDueTransactions,
+  idIPerseritjes,
   forecast, goalProgress, isRecurringDue, lastInstallmentDate, monthBounds, monthKeyBounds, monthlyTrend,
   monthlyRecurringBreakdown, nextOccurrence, overduePlans, periodBounds, planProgress,
   plansForMonth, planTotals, previousMonthKey, recurringProgress, rolloverAmount,
@@ -612,7 +613,7 @@ describe("recurring payments", () => {
 
   it("books every occurrence a neglected schedule owes, in one catch-up", () => {
     const rec = schedule("r", { dataETjetres: "2026-05-01", vlera: 100, borxhiId: "d1" });
-    const { transactions, updated, changed } = generateDueTransactions(rec, "2026-08-10", (p) => `${p}_${Math.random()}`);
+    const { transactions, updated, changed } = generateDueTransactions(rec, "2026-08-10");
     expect(changed).toBe(true);
     expect(transactions.map((t) => t.data)).toEqual(["2026-05-01", "2026-06-01", "2026-07-01", "2026-08-01"]);
     // The link to the debt note rides along, so the note is paid down by the same booking.
@@ -621,22 +622,37 @@ describe("recurring payments", () => {
     expect(updated.aktiv).toBe(true);
   });
 
+  it("gives the same occurrence the same id on every device", () => {
+    // Automatic schedules are booked at startup on whatever device is opened, so the phone and the
+    // laptop can both book the first of the month before either has synced. Random ids would make
+    // that two transactions - the rent, twice. The same id makes it one row that merges.
+    const rec = schedule("qira", { dataETjetres: "2026-08-01" });
+    const nePajisjenA = generateDueTransactions(rec, "2026-08-10").transactions;
+    const nePajisjenB = generateDueTransactions(rec, "2026-08-10").transactions;
+    expect(nePajisjenA.map((t) => t.id)).toEqual(nePajisjenB.map((t) => t.id));
+    expect(nePajisjenA[0].id).toBe(idIPerseritjes("qira", "2026-08-01"));
+
+    // Different occurrences of the same schedule still stay apart.
+    const disa = generateDueTransactions(schedule("qira", { dataETjetres: "2026-05-01" }), "2026-08-10").transactions;
+    expect(new Set(disa.map((t) => t.id)).size).toBe(disa.length);
+  });
+
   it("stops a mis-entered start date from generating thousands of rows at once", () => {
     const rec = schedule("r", { frekuenca: "ditore", dataETjetres: "2020-01-01" });
-    const { transactions } = generateDueTransactions(rec, "2026-08-10", (p) => `${p}_${Math.random()}`, 5);
+    const { transactions } = generateDueTransactions(rec, "2026-08-10", 5);
     expect(transactions).toHaveLength(5);
   });
 
   it("switches a schedule off once it passes its end date", () => {
     const rec = schedule("r", { dataETjetres: "2026-08-01", dataFundit: "2026-08-01" });
-    const { updated } = generateDueTransactions(rec, "2026-08-10", (p) => `${p}_1`);
+    const { updated } = generateDueTransactions(rec, "2026-08-10");
     expect(updated.aktiv).toBe(false);
-    expect(generateDueTransactions(updated, "2026-09-10", (p) => `${p}_2`).changed).toBe(false);
+    expect(generateDueTransactions(updated, "2026-09-10").changed).toBe(false);
   });
 
   it("carries a foreign-currency schedule onto the transaction it books", () => {
     const rec = schedule("r", { monedhaOrigjinale: "USD", vleraOrigjinale: 12, kursi: 0.9, vlera: 10.8 });
-    const [booked] = generateDueTransactions(rec, "2026-08-10", (p) => `${p}_1`).transactions;
+    const [booked] = generateDueTransactions(rec, "2026-08-10").transactions;
     expect(booked).toMatchObject({ monedhaOrigjinale: "USD", vleraOrigjinale: 12, kursi: 0.9, vlera: 10.8 });
   });
 });

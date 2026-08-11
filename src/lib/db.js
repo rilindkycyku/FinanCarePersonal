@@ -97,7 +97,7 @@ function njoftoBllokimin(bllokuar) {
  * phone reach the laptop without anyone pressing a button. Deliberately announced from the
  * database rather than from the forms: there is one write path and a dozen forms.
  *
- * Writes made *by* sync while applying what it downloaded go through `putRaw`/`removeRaw` and stay
+ * Writes made *by* sync while applying what it downloaded go through the `*Raw` helpers and stay
  * silent, so applying a change never schedules another sync to announce it back.
  */
 const degjuesitNdryshimit = new Set();
@@ -289,6 +289,46 @@ export function putRaw(store, record) {
 }
 
 /**
+ * The same, for many records of one store in a single transaction.
+ *
+ * A first sync applies every record the cloud holds; done one transaction at a time that is one
+ * round trip through the database engine per transaction, which on a phone with a few thousand
+ * rows is seconds of the app looking stuck. One transaction for the lot is the same work with one
+ * commit — and it is also all-or-nothing, so an interrupted sync leaves a batch either fully
+ * applied or not at all.
+ */
+export function putRawShume(store, records) {
+  if (records.length === 0) return Promise.resolve();
+  return withStore(store, "readwrite", (s) => {
+    records.forEach((record) => s.put(record));
+    return null;
+  });
+}
+
+/** Deletes many records of one store and leaves their tombstones, in one transaction across both
+ * stores — a deletion without its tombstone would be undone by the next sync. */
+export function fshiRawShume(store, hyrjet) {
+  if (hyrjet.length === 0) return Promise.resolve();
+  return withStores([store, STORES.fshirjet], "readwrite", (objektet, varret) => {
+    hyrjet.forEach(({ id, perditesuar }) => {
+      objektet.delete(id);
+      varret.put({ celesi: `${store}:${id}`, store, id, perditesuar, sinkPezull: false });
+    });
+  });
+}
+
+/** Records many tombstones at once, for the push path marking deletions as sent. */
+export function shenoFshirjetShume(hyrjet) {
+  if (hyrjet.length === 0) return Promise.resolve();
+  return withStore(STORES.fshirjet, "readwrite", (s) => {
+    hyrjet.forEach(({ store, id, perditesuar, sinkPezull = false }) => {
+      s.put({ celesi: `${store}:${id}`, store, id, perditesuar, sinkPezull });
+    });
+    return null;
+  });
+}
+
+/**
  * Deletes a record and leaves a tombstone behind, so the deletion can travel to the other devices.
  * Without one, the next sync would see a record present in the cloud and absent here, conclude
  * this device had simply never received it, and download it again - deleting anything would be
@@ -298,14 +338,6 @@ export function remove(store, id) {
   return withStore(store, "readwrite", (s) => s.delete(id))
     .then(() => (SINK_STORES.includes(store) ? shenoFshirjen(store, id) : undefined))
     .then(() => njoftoNdryshim())
-    .then(() => undefined);
-}
-
-/** Deletes a record on behalf of a deletion that came down from the cloud: the tombstone keeps the
- * timestamp of the device that did the deleting, exactly like `putRaw` keeps the edit's own. */
-export function removeRaw(store, id, perditesuar) {
-  return withStore(store, "readwrite", (s) => s.delete(id))
-    .then(() => shenoFshirjen(store, id, perditesuar, false))
     .then(() => undefined);
 }
 
@@ -372,7 +404,7 @@ export async function bookAutomaticRecurring(todayStr = todayISO()) {
 
   let numri = 0;
   for (const rec of automatike) {
-    const { transactions, updated, changed } = generateDueTransactions(rec, todayStr, makeId);
+    const { transactions, updated, changed } = generateDueTransactions(rec, todayStr);
     if (!changed) continue;
     await Promise.all([
       ...transactions.map((tx) => put(STORES.transactions, { ...tx, automatike: true })),

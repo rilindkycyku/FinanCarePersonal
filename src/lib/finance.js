@@ -989,7 +989,20 @@ export function upcomingRecurring(recurring, todayStr, days = 30) {
  * catches up in full on the next visit. `maxCatchUp` stops a mis-entered start date decades in
  * the past from generating thousands of rows in one go.
  */
-export function generateDueTransactions(rec, todayStr, makeIdFn, maxCatchUp = 60) {
+/**
+ * The id an occurrence is booked under: the schedule it came from, plus the date it fell due.
+ *
+ * Deliberately not random. Automatic schedules are booked at startup by *every* device the ledger
+ * is open on, and two devices that both open the app on the first of the month would otherwise
+ * each invent an id for the same rent and sync would keep them both - the month's rent, twice, in
+ * the balance. Derived from the occurrence itself, the two devices produce the same id, and the
+ * second booking is the same row rather than a new one.
+ */
+export function idIPerseritjes(recId, data) {
+  return `tx_rec_${recId}_${data}`;
+}
+
+export function generateDueTransactions(rec, todayStr, maxCatchUp = 60) {
   const transactions = [];
   let updated = { ...rec };
   let guard = 0;
@@ -998,7 +1011,7 @@ export function generateDueTransactions(rec, todayStr, makeIdFn, maxCatchUp = 60
 
   while (isRecurringDue(updated, todayStr) && guard < maxCatchUp) {
     transactions.push({
-      id: makeIdFn("tx"),
+      id: idIPerseritjes(updated.id, updated.dataETjetres),
       data: updated.dataETjetres,
       krijuar,
       lloji: updated.lloji,
