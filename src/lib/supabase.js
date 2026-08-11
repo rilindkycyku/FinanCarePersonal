@@ -329,6 +329,42 @@ export async function rest(shtegu, { method = "GET", body, headers = {}, kthePer
   throw gabimi(data?.message || `Projekti u përgjigj me gabimin ${res.status}.`, "server");
 }
 
+/**
+ * Swaps the saved public key for a new one — the day the user rotates it in Supabase.
+ *
+ * The new key is tried before it is kept, because it is being typed into the very device that
+ * would need it to talk to the project: saving a mistyped key first and discovering it afterwards
+ * would leave the device unable to sync until it was disconnected and set up from scratch. The
+ * check runs while the *old* key still works, so the session it needs is refreshed with the key
+ * that is on its way out.
+ *
+ * Only the key. A different project URL means a different database, with its own users and its own
+ * rows, so nothing about the current session would carry over — that is a reconnection, not an
+ * edit, and the page says so.
+ */
+export async function ndryshoCelesin(celesiIRi) {
+  const kontrolli = kontrolloCelesin(celesiIRi);
+  if (!kontrolli.ok) throw gabimi(kontrolli.gabim, "celesi");
+
+  const k = await siguroSesionin();
+  let res;
+  try {
+    res = await fetch(`${k.url}/rest/v1/${TABELA}?select=record_id&limit=1`, {
+      headers: { apikey: kontrolli.celesi, Authorization: `Bearer ${k.accessToken}` },
+    });
+  } catch {
+    throw gabimi("Projekti nuk u arrit — kontrolloni internetin.", "rrjeti");
+  }
+  if (!res.ok) {
+    const data = await trupi(res);
+    if (res.status === 401 || res.status === 403) {
+      throw gabimi("Projekti nuk e pranoi çelësin e ri — kontrolloni se është kopjuar i plotë dhe nga ky projekt.", "celesi");
+    }
+    throw gabimi(data?.message || `Projekti u përgjigj me gabimin ${res.status}.`, "server");
+  }
+  return ruajKonfigurimin({ anonKey: kontrolli.celesi });
+}
+
 /** The setup script, shown on the sync page with a copy button and run once by the user in their
  * own project's SQL editor. One table, one policy, one index. */
 export const SQL_INSTALIMI = `-- FinanCarePersonal · sinkronizimi

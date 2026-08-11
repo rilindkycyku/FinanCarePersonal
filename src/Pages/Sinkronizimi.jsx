@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Alert, Button, Card, Col, Form, InputGroup, Modal, Row, Spinner } from "react-bootstrap";
 import {
   AlertTriangle, Check, Cloud, CloudOff, Code2, Copy, Database, Download, Eye, EyeOff, ExternalLink,
-  LogIn, RefreshCw, ShieldCheck, Trash2, UserPlus,
+  KeyRound, LogIn, RefreshCw, Save, ShieldCheck, Trash2, UserPlus,
 } from "lucide-react";
 import NavBar from "../Components/NavBar";
 import Footer from "../Components/Footer";
@@ -12,8 +12,8 @@ import { useData } from "../Context/DataContext";
 import { useDialog } from "../Context/DialogContext";
 import { useSync } from "../Context/SyncContext";
 import {
-  SQL_INSTALIMI, dil, hyr, kontrolloCelesin, normalizoUrl, pastroKonfigurimin, regjistrohu,
-  ruajKonfigurimin,
+  SQL_INSTALIMI, dil, hyr, kontrolloCelesin, ndryshoCelesin, normalizoUrl, pastroKonfigurimin,
+  regjistrohu, ruajKonfigurimin,
 } from "../lib/supabase";
 import { fshiCloud, numeroCloud, rivendosKufijte } from "../lib/sinkronizimi";
 import "./Styles/PremiumTheme.css";
@@ -160,6 +160,9 @@ function Sinkronizimi() {
   const [message, setMessage] = useState(null);
   const [nCloud, setNCloud] = useState(null);
   const [sqlHapur, setSqlHapur] = useState(false);
+  // The key-rotation field, closed until asked for: it is a once-a-year action sitting next to
+  // buttons pressed every day.
+  const [celesiIRi, setCelesiIRi] = useState(null);
 
   const setField = (name, value) => setForm((prev) => ({ ...prev, [name]: value }));
 
@@ -236,6 +239,21 @@ function Sinkronizimi() {
         type: "success",
         text: `U morën ${permbledhja.marre} ndryshime dhe u dërguan ${permbledhja.derguar}.`,
       });
+    }
+  };
+
+  const handleRuajCelesin = async (e) => {
+    e.preventDefault();
+    setPune("celesi");
+    setMessage(null);
+    try {
+      await ndryshoCelesin(celesiIRi);
+      setCelesiIRi(null);
+      setMessage({ type: "success", text: "Çelësi u përditësua — kjo pajisje po e përdor atë të riun." });
+    } catch (err) {
+      setMessage({ type: "danger", text: err?.message || "Çelësi nuk u ndryshua." });
+    } finally {
+      setPune(null);
     }
   };
 
@@ -512,6 +530,48 @@ function Sinkronizimi() {
                   <CloudOff size={16} className="me-1" /> Shkëput këtë pajisje
                 </Button>
               </div>
+
+              {celesiIRi === null ? (
+                <button
+                  type="button"
+                  className="btn btn-link p-0 mt-3 text-decoration-none fcp-row-sub"
+                  onClick={() => setCelesiIRi(konfigurimi.anonKey || "")}
+                >
+                  <KeyRound size={14} className="me-1" /> Ndrysho çelësin publik
+                </button>
+              ) : (
+                <Form onSubmit={handleRuajCelesin} className="mt-3">
+                  <Row className="g-2 align-items-end">
+                    <FushaSekrete
+                      id="sync-celesi-ri"
+                      md={7}
+                      label="Çelësi publik i ri"
+                      placeholder="sb_publishable_…"
+                      value={celesiIRi}
+                      onChange={(e) => setCelesiIRi(e.target.value)}
+                      // Opens holding the current key, so it can be revealed and compared with the
+                      // dashboard — but selected on focus, because the reason anyone is here is to
+                      // paste a different one over it.
+                      onFocus={(e) => e.target.select()}
+                      autoComplete="off"
+                      ndihma="Provohet te projekti para se të ruhet, pra një çelës i gabuar nuk e lë pajisjen pa sinkronizim. Për të kaluar te një projekt tjetër duhet shkëputja."
+                    />
+                    <Col md={5} className="d-flex gap-2">
+                      <Button type="submit" className="btn-primary" disabled={pune === "celesi"}>
+                        {pune === "celesi" ? (
+                          <Spinner animation="border" size="sm" className="me-2" />
+                        ) : (
+                          <Save size={16} className="me-1" />
+                        )}
+                        Ruaj çelësin
+                      </Button>
+                      <Button variant="secondary" onClick={() => setCelesiIRi(null)} disabled={pune === "celesi"}>
+                        Anulo
+                      </Button>
+                    </Col>
+                  </Row>
+                </Form>
+              )}
             </Card>
 
             <Card className="profile-card fcp-zona-rrezik border-0 p-4 mb-4">

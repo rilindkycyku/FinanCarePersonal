@@ -231,6 +231,11 @@ përmes bazës suaj.
    Llogaria krijohet **brenda projektit tuaj**; në pajisjet e tjera përdorni po ato kredenciale me
    butonin *Hyr*.
 
+Çelësi mund të ndërrohet më vonë pa u shkëputur — te kartela e lidhjes, *Ndrysho çelësin publik*.
+I riu provohet te projekti para se të ruhet, pra një çelës i kopjuar gabimisht nuk e lë pajisjen pa
+sinkronizim; ndërrimi i vetë projektit, përkundrazi, kërkon shkëputje, sepse sesioni dhe rreshtat i
+takojnë bazës së vjetër.
+
 Supabase-i e ka konfirmimin me email të ndezur si parazgjedhje, pra pajisja e parë duhet ta hapë
 linkun që i vjen para se të hyjë. Nëse doni ta kaloni atë hap, fikeni te **Authentication →
 Providers → Email**; nëse e lini ndezur, mbani mend se çdo pajisje e re pret konfirmimin e llogarisë,
