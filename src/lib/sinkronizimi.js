@@ -350,8 +350,11 @@ async function ekzekuto({ ngaFillimi = false } = {}) {
 
 /** How many rows the cloud copy holds — the answer to "did anything actually get up there?". */
 export async function numeroCloud() {
+  // `limit=1` keeps the body to one row; the number itself rides in the header. Deliberately no
+  // `Range` header alongside it — a range asking for a row an empty table does not have is
+  // answered with 416, and an empty cloud copy is exactly the state right after the delete button.
   const res = await rest(`${TABELA}?select=record_id&limit=1`, {
-    headers: { Prefer: "count=exact", Range: "0-0" },
+    headers: { Prefer: "count=exact" },
     kthePergjigjen: true,
   });
   // PostgREST reports the count in Content-Range as `0-0/123`.
