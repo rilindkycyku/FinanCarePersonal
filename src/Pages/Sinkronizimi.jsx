@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import { Alert, Button, Card, Col, Form, Row, Spinner } from "react-bootstrap";
+import { Alert, Button, Card, Col, Form, InputGroup, Modal, Row, Spinner } from "react-bootstrap";
 import {
-  AlertTriangle, Check, Cloud, CloudOff, Copy, Database, Download, ExternalLink, LogIn, RefreshCw,
-  ShieldCheck, Trash2, UserPlus,
+  AlertTriangle, Check, Cloud, CloudOff, Code2, Copy, Database, Download, Eye, EyeOff, ExternalLink,
+  LogIn, RefreshCw, ShieldCheck, Trash2, UserPlus,
 } from "lucide-react";
 import NavBar from "../Components/NavBar";
 import Footer from "../Components/Footer";
@@ -37,41 +37,108 @@ function emriProjektit(url) {
   }
 }
 
-/** The SQL box: read-only, monospace, and one button away from the clipboard, because it exists to
- * be pasted into someone else's SQL editor and nothing else. */
-function SkriptiSql() {
+/**
+ * The setup script, in a dialog rather than in the page.
+ *
+ * Inline it was a twelve-line box that a phone renders as a narrow window onto lines it cannot
+ * show — the reader scrolls sideways through SQL they are not meant to read anyway, since the
+ * whole point is the copy button. In a dialog it gets the width of the screen, wraps instead of
+ * clipping, and the button that matters is the one under it.
+ */
+function ModaliSql({ show, onHide }) {
   const [kopjuar, setKopjuar] = useState(false);
+  const [deshtoi, setDeshtoi] = useState(false);
 
   const kopjo = async () => {
     try {
       await navigator.clipboard.writeText(SQL_INSTALIMI);
+      setDeshtoi(false);
       setKopjuar(true);
       setTimeout(() => setKopjuar(false), 2500);
     } catch {
-      // Clipboard permission refused (or an insecure context): the text is on screen and can be
-      // selected by hand, so there is nothing to report.
+      // Clipboard refused (an insecure context, or permission denied). The text is right there to
+      // be selected by hand, which is worth saying rather than leaving a button that did nothing.
+      setDeshtoi(true);
     }
   };
 
+  // `scrollable` keeps the script scrolling inside the dialog while the header and the copy button
+  // stay put — otherwise a full-screen phone dialog shows a short box floating in an empty screen,
+  // and a long script pushes the button off the bottom.
   return (
-    <div className="mb-3">
-      <div className="d-flex justify-content-between align-items-center mb-2">
-        <span className="fcp-row-sub">SQL Editor → New query → ngjiteni → Run</span>
-        <Button variant="outline-light" size="sm" onClick={kopjo}>
-          {kopjuar ? <Check size={15} className="me-1" /> : <Copy size={15} className="me-1" />}
-          {kopjuar ? "U kopjua" : "Kopjo"}
+    <Modal show={show} onHide={onHide} centered scrollable size="lg" fullscreen="sm-down" className="sp-modal">
+      <Modal.Header closeButton>
+        <Modal.Title className="h6 fw-bold mb-0">Skripti SQL i sinkronizimit</Modal.Title>
+      </Modal.Header>
+      <Modal.Body>
+        <p className="text-muted small">
+          Te Supabase: <strong>SQL Editor → New query</strong>, ngjiteni dhe shtypni{" "}
+          <strong>Run</strong>. Ekzekutohet një herë, por përsëritja nuk prish gjë — çdo hap i tij e
+          kontrollon vetë nëse ekziston.
+        </p>
+        <pre
+          style={{
+            whiteSpace: "pre-wrap",
+            wordBreak: "break-word",
+            fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
+            fontSize: "0.78rem",
+            lineHeight: 1.6,
+            background: "var(--sp-surface-2)",
+            border: "1px solid var(--sp-border)",
+            borderRadius: 14,
+            padding: "1rem",
+            margin: 0,
+          }}
+        >
+          {SQL_INSTALIMI}
+        </pre>
+        {deshtoi && (
+          <div className="fcp-row-sub mt-2">
+            Shfletuesi nuk e lejoi kopjimin automatik — zgjidhni tekstin më sipër dhe kopjojeni vetë.
+          </div>
+        )}
+      </Modal.Body>
+      <Modal.Footer>
+        <Button variant="secondary" onClick={onHide}>
+          Mbyll
         </Button>
-      </div>
-      <Form.Control
-        as="textarea"
-        readOnly
-        value={SQL_INSTALIMI}
-        rows={12}
-        spellCheck={false}
-        style={{ fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace", fontSize: "0.78rem", whiteSpace: "pre" }}
-        onFocus={(e) => e.target.select()}
-      />
-    </div>
+        <Button className="btn-primary" onClick={kopjo}>
+          {kopjuar ? <Check size={16} className="me-1" /> : <Copy size={16} className="me-1" />}
+          {kopjuar ? "U kopjua" : "Kopjo skriptin"}
+        </Button>
+      </Modal.Footer>
+    </Modal>
+  );
+}
+
+/**
+ * A field whose value is hidden until asked for. Both things typed here are long strings copied
+ * from somewhere else and impossible to proofread as dots — and a mistyped key fails with
+ * "the project did not accept it", which does not tell anyone which character went wrong.
+ */
+function FushaSekrete({ id, md, label, ndihma, ...props }) {
+  const [dukshem, setDukshem] = useState(false);
+  return (
+    <Form.Group as={Col} md={md} controlId={id}>
+      <Form.Label>{label}</Form.Label>
+      <InputGroup>
+        <Form.Control type={dukshem ? "text" : "password"} spellCheck={false} {...props} />
+        <Button
+          variant="outline-light"
+          onClick={() => setDukshem((v) => !v)}
+          // Keeps the button from taking focus on a tap, which would otherwise leave it sitting in
+          // its filled "pressed" state next to the field the user is typing in. Tabbing to it still
+          // works, and still shows the focus ring, so the toggle is not mouse-only.
+          onMouseDown={(e) => e.preventDefault()}
+          aria-label={dukshem ? "Fshih vlerën" : "Shfaq vlerën"}
+          aria-pressed={dukshem}
+          title={dukshem ? "Fshih" : "Shfaq"}
+        >
+          {dukshem ? <EyeOff size={16} /> : <Eye size={16} />}
+        </Button>
+      </InputGroup>
+      {ndihma && <div className="fcp-row-sub mt-1">{ndihma}</div>}
+    </Form.Group>
   );
 }
 
@@ -92,6 +159,7 @@ function Sinkronizimi() {
   const [pune, setPune] = useState(null);
   const [message, setMessage] = useState(null);
   const [nCloud, setNCloud] = useState(null);
+  const [sqlHapur, setSqlHapur] = useState(false);
 
   const setField = (name, value) => setForm((prev) => ({ ...prev, [name]: value }));
 
@@ -238,7 +306,9 @@ function Sinkronizimi() {
             {message.text}
             {message.sql && (
               <div className="mt-3">
-                <SkriptiSql />
+                <Button variant="outline-light" size="sm" onClick={() => setSqlHapur(true)}>
+                  <Code2 size={15} className="me-1" /> Shfaq skriptin SQL
+                </Button>
               </div>
             )}
           </Alert>
@@ -249,11 +319,15 @@ function Sinkronizimi() {
             {gabim.mesazhi}
             {gabim.kodi === "tabela" && (
               <div className="mt-3">
-                <SkriptiSql />
+                <Button variant="outline-light" size="sm" onClick={() => setSqlHapur(true)}>
+                  <Code2 size={15} className="me-1" /> Shfaq skriptin SQL
+                </Button>
               </div>
             )}
           </Alert>
         )}
+
+        <ModaliSql show={sqlHapur} onHide={() => setSqlHapur(false)} />
 
         {!lidhur ? (
           <>
@@ -289,7 +363,11 @@ function Sinkronizimi() {
                   kurrë këtu).
                 </li>
               </ol>
-              <SkriptiSql />
+              <div>
+                <Button className="btn-primary" onClick={() => setSqlHapur(true)}>
+                  <Code2 size={16} className="me-1" /> Shfaq skriptin SQL
+                </Button>
+              </div>
             </Card>
 
             <Card className="profile-card border-0 p-4 mb-4">
@@ -320,18 +398,16 @@ function Sinkronizimi() {
                     />
                   </Form.Group>
 
-                  <Form.Group as={Col} md={5} controlId="sync-key">
-                    <Form.Label>Çelësi anon public</Form.Label>
-                    <Form.Control
-                      type="password"
-                      placeholder="eyJhbGciOi… ose sb_publishable_…"
-                      value={form.anonKey}
-                      onChange={(e) => setField("anonKey", e.target.value)}
-                      autoComplete="off"
-                      spellCheck={false}
-                    />
-                    <div className="fcp-row-sub mt-1">Çelësi publik i projektit, i destinuar për shfletues.</div>
-                  </Form.Group>
+                  <FushaSekrete
+                    id="sync-key"
+                    md={5}
+                    label="Çelësi anon public"
+                    placeholder="eyJhbGciOi… ose sb_publishable_…"
+                    value={form.anonKey}
+                    onChange={(e) => setField("anonKey", e.target.value)}
+                    autoComplete="off"
+                    ndihma="Çelësi publik i projektit, i destinuar për shfletues."
+                  />
 
                   <Form.Group as={Col} md={6} controlId="sync-email">
                     <Form.Label>Email</Form.Label>
@@ -344,16 +420,15 @@ function Sinkronizimi() {
                     />
                   </Form.Group>
 
-                  <Form.Group as={Col} md={6} controlId="sync-password">
-                    <Form.Label>Fjalëkalimi</Form.Label>
-                    <Form.Control
-                      type="password"
-                      placeholder="të paktën 6 karaktere"
-                      value={form.password}
-                      onChange={(e) => setField("password", e.target.value)}
-                      autoComplete="current-password"
-                    />
-                  </Form.Group>
+                  <FushaSekrete
+                    id="sync-password"
+                    md={6}
+                    label="Fjalëkalimi"
+                    placeholder="të paktën 6 karaktere"
+                    value={form.password}
+                    onChange={(e) => setField("password", e.target.value)}
+                    autoComplete="current-password"
+                  />
 
                   <Col md={12} className="d-flex flex-wrap gap-2">
                     <Button type="submit" className="btn-primary" disabled={Boolean(pune)}>
