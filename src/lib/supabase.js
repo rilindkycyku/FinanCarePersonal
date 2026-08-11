@@ -353,6 +353,13 @@ create policy "vetem rreshtat e mi" on public.${TABELA}
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
 
+-- Nëse projekti nuk i ekspozon vetvetiu tabelat e reja te Data API
+-- ("Automatically expose new tables" i çaktivizuar), pa këto tabela ekziston
+-- por API-ja e kthen si të palejuar. Vetëm përdoruesi i identifikuar merr të
+-- drejta; rreshtat i filtron gjithsesi rregulli RLS më sipër.
+grant usage on schema public to anon, authenticated;
+grant select, insert, update, delete on public.${TABELA} to authenticated;
+
 -- Sinkronizimi merr vetëm çka ka ndryshuar që nga hera e fundit.
 create index if not exists ${TABELA}_updated_at_idx
   on public.${TABELA} (user_id, updated_at);`;
