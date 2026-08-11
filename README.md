@@ -3,7 +3,9 @@
 Ndjekës i financave personale, plotësisht në anën e klientit, i ndërtuar mbi dizajnin e
 [FinanCare](https://github.com/rilindkycyku/FinanCare). **Nuk ka backend** — profili, llogaritë,
 kategoritë, transaksionet, buxhetet, qëllimet e kursimit dhe pagesat e përsëritura ruhen të gjitha
-në shfletuesin tuaj përmes **IndexedDB**.
+në shfletuesin tuaj përmes **IndexedDB**. Kjo nuk ndryshon as kur i mbani të dhënat në disa
+pajisje: sinkronizimi është opsional dhe kalon përmes një projekti **Supabase që e zotëroni ju**,
+jo përmes ndonjë serveri të këtij aplikacioni.
 
 Ndërsa `financarelite` mbulon faturat për biznesin, FinanCarePersonal mbulon paranë tuaja: sa hyn,
 sa shpenzohet, sa mbetet dhe sa po kursesh.
@@ -139,6 +141,18 @@ sa shpenzohet, sa mbetet dhe sa po kursesh.
   <br />Fotot e faturave hyjnë në JSON të koduara në base64, prandaj kanë çelësin e vet: hiqeni kur
   doni vetëm librin e llogarive dhe jo dhjetëra megabajt fotografi. Faqja tregon edhe sa hapësirë
   zënë fotot dhe sa i ka lënë në dispozicion shfletuesi.
+- **Sinkronizimi mes pajisjeve (opsional)** — telefoni dhe kompjuteri me të njëjtat të dhëna, pa
+  një server në mes. Ju krijoni një projekt **Supabase tuajin** (plani falas mjafton), ekzekutoni
+  një skript SQL që faqja **Sinkronizimi** jua jep të gatshëm — një tabelë e vetme dhe rregulli RLS
+  që lejon vetëm llogarinë tuaj — dhe vendosni adresën e projektit me çelësin *anon public*. Nga
+  aty çdo pajisje hyn me të njëjtin email e fjalëkalim, të krijuar brenda projektit tuaj.
+  <br />Sinkronizimi bëhet vetë (kur hapet aplikacioni, pak sekonda pas çdo ndryshimi, kur ktheheni
+  te skeda dhe kur pajisja kthehet online) ose vetëm me buton, sipas një çelësi te vetë faqja. Çdo
+  rresht mban kohën kur u ndryshua dhe fiton ndryshimi më i fundit; fshirjet udhëtojnë si shënime
+  varri, pra një transaksion i fshirë në telefon nuk rikthehet nga kompjuteri. Shkon vetëm ajo që
+  ndryshoi që nga hera e fundit, jo e gjithë baza. Fotot e faturave mbeten jashtë — për ato mbetet
+  arkivi ZIP. Çelësi *service_role* refuzohet me vetëdije: ai anashkalon rregullat e sigurisë dhe
+  nuk ka pse të ndodhet kurrë në një shfletues.
 - **Tema e errët / e bardhë**, dizajn responsiv për telefon, dhe monedhë e konfigurueshme.
 
 ## Konfigurimi
@@ -152,7 +166,8 @@ npm run lint
 npm test         # testet e llogaritjeve (vitest)
 ```
 
-Llogaritjet financiare mbulohen me teste në `src/lib/finance.test.js` dhe `src/lib/csv.test.js` —
+Llogaritjet financiare mbulohen me teste në `src/lib/finance.test.js` dhe `src/lib/csv.test.js`,
+dhe rregullat e bashkimit të sinkronizimit në `src/lib/sinkronizimi.test.js` —
 funksione të pastra, pa shfletues e pa bazë të dhënash, ku çdo gjë që varet nga koha e merr "sot"
 si argument.
 
@@ -165,6 +180,16 @@ Të gjitha të dhënat ndodhen **vetëm** në IndexedDB të shfletuesit tuaj (`f
 përfshirë fotot e faturave — asnjë foto nuk ngarkohet askund. Asgjë nuk dërgohet në ndonjë server
 dhe nuk kërkohet llogari. Pastrimi i të dhënave të faqes i fshin ato — përdorni
 **Eksporto / Importo** për të mbajtur një kopje JSON.
+
+I vetmi rast kur diçka del nga shfletuesi është kur e vendosni vetë: te faqja **Sinkronizimi**
+lidhni një projekt Supabase **tuajin** dhe që nga ai çast libri i llogarive (jo fotot) shkon te
+*baza juaj*, në rajonin që zgjidhni ju, përmes HTTPS. Projekti, çelësi publik dhe sesioni ruhen në
+`localStorage` të kësaj pajisjeje — jo më të ndjeshme se vetë libri i llogarive, që tashmë ndodhet
+i plotë në të njëjtin shfletues. Ajo që mban të dhënat të mbyllura është rregulli RLS i skriptit:
+çelësi *anon* është publik nga natyra dhe pa hyrjen me email e fjalëkalim nuk lexon dot asnjë
+rresht. Çelësi *service_role* nuk pranohet fare. «Pastro të gjitha të dhënat» e harron edhe këtë
+lidhje, që një pajisje e pastruar të mos i shkarkojë të gjitha sërish në sinkronizimin e radhës;
+kopja te projekti juaj mbetet derisa ta fshini vetë nga po ajo faqe.
 
 Kufiri i vetëm është kuota që shfletuesi i jep kësaj faqeje, dhe fotot janë e vetmja gjë që i
 afrohet asaj; prandaj ato zvogëlohen para se të ruhen, ndahen nga pjesa tjetër e bazës (vetëm
@@ -188,10 +213,12 @@ aplikacion i shtuar te ekrani bazë ka numëruesin e vet dhe nuk preket.
 
 ```
 src/
-  Context/    DataContext (ngarkon dhe ruan gjithçka), ThemeContext, DialogContext
+  Context/    DataContext (ngarkon dhe ruan gjithçka), SyncContext (sinkronizimi automatik),
+              ThemeContext, DialogContext
   lib/        db.js (IndexedDB), finance.js (çdo kalkulim), csv.js (leximi i ekstraktit),
               rregullat.js (kujtesa e kategorive), images.js (përpunimi i fotove të faturave),
               zip.js (arkivi i kopjes së plotë), calc.js (llogaritësi i fushave të vlerës),
+              supabase.js (klienti i vogël i projektit tuaj), sinkronizimi.js (rregullat e bashkimit),
               format.js, options.js, exportExcel.js
   Components/ NavBar, Footer, Tabela (kërkim/renditje/eksport), modalet e shtimit, Ui.jsx,
               Faturat/ (fusha e fotove, galeria e një transaksioni, shikuesi)
@@ -199,7 +226,7 @@ src/
               Faturat/ (fusha e fotove, galeria e një transaksioni, shikuesi)
   Pages/      Paneli, Transaksionet, Llogaritë, Borxhet & Kartelat, Kategoritë, Buxhetet,
               Qëllimet, Shpenzimet e Planifikuara, Pagesat e Përsëritura, Statistikat,
-              Cilësimet, Eksporto/Importo, Importo nga CSV
+              Cilësimet, Eksporto/Importo, Sinkronizimi, Importo nga CSV
 ```
 
 Kalkulimet financiare janë të gjitha funksione të pastra në `src/lib/finance.js` — bilancet,

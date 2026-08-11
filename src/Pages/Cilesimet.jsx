@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { Card, Form, Row, Col, Button, Alert } from "react-bootstrap";
 import { Settings, Save, Trash2, RotateCcw, Sun, Moon, AlertTriangle, BellRing, Eraser } from "lucide-react";
 import NavBar from "../Components/NavBar";
@@ -9,6 +10,7 @@ import CilesimiNjeLlogari from "../Components/CilesimiNjeLlogari";
 import { useData } from "../Context/DataContext";
 import { useDialog } from "../Context/DialogContext";
 import { useTheme } from "../Context/ThemeContext";
+import { useSync } from "../Context/SyncContext";
 import { seedDefaults, wipeAllData } from "../lib/db";
 import { CURRENCIES, DEFAULT_CURRENCY } from "../lib/options";
 import { pastroRregullat } from "../lib/rregullat";
@@ -26,6 +28,7 @@ function Cilesimet() {
     loading, njeLlogari } = useData();
   const dialog = useDialog();
   const { theme, toggleTheme } = useTheme();
+  const { lidhur } = useSync();
   const [form, setForm] = useState({
     emri: "", monedha: DEFAULT_CURRENCY, teArdhuratMujore: "", objektiviKursimit: "", limitiDitor: "",
     njoftimeLimiti: false, cilesiaFaturave: CILESIA_PARAZGJEDHUR,
@@ -92,9 +95,22 @@ function Cilesimet() {
             </li>
           ))}
           <li>profili juaj (emri, monedha, objektivat)</li>
+          {/* Named explicitly: the wipe forgets it (db.js), and on a synced device that is the
+              difference between a wipe that holds and one the next sync undoes. */}
+          {lidhur && <li>lidhja me Supabase (projekti dhe sesioni i ruajtur këtu)</li>}
         </ul>
-        Nuk ka kopje në ndonjë server dhe veprimi nuk mund të zhbëhet. Nëse nuk keni një kopje JSON
-        te faqja <strong>Eksporto / Importo</strong>, anuloni dhe merreni së pari.
+        {lidhur ? (
+          <>
+            Kopja te projekti juaj Supabase nuk fshihet — por kjo pajisje shkëputet, pra nuk e merr
+            dot më vetvetiu. Nëse nuk keni një kopje JSON te faqja{" "}
+            <strong>Eksporto / Importo</strong>, anuloni dhe merreni së pari.
+          </>
+        ) : (
+          <>
+            Nuk ka kopje në ndonjë server dhe veprimi nuk mund të zhbëhet. Nëse nuk keni një kopje
+            JSON te faqja <strong>Eksporto / Importo</strong>, anuloni dhe merreni së pari.
+          </>
+        )}
       </>,
       { title: "Fshi Të Gjitha Të Dhënat", confirmLabel: "E kuptoj, vazhdo", variant: "danger" }
     );
@@ -354,6 +370,19 @@ function Cilesimet() {
             dhënave të faqes i fshin ato, pra mbani një kopje JSON te faqja <strong>Eksporto / Importo</strong>.
             Aktualisht ruhen {transactions.length} transaksione, {accounts.length} llogari,{" "}
             {categories.length} kategori dhe {borxhet.length} borxhe.
+          </p>
+          <p className="text-muted small mb-3">
+            {lidhur ? (
+              <>
+                Kjo pajisje sinkronizohet me projektin tuaj Supabase — shihni faqen{" "}
+                <Link to="/sinkronizimi">Sinkronizimi</Link>.
+              </>
+            ) : (
+              <>
+                Doni të njëjtat të dhëna në telefon dhe kompjuter? Lidhni një projekt Supabase tuajin te faqja{" "}
+                <Link to="/sinkronizimi">Sinkronizimi</Link>.
+              </>
+            )}
           </p>
           <div>
             <Button variant="outline-light" onClick={handleReseed}>
