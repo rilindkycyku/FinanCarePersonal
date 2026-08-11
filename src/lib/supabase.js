@@ -140,7 +140,7 @@ function payloadJwt(celesi) {
  */
 export function kontrolloCelesin(celesi) {
   const tekst = String(celesi || "").trim();
-  if (!tekst) return { ok: false, gabim: "Shkruani çelësin publik (anon / publishable) të projektit." };
+  if (!tekst) return { ok: false, gabim: "Shkruani çelësin publik (publishable, ose anon i vjetër) të projektit." };
   if (/^sb_secret_/i.test(tekst)) {
     return { ok: false, gabim: "Ky është çelësi sekret (secret) — ai nuk vendoset kurrë në shfletues. Përdorni çelësin publishable." };
   }
@@ -149,10 +149,10 @@ export function kontrolloCelesin(celesi) {
     return { ok: false, gabim: "Ky është çelësi service_role — ai anashkalon çdo rregull sigurie dhe nuk duhet ruajtur në shfletues. Përdorni çelësin anon public." };
   }
   if (payload && payload.role && payload.role !== "anon") {
-    return { ok: false, gabim: `Çelësi ka rolin "${payload.role}"; duhet çelësi anon public i projektit.` };
+    return { ok: false, gabim: `Çelësi ka rolin "${payload.role}"; duhet çelësi publik i projektit.` };
   }
   if (!payload && !/^sb_publishable_/i.test(tekst)) {
-    return { ok: false, gabim: "Çelësi nuk duket si një çelës Supabase (anon public ose sb_publishable_…)." };
+    return { ok: false, gabim: "Çelësi nuk duket si një çelës Supabase (sb_publishable_… ose anon i vjetër)." };
   }
   return { ok: true, celesi: tekst };
 }

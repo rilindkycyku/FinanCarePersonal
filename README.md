@@ -144,7 +144,7 @@ sa shpenzohet, sa mbetet dhe sa po kursesh.
 - **Sinkronizimi mes pajisjeve (opsional)** — telefoni dhe kompjuteri me të njëjtat të dhëna, pa
   një server në mes. Ju krijoni një projekt **Supabase tuajin** (plani falas mjafton), ekzekutoni
   një skript SQL që faqja **Sinkronizimi** jua jep të gatshëm — një tabelë e vetme dhe rregulli RLS
-  që lejon vetëm llogarinë tuaj — dhe vendosni adresën e projektit me çelësin *anon public*. Nga
+  që lejon vetëm llogarinë tuaj — dhe vendosni adresën e projektit me çelësin publik *publishable*. Nga
   aty çdo pajisje hyn me të njëjtin email e fjalëkalim, të krijuar brenda projektit tuaj.
   <br />Sinkronizimi bëhet vetë (kur hapet aplikacioni, pak sekonda pas çdo ndryshimi, kur ktheheni
   te skeda dhe kur pajisja kthehet online) ose vetëm me buton, sipas një çelësi te vetë faqja. Çdo
@@ -187,8 +187,8 @@ lidhni një projekt Supabase **tuajin** dhe që nga ai çast libri i llogarive (
 *baza juaj*, në rajonin që zgjidhni ju, përmes HTTPS. Projekti, çelësi publik dhe sesioni ruhen në
 `localStorage` të kësaj pajisjeje — jo më të ndjeshme se vetë libri i llogarive, që tashmë ndodhet
 i plotë në të njëjtin shfletues. Ajo që mban të dhënat të mbyllura është rregulli RLS i skriptit:
-çelësi *anon* është publik nga natyra dhe pa hyrjen me email e fjalëkalim nuk lexon dot asnjë
-rresht. Çelësi *service_role* nuk pranohet fare. «Pastro të gjitha të dhënat» e harron edhe këtë
+çelësi *publishable* (si edhe *anon*-i i vjetër) është publik nga natyra dhe pa hyrjen me email e
+fjalëkalim nuk lexon dot asnjë rresht. Çelësat *secret* dhe *service_role* nuk pranohen fare. «Pastro të gjitha të dhënat» e harron edhe këtë
 lidhje, që një pajisje e pastruar të mos i shkarkojë të gjitha sërish në sinkronizimin e radhës;
 kopja te projekti juaj mbetet derisa ta fshini vetë nga po ajo faqe.
 
@@ -222,8 +222,11 @@ përmes bazës suaj.
    një vit transaksionesh zë disa megabajt.
 2. Te **SQL Editor** ngjitni skriptin që ju jep faqja **Sinkronizimi** (me buton kopjimi) dhe
    shtypni **Run**. Ai krijon një tabelë të vetme, rregullin RLS dhe një indeks.
-3. Te **Project Settings → API** merrni **Project URL** dhe çelësin **anon public**. Çelësin
-   *service_role* mos e kopjoni — aplikacioni e refuzon vetë nëse ngjitet gabimisht.
+3. Te **Project Settings** merrni **Project URL** (te *Data API*) dhe çelësin **publishable**
+   (`sb_publishable_…`, te *API Keys*). Projektet e vjetra kanë në vend të tij çelësin *anon* te
+   skeda *Legacy*; aplikacioni i pranon të dyja, por i riu është ai që Supabase rekomandon dhe ai
+   që mund të zëvendësohet i vetëm, pa i prishur çelësat e tjerë. Çelësat *secret* /
+   *service_role* mos i kopjoni — aplikacioni i refuzon vetë nëse ngjiten gabimisht.
 4. Te faqja **Sinkronizimi** vendosni të dyja, pastaj krijoni llogarinë me email e fjalëkalim.
    Llogaria krijohet **brenda projektit tuaj**; në pajisjet e tjera përdorni po ato kredenciale me
    butonin *Hyr*.

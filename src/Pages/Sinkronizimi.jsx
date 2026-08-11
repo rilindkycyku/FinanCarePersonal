@@ -358,9 +358,12 @@ function Sinkronizimi() {
                   llogarinë tuaj t&apos;i lexojë rreshtat.
                 </li>
                 <li>
-                  Te <strong>Project Settings → API</strong> merrni <strong>Project URL</strong> dhe
-                  çelësin <strong>anon public</strong> (jo <em>service_role</em> — atë mos e kopjoni
-                  kurrë këtu).
+                  Te <strong>Project Settings</strong> merrni <strong>Project URL</strong> (te{" "}
+                  <em>Data API</em>) dhe çelësin <strong>publishable</strong> —{" "}
+                  <code>sb_publishable_…</code> te <em>API Keys</em>. Nëse projekti juaj ka ende
+                  çelësin e vjetër <em>anon</em> te skeda <em>Legacy</em>, edhe ai punon; i riu është
+                  ai që Supabase rekomandon dhe ai që mund ta zëvendësoni vetëm atë kur t&apos;ju
+                  duhet. Çelësat <em>secret</em> / <em>service_role</em> mos i kopjoni kurrë këtu.
                 </li>
               </ol>
               <div>
@@ -401,12 +404,12 @@ function Sinkronizimi() {
                   <FushaSekrete
                     id="sync-key"
                     md={5}
-                    label="Çelësi anon public"
-                    placeholder="eyJhbGciOi… ose sb_publishable_…"
+                    label="Çelësi publik"
+                    placeholder="sb_publishable_… ose eyJhbGciOi…"
                     value={form.anonKey}
                     onChange={(e) => setField("anonKey", e.target.value)}
                     autoComplete="off"
-                    ndihma="Çelësi publik i projektit, i destinuar për shfletues."
+                    ndihma="Publishable (ose anon i vjetër) — çelësi i destinuar për shfletues."
                   />
 
                   <Form.Group as={Col} md={6} controlId="sync-email">
@@ -542,13 +545,14 @@ function Sinkronizimi() {
           </h5>
           <ul className="text-muted small ps-3 mb-0" style={{ lineHeight: 1.9 }}>
             <li>
-              <strong>Çelësi anon nuk është fjalëkalim.</strong> Ai është publik nga natyra — çdo
-              aplikacion Supabase e dërgon te shfletuesi. Ajo që mbron të dhënat është rregulli RLS
-              i skriptit: pa hyrë me email dhe fjalëkalim, çelësi nuk lexon dot asnjë rresht.
+              <strong>Çelësi publik nuk është fjalëkalim.</strong> Ai është publik nga natyra — çdo
+              aplikacion Supabase e dërgon te shfletuesi, dhe vetë Supabase-i shkruan se mund të
+              ndahet lirisht. Ajo që mbron të dhënat është rregulli RLS i skriptit: pa hyrë me email
+              dhe fjalëkalim, çelësi nuk lexon dot asnjë rresht.
             </li>
             <li>
-              <strong>Çelësin service_role mos e vendosni kurrë këtu.</strong> Ai i anashkalon
-              rregullat. Aplikacioni e refuzon vetë nëse ngjitet gabimisht.
+              <strong>Çelësat secret / service_role mos i vendosni kurrë këtu.</strong> Ata i
+              anashkalojnë rregullat. Aplikacioni i refuzon vetë nëse ngjiten gabimisht.
             </li>
             <li>
               <strong>Kredencialet ruhen në këtë pajisje</strong> (localStorage), bashkë me sesionin.
