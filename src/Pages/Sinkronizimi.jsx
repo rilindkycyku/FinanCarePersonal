@@ -271,18 +271,45 @@ function Sinkronizimi() {
     setMessage({ type: "success", text: "Kjo pajisje u shkëput nga sinkronizimi." });
   };
 
+  /**
+   * Two gates, like the wipe on the settings page and for the same reason: this one reaches past
+   * the device it is pressed on. The first spells out what disappears, the second only unlocks
+   * once the word is typed — a stray double-tap can dismiss one dialog, never both.
+   */
   const handleFshiCloud = async () => {
     const ok = await dialog.confirm(
       <>
-        Fshihen të gjitha rreshtat tuaj në tabelën <code>financare_records</code> të projektit tuaj.
-        Të dhënat në këtë shfletues nuk preken, por{" "}
-        <strong>pajisjet e tjera që nuk kanë sinkronizuar ende</strong> nuk do t&apos;i marrin dot
-        më ndryshimet e ngarkuara deri tani. Sinkronizimi i radhës nga kjo pajisje e ringarkon
-        gjithçka që keni këtu.
+        Fshihen të gjitha rreshtat tuaj në tabelën <code>financare_records</code> të projektit tuaj —
+        aktualisht <strong>{nCloud === null ? "…" : nCloud}</strong> rreshta.
+        <ul className="text-start mt-2 mb-2 ps-4">
+          <li>Të dhënat në këtë shfletues nuk preken.</li>
+          <li>
+            Pajisjet e tjera që nuk kanë sinkronizuar ende <strong>nuk i marrin dot</strong>{" "}
+            ndryshimet e ngarkuara deri tani.
+          </li>
+          <li>Sinkronizimi i radhës nga kjo pajisje e ringarkon gjithçka që keni këtu.</li>
+        </ul>
+        Nëse doni thjesht ta ndalni sinkronizimin, përdorni <strong>Shkëput këtë pajisje</strong> —
+        kopja mbetet e paprekur.
       </>,
-      { title: "Fshi kopjen në cloud", confirmLabel: "Fshi kopjen", variant: "danger", requireText: "FSHI" }
+      { title: "Fshi kopjen në cloud", confirmLabel: "E kuptoj, vazhdo", variant: "danger" }
     );
     if (!ok) return;
+
+    const konfirmimi = await dialog.confirm(
+      <>
+        Hapi i fundit. Rreshtat te projekti juaj Supabase fshihen përgjithmonë dhe veprimi nuk
+        zhbëhet nga këtu.
+      </>,
+      {
+        title: "Konfirmimi i Fundit",
+        confirmLabel: "Fshi kopjen",
+        cancelLabel: "Hiq dorë",
+        variant: "danger",
+        requireText: "FSHI",
+      }
+    );
+    if (!konfirmimi) return;
     setPune("fshij");
     try {
       await fshiCloud();
@@ -346,6 +373,23 @@ function Sinkronizimi() {
         )}
 
         <ModaliSql show={sqlHapur} onHide={() => setSqlHapur(false)} />
+
+        {/* Detected from what the last push came back with (sinkronizimi.js): a project set up
+            before the trigger existed keeps whatever time the device sent, and then the order of
+            the whole table depends on every device's clock being right. */}
+        {lidhur && konfigurimi.oraServerit === false && (
+          <Alert variant="warning">
+            Projekti juaj nuk po e vendos vetë orën e rreshtave — ka gjasa ta keni konfiguruar para
+            se skripti ta shtonte atë hap. Ekzekutojeni skriptin sërish (përsëritja është e sigurt):
+            pa të, një pajisje me orë të pasaktë mund t&apos;i mbajë ndryshimet e veta pa u parë nga
+            të tjerat.
+            <div className="mt-3">
+              <Button variant="outline-light" size="sm" onClick={() => setSqlHapur(true)}>
+                <Code2 size={15} className="me-1" /> Shfaq skriptin SQL
+              </Button>
+            </div>
+          </Alert>
+        )}
 
         {!lidhur ? (
           <>

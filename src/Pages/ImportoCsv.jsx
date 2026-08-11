@@ -6,6 +6,7 @@ import NavBar from "../Components/NavBar";
 import Footer from "../Components/Footer";
 import PageTitle from "../Components/PageTitle";
 import PageLoading from "../Components/PageLoading";
+import PunaNeVazhdim from "../Components/PunaNeVazhdim";
 import { Empty } from "../Components/Ui";
 import { useData } from "../Context/DataContext";
 import { useDialog } from "../Context/DialogContext";
@@ -213,6 +214,13 @@ function ImportoCsv() {
     <div className="fcp-page">
       <PageTitle title="Importo nga CSV" />
       <NavBar />
+
+      {duke && (
+        <PunaNeVazhdim
+          titulli="Duke regjistruar transaksionet..."
+          ndihma="Çdo rresht i zgjedhur po shkruhet në bazë. Ndërprerja tani do të linte gjysmën e ekstraktit brenda."
+        />
+      )}
 
       <Container className="py-4">
         <div className="fcp-page-head">

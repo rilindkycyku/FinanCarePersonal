@@ -7,6 +7,7 @@ import NavBar from "../Components/NavBar";
 import Footer from "../Components/Footer";
 import PageTitle from "../Components/PageTitle";
 import PageLoading from "../Components/PageLoading";
+import PunaNeVazhdim from "../Components/PunaNeVazhdim";
 import Ndaje from "../Components/Ndaje";
 import { useData } from "../Context/DataContext";
 import { useDialog } from "../Context/DialogContext";
@@ -24,6 +25,29 @@ import "./Styles/PremiumTheme.css";
 import "./Styles/DizajniPergjithshem.css";
 import "./Styles/Dashboard.css";
 import "./Styles/Personal.css";
+
+/**
+ * What the blocking overlay says per job. Each of these reads or writes the whole database (or
+ * every invoice photo in it), which on a phone is seconds of a page that looks idle — long enough
+ * to be tapped again or navigated away from, and both of those make it worse.
+ */
+const PUNET = {
+  json: {
+    titulli: "Duke përgatitur kopjen JSON...",
+    ndihma: "Po lexohet e gjithë baza. Mos e mbyllni faqen derisa të shkarkohet skedari.",
+  },
+  zip: {
+    titulli: "Duke ndërtuar arkivin ZIP...",
+    ndihma: "Fotot e faturave shkruhen një nga një brenda arkivit — me shumë foto kjo zgjat.",
+  },
+  txExcel: { titulli: "Duke eksportuar në Excel...", ndihma: "Po shkruhen transaksionet në skedar." },
+  pdf: { titulli: "Duke përgatitur pasqyrën PDF...", ndihma: "Po ndërtohen faqet dhe grafikët e periudhës." },
+  excel: { titulli: "Duke përgatitur pasqyrën Excel...", ndihma: "Po shkruhen lëvizjet e periudhës." },
+  importim: {
+    titulli: "Duke importuar të dhënat...",
+    ndihma: "Baza po shkruhet nga skedari. Ndërprerja tani do ta linte atë përgjysmë.",
+  },
+};
 
 function TeDhena() {
   const { profile, accounts, categories, transactions, budgets, goals, recurring, borxhet, planet, faturat, reload,
@@ -276,6 +300,7 @@ function TeDhena() {
       { title: bashko ? "Bashko me të Dhënat Aktuale" : "Konfirmo Importimin" }
     );
     if (!proceed) return;
+    setDuke("importim");
     try {
       // Told apart by the file's own first bytes rather than by its name, so a renamed backup
       // still imports as whatever it actually is.
@@ -298,6 +323,8 @@ function TeDhena() {
       });
     } catch (err) {
       setMessage({ type: "danger", text: `Importimi dështoi: ${err.message}` });
+    } finally {
+      setDuke(null);
     }
   };
 
@@ -319,6 +346,18 @@ function TeDhena() {
     <div className="fcp-page">
       <PageTitle title="Eksporto / Importo" />
       <NavBar />
+
+      {/* Re-encoding counts its own work, so it gets a bar; the rest cannot say how far along
+          they are and say what they are doing instead. */}
+      {ngjeshja ? (
+        <PunaNeVazhdim
+          titulli="Duke ngjeshur fotot..."
+          ndihma="Çdo foto rikodohet dhe rishkruhet. Mos e mbyllni faqen derisa të përfundojë."
+          progres={ngjeshja}
+        />
+      ) : (
+        duke && PUNET[duke] && <PunaNeVazhdim {...PUNET[duke]} />
+      )}
 
       <div className="containerDashboardP">
         <h4 className="fcp-section-title">

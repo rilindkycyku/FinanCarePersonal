@@ -130,6 +130,11 @@ sa shpenzohet, sa mbetet dhe sa po kursesh.
   telefon nuk e mban dot në memorie, kurse i njëjti arkiv ZIP zë 163 MB dhe krijohet pa e rritur
   memorien fare. Faqja tregon edhe sa hapësirë zënë fotot, sa i ka lënë në dispozicion shfletuesi,
   dhe paralajmëron kur i afrohet fundit.
+  <br />Ndërsa punojnë, këto veprime **e bllokojnë ekranin**: ndërtimi i një arkivi me fotot e një
+  viti, importimi i një kopjeje ose rikodimi i çdo fotoje zgjat sekonda në telefon — mjaft sa faqja
+  të duket e ngrirë, të preket sërish dhe eksporti të nisë dy herë, ose të dilet prej saj në mes të
+  një importi që e lë bazën përgjysmë. Aty ku puna di ta numërojë veten (ngjeshja e fotove) shfaqet
+  edhe ecuria.
 
 - **Pasqyrë PDF** — e ndërtuar si pasqyra e bankës, për një periudhë (ky muaj, muaji i kaluar, ky
   vit, gjithë historiku) dhe opsionalisht për një llogari të vetme. Kolona kryesore ndahet në
@@ -148,8 +153,10 @@ sa shpenzohet, sa mbetet dhe sa po kursesh.
   aty çdo pajisje hyn me të njëjtin email e fjalëkalim, të krijuar brenda projektit tuaj.
   <br />Sinkronizimi bëhet vetë (kur hapet aplikacioni, pak sekonda pas çdo ndryshimi, kur ktheheni
   te skeda dhe kur pajisja kthehet online) ose vetëm me buton, sipas një çelësi te vetë faqja. Çdo
-  rresht mban kohën kur u ndryshua dhe fiton ndryshimi më i fundit; fshirjet udhëtojnë si shënime
-  varri, pra një transaksion i fshirë në telefon nuk rikthehet nga kompjuteri. Shkon vetëm ajo që
+  ndryshim i bërë këtu qëndron i shënuar derisa të pranohet nga cloud-i, dhe orën e rreshtave e
+  vendos serveri — pra fiton pajisja e fundit që sinkronizohet, edhe kur ora e telefonit është e
+  gabuar. Fshirjet udhëtojnë si shënime varri, pra një transaksion i fshirë në telefon nuk
+  rikthehet nga kompjuteri. Shkon vetëm ajo që
   ndryshoi që nga hera e fundit, jo e gjithë baza. Fotot e faturave mbeten jashtë — për ato mbetet
   arkivi ZIP. Çelësi *service_role* refuzohet me vetëdije: ai anashkalon rregullat e sigurisë dhe
   nuk ka pse të ndodhet kurrë në një shfletues. Hapat, forma e tabelës dhe kufizimet janë te
@@ -269,17 +276,23 @@ order by dita desc;
 
 ### Si bashkohen ndryshimet
 
-- Çdo rekord mban `perditesuar`, momentin kur u shkrua — vulosur në një pikë të vetme te `db.js`,
-  pra asnjë formular nuk e ka për detyrë ta mbajë mend.
+- Çdo rekord i ndryshuar këtu mbetet i shënuar **«ende i padërguar»** (`sinkPezull`) derisa cloud-i
+  ta pranojë — një flamur, jo një krahasim datash, sepse një telefon me orë të gabuar e di
+  përsosmërisht *që* ndryshoi diçka; gabon vetëm te *kur*. Flamuri vihet në një pikë të vetme te
+  `db.js`, pra asnjë formular nuk e ka për detyrë ta mbajë mend.
 - Çdo fshirje lë një **shënim varri** në një store të vetin (`fshirjet`, DB_VERSION 5). Pa të, një
   transaksion i fshirë në telefon do të dukej thjesht «i pamarrë ende» nga kompjuteri dhe do të
   rishkarkohej — fshirja do të ishte e pamundur.
-- Një sinkronizim merr vetëm çka ka ndryshuar që nga hera e fundit, aplikon atë që është më e re se
-  kopja lokale, pastaj dërgon ndryshimet e veta. **Fiton ndryshimi më i fundit**, për rresht: dy
-  pajisje që shtojnë rreshta të ndryshëm nuk përplasen kurrë, kurse i njëjti transaksion i
-  redaktuar në të dyja pa qenë online në mes mbetet me versionin e ruajtur më vonë. Krahasimi
-  mbështetet te ora e pajisjeve, pra një telefon me orë të prapambetur humb redaktime që duhej t&apos;i
-  fitonte.
+- Një sinkronizim merr vetëm çka ka ndryshuar që nga hera e fundit, aplikon atë që erdhi, pastaj
+  dërgon çka pret ende. Rregulli mes pajisjeve është **fiton e fundit që sinkronizohet**, për
+  rresht: dy pajisje që shtojnë rreshta të ndryshëm nuk përplasen kurrë, kurse i njëjti transaksion
+  i redaktuar në të dyja pa qenë online në mes mbetet me versionin që u ngarkua i fundit. Asgjë e
+  shkruar në një pajisje nuk hidhet poshtë para se të jetë dërguar të paktën një herë.
+- **Orën e vendos serveri, jo pajisja.** Skripti krijon një trigger që i vulos rreshtat me `now()`
+  të Postgres-it, dhe çdo ngarkim e lexon atë orë mbrapsht e ruan si të vetën — kështu dy pajisje
+  krahasohen gjithnjë me një orë të vetme. Nëse projekti juaj është konfiguruar para se ky hap të
+  ekzistonte, aplikacioni e vë re vetë (koha e kthyer është saktësisht ajo që dërgoi) dhe ju kërkon
+  ta ekzekutoni skriptin sërish.
 - Rekordet e krijuara para se të ekzistonte sinkronizimi datohen te epoka, jo te «tani»: kështu një
   pajisje e re, që sapo ka mbjellë kategoritë e parazgjedhura me të njëjtat id, nuk i mbishkruan
   riemërtimet e pajisjes së vjetër.

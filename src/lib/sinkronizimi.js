@@ -32,7 +32,7 @@
 
 import {
   SINK_PROFILE_ID, SINK_STORES, getAll, getFshirjet, getProfile, hiqFshirjet, putProfileRaw, putRaw,
-  removeRaw,
+  removeRaw, shenoFshirjen,
 } from "./db";
 import { TABELA, lexoKonfigurimin, rest, ruajKonfigurimin, siguroSesionin } from "./supabase";
 
@@ -56,19 +56,26 @@ export function celesiRreshtit(store, id) {
 // ---- pure: what this device owes the cloud, and what it should take from it ----
 
 /**
- * Every local record and tombstone touched since the last successful push.
+ * Every local record and tombstone that is still waiting to reach the cloud.
+ *
+ * Waiting is a flag (`sinkPezull`), not a date comparison. A device whose clock is wrong is still
+ * perfectly able to know *that* it changed something — it is only wrong about when — so nothing
+ * here asks the clock anything, and an edit made on a phone an hour behind is sent like any other.
+ *
+ * `gjithcka` ignores the flag and sends the lot: the "upload everything again" path, for a cloud
+ * copy that lost rows or was never finished by an interrupted first sync.
  *
  * `perjashto` holds the rows this same sync has just applied from the cloud: they are, by
  * definition, changes this device did not make, and sending them straight back would be a write
  * per row for nothing.
  */
-export function ndryshimetLokale({ storet = {}, profili = null, fshirjet = [], pushedAt = 0, perjashto = new Set() }) {
+export function ndryshimetLokale({ storet = {}, profili = null, fshirjet = [], gjithcka = false, perjashto = new Set() }) {
   const rreshtat = [];
 
   const shto = (store, id, rekordi, fshire) => {
-    const ts = Number(rekordi?.perditesuar) || 0;
-    if (ts < pushedAt) return;
+    if (!gjithcka && !rekordi?.sinkPezull) return;
     if (perjashto.has(celesiRreshtit(store, id))) return;
+    const ts = Number(rekordi?.perditesuar) || 0;
     rreshtat.push({ store, id, perditesuar: ts, fshire, data: fshire ? null : rekordi });
   };
 
@@ -88,27 +95,49 @@ export function ndryshimetLokale({ storet = {}, profili = null, fshirjet = [], p
   return rreshtat;
 }
 
-/** `${store}:${id}` → the timestamp this device has for it, deletions included. The one thing the
- * decision below needs to know about the local side. */
+/** `${store}:${id}` → what this device holds for it: the timestamp, and whether the change is still
+ * waiting to be sent. Deletions included. The whole of the local side, as the merge sees it. */
 export function gjendjaLokale({ storet = {}, profili = null, fshirjet = [] }) {
   const kohet = new Map();
+  const pezull = new Set();
+
+  const shto = (store, id, rekordi) => {
+    const celesi = celesiRreshtit(store, id);
+    kohet.set(celesi, Number(rekordi?.perditesuar) || 0);
+    if (rekordi?.sinkPezull) pezull.add(celesi);
+  };
+
   for (const [store, rekordet] of Object.entries(storet)) {
     for (const rekordi of rekordet ?? []) {
-      if (rekordi?.id) kohet.set(celesiRreshtit(store, rekordi.id), Number(rekordi.perditesuar) || 0);
+      if (rekordi?.id) shto(store, rekordi.id, rekordi);
     }
   }
   if (profili && Object.keys(profili).length > 0) {
-    kohet.set(celesiRreshtit(STORI_PROFILIT, SINK_PROFILE_ID), Number(profili.perditesuar) || 0);
+    shto(STORI_PROFILIT, SINK_PROFILE_ID, profili);
   }
   for (const f of fshirjet ?? []) {
-    if (f?.store && f?.id) kohet.set(celesiRreshtit(f.store, f.id), Number(f.perditesuar) || 0);
+    if (f?.store && f?.id) shto(f.store, f.id, f);
   }
-  return kohet;
+  return { kohet, pezull };
 }
 
 /**
  * What to do with what came down: write it, delete it, or leave the local copy alone because it is
  * the newer one (it will be pushed a few lines later, and the other device will take it then).
+ *
+ * Two rules, and neither of them compares one device's clock with another's:
+ *
+ * 1. **An unsent local change wins.** It is kept, skipped here, and pushed a few lines later. So
+ *    the rule across devices is "the last one to sync wins" rather than "the one whose clock reads
+ *    latest wins", and nothing typed on this device is ever discarded before it has been sent.
+ * 2. **Otherwise the cloud row wins.** There is exactly one row per record, so it always holds the
+ *    last state anybody pushed; and an incremental pull only returns rows changed since this
+ *    device's watermark. A row that arrives while the local copy is settled is therefore news by
+ *    construction — no date arithmetic required to know it.
+ *
+ * The one comparison left is equality, and it means "this is my own row coming back": every push
+ * records the timestamp the row ended up with, so an echo matches to the millisecond and is
+ * skipped instead of being re-applied on every sync.
  *
  * A deletion for a record this device has never had is skipped rather than recorded — there is
  * nothing to delete, and a tombstone for a record that never existed here would be pure noise.
@@ -117,7 +146,7 @@ export function gjendjaLokale({ storet = {}, profili = null, fshirjet = [] }) {
  * skipped. Skipping one is a decision that it is already accounted for, so re-downloading it on
  * every future sync would achieve nothing.
  */
-export function planiIAplikimit(rreshtat, kohet) {
+export function planiIAplikimit(rreshtat, { kohet, pezull = new Set() }) {
   const shkruaj = [];
   const fshi = [];
   let anashkaluar = 0;
@@ -134,8 +163,16 @@ export function planiIAplikimit(rreshtat, kohet) {
     }
     maxTs = Math.max(maxTs, rr.perditesuar);
 
-    const lokal = kohet.get(celesiRreshtit(rr.store, rr.id));
-    if (lokal !== undefined && lokal >= rr.perditesuar) {
+    const celesi = celesiRreshtit(rr.store, rr.id);
+    // Not yet sent from here: this device's version is the one going out, so what came down is
+    // last round's news whatever its timestamp says.
+    if (pezull.has(celesi)) {
+      anashkaluar++;
+      continue;
+    }
+
+    const lokal = kohet.get(celesi);
+    if (lokal !== undefined && lokal === rr.perditesuar) {
       anashkaluar++;
       continue;
     }
@@ -159,13 +196,19 @@ export function planiIAplikimit(rreshtat, kohet) {
  * insert through PostgREST fills omitted keys with NULL unless asked otherwise — and NULL is the
  * one value the row-level-security check will refuse. */
 export function rreshtiPerServer(rr, userId) {
+  // `sinkPezull` is this device's own bookkeeping — "not sent yet" — and sending it would tell the
+  // next device to send it again, for ever. `updated_at` is sent for a project whose setup script
+  // predates the timestamp trigger; where the trigger exists it overrides this with the server's
+  // own clock, which is the entire point of it.
+  const teDhenat = { ...(rr.data ?? {}) };
+  delete teDhenat.sinkPezull;
   return {
     user_id: userId,
     store: rr.store,
     record_id: rr.id,
     updated_at: new Date(rr.perditesuar).toISOString(),
     deleted: Boolean(rr.fshire),
-    data: rr.fshire ? null : rr.data,
+    data: rr.fshire ? null : teDhenat,
   };
 }
 
@@ -235,7 +278,8 @@ export async function stampoPastampuarat(gjendja, kur = KOHA_PARA_SINKRONIZIMIT)
 
 async function apliko({ shkruaj, fshi }) {
   for (const rr of shkruaj) {
-    const rekordi = { ...rr.data, perditesuar: rr.perditesuar };
+    // Arrived from the cloud, so by definition it is not waiting to go to the cloud.
+    const rekordi = { ...rr.data, perditesuar: rr.perditesuar, sinkPezull: false };
     if (rr.store === STORI_PROFILIT) await putProfileRaw(rekordi);
     // The id is taken from the row rather than from the JSON: the row's key is what the whole
     // merge was decided on, so a payload disagreeing with it must not create a second record.
@@ -263,16 +307,131 @@ async function shkarkoRreshtat(nga) {
   }
 }
 
+/**
+ * Sends the rows and reads back the timestamp the server gave each one.
+ *
+ * The read-back is what keeps every device's timestamps in a single clock: a row written here and
+ * a row written on the laptop are then both dated by Postgres, so comparing them means something.
+ * `select=` keeps the response to three columns — without it the whole `data` payload comes back
+ * and a first sync would pay for itself twice.
+ */
 async function dergoRreshtat(rreshtat, userId) {
+  const kohet = new Map();
   for (let i = 0; i < rreshtat.length; i += KUFIRI_DERGIMIT) {
     const pjesa = rreshtat.slice(i, i + KUFIRI_DERGIMIT).map((rr) => rreshtiPerServer(rr, userId));
-    await rest(`${TABELA}?on_conflict=user_id,store,record_id`, {
-      method: "POST",
-      body: pjesa,
-      // An upsert: the same record edited twice must update its row, not fail on the primary key.
-      headers: { Prefer: "resolution=merge-duplicates,return=minimal" },
-    });
+    const pergjigja = await rest(
+      `${TABELA}?on_conflict=user_id,store,record_id&select=store,record_id,updated_at`,
+      {
+        method: "POST",
+        body: pjesa,
+        // An upsert: the same record edited twice must update its row, not fail on the primary key.
+        headers: { Prefer: "resolution=merge-duplicates,return=representation" },
+      }
+    );
+    for (const row of Array.isArray(pergjigja) ? pergjigja : []) {
+      const ts = Date.parse(row?.updated_at);
+      if (row?.store && row?.record_id && Number.isFinite(ts)) {
+        kohet.set(celesiRreshtit(row.store, row.record_id), ts);
+      }
+    }
   }
+  return kohet;
+}
+
+/**
+ * Whether the project stamped the rows itself, judged from what came back.
+ *
+ * The trigger sets `updated_at` to the server's `now()`, which will not land on the exact
+ * millisecond this device asked for; a project still running the setup script from before the
+ * trigger existed keeps the value it was sent, to the millisecond. So: any row that came back
+ * changed means the trigger is there, and rows that all came back identical mean it is not.
+ *
+ * Worth knowing rather than ignoring, because without the trigger the ordering of the whole table
+ * is at the mercy of every device's clock — a phone an hour behind writes rows dated an hour ago,
+ * which every other device's watermark has already scrolled past. Returns null when the push had
+ * nothing to say.
+ */
+export function zbulojOrenELServerit(rreshtat, kohet) {
+  let pare = false;
+  for (const rr of rreshtat) {
+    const koha = kohet.get(celesiRreshtit(rr.store, rr.id));
+    if (koha === undefined) continue;
+    if (koha !== rr.perditesuar) return true;
+    pare = true;
+  }
+  return pare ? false : null;
+}
+
+/** The local record or tombstone a pushed row came from, as it stands *now*. */
+function gjejLokalin(gjendja, rr) {
+  if (rr.fshire) return (gjendja.fshirjet ?? []).find((f) => f.store === rr.store && f.id === rr.id);
+  if (rr.store === STORI_PROFILIT) return gjendja.profili;
+  return (gjendja.storet[rr.store] ?? []).find((r) => r.id === rr.id);
+}
+
+/**
+ * Clears the "waiting to be sent" flag on everything the cloud has just accepted, and adopts the
+ * timestamp the server gave it.
+ *
+ * The database is re-read first, because the user does not stop typing while a request is in
+ * flight: a record edited between the push and this moment must stay flagged, or that edit would
+ * sit on this device for ever, believed to have been sent. Comparing `perditesuar` against what
+ * was actually pushed is how that is told apart.
+ */
+async function shenoTeDerguarat(rreshtat, kohet) {
+  if (rreshtat.length === 0) return 0;
+  const tani = await lexoGjendjen();
+  let numri = 0;
+
+  for (const rr of rreshtat) {
+    const lokal = gjejLokalin(tani, rr);
+    if (!lokal) continue;
+    if ((Number(lokal.perditesuar) || 0) !== rr.perditesuar) continue;
+
+    const koha = kohet.get(celesiRreshtit(rr.store, rr.id)) ?? rr.perditesuar;
+    if (rr.fshire) await shenoFshirjen(rr.store, rr.id, koha, false);
+    else if (rr.store === STORI_PROFILIT) await putProfileRaw({ ...lokal, perditesuar: koha, sinkPezull: false });
+    else await putRaw(rr.store, { ...lokal, perditesuar: koha, sinkPezull: false });
+    numri++;
+  }
+  return numri;
+}
+
+/**
+ * One-off for a device that was already syncing before the flag existed.
+ *
+ * Under the old rule "unsent" meant "changed after the last push", so that is what is converted
+ * here — once, guarded by a marker in the configuration. Without it, every local change made
+ * before the update would look settled and would never be sent.
+ */
+async function migroPezullimet(gjendja, k) {
+  if (k.migruarPezull || !k.pushedAt) {
+    if (!k.migruarPezull) ruajKonfigurimin({ migruarPezull: true });
+    return 0;
+  }
+  const punet = [];
+  const shenjo = (rekordi, ruaj) => {
+    if (rekordi?.sinkPezull) return;
+    if ((Number(rekordi?.perditesuar) || 0) < k.pushedAt) return;
+    rekordi.sinkPezull = true;
+    punet.push(ruaj());
+  };
+
+  for (const [store, rekordet] of Object.entries(gjendja.storet)) {
+    for (const rekordi of rekordet) {
+      if (rekordi?.id) shenjo(rekordi, () => putRaw(store, rekordi));
+    }
+  }
+  if (gjendja.profili && Object.keys(gjendja.profili).length > 0) {
+    shenjo(gjendja.profili, () => putProfileRaw(gjendja.profili));
+  }
+  for (const f of gjendja.fshirjet) {
+    shenjo(f, () => shenoFshirjen(f.store, f.id, f.perditesuar, true));
+  }
+
+  await Promise.all(punet);
+  ruajKonfigurimin({ migruarPezull: true });
+  return punet.length;
 }
 
 let nePritje = null;
@@ -300,14 +459,17 @@ export function dukeSinkronizuar() {
   return nePritje !== null;
 }
 
-async function ekzekuto({ ngaFillimi = false } = {}) {
+async function ekzekuto({ ngaFillimi: kerkuar = false } = {}) {
   const nisi = Date.now();
   try {
     const k = await siguroSesionin();
     if (!k.userId) throw new Error("Sesioni nuk ka përdorues — hyni sërish.");
+    // Either the user asked for it, or a previous run left the cloud copy empty and owing.
+    const ngaFillimi = kerkuar || Boolean(k.ngaFillimiTjeter);
 
     const gjendja = await lexoGjendjen();
     const stampuar = await stampoPastampuarat(gjendja);
+    await migroPezullimet(gjendja, k);
 
     const rreshtat = await shkarkoRreshtat(ngaFillimi ? "" : k.pulledAt);
     const plani = planiIAplikimit(rreshtat, gjendjaLokale(gjendja));
@@ -317,10 +479,12 @@ async function ekzekuto({ ngaFillimi = false } = {}) {
       ...gjendja,
       // A full download also re-sends everything, so that a cloud copy which lost rows (or was
       // never fully written by an interrupted first sync) is completed from this device.
-      pushedAt: ngaFillimi ? 0 : k.pushedAt,
+      gjithcka: ngaFillimi,
       perjashto: plani.celesat,
     });
-    await dergoRreshtat(perDergim, k.userId);
+    const kohetServerit = await dergoRreshtat(perDergim, k.userId);
+    await shenoTeDerguarat(perDergim, kohetServerit);
+    const oraServerit = zbulojOrenELServerit(perDergim, kohetServerit);
 
     // Only ever moved forward by rows actually seen. Advancing it to "now" instead would skip any
     // row another device wrote while this sync was in flight — the one class of change that would
@@ -334,9 +498,13 @@ async function ekzekuto({ ngaFillimi = false } = {}) {
     };
     ruajKonfigurimin({
       pulledAt: pulledAt ? new Date(pulledAt).toISOString() : "",
-      // Taken before the pull, not after the push: a record saved while the sync was running is
-      // then still newer than the watermark and goes out with the next one.
+      // Kept for the record (and for the one-off migration above); what is actually still owed to
+      // the cloud is now the flag on each record, not anything derived from this.
       pushedAt: nisi,
+      ngaFillimiTjeter: false,
+      // Left alone when this run pushed nothing, so a quiet sync does not erase what the last
+      // busy one found out.
+      ...(oraServerit === null ? {} : { oraServerit }),
       fundit: permbledhja,
     });
     return { ...permbledhja, stampuar, anashkaluar: plani.anashkaluar, ndryshoi: permbledhja.marre > 0 };
@@ -376,7 +544,10 @@ export async function fshiCloud() {
     method: "DELETE",
     headers: { Prefer: "return=minimal" },
   });
-  ruajKonfigurimin({ pulledAt: "", pushedAt: 0, fundit: null });
+  // Everything this device holds is now missing from the cloud, though none of it is *flagged* as
+  // unsent — it was sent, to rows that no longer exist. So the next sync is told to send the lot,
+  // which is what the button's own description promises.
+  ruajKonfigurimin({ pulledAt: "", pushedAt: 0, fundit: null, ngaFillimiTjeter: true });
 }
 
 /** Sync from scratch on the next run without touching anything already stored — used after

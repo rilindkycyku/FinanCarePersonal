@@ -389,6 +389,24 @@ create policy "vetem rreshtat e mi" on public.${TABELA}
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
 
+-- Ora e serverit, jo ajo e telefonit: pa këtë, dy pajisje me orë të pabarabarta
+-- do të krahasoheshin me njësi të ndryshme dhe një telefon i mbetur pas do të
+-- humbte ndryshime që duhej t'i fitonte. Vlera e dërguar nga pajisja shpërfillet.
+create or replace function public.${TABELA}_ora()
+returns trigger
+language plpgsql
+as $$
+begin
+  new.updated_at := now();
+  return new;
+end;
+$$;
+
+drop trigger if exists ${TABELA}_ora on public.${TABELA};
+create trigger ${TABELA}_ora
+  before insert or update on public.${TABELA}
+  for each row execute function public.${TABELA}_ora();
+
 -- Nëse projekti nuk i ekspozon vetvetiu tabelat e reja te Data API
 -- ("Automatically expose new tables" i çaktivizuar), pa këto tabela ekziston
 -- por API-ja e kthen si të palejuar. Vetëm përdoruesi i identifikuar merr të

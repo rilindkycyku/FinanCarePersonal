@@ -259,10 +259,17 @@ export function getOne(store, id) {
 /**
  * Writes a record and stamps it with the moment it was written.
  *
- * `perditesuar` is what makes sync possible at all: without a per-record timestamp there is no way
- * to tell which of two copies of the same transaction is the newer one, and a merge would have to
- * guess. It is written here, at the single point every ordinary change already passes through, so
- * no form, page or importer has to remember to set it.
+ * Two fields make sync possible, and both are written here — at the single point every ordinary
+ * change already passes through — so no form, page or importer has to remember them.
+ *
+ * `sinkPezull` means "changed on this device and not yet accepted by the cloud". It is a flag
+ * rather than a comparison of timestamps, and that is the whole point: a phone whose clock is an
+ * hour behind would otherwise produce edits that *look* older than the copy they replace, and the
+ * next sync would quietly throw them away. A flag cannot be wrong about that.
+ *
+ * `perditesuar` is the moment of the change, kept for ordering. Once a record has been through the
+ * cloud it holds the time the *server* gave it (sinkronizimi.js writes that back), so comparisons
+ * between two devices are made in one clock rather than in two.
  *
  * The one path that must *not* be stamped is sync applying what came down from the cloud — that
  * record already has a timestamp, the one it was given on the device where it was edited, and
@@ -270,7 +277,7 @@ export function getOne(store, id) {
  * uses `putRaw`.
  */
 export function put(store, record) {
-  const stamped = { ...record, perditesuar: Date.now() };
+  const stamped = { ...record, perditesuar: Date.now(), sinkPezull: true };
   return withStore(store, "readwrite", (s) => s.put(stamped))
     .then(() => njoftoNdryshim())
     .then(() => stamped);
@@ -298,13 +305,13 @@ export function remove(store, id) {
  * timestamp of the device that did the deleting, exactly like `putRaw` keeps the edit's own. */
 export function removeRaw(store, id, perditesuar) {
   return withStore(store, "readwrite", (s) => s.delete(id))
-    .then(() => shenoFshirjen(store, id, perditesuar))
+    .then(() => shenoFshirjen(store, id, perditesuar, false))
     .then(() => undefined);
 }
 
-export function shenoFshirjen(store, id, perditesuar = Date.now()) {
+export function shenoFshirjen(store, id, perditesuar = Date.now(), sinkPezull = true) {
   return withStore(STORES.fshirjet, "readwrite", (s) =>
-    s.put({ celesi: `${store}:${id}`, store, id, perditesuar })
+    s.put({ celesi: `${store}:${id}`, store, id, perditesuar, sinkPezull })
   ).then(() => undefined);
 }
 
@@ -535,7 +542,7 @@ export function getProfile() {
 }
 
 export function putProfile(record) {
-  const stamped = { ...record, perditesuar: Date.now() };
+  const stamped = { ...record, perditesuar: Date.now(), sinkPezull: true };
   return withStore(STORES.profile, "readwrite", (s) => s.put(stamped, PROFILE_KEY))
     .then(() => njoftoNdryshim())
     .then(() => stamped);

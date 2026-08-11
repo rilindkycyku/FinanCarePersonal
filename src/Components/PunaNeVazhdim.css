@@ -1,0 +1,67 @@
+/* The blocking overlay for long jobs (exports, imports, re-encoding photos). Above the modals,
+   because an import is confirmed from one and must cover it while it runs. */
+
+.fcp-puna {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: rgba(2, 6, 23, 0.72);
+  backdrop-filter: blur(3px);
+  /* The point of the overlay: taps land here and go nowhere. */
+  cursor: progress;
+}
+
+.fcp-puna-kuti {
+  width: min(360px, 100%);
+  text-align: center;
+  padding: 2rem 1.5rem;
+  border-radius: 20px;
+  background: var(--sp-surface, #0f172a);
+  border: 1px solid var(--sp-border, rgba(148, 163, 184, 0.2));
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+}
+
+.fcp-puna-rrota {
+  color: var(--sp-emerald, #10b981);
+  width: 2.5rem;
+  height: 2.5rem;
+  border-width: 0.22em;
+}
+
+.fcp-puna-titull {
+  margin-top: 1rem;
+  font-weight: 700;
+  color: var(--sp-text, #e2e8f0);
+}
+
+.fcp-puna-ndihme {
+  margin-top: 0.35rem;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--sp-text-muted, #94a3b8);
+}
+
+.fcp-puna-shirit {
+  margin-top: 1rem;
+  height: 8px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--sp-surface-2, rgba(148, 163, 184, 0.18));
+}
+
+.fcp-puna-mbushje {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--sp-emerald, #10b981);
+  transition: width 0.2s ease;
+}
+
+.fcp-puna-numri {
+  margin-top: 0.4rem;
+  font-size: 0.8rem;
+  color: var(--sp-text-muted, #94a3b8);
+}
