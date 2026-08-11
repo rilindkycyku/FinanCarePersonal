@@ -9,9 +9,10 @@ import { generateDueTransactions } from "./finance";
 import { todayISO } from "./format";
 import { blobNeDataUrl, dataUrlNeBlob, emriSkedarit, ringjeshFaturen, thumbNeDataUrl } from "./images";
 import { krijoZip, lexoZip } from "./zip";
+import { pastroKonfigurimin } from "./supabase";
 
 const DB_NAME = "financarepersonal";
-const DB_VERSION = 4;
+const DB_VERSION = 5;
 
 export const STORES = {
   profile: "profile",
@@ -35,9 +36,34 @@ export const STORES = {
   // loading its whole database at startup.
   faturat: "faturat",
   faturaSkedaret: "faturaSkedaret",
+  // Tombstones: `${store}:${id}` of every record deleted on this device, with the moment it went.
+  // Nothing else in the app reads them — they exist so that sync (lib/sinkronizimi.js) can tell
+  // "this record was deleted here" apart from "this device has never seen that record", which is
+  // the same absence to look at and the difference between a delete travelling to the other
+  // device and the other device putting the record straight back.
+  fshirjet: "fshirjet",
 };
 
 const PROFILE_KEY = "main";
+
+/**
+ * The stores whose records take part in sync, and the id of the profile record inside it. Invoice
+ * photos are deliberately absent: they are binary, they are by far the largest thing here, and
+ * they would need Supabase Storage rather than a table — the ZIP backup remains the way to move
+ * pictures between devices.
+ */
+export const SINK_STORES = [
+  STORES.accounts,
+  STORES.categories,
+  STORES.transactions,
+  STORES.budgets,
+  STORES.goals,
+  STORES.recurring,
+  STORES.borxhet,
+  STORES.planet,
+];
+
+export const SINK_PROFILE_ID = PROFILE_KEY;
 
 /**
  * A version upgrade cannot start while another tab, window or the installed app still holds the
@@ -63,6 +89,26 @@ export function onBllokimBaze(fn) {
 
 function njoftoBllokimin(bllokuar) {
   degjuesitBllokimit.forEach((fn) => fn(bllokuar));
+}
+
+/**
+ * "Something in this browser's ledger just changed." Announced by every write below and listened
+ * to by automatic sync (Context/SyncContext.jsx), which is what lets a transaction typed on the
+ * phone reach the laptop without anyone pressing a button. Deliberately announced from the
+ * database rather than from the forms: there is one write path and a dozen forms.
+ *
+ * Writes made *by* sync while applying what it downloaded go through `putRaw`/`removeRaw` and stay
+ * silent, so applying a change never schedules another sync to announce it back.
+ */
+const degjuesitNdryshimit = new Set();
+
+export function onNdryshimLokal(fn) {
+  degjuesitNdryshimit.add(fn);
+  return () => degjuesitNdryshimit.delete(fn);
+}
+
+function njoftoNdryshim() {
+  degjuesitNdryshimit.forEach((fn) => fn());
 }
 
 /** A phone can freeze the other tab so thoroughly that the browser never gets round to firing
@@ -128,6 +174,10 @@ function openDb() {
       if (!db.objectStoreNames.contains(STORES.faturaSkedaret)) {
         // Plain blobs, keyed by the invoice id — a Blob has no fields to use as a keyPath.
         db.createObjectStore(STORES.faturaSkedaret);
+      }
+      // Added in DB_VERSION 5, for sync. A database that never syncs simply keeps an empty store.
+      if (!db.objectStoreNames.contains(STORES.fshirjet)) {
+        db.createObjectStore(STORES.fshirjet, { keyPath: "celesi" });
       }
     };
     // The request keeps waiting either way; these only decide whether the user is told about it.
@@ -206,12 +256,77 @@ export function getOne(store, id) {
   return withStore(store, "readonly", (s) => s.get(id));
 }
 
+/**
+ * Writes a record and stamps it with the moment it was written.
+ *
+ * `perditesuar` is what makes sync possible at all: without a per-record timestamp there is no way
+ * to tell which of two copies of the same transaction is the newer one, and a merge would have to
+ * guess. It is written here, at the single point every ordinary change already passes through, so
+ * no form, page or importer has to remember to set it.
+ *
+ * The one path that must *not* be stamped is sync applying what came down from the cloud — that
+ * record already has a timestamp, the one it was given on the device where it was edited, and
+ * replacing it with "now" would make an old edit look like the newest one everywhere. That path
+ * uses `putRaw`.
+ */
 export function put(store, record) {
+  const stamped = { ...record, perditesuar: Date.now() };
+  return withStore(store, "readwrite", (s) => s.put(stamped))
+    .then(() => njoftoNdryshim())
+    .then(() => stamped);
+}
+
+/** Writes a record exactly as given, keeping its own `perditesuar`. For the sync apply path. */
+export function putRaw(store, record) {
   return withStore(store, "readwrite", (s) => s.put(record)).then(() => record);
 }
 
+/**
+ * Deletes a record and leaves a tombstone behind, so the deletion can travel to the other devices.
+ * Without one, the next sync would see a record present in the cloud and absent here, conclude
+ * this device had simply never received it, and download it again — deleting anything would be
+ * impossible on a synced ledger.
+ */
 export function remove(store, id) {
-  return withStore(store, "readwrite", (s) => s.delete(id)).then(() => undefined);
+  return withStore(store, "readwrite", (s) => s.delete(id))
+    .then(() => (SINK_STORES.includes(store) ? shenoFshirjen(store, id) : undefined))
+    .then(() => njoftoNdryshim())
+    .then(() => undefined);
+}
+
+/** Deletes a record on behalf of a deletion that came down from the cloud: the tombstone keeps the
+ * timestamp of the device that did the deleting, exactly like `putRaw` keeps the edit's own. */
+export function removeRaw(store, id, perditesuar) {
+  return withStore(store, "readwrite", (s) => s.delete(id))
+    .then(() => shenoFshirjen(store, id, perditesuar))
+    .then(() => undefined);
+}
+
+export function shenoFshirjen(store, id, perditesuar = Date.now()) {
+  return withStore(STORES.fshirjet, "readwrite", (s) =>
+    s.put({ celesi: `${store}:${id}`, store, id, perditesuar })
+  ).then(() => undefined);
+}
+
+export function getFshirjet() {
+  return getAll(STORES.fshirjet);
+}
+
+/**
+ * Withdraws tombstones for records that exist again.
+ *
+ * Ids are unique, so a deleted record normally never comes back — except for the two places that
+ * write a record whose id is chosen rather than generated: restoring the default categories (their
+ * ids are fixed, so deleting "Ushqim" and asking for the defaults back re-creates that very id)
+ * and importing a backup taken before the deletion. Leaving the tombstone in place would let the
+ * next sync delete the record again, on this device and on every other one.
+ */
+export function hiqFshirjet(celesat) {
+  if (celesat.length === 0) return Promise.resolve();
+  return withStore(STORES.fshirjet, "readwrite", (s) => {
+    celesat.forEach((celesi) => s.delete(celesi));
+    return null;
+  });
 }
 
 export function clearStore(store) {
@@ -420,6 +535,14 @@ export function getProfile() {
 }
 
 export function putProfile(record) {
+  const stamped = { ...record, perditesuar: Date.now() };
+  return withStore(STORES.profile, "readwrite", (s) => s.put(stamped, PROFILE_KEY))
+    .then(() => njoftoNdryshim())
+    .then(() => stamped);
+}
+
+/** The profile as it came down from the cloud, keeping its own timestamp — see `putRaw`. */
+export function putProfileRaw(record) {
   return withStore(STORES.profile, "readwrite", (s) => s.put(record, PROFILE_KEY)).then(() => record);
 }
 
@@ -583,6 +706,9 @@ export async function importAllData(data, { mode = "zevendeso" } = {}) {
   }
 
   const permbledhja = { shtuar: 0, ekzistuese: 0 };
+  // A restore says the file is the truth, which includes records this device deleted before the
+  // file was taken: every tombstone goes, or the next sync would delete them straight back out.
+  if (!bashko) await clearStore(STORES.fshirjet);
 
   for (const [store, celesi] of IMPORT_STORES) {
     const rreshtat = data[celesi] ?? [];
@@ -593,6 +719,9 @@ export async function importAllData(data, { mode = "zevendeso" } = {}) {
     permbledhja.shtuar += teShkruara.length;
     permbledhja.ekzistuese += rreshtat.length - teShkruara.length;
     await Promise.all(teShkruara.map((record) => put(store, record)));
+    // A merge brings back only what is missing here — which may include a record deleted on this
+    // device, whose tombstone has to be withdrawn now that the record exists again.
+    if (bashko) await hiqFshirjet(teShkruara.map((r) => `${store}:${r.id}`));
   }
 
   // Same rule as every other store, applied to the pictures: a merge adds only the ones this
@@ -654,6 +783,13 @@ export async function shenoKopjen(kur = new Date().toISOString()) {
  * caller re-seeds accounts/categories if it wants the starter lists back. */
 export async function wipeAllData() {
   await Promise.all(Object.values(STORES).map((store) => clearStore(store)));
+  // The saved Supabase project goes with it, for two reasons. It is a credential kept in this
+  // browser, and "pastro të gjitha të dhënat" that leaves credentials behind is not what it says
+  // it is. And it is the only way the wipe can mean anything on a synced device: left connected,
+  // the next sync would look at an empty ledger, find the whole cloud copy missing from it, and
+  // download every last transaction back. The cloud copy is left untouched — reconnecting brings
+  // it back deliberately, which is a different act from a wipe undoing itself.
+  pastroKonfigurimin();
   // `ensureDefaultCategories()` runs at every startup, so without this the 25 starter categories
   // would quietly reappear on the next reload and a wipe the user confirmed twice would look like
   // it had only half worked. Recording them as removed uses the same marker a manually deleted
@@ -667,6 +803,12 @@ export async function seedDefaults({ perfshiLlogarite = true } = {}) {
   await Promise.all([
     ...(perfshiLlogarite ? DEFAULT_ACCOUNTS.map((a) => put(STORES.accounts, a)) : []),
     ...DEFAULT_CATEGORIES.map((c) => put(STORES.categories, c)),
+  ]);
+  // The starter lists have fixed ids, so these rows may be re-creating exactly what a tombstone
+  // says was deleted — see `hiqFshirjet`.
+  await hiqFshirjet([
+    ...(perfshiLlogarite ? DEFAULT_ACCOUNTS.map((a) => `${STORES.accounts}:${a.id}`) : []),
+    ...DEFAULT_CATEGORIES.map((c) => `${STORES.categories}:${c.id}`),
   ]);
   // Asking for the default lists back also withdraws every "I threw this one away" marker — the
   // whole set is on the screen again, so nothing is left recorded as removed.
