@@ -6,6 +6,8 @@ import {
   KeyRound, LogIn, RefreshCw, Save, ShieldCheck, Trash2, UserPlus, Wand2,
 } from "lucide-react";
 import NavBar from "../Components/NavBar";
+import ModaliKonfigurimit from "../Components/Sinkronizimi/ModaliKonfigurimit";
+import FushaSekrete from "../Components/Sinkronizimi/FushaSekrete";
 import Footer from "../Components/Footer";
 import PageTitle from "../Components/PageTitle";
 import PageLoading from "../Components/PageLoading";
@@ -13,8 +15,8 @@ import { useData } from "../Context/DataContext";
 import { useDialog } from "../Context/DialogContext";
 import { useSync } from "../Context/SyncContext";
 import {
-  LINKU_TOKENIT, SQL_INSTALIMI, dil, hyr, instaloSkemen, kontrolloCelesin, linkuSqlEditor,
-  ndryshoCelesin, normalizoUrl, pastroKonfigurimin, referencaProjektit, regjistrohu, ruajKonfigurimin,
+  dil, hyr, kontrolloCelesin, ndryshoCelesin, normalizoUrl, pastroKonfigurimin, regjistrohu,
+  ruajKonfigurimin,
 } from "../lib/supabase";
 import { fshiCloud, numeroCloud, rivendosKufijte } from "../lib/sinkronizimi";
 import "./Styles/PremiumTheme.css";
@@ -36,194 +38,6 @@ function emriProjektit(url) {
   } catch {
     return url;
   }
-}
-
-/**
- * The setup script, in a dialog rather than in the page.
- *
- * Inline it was a twelve-line box that a phone renders as a narrow window onto lines it cannot
- * show - the reader scrolls sideways through SQL they are not meant to read anyway, since the
- * whole point is the copy button. In a dialog it gets the width of the screen, wraps instead of
- * clipping, and the button that matters is the one under it.
- */
-function ModaliSql({ show, onHide, url, onGati }) {
-  const [kopjuar, setKopjuar] = useState(false);
-  const [deshtoi, setDeshtoi] = useState(false);
-  // The token lives in this state and nowhere else: it is never saved, and the field is emptied the
-  // moment the dialog closes or the install succeeds.
-  const [token, setToken] = useState("");
-  const [duke, setDuke] = useState(false);
-  const [rezultati, setRezultati] = useState(null);
-  const ref = referencaProjektit(url);
-
-  useEffect(() => {
-    if (show) return;
-    setToken("");
-    setRezultati(null);
-  }, [show]);
-
-  const instalo = async () => {
-    if (duke) return;
-    setDuke(true);
-    setRezultati(null);
-    try {
-      await instaloSkemen(token, url);
-      setToken("");
-      setRezultati({
-        lloji: "success",
-        teksti: "Projekti u konfigurua - tabela, rregulli RLS, ora e serverit dhe indeksi janë në vend. Sinkronizimi po vazhdon vetë.",
-      });
-      // The reason anyone opened this dialog is that syncing was failing, so the last step is not
-      // to announce success and wait to be pressed again - it is to go and sync.
-      onGati?.();
-    } catch (err) {
-      setRezultati({ lloji: "danger", teksti: err?.message || "Konfigurimi dështoi." });
-    } finally {
-      setDuke(false);
-    }
-  };
-
-  const kopjo = async () => {
-    try {
-      await navigator.clipboard.writeText(SQL_INSTALIMI);
-      setDeshtoi(false);
-      setKopjuar(true);
-      setTimeout(() => setKopjuar(false), 2500);
-    } catch {
-      // Clipboard refused (an insecure context, or permission denied). The text is right there to
-      // be selected by hand, which is worth saying rather than leaving a button that did nothing.
-      setDeshtoi(true);
-    }
-  };
-
-  // `scrollable` keeps the script scrolling inside the dialog while the header and the copy button
-  // stay put - otherwise a full-screen phone dialog shows a short box floating in an empty screen,
-  // and a long script pushes the button off the bottom.
-  return (
-    <Modal show={show} onHide={onHide} centered scrollable size="lg" fullscreen="sm-down" className="sp-modal">
-      <Modal.Header closeButton>
-        <Modal.Title className="h6 fw-bold mb-0">Konfigurimi i projektit</Modal.Title>
-      </Modal.Header>
-      <Modal.Body>
-        {/* Two ways to the same end. The automatic one is first because it is the one people want;
-            the script stays under it because it is the one that always works. */}
-        <h6 className="fw-bold mb-1">
-          <Wand2 size={15} className="me-1 text-primary" /> Konfiguroje vetë aplikacioni
-        </h6>
-        <p className="text-muted small mb-2">
-          Çelësi i projektit që ruhet në këtë pajisje lexon e shkruan rreshta - krijimin e tabelës
-          nuk e lejon Supabase ta bëjë me të, dhe kjo është mbrojtje, jo mangësi. Për këtë hap të
-          vetëm duhet <strong>token-i personal</strong> i llogarisë suaj Supabase:{" "}
-          <a href={LINKU_TOKENIT} target="_blank" rel="noreferrer">
-            Account → Access Tokens <ExternalLink size={12} />
-          </a>
-          . Përdoret vetëm për këtë thirrje dhe <strong>nuk ruhet askund</strong> - as në këtë
-          pajisje. Ai vlen për gjithë llogarinë tuaj Supabase, prandaj revokojeni pas tij nëse doni.
-        </p>
-        <InputGroup className="mb-2">
-          <Form.Control
-            type="password"
-            placeholder="sbp_..."
-            spellCheck={false}
-            autoComplete="off"
-            value={token}
-            onChange={(e) => setToken(e.target.value)}
-            disabled={duke}
-          />
-          <Button className="btn-primary" onClick={instalo} disabled={duke || !token.trim()}>
-            {duke ? <Spinner animation="border" size="sm" className="me-1" /> : <Wand2 size={15} className="me-1" />}
-            {duke ? "Duke konfiguruar..." : "Konfiguro"}
-          </Button>
-        </InputGroup>
-        {!ref && (
-          <div className="fcp-row-sub mb-2">
-            Adresa e projektit nuk duket si një adresë Supabase, prandaj kjo rrugë nuk e gjen dot
-            projektin - përdorni skriptin më poshtë.
-          </div>
-        )}
-        {rezultati && (
-          <Alert variant={rezultati.lloji} className="py-2 small">
-            {rezultati.teksti}
-          </Alert>
-        )}
-
-        <hr />
-
-        <h6 className="fw-bold mb-1">
-          <Code2 size={15} className="me-1 text-primary" /> Ose ekzekutojeni vetë skriptin
-        </h6>
-        <p className="text-muted small">
-          Te Supabase: <strong>SQL Editor → New query</strong>, ngjiteni dhe shtypni{" "}
-          <strong>Run</strong>. Ekzekutohet një herë, por përsëritja nuk prish gjë - çdo hap i tij e
-          kontrollon vetë nëse ekziston.
-        </p>
-        <pre
-          style={{
-            whiteSpace: "pre-wrap",
-            wordBreak: "break-word",
-            fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
-            fontSize: "0.78rem",
-            lineHeight: 1.6,
-            background: "var(--sp-surface-2)",
-            border: "1px solid var(--sp-border)",
-            borderRadius: 14,
-            padding: "1rem",
-            margin: 0,
-          }}
-        >
-          {SQL_INSTALIMI}
-        </pre>
-        {deshtoi && (
-          <div className="fcp-row-sub mt-2">
-            Shfletuesi nuk e lejoi kopjimin automatik - zgjidhni tekstin më sipër dhe kopjojeni vetë.
-          </div>
-        )}
-      </Modal.Body>
-      <Modal.Footer>
-        <Button variant="secondary" onClick={onHide}>
-          Mbyll
-        </Button>
-        <Button variant="outline-light" href={linkuSqlEditor(url)} target="_blank" rel="noreferrer">
-          <ExternalLink size={16} className="me-1" /> Hap SQL Editor
-        </Button>
-        <Button className="btn-primary" onClick={kopjo}>
-          {kopjuar ? <Check size={16} className="me-1" /> : <Copy size={16} className="me-1" />}
-          {kopjuar ? "U kopjua" : "Kopjo skriptin"}
-        </Button>
-      </Modal.Footer>
-    </Modal>
-  );
-}
-
-/**
- * A field whose value is hidden until asked for. Both things typed here are long strings copied
- * from somewhere else and impossible to proofread as dots - and a mistyped key fails with
- * "the project did not accept it", which does not tell anyone which character went wrong.
- */
-function FushaSekrete({ id, md, label, ndihma, ...props }) {
-  const [dukshem, setDukshem] = useState(false);
-  return (
-    <Form.Group as={Col} md={md} controlId={id}>
-      <Form.Label>{label}</Form.Label>
-      <InputGroup>
-        <Form.Control type={dukshem ? "text" : "password"} spellCheck={false} {...props} />
-        <Button
-          variant="outline-light"
-          onClick={() => setDukshem((v) => !v)}
-          // Keeps the button from taking focus on a tap, which would otherwise leave it sitting in
-          // its filled "pressed" state next to the field the user is typing in. Tabbing to it still
-          // works, and still shows the focus ring, so the toggle is not mouse-only.
-          onMouseDown={(e) => e.preventDefault()}
-          aria-label={dukshem ? "Fshih vlerën" : "Shfaq vlerën"}
-          aria-pressed={dukshem}
-          title={dukshem ? "Fshih" : "Shfaq"}
-        >
-          {dukshem ? <EyeOff size={16} /> : <Eye size={16} />}
-        </Button>
-      </InputGroup>
-      {ndihma && <div className="fcp-row-sub mt-1">{ndihma}</div>}
-    </Form.Group>
-  );
 }
 
 function Sinkronizimi() {
@@ -486,7 +300,7 @@ function Sinkronizimi() {
           as ndonjë shërbim i FinanCarePersonal, nuk i sheh dhe nuk i ruan ato.
         </p>
 
-        <ModaliSql show={sqlHapur} onHide={() => setSqlHapur(false)} url={konfigurimi.url || normalizoUrl(form.url)}
+        <ModaliKonfigurimit show={sqlHapur} onHide={() => setSqlHapur(false)} url={konfigurimi.url || normalizoUrl(form.url)}
           onGati={() => { pastroGabimin(); sinkronizoTani(); }} />
 
         {/* Detected from what the last push came back with (sinkronizimi.js): a project set up
