@@ -123,7 +123,12 @@ export function normalizoUrl(hyrja) {
   } catch {
     return "";
   }
-  if (u.protocol !== "https:" && u.hostname !== "localhost" && u.hostname !== "127.0.0.1") return "";
+  const lokal = u.hostname === "localhost" || u.hostname === "127.0.0.1";
+  if (u.protocol !== "https:" && !lokal) return "";
+  // A project address is a domain. Refusing a bare word here turns a typo into "that is not an
+  // address" while the field is still on screen, instead of a request that fails a second later
+  // with "the project could not be reached" - which reads like the project's fault, not the typo's.
+  if (!lokal && !u.hostname.includes(".")) return "";
   return `${u.origin}`;
 }
 
@@ -284,6 +289,43 @@ export async function siguroSesionin() {
     throw gabimi("Sesioni skadoi - hyni sërish me email dhe fjalëkalim.", "sesioni");
   }
   return ruajSesionin(data);
+}
+
+/**
+ * Adopts a session handed over in the URL, as the confirmation email does.
+ *
+ * Supabase sends the confirm/recovery link back to the project's *Site URL* with the session in
+ * the fragment (`#access_token=…&refresh_token=…`). If that URL is this app, the person has
+ * effectively just signed in - and without this they would land on the dashboard, see nothing
+ * happen, and be asked for the password they have this second finished proving they know.
+ *
+ * Two guards. The tokens are only taken on a device that already has this project configured,
+ * because a session is useless without the key to send it with; and the token's own `iss` must be
+ * that project, so a link from somewhere else cannot quietly repoint this device. Nothing is
+ * trusted beyond that: a forged token fails at the first request, where the project checks it.
+ *
+ * The caller is expected to strip the fragment afterwards - a token has no business sitting in the
+ * address bar, in the back-button history, or in whatever the browser syncs elsewhere.
+ */
+export function adoptoSesioninNgaLinku(hash = typeof window === "undefined" ? "" : window.location.hash) {
+  const params = new URLSearchParams(String(hash).replace(/^#/, ""));
+  const access = params.get("access_token");
+  const refresh = params.get("refresh_token");
+  if (!access || !refresh) return null;
+
+  const k = lexoKonfigurimin();
+  if (!eshteKonfiguruar(k)) return null;
+
+  const payload = payloadJwt(access);
+  if (!String(payload?.iss || "").startsWith(k.url)) return null;
+
+  return ruajKonfigurimin({
+    accessToken: access,
+    refreshToken: refresh,
+    skadonMe: Date.now() + (Number(params.get("expires_in")) || 3600) * 1000,
+    userId: payload?.sub || k.userId,
+    email: payload?.email || k.email,
+  });
 }
 
 export async function dil() {
