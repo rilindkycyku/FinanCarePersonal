@@ -239,16 +239,31 @@ përmes bazës suaj.
 
 1. Krijoni një projekt te [supabase.com](https://supabase.com/dashboard) - plani falas mjafton, se
    një vit transaksionesh zë disa megabajt.
-2. Te **SQL Editor** ngjitni skriptin që ju jep faqja **Sinkronizimi** (me buton kopjimi) dhe
-   shtypni **Run**. Ai krijon një tabelë të vetme, rregullin RLS dhe një indeks.
-3. Te **Project Settings** merrni **Project URL** (te *Data API*) dhe çelësin **publishable**
+2. Te **Project Settings** merrni **Project URL** (te *Data API*) dhe çelësin **publishable**
    (`sb_publishable_…`, te *API Keys*). Projektet e vjetra kanë në vend të tij çelësin *anon* te
    skeda *Legacy*; aplikacioni i pranon të dyja, por i riu është ai që Supabase rekomandon dhe ai
    që mund të zëvendësohet i vetëm, pa i prishur çelësat e tjerë. Çelësat *secret* /
    *service_role* mos i kopjoni - aplikacioni i refuzon vetë nëse ngjiten gabimisht.
-4. Te faqja **Sinkronizimi** vendosni të dyja, pastaj krijoni llogarinë me email e fjalëkalim.
-   Llogaria krijohet **brenda projektit tuaj**; në pajisjet e tjera përdorni po ato kredenciale me
-   butonin *Hyr*.
+3. Te faqja **Sinkronizimi** vendosni adresën e çelësin, pastaj shtypni **Konfiguro projektin**.
+   Aty ka dy rrugë për të njëjtin përfundim - një tabelë e vetme, rregulli RLS, ora e serverit dhe
+   një indeks:
+   - **Automatikisht**: ngjitni një *personal access token* të llogarisë suaj Supabase
+     ([Account → Access Tokens](https://supabase.com/dashboard/account/tokens), fillon me `sbp_`)
+     dhe aplikacioni e ekzekuton vetë skriptin. Token-i përdoret **vetëm për atë thirrje dhe nuk
+     ruhet askund** - as në këtë pajisje; mund ta revokoni menjëherë pas tij.
+   - **Vetë**: kopjoni skriptin dhe ekzekutojeni te **SQL Editor → New query → Run** (butoni *Hap
+     SQL Editor* e hap direkt te projekti juaj).
+
+   Pse duhet një token i veçantë dhe nuk mjafton çelësi që tashmë keni ngjitur? Sepse çelësi i
+   projektit flet vetëm me **PostgREST**, dhe PostgREST-i shërben rreshta - tabela nuk krijohet dot
+   me të. Kjo është mbrojtje, jo mangësi: po të mundej, një kopje e vjedhur e `localStorage`-it të
+   shfletuesit do të mund ta rishkruante bazën. Krijimi i tabelës kalon nga një API krejt tjetër
+   (Management API), e cila pranon vetëm token-in e llogarisë.
+
+   Disa shfletues mund ta bllokojnë atë thirrje si kërkesë ndër-origjinë; në atë rast aplikacioni
+   e thotë hapur dhe ju kthen te skripti, që zgjat po aq.
+4. Në të njëjtën faqe krijoni llogarinë me email e fjalëkalim. Llogaria krijohet **brenda projektit
+   tuaj**; në pajisjet e tjera përdorni po ato kredenciale me butonin *Hyr*.
 
 Çelësi mund të ndërrohet më vonë pa u shkëputur - te kartela e lidhjes, *Ndrysho çelësin publik*.
 I riu provohet te projekti para se të ruhet, pra një çelës i kopjuar gabimisht nuk e lë pajisjen pa

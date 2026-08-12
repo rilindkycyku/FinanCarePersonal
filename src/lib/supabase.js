@@ -28,6 +28,18 @@ const CELESI_RUAJTJES = "financarepersonal.sinkronizimi";
  * one, which is not a thing this app can ship. */
 export const TABELA = "financare_records";
 
+/**
+ * The version of the setup script this release ships.
+ *
+ * It exists so the page can tell "your project was set up with an older script" from "your project
+ * is fine", and it is bumped **only** when the SQL below actually changes - which is meant to be
+ * almost never. Adding a field to a record (subcategories' `prindi`, say) is not one of those
+ * times: the record travels whole inside the `data` jsonb column, so Postgres never has to be told
+ * about it. That is the reason the schema is one table with a JSON payload in the first place - a
+ * user should not have to run SQL in their own project because this app gained a feature.
+ */
+export const SKEMA_VERSIONI = 1;
+
 const BOSH = {
   url: "",
   anonKey: "",
@@ -43,6 +55,10 @@ const BOSH = {
   // of the things being synced - a watermark travelling between devices would be nonsense.
   pulledAt: "",
   pushedAt: 0,
+  // Which version of the setup script this project was last known to have, when it was this device
+  // that ran it. A hint for the page, never a substitute for the live checks - another device may
+  // have set the project up, and the trigger check below is what actually knows.
+  skemaVersioni: 0,
   fundit: null,
 };
 
@@ -381,6 +397,131 @@ export async function rest(shtegu, { method = "GET", body, headers = {}, kthePer
     throw gabimi("Projekti nuk e lejoi këtë veprim - kontrolloni që rregullat RLS të skriptit janë krijuar.", "leje");
   }
   throw gabimi(data?.message || `Projekti u përgjigj me gabimin ${res.status}.`, "server");
+}
+
+/**
+ * ---- Running the setup script from inside the app ----
+ *
+ * The honest shape of this, because the limit is not a missing feature but the design of the API:
+ * the key saved on this device reaches **PostgREST** only, and PostgREST serves rows. It cannot
+ * create a table, a policy or a trigger, and no setting on the project makes it able to - which is
+ * also what stops a stolen copy of this browser's localStorage from rewriting the database.
+ *
+ * Supabase does expose a second, separate API - the Management API - which *can* run SQL. It does
+ * not take the project's key at all: it takes a **personal access token** for the whole Supabase
+ * account. So the setup can be run from here, but only by someone holding that token, and only if
+ * they hand it over for the one call.
+ *
+ * Which is exactly how it is treated below: the token is a parameter, it is used for a single
+ * request, and it is never written to `localStorage`, never put in the sync configuration and
+ * never logged. Nothing in this file remembers it after the call returns - closing the dialog is
+ * the end of it. The manual path (copy the script, run it in the SQL editor) stays as it was and
+ * remains the one that needs no account-wide credential at all.
+ */
+
+const API_MANAGEMENT = "https://api.supabase.com";
+
+/**
+ * The project reference - the `abcdefghijklmnopqrst` in `https://abcdefghijklmnopqrst.supabase.co`,
+ * which is how the Management API names a project. Empty for anything that is not a Supabase
+ * project address (a custom domain, a self-hosted instance), because for those there is no ref to
+ * guess and the caller has to say so rather than send a request that cannot work.
+ */
+export function referencaProjektit(url) {
+  try {
+    const { hostname } = new URL(normalizoUrl(url) || String(url));
+    const pjeset = hostname.split(".");
+    if (pjeset.length < 3) return "";
+    if (!/^supabase\.(co|in|net)$/i.test(pjeset.slice(1).join("."))) return "";
+    return /^[a-z0-9]{16,32}$/i.test(pjeset[0]) ? pjeset[0].toLowerCase() : "";
+  } catch {
+    return "";
+  }
+}
+
+/** That project's SQL editor, with a new empty query already open - the manual path, minus the
+ * hunting through a dashboard for the right project. */
+export function linkuSqlEditor(url) {
+  const ref = referencaProjektit(url);
+  return ref ? `https://supabase.com/dashboard/project/${ref}/sql/new` : "https://supabase.com/dashboard";
+}
+
+/** Where the token is created, so the dialog can send people straight there. */
+export const LINKU_TOKENIT = "https://supabase.com/dashboard/account/tokens";
+
+/**
+ * What may be sent to the Management API. A personal access token is `sbp_…`; everything else
+ * people are likely to paste here is a project key, and a project key sent to the Management API
+ * would simply be refused - so it is refused here instead, where the message can say which of the
+ * several strings on the Supabase dashboard is the right one.
+ */
+export function kontrolloTokenin(token) {
+  const tekst = String(token || "").trim();
+  if (!tekst) return { ok: false, gabim: "Ngjitni token-in personal (sbp_…) të llogarisë suaj Supabase." };
+  if (/^sb_(publishable|secret)_/i.test(tekst) || payloadJwt(tekst)) {
+    return {
+      ok: false,
+      gabim: "Ky është një çelës i projektit, jo token-i i llogarisë. Token-i krijohet te Account → Access Tokens dhe fillon me «sbp_».",
+    };
+  }
+  if (!/^sbp_[a-z0-9]{16,}$/i.test(tekst)) {
+    return { ok: false, gabim: "Token-i nuk duket i plotë - duhet të fillojë me «sbp_» dhe të kopjohet i gjithi." };
+  }
+  return { ok: true, token: tekst };
+}
+
+/**
+ * Runs the setup script against the user's project through the Management API.
+ *
+ * The script is the same one the dialog shows, and every statement in it is guarded (`if not
+ * exists` / `or replace`), so running it on a project that is already set up changes nothing -
+ * which is what makes this safe to offer as a button rather than as a one-time ritual.
+ *
+ * A browser is not the intended client of that API, so the request can also be stopped by the
+ * browser itself before it ever leaves - a cross-origin call that the API does not invite back.
+ * That failure is indistinguishable from being offline at this level, so it gets its own code
+ * (`bllokuar`) and its own answer: use the script, it is right there.
+ */
+export async function instaloSkemen(token, url) {
+  const kontrolli = kontrolloTokenin(token);
+  if (!kontrolli.ok) throw gabimi(kontrolli.gabim, "token");
+
+  const ref = referencaProjektit(url || lexoKonfigurimin().url);
+  if (!ref) {
+    throw gabimi(
+      "Adresa e projektit nuk është një adresë Supabase (p.sh. https://abcdefgh.supabase.co), prandaj skripti duhet ekzekutuar vetë te SQL Editor.",
+      "projekti"
+    );
+  }
+
+  let res;
+  try {
+    res = await fetch(`${API_MANAGEMENT}/v1/projects/${ref}/database/query`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${kontrolli.token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ query: SQL_INSTALIMI }),
+    });
+  } catch {
+    throw gabimi(
+      "Shfletuesi nuk e lejoi thirrjen drejt api.supabase.com. Përdorni skriptin: kopjojeni dhe ekzekutojeni te SQL Editor - zgjat po aq.",
+      "bllokuar"
+    );
+  }
+
+  if (res.status === 401 || res.status === 403) {
+    throw gabimi("Token-i nuk u pranua - kontrolloni se është kopjuar i plotë dhe nuk është revokuar.", "token");
+  }
+  if (res.status === 404) {
+    throw gabimi(`Projekti "${ref}" nuk u gjet me këtë token - a i takon kjo llogari atij projekti?`, "projekti");
+  }
+  if (!res.ok) {
+    const data = await trupi(res);
+    throw gabimi(data?.message || `Supabase u përgjigj me gabimin ${res.status}.`, "server");
+  }
+
+  // Only the fact that it ran is remembered. The token itself goes no further than this function.
+  ruajKonfigurimin({ skemaVersioni: SKEMA_VERSIONI });
+  return true;
 }
 
 /**
