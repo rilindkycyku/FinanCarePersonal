@@ -3,6 +3,7 @@ import { Modal, Button, Form, Row, Col, Alert } from "react-bootstrap";
 import { TrendingDown, PlusCircle } from "lucide-react";
 import { useData } from "../Context/DataContext";
 import VleraInput from "./VleraInput";
+import OpsionetKategorive from "./OpsionetKategorive";
 import { makeId, STORES } from "../lib/db";
 import { toNumber, todayISO } from "../lib/format";
 import { debtTypeMeta } from "../lib/options";
@@ -283,11 +284,7 @@ function ShtoPagesenBorxhit({ show, onHide, borxhi, initial }) {
                     onChange={(e) => setField("kategoriaId", e.target.value)}
                   >
                     <option value="">Zgjidh kategorinë...</option>
-                    {kategoriteERelevante.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.emri}
-                      </option>
-                    ))}
+                    <OpsionetKategorive categories={categories} lloji={txLloji} />
                   </Form.Select>
                   {kategoriteERelevante.length === 0 && (
                     <div className="fcp-modal-hint">

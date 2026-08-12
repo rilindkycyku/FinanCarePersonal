@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Alert, Button, Card, Col, Form, InputGroup, Modal, Row, Spinner } from "react-bootstrap";
 import {
   AlertTriangle, Check, Cloud, CloudOff, Code2, Copy, Database, Download, Eye, EyeOff, ExternalLink,
-  KeyRound, LogIn, RefreshCw, Save, ShieldCheck, Trash2, UserPlus,
+  KeyRound, LogIn, RefreshCw, Save, ShieldCheck, Trash2, UserPlus, Wand2,
 } from "lucide-react";
 import NavBar from "../Components/NavBar";
 import Footer from "../Components/Footer";
@@ -12,8 +12,8 @@ import { useData } from "../Context/DataContext";
 import { useDialog } from "../Context/DialogContext";
 import { useSync } from "../Context/SyncContext";
 import {
-  SQL_INSTALIMI, dil, hyr, kontrolloCelesin, ndryshoCelesin, normalizoUrl, pastroKonfigurimin,
-  regjistrohu, ruajKonfigurimin,
+  LINKU_TOKENIT, SQL_INSTALIMI, dil, hyr, instaloSkemen, kontrolloCelesin, linkuSqlEditor,
+  ndryshoCelesin, normalizoUrl, pastroKonfigurimin, referencaProjektit, regjistrohu, ruajKonfigurimin,
 } from "../lib/supabase";
 import { fshiCloud, numeroCloud, rivendosKufijte } from "../lib/sinkronizimi";
 import "./Styles/PremiumTheme.css";
@@ -45,9 +45,36 @@ function emriProjektit(url) {
  * whole point is the copy button. In a dialog it gets the width of the screen, wraps instead of
  * clipping, and the button that matters is the one under it.
  */
-function ModaliSql({ show, onHide }) {
+function ModaliSql({ show, onHide, url }) {
   const [kopjuar, setKopjuar] = useState(false);
   const [deshtoi, setDeshtoi] = useState(false);
+  // The token lives in this state and nowhere else: it is never saved, and the field is emptied the
+  // moment the dialog closes or the install succeeds.
+  const [token, setToken] = useState("");
+  const [duke, setDuke] = useState(false);
+  const [rezultati, setRezultati] = useState(null);
+  const ref = referencaProjektit(url);
+
+  useEffect(() => {
+    if (show) return;
+    setToken("");
+    setRezultati(null);
+  }, [show]);
+
+  const instalo = async () => {
+    if (duke) return;
+    setDuke(true);
+    setRezultati(null);
+    try {
+      await instaloSkemen(token, url);
+      setToken("");
+      setRezultati({ lloji: "success", teksti: "Projekti u konfigurua - tabela, rregulli RLS, ora e serverit dhe indeksi janë në vend." });
+    } catch (err) {
+      setRezultati({ lloji: "danger", teksti: err?.message || "Konfigurimi dështoi." });
+    } finally {
+      setDuke(false);
+    }
+  };
 
   const kopjo = async () => {
     try {
@@ -68,9 +95,56 @@ function ModaliSql({ show, onHide }) {
   return (
     <Modal show={show} onHide={onHide} centered scrollable size="lg" fullscreen="sm-down" className="sp-modal">
       <Modal.Header closeButton>
-        <Modal.Title className="h6 fw-bold mb-0">Skripti SQL i sinkronizimit</Modal.Title>
+        <Modal.Title className="h6 fw-bold mb-0">Konfigurimi i projektit</Modal.Title>
       </Modal.Header>
       <Modal.Body>
+        {/* Two ways to the same end. The automatic one is first because it is the one people want;
+            the script stays under it because it is the one that always works. */}
+        <h6 className="fw-bold mb-1">
+          <Wand2 size={15} className="me-1 text-primary" /> Konfiguroje vetë aplikacioni
+        </h6>
+        <p className="text-muted small mb-2">
+          Çelësi i projektit që ruhet në këtë pajisje lexon e shkruan rreshta - krijimin e tabelës
+          nuk e lejon Supabase ta bëjë me të, dhe kjo është mbrojtje, jo mangësi. Për këtë hap të
+          vetëm duhet <strong>token-i personal</strong> i llogarisë suaj Supabase:{" "}
+          <a href={LINKU_TOKENIT} target="_blank" rel="noreferrer">
+            Account → Access Tokens <ExternalLink size={12} />
+          </a>
+          . Përdoret vetëm për këtë thirrje dhe <strong>nuk ruhet askund</strong> - as në këtë
+          pajisje. Ai vlen për gjithë llogarinë tuaj Supabase, prandaj revokojeni pas tij nëse doni.
+        </p>
+        <InputGroup className="mb-2">
+          <Form.Control
+            type="password"
+            placeholder="sbp_..."
+            spellCheck={false}
+            autoComplete="off"
+            value={token}
+            onChange={(e) => setToken(e.target.value)}
+            disabled={duke}
+          />
+          <Button className="btn-primary" onClick={instalo} disabled={duke || !token.trim()}>
+            {duke ? <Spinner animation="border" size="sm" className="me-1" /> : <Wand2 size={15} className="me-1" />}
+            {duke ? "Duke konfiguruar..." : "Konfiguro"}
+          </Button>
+        </InputGroup>
+        {!ref && (
+          <div className="fcp-row-sub mb-2">
+            Adresa e projektit nuk duket si një adresë Supabase, prandaj kjo rrugë nuk e gjen dot
+            projektin - përdorni skriptin më poshtë.
+          </div>
+        )}
+        {rezultati && (
+          <Alert variant={rezultati.lloji} className="py-2 small">
+            {rezultati.teksti}
+          </Alert>
+        )}
+
+        <hr />
+
+        <h6 className="fw-bold mb-1">
+          <Code2 size={15} className="me-1 text-primary" /> Ose ekzekutojeni vetë skriptin
+        </h6>
         <p className="text-muted small">
           Te Supabase: <strong>SQL Editor → New query</strong>, ngjiteni dhe shtypni{" "}
           <strong>Run</strong>. Ekzekutohet një herë, por përsëritja nuk prish gjë - çdo hap i tij e
@@ -101,6 +175,9 @@ function ModaliSql({ show, onHide }) {
       <Modal.Footer>
         <Button variant="secondary" onClick={onHide}>
           Mbyll
+        </Button>
+        <Button variant="outline-light" href={linkuSqlEditor(url)} target="_blank" rel="noreferrer">
+          <ExternalLink size={16} className="me-1" /> Hap SQL Editor
         </Button>
         <Button className="btn-primary" onClick={kopjo}>
           {kopjuar ? <Check size={16} className="me-1" /> : <Copy size={16} className="me-1" />}
@@ -185,7 +262,7 @@ function Sinkronizimi() {
     const shfaq = await dialog.confirm(teksti, {
       title: titulli,
       variant: lloji,
-      confirmLabel: "Shfaq skriptin SQL",
+      confirmLabel: "Konfiguro projektin",
       cancelLabel: "Në rregull",
     });
     if (shfaq) setSqlHapur(true);
@@ -379,7 +456,7 @@ function Sinkronizimi() {
           as ndonjë shërbim i FinanCarePersonal, nuk i sheh dhe nuk i ruan ato.
         </p>
 
-        <ModaliSql show={sqlHapur} onHide={() => setSqlHapur(false)} />
+        <ModaliSql show={sqlHapur} onHide={() => setSqlHapur(false)} url={konfigurimi.url || normalizoUrl(form.url)} />
 
         {/* Detected from what the last push came back with (sinkronizimi.js): a project set up
             before the trigger existed keeps whatever time the device sent, and then the order of
@@ -392,7 +469,7 @@ function Sinkronizimi() {
             të tjerat.
             <div className="mt-3">
               <Button variant="outline-light" size="sm" onClick={() => setSqlHapur(true)}>
-                <Code2 size={15} className="me-1" /> Shfaq skriptin SQL
+                <Code2 size={15} className="me-1" /> Konfiguro projektin
               </Button>
             </div>
           </Alert>
@@ -422,11 +499,6 @@ function Sinkronizimi() {
                   disa megabajt).
                 </li>
                 <li>
-                  Te <strong>SQL Editor</strong> ngjitni skriptin e mëposhtëm dhe shtypni{" "}
-                  <strong>Run</strong>. Ai krijon një tabelë të vetme dhe rregullin që lejon vetëm
-                  llogarinë tuaj t&apos;i lexojë rreshtat.
-                </li>
-                <li>
                   Te <strong>Authentication → URL Configuration</strong> vendosni{" "}
                   <strong>Site URL</strong> te adresa e këtij aplikacioni. Parazgjedhja e Supabase
                   është <code>http://localhost:3000</code>, pra linku i konfirmimit do të hapte një
@@ -440,10 +512,16 @@ function Sinkronizimi() {
                   ai që Supabase rekomandon dhe ai që mund ta zëvendësoni vetëm atë kur t&apos;ju
                   duhet. Çelësat <em>secret</em> / <em>service_role</em> mos i kopjoni kurrë këtu.
                 </li>
+                <li>
+                  Vendosini te <strong>Hapi 2</strong> më poshtë, pastaj shtypni{" "}
+                  <strong>Konfiguro projektin</strong>: aplikacioni e krijon vetë tabelën e vetme
+                  dhe rregullin që lejon vetëm llogarinë tuaj t&apos;i lexojë rreshtat - ose, po të
+                  parapëlqeni, ju jep skriptin për ta ekzekutuar te <strong>SQL Editor</strong>.
+                </li>
               </ol>
               <div>
                 <Button className="btn-primary" onClick={() => setSqlHapur(true)}>
-                  <Code2 size={16} className="me-1" /> Shfaq skriptin SQL
+                  <Wand2 size={16} className="me-1" /> Konfiguro projektin
                 </Button>
               </div>
             </Card>

@@ -232,6 +232,34 @@ describe("breakdowns", () => {
     expect(totals[0].perqindja).toBe(75);
   });
 
+  it("counts a subcategory into its parent and keeps the detail on the row", () => {
+    const meNen = [
+      ...categories,
+      { id: "c1a", emri: "Market", lloji: "shpenzim", prindi: "c1", ngjyra: "#111", ikona: "ShoppingCart" },
+      { id: "c1b", emri: "Furra", lloji: "shpenzim", prindi: "c1", ngjyra: "#111", ikona: "Utensils" },
+    ];
+    const txs = [
+      tx("1", { kategoriaId: "c1", vlera: 10 }),
+      tx("2", { kategoriaId: "c1a", vlera: 60 }),
+      tx("3", { kategoriaId: "c1b", vlera: 30 }),
+      tx("4", { kategoriaId: "c2", vlera: 100 }),
+    ];
+    const [ushqimi] = totalsByCategory(txs, meNen);
+    expect(ushqimi).toMatchObject({ id: "c1", emri: "Ushqim", vlera: 100, numri: 3, vleraVetjake: 10 });
+    expect(ushqimi.nenkategorite.map((n) => [n.emri, n.vlera])).toEqual([
+      ["Market", 60],
+      ["Furra", 30],
+    ]);
+    // The shares still describe the whole period, so they add up the way they did before.
+    expect(totalsByCategory(txs, meNen).reduce((sum, k) => sum + k.perqindja, 0)).toBe(100);
+  });
+
+  it("gives a parent a row even when only its subcategories were used", () => {
+    const meNen = [...categories, { id: "c1a", emri: "Market", lloji: "shpenzim", prindi: "c1" }];
+    const [rreshti] = totalsByCategory([tx("1", { kategoriaId: "c1a", vlera: 40 })], meNen);
+    expect(rreshti).toMatchObject({ id: "c1", emri: "Ushqim", vlera: 40, vleraVetjake: 0 });
+  });
+
   it("keeps spending whose category was deleted instead of dropping it", () => {
     const totals = totalsByCategory([tx("1", { kategoriaId: "gone", vlera: 10 })], categories);
     expect(totals).toHaveLength(1);
@@ -459,6 +487,20 @@ describe("budgets", () => {
     expect(row.tepruar).toBe(true);
     expect(row.mbetur).toBe(-30);
     expect(row.emri).toBe("Ushqim");
+  });
+
+  it("measures a budget on a parent against its subcategories too", () => {
+    const meNen = [...categories, { id: "c1a", emri: "Market", lloji: "shpenzim", prindi: "c1" }];
+    const budget = { id: "b1", kategoriaId: "c1", vlera: 200, muaji: null };
+    const txs = [
+      tx("1", { data: "2026-08-05", kategoriaId: "c1", vlera: 30 }),
+      tx("2", { data: "2026-08-06", kategoriaId: "c1a", vlera: 90 }),
+    ];
+    const [row] = budgetProgress([budget], meNen, txs, "2026-08");
+    expect(row).toMatchObject({ shpenzuar: 120, nenkategori: 1 });
+    // A budget set on the subcategory itself measures only that one.
+    const [vetem] = budgetProgress([{ ...budget, kategoriaId: "c1a" }], meNen, txs, "2026-08");
+    expect(vetem).toMatchObject({ shpenzuar: 90, emri: "Ushqim › Market", nenkategori: 0 });
   });
 
   it("still renders a budget whose category was deleted", () => {

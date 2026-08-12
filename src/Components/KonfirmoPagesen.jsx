@@ -4,6 +4,7 @@ import { Pencil, X } from "lucide-react";
 import { useData } from "../Context/DataContext";
 import VleraInput from "./VleraInput";
 import { makeId, STORES } from "../lib/db";
+import { emriIPlote } from "../lib/kategorite";
 import {
   convertedAmount, debtPaymentsFromTransactions, generateDueTransactions, monthBounds,
   monthlyRecurringBreakdown, recurringProgress, scheduledOccurrences,
@@ -54,7 +55,7 @@ function KonfirmoPagesen({ show, rec, onHide, gjithcka = false }) {
     ? "Të gjitha pagesat"
     : sipasLlogarise
       ? llogaria?.emri || "Llogaria"
-      : categories.find((c) => c.id === rec?.kategoriaId)?.emri || "Kategoria";
+      : emriIPlote(categories, rec?.kategoriaId, "Kategoria");
 
   useEffect(() => {
     if (!show || !rec) return;

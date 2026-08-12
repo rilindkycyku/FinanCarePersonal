@@ -18,6 +18,7 @@ import { currencySymbol, toNumber } from "../lib/format";
 import VleraInput from "../Components/VleraInput";
 import { kerkoLeje, lejaAktuale } from "../lib/njoftimet";
 import { CILESITE_FATURAVE, CILESIA_PARAZGJEDHUR } from "../lib/images";
+import { emriIPlote } from "../lib/kategorite";
 import "./Styles/PremiumTheme.css";
 import "./Styles/DizajniPergjithshem.css";
 import "./Styles/Dashboard.css";
@@ -337,7 +338,7 @@ function Cilesimet() {
               <div className="d-flex flex-wrap gap-2 mb-3">
                 {rregullaAktive.slice(0, 24).map((r) => (
                   <span className="fcp-pill" key={`${r.fjalet.join("-")}-${r.lloji}`}>
-                    {r.fjalet.join(" ")} → {categories.find((c) => c.id === r.kategoriaId)?.emri}
+                    {r.fjalet.join(" ")} → {emriIPlote(categories, r.kategoriaId)}
                   </span>
                 ))}
                 {rregullaAktive.length > 24 && (

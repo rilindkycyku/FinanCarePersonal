@@ -1,42 +1,73 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Modal, Button, Form, Row, Col, Alert } from "react-bootstrap";
 import { TrendingUp, TrendingDown } from "lucide-react";
 import { useData } from "../Context/DataContext";
 import { makeId, STORES } from "../lib/db";
+import { mundTeKeteNjePrind, nenkategorite, prinderitEMundshem, prindiPerRuajtje } from "../lib/kategorite";
 import { ColorPicker, IconPicker } from "./Pickers";
 import "./ModalForms.css";
 
-const blank = (lloji = "shpenzim") => ({
+const blank = (lloji = "shpenzim", prindi = "") => ({
   emri: "",
   lloji,
+  prindi,
   ngjyra: "#10b981",
   ikona: "MoreHorizontal",
 });
 
 /** Add/edit one category. A category belongs to exactly one direction (income or expense), which
- * is what lets the transaction form show only the relevant options. */
-function ShtoKategorine({ show, onHide, initial, llojiFillestar = "shpenzim" }) {
+ * is what lets the transaction form show only the relevant options; and it may sit under one other
+ * category of the same direction, which is what turns "Ushqim & Pije" into a heading with
+ * "Market", "Furra" and "Pije & Ujë" under it. */
+function ShtoKategorine({ show, onHide, initial, llojiFillestar = "shpenzim", prindiFillestar = "" }) {
   const { categories, save } = useData();
-  const [category, setCategory] = useState(blank(llojiFillestar));
+  const [category, setCategory] = useState(blank(llojiFillestar, prindiFillestar));
   const [error, setError] = useState("");
 
   useEffect(() => {
     if (!show) return;
     setError("");
-    setCategory(initial ? { ...blank(initial.lloji), ...initial } : blank(llojiFillestar));
-  }, [show, initial, llojiFillestar]);
+    setCategory(
+      initial
+        ? { ...blank(initial.lloji), ...initial, prindi: initial.prindi || "" }
+        : blank(llojiFillestar, prindiFillestar)
+    );
+  }, [show, initial, llojiFillestar, prindiFillestar]);
 
   const setField = (name, value) => setCategory((prev) => ({ ...prev, [name]: value }));
+
+  /** A category that already has subcategories cannot become one itself - the list is one level
+   * deep, and its children have to stay reachable. */
+  const femijet = useMemo(() => nenkategorite(categories, category.id), [categories, category.id]);
+  const mundEmbi = mundTeKeteNjePrind(categories, category);
+  const prinderit = useMemo(() => prinderitEMundshem(categories, category), [categories, category]);
+
+  /** Switching direction re-files the category at the top level: its old parent belongs to the
+   * other side and would be dropped on save anyway. */
+  const changeType = (lloji) =>
+    setCategory((prev) => ({
+      ...prev,
+      lloji,
+      prindi: categories.find((c) => c.id === prev.prindi)?.lloji === lloji ? prev.prindi : "",
+    }));
 
   const handleSave = async (e) => {
     e.preventDefault();
     const emri = category.emri.trim();
     if (!emri) return setError("Emri i kategorisë është i detyrueshëm.");
 
+    const prindi = prindiPerRuajtje(categories, category, category.prindi);
+
+    // Two subcategories of different parents may share a name ("Kafe" under one, "Kafe" under
+    // another): what has to be unique is the name *within its own list*.
     const duplicate = categories.find(
-      (c) => c.id !== category.id && c.lloji === category.lloji && c.emri.trim().toLowerCase() === emri.toLowerCase()
+      (c) =>
+        c.id !== category.id &&
+        c.lloji === category.lloji &&
+        (c.prindi || null) === prindi &&
+        c.emri.trim().toLowerCase() === emri.toLowerCase()
     );
-    if (duplicate) return setError(`Kategoria "${emri}" ekziston tashmë për këtë lloj.`);
+    if (duplicate) return setError(`Kategoria "${emri}" ekziston tashmë në këtë listë.`);
 
     setError("");
 
@@ -44,6 +75,7 @@ function ShtoKategorine({ show, onHide, initial, llojiFillestar = "shpenzim" }) 
       id: category.id || makeId("cat"),
       emri,
       lloji: category.lloji,
+      prindi,
       ngjyra: category.ngjyra,
       ikona: category.ikona,
     });
@@ -69,14 +101,14 @@ function ShtoKategorine({ show, onHide, initial, llojiFillestar = "shpenzim" }) 
             <button
               type="button"
               className={`fcp-type-btn shpenzim${category.lloji === "shpenzim" ? " active" : ""}`}
-              onClick={() => setField("lloji", "shpenzim")}
+              onClick={() => changeType("shpenzim")}
             >
               <TrendingDown size={15} /> Shpenzim
             </button>
             <button
               type="button"
               className={`fcp-type-btn hyrje${category.lloji === "hyrje" ? " active" : ""}`}
-              onClick={() => setField("lloji", "hyrje")}
+              onClick={() => changeType("hyrje")}
             >
               <TrendingUp size={15} /> Hyrje
             </button>
@@ -94,6 +126,27 @@ function ShtoKategorine({ show, onHide, initial, llojiFillestar = "shpenzim" }) 
                 autoFocus
                 required
               />
+            </Form.Group>
+
+            <Form.Group as={Col} md={12} controlId="category-prindi">
+              <Form.Label>Nënkategori e (opsionale)</Form.Label>
+              <Form.Select
+                value={category.prindi || ""}
+                onChange={(e) => setField("prindi", e.target.value)}
+                disabled={!mundEmbi}
+              >
+                <option value="">Kategori kryesore</option>
+                {prinderit.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.emri}
+                  </option>
+                ))}
+              </Form.Select>
+              <div className="fcp-modal-hint">
+                {mundEmbi
+                  ? "Nënkategoria ndan shpenzimin brenda një kategorie - p.sh. Ushqim & Pije › Market. Statistikat dhe buxhetet e kategorisë kryesore e numërojnë edhe atë."
+                  : `Kjo kategori ka vetë ${femijet.length} nënkategori, prandaj mbetet kategori kryesore.`}
+              </div>
             </Form.Group>
 
             <Col md={12}>

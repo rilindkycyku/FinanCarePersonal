@@ -4,6 +4,7 @@ import { TrendingUp, TrendingDown } from "lucide-react";
 import { useData } from "../Context/DataContext";
 import MonedhaTjeter from "./MonedhaTjeter";
 import VleraInput from "./VleraInput";
+import OpsionetKategorive from "./OpsionetKategorive";
 import { makeId, STORES } from "../lib/db";
 import { currencySymbol, formatMoney, toNumber, todayISO } from "../lib/format";
 import { convertedAmount, currencyFields, debtProgress, lastInstallmentDate } from "../lib/finance";
@@ -65,11 +66,6 @@ function ShtoTePerseritur({ show, onHide, initial }) {
   }, [show, initial, accounts, njeLlogari, llogariaKryesore]);
 
   const kesteFundi = lastInstallmentDate(rec.dataETjetres, rec.frekuenca, rec.nrKesteve);
-
-  const kategoriteERelevante = useMemo(
-    () => categories.filter((c) => c.lloji === rec.lloji).sort((a, b) => a.emri.localeCompare(b.emri)),
-    [categories, rec.lloji]
-  );
 
   /**
    * Notes this schedule could pay down, matched to its direction: an expense settles something you
@@ -262,11 +258,7 @@ function ShtoTePerseritur({ show, onHide, initial }) {
               </Form.Label>
               <Form.Select value={rec.kategoriaId} onChange={(e) => setField("kategoriaId", e.target.value)} required>
                 <option value="">Zgjidh kategorinë...</option>
-                {kategoriteERelevante.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.emri}
-                  </option>
-                ))}
+                <OpsionetKategorive categories={categories} lloji={rec.lloji} />
               </Form.Select>
             </Form.Group>
 

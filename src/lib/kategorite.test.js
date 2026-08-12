@@ -1,0 +1,118 @@
+import { describe, expect, it } from "vitest";
+import {
+  emriIPlote,
+  familja,
+  mundTeKeteNjePrind,
+  nenkategorite,
+  pemaKategorive,
+  prinderitEMundshem,
+  prindiI,
+  prindiPerRuajtje,
+  rrenjaE,
+} from "./kategorite";
+
+const kategori = (id, emri, extra = {}) => ({ id, emri, lloji: "shpenzim", ...extra });
+
+const lista = [
+  kategori("ushqim", "Ushqim & Pije"),
+  kategori("market", "Market", { prindi: "ushqim" }),
+  kategori("furra", "Furra", { prindi: "ushqim" }),
+  kategori("transport", "Transport"),
+  kategori("rroga", "Rroga", { lloji: "hyrje" }),
+];
+
+describe("kategorite", () => {
+  it("reads a category's parent, and nothing for a top-level one", () => {
+    expect(prindiI(lista, "market")?.id).toBe("ushqim");
+    expect(prindiI(lista, "ushqim")).toBe(null);
+  });
+
+  it("lists the subcategories of a parent, by name", () => {
+    expect(nenkategorite(lista, "ushqim").map((c) => c.emri)).toEqual(["Furra", "Market"]);
+    expect(nenkategorite(lista, "market")).toEqual([]);
+  });
+
+  it("groups a family for the totals, budgets and filters that ask about a parent", () => {
+    expect(familja(lista, "ushqim").sort()).toEqual(["furra", "market", "ushqim"]);
+    expect(familja(lista, "market")).toEqual(["market"]);
+    expect(familja(lista, "")).toEqual([]);
+  });
+
+  it("spells a subcategory out with the parent it belongs to", () => {
+    expect(emriIPlote(lista, "market")).toBe("Ushqim & Pije › Market");
+    expect(emriIPlote(lista, "ushqim")).toBe("Ushqim & Pije");
+    expect(emriIPlote(lista, "gone", "Pa kategori")).toBe("Pa kategori");
+  });
+
+  it("builds one direction as parents with their children, both sorted", () => {
+    const pema = pemaKategorive(lista, "shpenzim");
+    expect(pema.map((c) => c.emri)).toEqual(["Transport", "Ushqim & Pije"]);
+    expect(pema[1].femijet.map((c) => c.emri)).toEqual(["Furra", "Market"]);
+    expect(pemaKategorive(lista, "hyrje").map((c) => c.emri)).toEqual(["Rroga"]);
+    // Without a direction it is every category at once - what the transactions filter lists.
+    expect(pemaKategorive(lista).map((c) => c.emri)).toEqual(["Rroga", "Transport", "Ushqim & Pije"]);
+  });
+
+  it("treats a parent that no longer exists as no parent at all", () => {
+    const jetim = [kategori("market", "Market", { prindi: "e_fshire" })];
+    expect(prindiI(jetim, "market")).toBe(null);
+    expect(rrenjaE(jetim, "market")).toBe("market");
+    expect(pemaKategorive(jetim, "shpenzim").map((c) => c.emri)).toEqual(["Market"]);
+  });
+
+  it("ignores a parent of the other direction", () => {
+    const perziera = [kategori("rroga", "Rroga", { lloji: "hyrje" }), kategori("market", "Market", { prindi: "rroga" })];
+    expect(prindiI(perziera, "market")).toBe(null);
+  });
+
+  it("files a grandchild under the topmost category rather than nesting deeper", () => {
+    const thelle = [...lista, kategori("bio", "Bio", { prindi: "market" })];
+    expect(rrenjaE(thelle, "bio")).toBe("ushqim");
+    expect(nenkategorite(thelle, "ushqim").map((c) => c.emri)).toEqual(["Bio", "Furra", "Market"]);
+    expect(pemaKategorive(thelle, "shpenzim")[1].femijet.map((c) => c.emri)).toEqual(["Bio", "Furra", "Market"]);
+  });
+
+  it("ends the walk on a cycle instead of hanging, leaving both at the top level", () => {
+    const rreth = [kategori("a", "A", { prindi: "b" }), kategori("b", "B", { prindi: "a" })];
+    // Which of the two the walk stops on is arbitrary - what matters is that it stops, and that
+    // neither category disappears from the page because of a record nothing in the app can produce.
+    expect(rrenjaE(rreth, "a")).toBe("a");
+    expect(pemaKategorive(rreth, "shpenzim").map((c) => c.emri)).toEqual(["A", "B"]);
+  });
+
+  it("survives a list carrying a row that is not a category at all", () => {
+    // A hand-edited backup or a half-applied sync can put anything in the array; one bad row must
+    // not take the page with it.
+    const ndotur = [null, undefined, "jo kategori", { emri: "pa id" }, ...lista];
+    expect(pemaKategorive(ndotur, "shpenzim").map((c) => c.emri)).toEqual(["Transport", "Ushqim & Pije"]);
+    expect(nenkategorite(ndotur, "ushqim").map((c) => c.emri)).toEqual(["Furra", "Market"]);
+    expect(emriIPlote(ndotur, "market")).toBe("Ushqim & Pije › Market");
+  });
+
+  it("offers only top-level categories of the same direction as a parent", () => {
+    const mundshem = prinderitEMundshem(lista, kategori("re", "E re"));
+    expect(mundshem.map((c) => c.id)).toEqual(["transport", "ushqim"]);
+  });
+
+  it("never offers a category itself, nor anything already under it", () => {
+    expect(prinderitEMundshem(lista, lista[0]).map((c) => c.id)).toEqual(["transport"]);
+  });
+
+  it("keeps the list one level deep: a parent cannot become a subcategory", () => {
+    expect(mundTeKeteNjePrind(lista, lista[0])).toBe(false);
+    expect(mundTeKeteNjePrind(lista, lista[1])).toBe(true);
+  });
+
+  it("stores only a parent that is actually allowed", () => {
+    const market = lista[1];
+    expect(prindiPerRuajtje(lista, market, "transport")).toBe("transport");
+    expect(prindiPerRuajtje(lista, market, "")).toBe(null);
+    // Itself, a subcategory, one of the other direction, and one that is gone.
+    expect(prindiPerRuajtje(lista, market, "market")).toBe(null);
+    expect(prindiPerRuajtje(lista, market, "furra")).toBe(null);
+    expect(prindiPerRuajtje(lista, market, "rroga")).toBe(null);
+    expect(prindiPerRuajtje(lista, market, "e_fshire")).toBe(null);
+    // A category that has children of its own cannot be filed under anything.
+    expect(prindiPerRuajtje(lista, lista[0], "transport")).toBe(null);
+  });
+});

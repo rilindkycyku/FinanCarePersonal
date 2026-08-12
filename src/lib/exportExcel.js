@@ -2,6 +2,7 @@ import { saveAs } from "file-saver";
 import { getProfile } from "./db";
 import { currencySymbol } from "./format";
 import { DEFAULT_CURRENCY } from "./options";
+import { NDARESI, emriIPlote } from "./kategorite";
 
 // Same dark-green FinanCare palette as FinanCareLite's exportExcel.js, reading the personal
 // profile from IndexedDB instead of a business profile from an API (there is no backend here).
@@ -351,15 +352,20 @@ export async function exportStatementExcel({
   );
 
   const gjithsejKategorite = t.kategorite.reduce((sum, k) => sum + k.vlera, 0);
+  const pjesa = (vlera) => (gjithsejKategorite > 0 ? `${Math.round((vlera / gjithsejKategorite) * 100)}%` : "0%");
   statementSheet(
     wb,
     "Sipas kategorive",
     ["Kategoria", "Transaksione", `Vlera (${simboli})`, "Pjesa"],
-    t.kategorite.map((k) => [
-      k.emri,
-      k.numri,
-      k.vlera,
-      gjithsejKategorite > 0 ? `${Math.round((k.vlera / gjithsejKategorite) * 100)}%` : "0%",
+    // The parent's line is the group total; each subcategory follows it indented, so the sheet can
+    // be read either way round - the month at a glance, or exactly what the food line was made of.
+    // Only the parent lines are summed into the total, or every euro would be counted twice.
+    t.kategorite.flatMap((k) => [
+      [k.emri, k.numri, k.vlera, pjesa(k.vlera)],
+      ...(k.nenkategorite || []).map((n) => [`    ${NDARESI}${n.emri}`, n.numri, n.vlera, pjesa(n.vlera)]),
+      ...(k.nenkategorite?.length && k.vleraVetjake > 0
+        ? [[`    ${NDARESI}Pa nënkategori`, k.numriVetjak, k.vleraVetjake, pjesa(k.vleraVetjake)]]
+        : []),
     ]),
     { totali: gjithsejKategorite }
   );
@@ -394,7 +400,7 @@ export async function exportStatementExcel({
         const mbetur = Math.max(gjithsej - paguar, 0);
         return [
           r.emri,
-          categories.find((c) => c.id === r.kategoriaId)?.emri || "",
+          emriIPlote(categories, r.kategoriaId),
           Number(r.vlera) || 0,
           gjithsej,
           paguar,

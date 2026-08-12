@@ -5,6 +5,7 @@ import { useData } from "../Context/DataContext";
 import MonedhaTjeter from "./MonedhaTjeter";
 import VleraInput from "./VleraInput";
 import EtiketaFusha from "./EtiketaFusha";
+import OpsionetKategorive from "./OpsionetKategorive";
 import FaturaFusha from "./Faturat/FaturaFusha";
 import { makeId, sinkronizoFaturat, STORES } from "../lib/db";
 import { currencySymbol, formatMoney, toNumber, todayISO } from "../lib/format";
@@ -433,11 +434,7 @@ function ShtoTransaksionin({
                   required
                 >
                   <option value="">Zgjidh kategorinë...</option>
-                  {kategoriteERelevante.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.emri}
-                    </option>
-                  ))}
+                  <OpsionetKategorive categories={categories} lloji={tx.lloji} />
                 </Form.Select>
                 {tx.sugjeruar && tx.kategoriaId && (
                   <div className="fcp-modal-hint">

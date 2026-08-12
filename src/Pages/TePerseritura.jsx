@@ -17,6 +17,7 @@ import { useDialog } from "../Context/DialogContext";
 import { STORES } from "../lib/db";
 import { annualOutlook, dueRecurring, frequencyLabel, generateDueTransactions, isRecurringDue } from "../lib/finance";
 import { formatDate, formatMoney, plainAmount, todayISO } from "../lib/format";
+import { emriIPlote } from "../lib/kategorite";
 import { getIcon } from "../lib/icons";
 import "./Styles/PremiumTheme.css";
 import "./Styles/DizajniPergjithshem.css";
@@ -97,7 +98,7 @@ function TePerseritura() {
     Lloji: r.lloji === "hyrje" ? "Hyrje" : "Shpenzim",
     Frekuenca: frequencyLabel(r.frekuenca),
     "Data e Radhës": r.dataETjetres,
-    Kategoria: nameOf(categories, r.kategoriaId),
+    Kategoria: emriIPlote(categories, r.kategoriaId, "-"),
     ...(njeLlogari ? {} : { Llogaria: nameOf(accounts, r.llogariaId) }),
     Statusi: !r.aktiv ? "Joaktive" : isRecurringDue(r, today) ? "Ka arritur" : "Aktive",
     [`Vlera (${simboli})`]: `<span class="${r.lloji === "hyrje" ? "fcp-pos" : "fcp-neg"}">${plainAmount(

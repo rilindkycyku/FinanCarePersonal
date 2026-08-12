@@ -16,6 +16,7 @@ import ShpenzimiDitor from "../Components/ShpenzimiDitor";
 import SesioniSkadoi from "../Components/SesioniSkadoi";
 import { Kpi, Panel, ProgressBar, Empty } from "../Components/Ui";
 import { useData } from "../Context/DataContext";
+import { emriIPlote } from "../lib/kategorite";
 import { getIcon } from "../lib/icons";
 import {
   accountsWithBalances, backupStatus, budgetProgress, cashflow, debtProgress, debtTotals, dueRecurring,
@@ -355,7 +356,7 @@ function Dashboard() {
                       <div className="fcp-row-main">
                         <div className="fcp-row-title">
                           {tx.pershkrimi ||
-                            kategoria?.emri ||
+                            emriIPlote(categories, tx.kategoriaId) ||
                             (qellimi ? `Kontribut: ${qellimi.emri}` : "Transfer")}
                           {/* A receipt is attached - the picture itself is opened from the
                               transactions list, this is only the sign that there is one. */}
@@ -370,7 +371,7 @@ function Dashboard() {
                               ? "Kursim brenda llogarisë"
                               : `${nameOf(accounts, tx.llogariaId)} → ${nameOf(accounts, tx.llogariaDestinacionId)}`
                             : [
-                                kategoria?.emri || "Pa kategori",
+                                emriIPlote(categories, tx.kategoriaId, "Pa kategori"),
                                 njeLlogari ? null : nameOf(accounts, tx.llogariaId),
                                 tx.monedhaOrigjinale
                                   ? formatMoney(tx.vleraOrigjinale, tx.monedhaOrigjinale)

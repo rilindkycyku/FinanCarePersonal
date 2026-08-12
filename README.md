@@ -62,10 +62,21 @@ sa shpenzohet, sa mbetet dhe sa po kursesh.
   tuaja, një hyrje e përsëritur me ato që ju kanë borxh. Borxhi zbritet me vlerën që u pagua
   vërtet, jo me atë të planifikuar, pra bonuset e zbritura nga kësti reflektohen saktë; dhe kjo
   vlen njësoj kur konfirmoni një pagesë të vetme apo të gjitha përnjëherë.
-- **Kategoritë** - kategori të veçanta për hyrje dhe shpenzime, me ngjyrë e ikonë, dhe me numërimin
-  e përdorimit real të secilës.
+- **Kategoritë & nënkategoritë** - kategori të veçanta për hyrje dhe shpenzime, me ngjyrë e ikonë,
+  dhe me numërimin e përdorimit real të secilës. Çdo kategori mund të ketë **nënkategori** - p.sh.
+  *Ushqim & Pije › Market*, *› Furra*, *› Pije & Ujë*, ose *Kafe & Restorant › Kafe*, *› Drekë në
+  Punë*, *› Fast Food* - që i përgjigjen pyetjes që lista e sheshtë nuk e mbulonte: ishte market,
+  drekë në punë apo restorant? Lista mbetet **një nivel e thellë** me qëllim; një nivel i tretë nuk
+  shton përgjigje të re, vetëm punë arkivimi. Në formularë nënkategoritë shfaqen të grupuara nën
+  kategorinë e vet (te telefoni, lista e vetë shfletuesit i tregon si tituj), dhe kategoria kryesore
+  mbetet e zgjedhshme si më parë - *«diku te ushqimi, nuk po e ndaj»* është përgjigje e vërtetë.
+  Statistikat i mbledhin nënkategoritë te kategoria kryesore dhe e hapin ndarjen nën të, prandaj
+  pjesët vazhdojnë të mblidhen sa muaji. Kur fshihet një kategori kryesore, nënkategoritë e saj nuk
+  fshihen bashkë me të - ngrihen në kategori kryesore, sepse kanë transaksionet e veta.
 - **Buxhetet** - kufi mujor shpenzimi për kategori, me ecuri, sinjalizim kur teprohet, lëvizje nga
-  muaji në muaj dhe mundësi që një buxhet të vlejë vetëm për një muaj të caktuar.
+  muaji në muaj dhe mundësi që një buxhet të vlejë vetëm për një muaj të caktuar. Një buxhet mbi një
+  kategori kryesore numëron edhe nënkategoritë e saj, pra *200 € për Ushqim & Pije* mat marketin,
+  furrën dhe pijet bashkë; një buxhet mbi një nënkategori mat vetëm atë.
 - **Qëllimet e Kursimit** - synimi, afati, ecuria dhe kontributet. Një kontribut është transfer i
   vërtetë në llogarinë e kursimit, i etiketuar me qëllimin, pra paraja dhe ecuria janë e njëjta
   e dhënë.
@@ -95,7 +106,8 @@ sa shpenzohet, sa mbetet dhe sa po kursesh.
   origjinale mbahet për krahasim me ekstraktin e kartelës). Kursi i fundit për çdo monedhë mbahet
   mend, sepse aplikacioni nuk ka backend për t'i marrë kurset vetë.
 - **Statistikat** - hyrje kundrejt shpenzimeve për 6 muajt e fundit, bilanc mujor, ndarja sipas
-  kategorive e llogarive, mesatarja ditore dhe 5 shpenzimet më të mëdha, për periudhë të zgjedhur.
+  kategorive e llogarive (me nënkategoritë e hapura nën secilën kategori), mesatarja ditore dhe 5
+  shpenzimet më të mëdha, për periudhë të zgjedhur.
 - **Bilanci ndër muaj dhe parashikimi** - një vijë e vetme: muajt e kaluar me vijë të plotë, muajt
   që vijnë me vijë të ndërprerë. Parashikimi nuk supozon asgjë nga mesatarja e së kaluarës - ecën
   ditë për ditë mbi atë që dihet tashmë (transaksionet me datë të ardhshme, këstet e pagesat e
@@ -227,16 +239,31 @@ përmes bazës suaj.
 
 1. Krijoni një projekt te [supabase.com](https://supabase.com/dashboard) - plani falas mjafton, se
    një vit transaksionesh zë disa megabajt.
-2. Te **SQL Editor** ngjitni skriptin që ju jep faqja **Sinkronizimi** (me buton kopjimi) dhe
-   shtypni **Run**. Ai krijon një tabelë të vetme, rregullin RLS dhe një indeks.
-3. Te **Project Settings** merrni **Project URL** (te *Data API*) dhe çelësin **publishable**
+2. Te **Project Settings** merrni **Project URL** (te *Data API*) dhe çelësin **publishable**
    (`sb_publishable_…`, te *API Keys*). Projektet e vjetra kanë në vend të tij çelësin *anon* te
    skeda *Legacy*; aplikacioni i pranon të dyja, por i riu është ai që Supabase rekomandon dhe ai
    që mund të zëvendësohet i vetëm, pa i prishur çelësat e tjerë. Çelësat *secret* /
    *service_role* mos i kopjoni - aplikacioni i refuzon vetë nëse ngjiten gabimisht.
-4. Te faqja **Sinkronizimi** vendosni të dyja, pastaj krijoni llogarinë me email e fjalëkalim.
-   Llogaria krijohet **brenda projektit tuaj**; në pajisjet e tjera përdorni po ato kredenciale me
-   butonin *Hyr*.
+3. Te faqja **Sinkronizimi** vendosni adresën e çelësin, pastaj shtypni **Konfiguro projektin**.
+   Aty ka dy rrugë për të njëjtin përfundim - një tabelë e vetme, rregulli RLS, ora e serverit dhe
+   një indeks:
+   - **Automatikisht**: ngjitni një *personal access token* të llogarisë suaj Supabase
+     ([Account → Access Tokens](https://supabase.com/dashboard/account/tokens), fillon me `sbp_`)
+     dhe aplikacioni e ekzekuton vetë skriptin. Token-i përdoret **vetëm për atë thirrje dhe nuk
+     ruhet askund** - as në këtë pajisje; mund ta revokoni menjëherë pas tij.
+   - **Vetë**: kopjoni skriptin dhe ekzekutojeni te **SQL Editor → New query → Run** (butoni *Hap
+     SQL Editor* e hap direkt te projekti juaj).
+
+   Pse duhet një token i veçantë dhe nuk mjafton çelësi që tashmë keni ngjitur? Sepse çelësi i
+   projektit flet vetëm me **PostgREST**, dhe PostgREST-i shërben rreshta - tabela nuk krijohet dot
+   me të. Kjo është mbrojtje, jo mangësi: po të mundej, një kopje e vjedhur e `localStorage`-it të
+   shfletuesit do të mund ta rishkruante bazën. Krijimi i tabelës kalon nga një API krejt tjetër
+   (Management API), e cila pranon vetëm token-in e llogarisë.
+
+   Disa shfletues mund ta bllokojnë atë thirrje si kërkesë ndër-origjinë; në atë rast aplikacioni
+   e thotë hapur dhe ju kthen te skripti, që zgjat po aq.
+4. Në të njëjtën faqe krijoni llogarinë me email e fjalëkalim. Llogaria krijohet **brenda projektit
+   tuaj**; në pajisjet e tjera përdorni po ato kredenciale me butonin *Hyr*.
 
 Çelësi mund të ndërrohet më vonë pa u shkëputur - te kartela e lidhjes, *Ndrysho çelësin publik*.
 I riu provohet te projekti para se të ruhet, pra një çelës i kopjuar gabimisht nuk e lë pajisjen pa
@@ -262,8 +289,8 @@ store:
 | --- | --- | --- | --- | --- | --- |
 | `a1b2…` | `transactions` | `tx_m4f2k9x` | `2026-08-11 18:02:18+00` | `false` | `{"id":"tx_m4f2k9x","data":"2026-08-11","lloji":"shpenzim","vlera":12.34,…}` |
 
-Një libër me 800 transaksione, 6 llogari e 25 kategori bëhet rreth 830 rreshta, plus një rresht për
-profilin. Fushat e vetë rekordit rrinë brenda kolonës `data` (jsonb) sepse tabela ndodhet te
+Një libër me 800 transaksione, 6 llogari e 55 kategori (me nënkategoritë) bëhet rreth 860 rreshta,
+plus një rresht për profilin. Fushat e vetë rekordit rrinë brenda kolonës `data` (jsonb) sepse tabela ndodhet te
 projekti **juaj**: po të kishte kolona të shtypura, çdo version i ri që shton një fushë do të
 kërkonte një `ALTER TABLE` te secili projekt përpara se aplikacioni të vazhdonte të punonte, dhe
 një pajisje ende me versionin e vjetër do të prishej. Kostoja është se rreshti nuk lexohet bukur te
@@ -278,6 +305,12 @@ from financare_records
 where store = 'transactions' and not deleted
 order by dita desc;
 ```
+
+**Nënkategoritë nuk kërkojnë asnjë ndryshim te projekti juaj.** Prindi i një kategorie ruhet si një
+fushë e zakonshme brenda `data` (`{"id":"cat_…","emri":"Market","prindi":"cat_default_ushqim"}`),
+pra skripti SQL mbetet ai që ishte, nuk ka `ALTER TABLE` për të bërë, dhe një pajisje ende me
+versionin e vjetër vazhdon të sinkronizohet - thjesht e ruan fushën pa e kuptuar, derisa të
+përditësohet. Kjo ishte arsyeja pse kolona është `jsonb` që në fillim.
 
 ### Si bashkohen ndryshimet
 
@@ -326,13 +359,13 @@ src/
   Context/    DataContext (ngarkon dhe ruan gjithçka), SyncContext (sinkronizimi automatik),
               ThemeContext, DialogContext
   lib/        db.js (IndexedDB), finance.js (çdo kalkulim), csv.js (leximi i ekstraktit),
+              kategorite.js (nënkategoritë: prindi, familja, pema e pickerave),
               rregullat.js (kujtesa e kategorive), images.js (përpunimi i fotove të faturave),
               zip.js (arkivi i kopjes së plotë), calc.js (llogaritësi i fushave të vlerës),
               supabase.js (klienti i vogël i projektit tuaj), sinkronizimi.js (rregullat e bashkimit),
               format.js, options.js, exportExcel.js
   Components/ NavBar, Footer, Tabela (kërkim/renditje/eksport), modalet e shtimit, Ui.jsx,
-              Faturat/ (fusha e fotove, galeria e një transaksioni, shikuesi)
-  Components/ NavBar, Footer, Tabela (kërkim/renditje/eksport), modalet e shtimit, Ui.jsx,
+              OpsionetKategorive (opsionet e grupuara të çdo pickeri kategorish),
               Faturat/ (fusha e fotove, galeria e një transaksioni, shikuesi)
   Pages/      Paneli, Transaksionet, Llogaritë, Borxhet & Kartelat, Kategoritë, Buxhetet,
               Qëllimet, Shpenzimet e Planifikuara, Pagesat e Përsëritura, Statistikat,
