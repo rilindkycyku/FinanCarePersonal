@@ -286,6 +286,43 @@ export async function siguroSesionin() {
   return ruajSesionin(data);
 }
 
+/**
+ * Adopts a session handed over in the URL, as the confirmation email does.
+ *
+ * Supabase sends the confirm/recovery link back to the project's *Site URL* with the session in
+ * the fragment (`#access_token=…&refresh_token=…`). If that URL is this app, the person has
+ * effectively just signed in - and without this they would land on the dashboard, see nothing
+ * happen, and be asked for the password they have this second finished proving they know.
+ *
+ * Two guards. The tokens are only taken on a device that already has this project configured,
+ * because a session is useless without the key to send it with; and the token's own `iss` must be
+ * that project, so a link from somewhere else cannot quietly repoint this device. Nothing is
+ * trusted beyond that: a forged token fails at the first request, where the project checks it.
+ *
+ * The caller is expected to strip the fragment afterwards - a token has no business sitting in the
+ * address bar, in the back-button history, or in whatever the browser syncs elsewhere.
+ */
+export function adoptoSesioninNgaLinku(hash = typeof window === "undefined" ? "" : window.location.hash) {
+  const params = new URLSearchParams(String(hash).replace(/^#/, ""));
+  const access = params.get("access_token");
+  const refresh = params.get("refresh_token");
+  if (!access || !refresh) return null;
+
+  const k = lexoKonfigurimin();
+  if (!eshteKonfiguruar(k)) return null;
+
+  const payload = payloadJwt(access);
+  if (!String(payload?.iss || "").startsWith(k.url)) return null;
+
+  return ruajKonfigurimin({
+    accessToken: access,
+    refreshToken: refresh,
+    skadonMe: Date.now() + (Number(params.get("expires_in")) || 3600) * 1000,
+    userId: payload?.sub || k.userId,
+    email: payload?.email || k.email,
+  });
+}
+
 export async function dil() {
   const k = lexoKonfigurimin();
   try {

@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { onNdryshimLokal } from "../lib/db";
-import { eshteLidhur, lexoKonfigurimin, onKonfigurim } from "../lib/supabase";
+import { adoptoSesioninNgaLinku, eshteLidhur, lexoKonfigurimin, onKonfigurim } from "../lib/supabase";
 import { kaTePadergaura, sinkronizo } from "../lib/sinkronizimi";
 import { useData } from "./DataContext";
 
@@ -47,7 +47,16 @@ export function SyncProvider({ children }) {
   const kohaFundit = useRef(0);
   const afati = useRef(null);
 
-  useEffect(() => onKonfigurim(setKonfigurimi), []);
+  useEffect(() => {
+    const hiq = onKonfigurim(setKonfigurimi);
+    // A session arriving in the URL - the link from the confirmation email, when the project's
+    // Site URL points here. Taken before anything else runs, and the fragment wiped immediately
+    // afterwards so the token does not stay in the address bar or in the back-button history.
+    if (adoptoSesioninNgaLinku()) {
+      window.history.replaceState(null, "", window.location.pathname + window.location.search);
+    }
+    return hiq;
+  }, []);
 
   const lidhur = eshteLidhur(konfigurimi);
   const automatik = lidhur && konfigurimi.automatik !== false;

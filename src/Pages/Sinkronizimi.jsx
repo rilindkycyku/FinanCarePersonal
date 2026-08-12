@@ -420,6 +420,12 @@ function Sinkronizimi() {
                   llogarinë tuaj t&apos;i lexojë rreshtat.
                 </li>
                 <li>
+                  Te <strong>Authentication → URL Configuration</strong> vendosni{" "}
+                  <strong>Site URL</strong> te adresa e këtij aplikacioni. Parazgjedhja e Supabase
+                  është <code>http://localhost:3000</code>, pra linku i konfirmimit do të hapte një
+                  faqe që nuk ekziston. Me adresën e duhur, ai link ju kthen këtu tashmë të futur.
+                </li>
+                <li>
                   Te <strong>Project Settings</strong> merrni <strong>Project URL</strong> (te{" "}
                   <em>Data API</em>) dhe çelësin <strong>publishable</strong> -{" "}
                   <code>sb_publishable_…</code> te <em>API Keys</em>. Nëse projekti juaj ka ende

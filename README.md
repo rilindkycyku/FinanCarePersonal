@@ -243,6 +243,11 @@ I riu provohet te projekti para se të ruhet, pra një çelës i kopjuar gabimis
 sinkronizim; ndërrimi i vetë projektit, përkundrazi, kërkon shkëputje, sepse sesioni dhe rreshtat i
 takojnë bazës së vjetër.
 
+Te **Authentication → URL Configuration** vendosni edhe **Site URL** te adresa e aplikacionit
+tuaj: parazgjedhja e Supabase është `http://localhost:3000`, pra linku i konfirmimit hap një faqe
+që nuk ekziston. Me adresën e duhur, ai link ju kthen te aplikacioni **tashmë të futur** - sesioni
+vjen brenda vetë linkut, merret në hapje dhe fshihet menjëherë nga adresa.
+
 Supabase-i e ka konfirmimin me email të ndezur si parazgjedhje, pra pajisja e parë duhet ta hapë
 linkun që i vjen para se të hyjë. Nëse doni ta kaloni atë hap, fikeni te **Authentication →
 Providers → Email**; nëse e lini ndezur, mbani mend se çdo pajisje e re pret konfirmimin e llogarisë,
