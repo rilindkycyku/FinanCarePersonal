@@ -13,6 +13,7 @@ import Footer from "../Components/Footer";
 import ShtoTransaksionin from "../Components/ShtoTransaksionin";
 import ButonPasqyra from "../Components/ButonPasqyra";
 import ShpenzimiDitor from "../Components/ShpenzimiDitor";
+import SesioniSkadoi from "../Components/SesioniSkadoi";
 import { Kpi, Panel, ProgressBar, Empty } from "../Components/Ui";
 import { useData } from "../Context/DataContext";
 import { getIcon } from "../lib/icons";
@@ -105,6 +106,10 @@ function Dashboard() {
     <div className="dashboard-wrapper">
       <PageTitle title="Paneli" />
       <NavBar />
+
+      {/* The home screen is where the app is opened, so it is where a device that has quietly
+          stopped syncing gets to say so. */}
+      <SesioniSkadoi />
 
       <div className="welcome-hero">
         <Container>
