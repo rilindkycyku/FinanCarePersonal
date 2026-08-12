@@ -7,6 +7,7 @@ import Footer from "../Components/Footer";
 import PageTitle from "../Components/PageTitle";
 import PageLoading from "../Components/PageLoading";
 import PunaNeVazhdim from "../Components/PunaNeVazhdim";
+import OpsionetKategorive from "../Components/OpsionetKategorive";
 import { Empty } from "../Components/Ui";
 import { useData } from "../Context/DataContext";
 import { useDialog } from "../Context/DialogContext";
@@ -207,8 +208,6 @@ function ImportoCsv() {
   };
 
   if (loading) return <PageLoading title="Importo nga CSV" />;
-
-  const kategoriteE = (lloji) => categories.filter((c) => c.lloji === lloji);
 
   return (
     <div className="fcp-page">
@@ -429,11 +428,7 @@ function ImportoCsv() {
                                   onChange={(e) => vendos(r.celesi, { kategoriaId: e.target.value })}
                                 >
                                   <option value="">Pa kategori</option>
-                                  {kategoriteE(r.lloji).map((c) => (
-                                    <option key={c.id} value={c.id}>
-                                      {c.emri}
-                                    </option>
-                                  ))}
+                                  <OpsionetKategorive categories={categories} lloji={r.lloji} />
                                 </Form.Select>
                                 {z.sugjeruar && z.kategoriaId && (
                                   <div className="fcp-row-sub">

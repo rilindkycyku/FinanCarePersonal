@@ -186,6 +186,62 @@ export const DEFAULT_CATEGORIES = [
   // Kept last: it is the bucket for whatever the list above still does not name.
   { id: "cat_default_tjera_shp", emri: "Shpenzime të Tjera", lloji: "shpenzim", ngjyra: "#94a3b8", ikona: "MoreHorizontal" },
 
+  // ── Nënkategoritë e parazgjedhura ───────────────────────────────────────────
+  // Only the baskets that were doing too much work on their own: "Ushqim & Pije" alone answered for
+  // the weekly market run, the lunch bought at work and a delivery on Saturday, so at the end of the
+  // month the biggest line in the statistics was the one that said the least. Each one keeps its
+  // parent's colour, so the group still reads as one block on the charts, and the parent stays
+  // usable as it was for anyone who does not want the detail.
+  //
+  // Everything below is a starting point like the rest of this file: rename, recolour, re-file or
+  // delete freely, and nothing brings a deleted one back.
+
+  // Ushqim & Pije - what came home from a shop.
+  { id: "cat_default_ushqim_market", emri: "Market & Supermarket", lloji: "shpenzim", prindi: "cat_default_ushqim", ngjyra: "#f59e0b", ikona: "ShoppingCart" },
+  { id: "cat_default_ushqim_furra", emri: "Furra & Ëmbëltore", lloji: "shpenzim", prindi: "cat_default_ushqim", ngjyra: "#f59e0b", ikona: "Utensils" },
+  { id: "cat_default_ushqim_mish", emri: "Mish & Peshk", lloji: "shpenzim", prindi: "cat_default_ushqim", ngjyra: "#f59e0b", ikona: "Utensils" },
+  { id: "cat_default_ushqim_fruta", emri: "Fruta & Perime", lloji: "shpenzim", prindi: "cat_default_ushqim", ngjyra: "#f59e0b", ikona: "ShoppingCart" },
+  { id: "cat_default_ushqim_pije", emri: "Pije & Ujë", lloji: "shpenzim", prindi: "cat_default_ushqim", ngjyra: "#f59e0b", ikona: "Coffee" },
+
+  // Kafe & Restorant - what was eaten or drunk out.
+  { id: "cat_default_restorant_kafe", emri: "Kafe", lloji: "shpenzim", prindi: "cat_default_restorant", ngjyra: "#f97316", ikona: "Coffee" },
+  { id: "cat_default_restorant_dreka", emri: "Drekë në Punë", lloji: "shpenzim", prindi: "cat_default_restorant", ngjyra: "#f97316", ikona: "Briefcase" },
+  { id: "cat_default_restorant_ushqim", emri: "Restorant", lloji: "shpenzim", prindi: "cat_default_restorant", ngjyra: "#f97316", ikona: "Utensils" },
+  { id: "cat_default_restorant_fast", emri: "Fast Food & Porosi Online", lloji: "shpenzim", prindi: "cat_default_restorant", ngjyra: "#f97316", ikona: "Smartphone" },
+  { id: "cat_default_restorant_dalje", emri: "Dalje & Bar", lloji: "shpenzim", prindi: "cat_default_restorant", ngjyra: "#f97316", ikona: "Music" },
+
+  // Transport - fuel keeps its own category, so what is left here is everything else.
+  { id: "cat_default_transport_publik", emri: "Transport Publik", lloji: "shpenzim", prindi: "cat_default_transport", ngjyra: "#3b82f6", ikona: "Bus" },
+  { id: "cat_default_transport_taksi", emri: "Taksi", lloji: "shpenzim", prindi: "cat_default_transport", ngjyra: "#3b82f6", ikona: "Car" },
+  { id: "cat_default_transport_parkim", emri: "Parkim & Rrugë", lloji: "shpenzim", prindi: "cat_default_transport", ngjyra: "#3b82f6", ikona: "Car" },
+  { id: "cat_default_transport_servis", emri: "Servis & Gomat", lloji: "shpenzim", prindi: "cat_default_transport", ngjyra: "#3b82f6", ikona: "Wrench" },
+
+  // Fatura & Shërbime - one line per household bill, because they rise separately.
+  { id: "cat_default_fatura_rryme", emri: "Rrymë", lloji: "shpenzim", prindi: "cat_default_fatura", ngjyra: "#06b6d4", ikona: "Zap" },
+  { id: "cat_default_fatura_uje", emri: "Ujë", lloji: "shpenzim", prindi: "cat_default_fatura", ngjyra: "#06b6d4", ikona: "Zap" },
+  { id: "cat_default_fatura_ngrohje", emri: "Ngrohje", lloji: "shpenzim", prindi: "cat_default_fatura", ngjyra: "#06b6d4", ikona: "Zap" },
+  { id: "cat_default_fatura_mbeturina", emri: "Mbeturina & Komunale", lloji: "shpenzim", prindi: "cat_default_fatura", ngjyra: "#06b6d4", ikona: "Receipt" },
+
+  // Blerje Shtëpiake.
+  { id: "cat_default_shtepi_pastrim", emri: "Pastrim & Detergjentë", lloji: "shpenzim", prindi: "cat_default_shtepi", ngjyra: "#84cc16", ikona: "Sparkles" },
+  { id: "cat_default_shtepi_ene", emri: "Enë & Vegla", lloji: "shpenzim", prindi: "cat_default_shtepi", ngjyra: "#84cc16", ikona: "Wrench" },
+  { id: "cat_default_shtepi_mobilje", emri: "Mobilje & Dekor", lloji: "shpenzim", prindi: "cat_default_shtepi", ngjyra: "#84cc16", ikona: "Home" },
+
+  // Shëndetësi.
+  { id: "cat_default_shendet_vizita", emri: "Vizita & Analiza", lloji: "shpenzim", prindi: "cat_default_shendetesi", ngjyra: "#f43f5e", ikona: "HeartPulse" },
+  { id: "cat_default_shendet_dentist", emri: "Dentist", lloji: "shpenzim", prindi: "cat_default_shendetesi", ngjyra: "#f43f5e", ikona: "HeartPulse" },
+  { id: "cat_default_shendet_optike", emri: "Syze & Optikë", lloji: "shpenzim", prindi: "cat_default_shendetesi", ngjyra: "#f43f5e", ikona: "HeartPulse" },
+
+  // Veshje.
+  { id: "cat_default_veshje_rroba", emri: "Rroba", lloji: "shpenzim", prindi: "cat_default_veshje", ngjyra: "#a855f7", ikona: "Shirt" },
+  { id: "cat_default_veshje_kepuce", emri: "Këpucë", lloji: "shpenzim", prindi: "cat_default_veshje", ngjyra: "#a855f7", ikona: "Shirt" },
+  { id: "cat_default_veshje_aksesore", emri: "Aksesorë", lloji: "shpenzim", prindi: "cat_default_veshje", ngjyra: "#a855f7", ikona: "Gift" },
+
+  // Argëtim.
+  { id: "cat_default_argetim_kinema", emri: "Kinema & Teatër", lloji: "shpenzim", prindi: "cat_default_argetim", ngjyra: "#ec4899", ikona: "Film" },
+  { id: "cat_default_argetim_ngjarje", emri: "Koncerte & Ngjarje", lloji: "shpenzim", prindi: "cat_default_argetim", ngjyra: "#ec4899", ikona: "Music" },
+  { id: "cat_default_argetim_lojera", emri: "Lojëra & Hobi", lloji: "shpenzim", prindi: "cat_default_argetim", ngjyra: "#ec4899", ikona: "Laptop" },
+
   // ── Hyrjet ──────────────────────────────────────────────────
   { id: "cat_default_rroga", emri: "Rroga", lloji: "hyrje", ngjyra: "#10b981", ikona: "Briefcase" },
   { id: "cat_default_bonus", emri: "Bonus & Shpërblime", lloji: "hyrje", ngjyra: "#22c55e", ikona: "Coins" },

@@ -17,6 +17,7 @@
 import { addDays, addMonths, addWeeks, addYears, format, parseISO } from "date-fns";
 import { debtTypeMeta, planPriorityMeta, FREQUENCIES, MONTHS_SHORT } from "./options";
 import { toNumber } from "./format";
+import { emriIPlote, familjaSet, rrenjaE } from "./kategorite";
 
 // ── Accounts ────────────────────────────────────────────────────────────────
 
@@ -350,8 +351,16 @@ export function categoryComparison(transactions, categories, key, lloji = "shpen
     .sort((a, b) => Math.abs(b.ndryshimi) - Math.abs(a.ndryshimi));
 }
 
-/** Category totals for one direction ("shpenzim" or "hyrje"), largest first. Transactions whose
- * category was deleted are grouped under "Pa kategori" instead of being dropped. */
+/**
+ * Category totals for one direction ("shpenzim" or "hyrje"), largest first. Transactions whose
+ * category was deleted are grouped under "Pa kategori" instead of being dropped.
+ *
+ * Subcategories are counted **into their parent** and listed again under `nenkategorite` on that
+ * row. A ranking that put "Ushqim & Pije › Market", "› Furra" and "› Mish" three rows apart would
+ * answer "where does the money go?" with the one thing the parent already said better, and the
+ * shares would no longer add up to a month. So the top line stays the parent, and the detail sits
+ * inside it for whoever wants to open it - which is the whole point of having subcategories.
+ */
 export function totalsByCategory(transactions, categories, lloji = "shpenzim") {
   const byId = new Map(categories.map((c) => [c.id, c]));
   const totals = new Map();
@@ -365,20 +374,42 @@ export function totalsByCategory(transactions, categories, lloji = "shpenzim") {
     });
 
   const gjithsej = Array.from(totals.values()).reduce((sum, t) => sum + t.vlera, 0);
+  const pjesa = (vlera) => (gjithsej > 0 ? (vlera / gjithsej) * 100 : 0);
 
-  return Array.from(totals.entries())
-    .map(([id, t]) => {
-      const kategoria = byId.get(id);
-      return {
-        id,
-        emri: kategoria?.emri || "Pa kategori",
-        ngjyra: kategoria?.ngjyra || "#94a3b8",
-        ikona: kategoria?.ikona || "MoreHorizontal",
-        vlera: t.vlera,
-        numri: t.numri,
-        perqindja: gjithsej > 0 ? (t.vlera / gjithsej) * 100 : 0,
-      };
-    })
+  const rreshti = (id, t) => {
+    const kategoria = byId.get(id);
+    return {
+      id,
+      emri: kategoria?.emri || "Pa kategori",
+      ngjyra: kategoria?.ngjyra || "#94a3b8",
+      ikona: kategoria?.ikona || "MoreHorizontal",
+      vlera: t.vlera,
+      numri: t.numri,
+      perqindja: pjesa(t.vlera),
+    };
+  };
+
+  // Everything is first filed under the top-level category it belongs to, so a parent that was
+  // never booked to directly still gets a row when its subcategories were.
+  const sipasRrenjes = new Map();
+  totals.forEach((t, id) => {
+    const rrenja = id === "__pa_kategori__" ? id : rrenjaE(categories, id);
+    const grupi = sipasRrenjes.get(rrenja) || { vlera: 0, numri: 0, femijet: [] };
+    grupi.vlera += t.vlera;
+    grupi.numri += t.numri;
+    if (id !== rrenja) grupi.femijet.push(rreshti(id, t));
+    sipasRrenjes.set(rrenja, grupi);
+  });
+
+  return Array.from(sipasRrenjes.entries())
+    .map(([id, grupi]) => ({
+      ...rreshti(id, grupi),
+      // The parent's own share of its group, i.e. what was booked straight to it rather than to one
+      // of its subcategories - shown beside the children so the two halves are readable apart.
+      vleraVetjake: totals.get(id)?.vlera || 0,
+      numriVetjak: totals.get(id)?.numri || 0,
+      nenkategorite: grupi.femijet.sort((a, b) => b.vlera - a.vlera),
+    }))
     .sort((a, b) => b.vlera - a.vlera);
 }
 
@@ -577,12 +608,18 @@ export function effectiveBudgets(budgets, key) {
   return Array.from(resolved.values());
 }
 
-/** Budget vs. actual spending for one month, most-used first. */
-/** What a category cost in the month `key`. */
-function spentInMonth(transactions, kategoriaId, key) {
+/**
+ * What a category cost in the month `key`.
+ *
+ * `idet` is the whole family of the budgeted category - itself plus its subcategories - so a budget
+ * set on "Ushqim & Pije" measures the market run *and* the bakery *and* the drinks. Anything else
+ * would make a parent budget unusable the moment its owner starts using the detail underneath it.
+ */
+function spentInMonth(transactions, idet, key) {
   const { start, end } = monthKeyBounds(key);
+  const kerkuar = idet instanceof Set ? idet : new Set([idet]);
   return filterByRange(transactions, start, end)
-    .filter((tx) => tx.lloji === "shpenzim" && tx.kategoriaId === kategoriaId)
+    .filter((tx) => tx.lloji === "shpenzim" && kerkuar.has(tx.kategoriaId))
     .reduce((sum, tx) => sum + toNumber(tx.vlera), 0);
 }
 
@@ -603,14 +640,15 @@ export function previousMonthKey(key) {
  * standing budget applies to every past month, so without the cap a category left alone would
  * arrive carrying a year of unused allowance.
  */
-export function rolloverAmount(budget, budgets, transactions, key, maxMonths = 12) {
+export function rolloverAmount(budget, budgets, transactions, key, categories = [], maxMonths = 12) {
   if (!budget?.rimbart) return 0;
+  const idet = familjaSet(categories, budget.kategoriaId);
   let carry = 0;
   let muaji = previousMonthKey(key);
   for (let i = 0; i < maxMonths; i += 1) {
     const paraardhes = effectiveBudgets(budgets, muaji).find((b) => b.kategoriaId === budget.kategoriaId);
     if (!paraardhes) break;
-    const mbetur = toNumber(paraardhes.vlera) - spentInMonth(transactions, budget.kategoriaId, muaji);
+    const mbetur = toNumber(paraardhes.vlera) - spentInMonth(transactions, idet, muaji);
     if (mbetur <= 0) break;
     carry += mbetur;
     muaji = previousMonthKey(muaji);
@@ -624,16 +662,21 @@ export function budgetProgress(budgets, categories, transactions, key) {
   return effectiveBudgets(budgets, key)
     .map((budget) => {
       const kategoria = byId.get(budget.kategoriaId);
+      // The budgeted category and everything filed under it - see `spentInMonth`.
+      const idet = familjaSet(categories, budget.kategoriaId);
       const bazë = toNumber(budget.vlera);
-      const rimbartur = rolloverAmount(budget, budgets, transactions, key);
+      const rimbartur = rolloverAmount(budget, budgets, transactions, key, categories);
       const buxheti = bazë + rimbartur;
-      const shpenzuar = spentInMonth(transactions, budget.kategoriaId, key);
+      const shpenzuar = spentInMonth(transactions, idet, key);
       const perqindja = buxheti > 0 ? (shpenzuar / buxheti) * 100 : 0;
       // Last month's spending on the same category, for the trend shown beside the bar.
-      const muajiKaluar = spentInMonth(transactions, budget.kategoriaId, previousMonthKey(key));
+      const muajiKaluar = spentInMonth(transactions, idet, previousMonthKey(key));
       return {
         ...budget,
-        emri: kategoria?.emri || "Kategori e fshirë",
+        emri: (kategoria && emriIPlote(categories, kategoria.id)) || "Kategori e fshirë",
+        // How many subcategories this budget is also covering, so the page can say so rather than
+        // leave the total looking too big for the category named on the row.
+        nenkategori: idet.size - 1,
         ngjyra: kategoria?.ngjyra || "#94a3b8",
         ikona: kategoria?.ikona || "MoreHorizontal",
         buxhetiBaze: bazë,

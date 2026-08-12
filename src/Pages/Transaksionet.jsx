@@ -9,12 +9,14 @@ import PageLoading from "../Components/PageLoading";
 import Tabela from "../Components/Tabela/Tabela";
 import ShtoTransaksionin from "../Components/ShtoTransaksionin";
 import FaturatModal from "../Components/Faturat/FaturatModal";
+import OpsionetKategorive from "../Components/OpsionetKategorive";
 import { Kpi } from "../Components/Ui";
 import { useData } from "../Context/DataContext";
 import { useDialog } from "../Context/DialogContext";
 import { STORES } from "../lib/db";
 import { cashflow, sortByDateDesc } from "../lib/finance";
 import { etiketatE, kaEtiketen, ngjyraEtiketes, perdorimiEtiketave } from "../lib/etiketat";
+import { emriIPlote, familjaSet } from "../lib/kategorite";
 import { escapeHtml, formatMoney, formatPercent, plainAmount, todayISO, toNumber } from "../lib/format";
 import { TRANSACTION_TYPE_LABELS } from "../lib/options";
 import "./Styles/PremiumTheme.css";
@@ -51,8 +53,12 @@ function Transaksionet() {
   const teFiltruara = useMemo(() => {
     const min = filtri.min === "" ? null : toNumber(filtri.min);
     const max = filtri.max === "" ? null : toNumber(filtri.max);
+    // Filtering by a category means the category *and everything filed under it*: picking
+    // "Ushqim & Pije" and getting none of the market runs booked to its subcategories would read
+    // as an empty month rather than as a filter that meant something narrower than it said.
+    const kategorite = familjaSet(categories, filtri.kategoria);
     return transactions.filter((tx) => {
-      if (filtri.kategoria && tx.kategoriaId !== filtri.kategoria) return false;
+      if (filtri.kategoria && !kategorite.has(tx.kategoriaId)) return false;
       if (filtri.llogaria && tx.llogariaId !== filtri.llogaria && tx.llogariaDestinacionId !== filtri.llogaria) {
         return false;
       }
@@ -62,7 +68,7 @@ function Transaksionet() {
       if (max !== null && vlera > max) return false;
       return true;
     });
-  }, [transactions, filtri]);
+  }, [transactions, categories, filtri]);
 
   const kaFiltra = Object.values(filtri).some(Boolean);
   const flows = useMemo(() => cashflow(teFiltruara), [teFiltruara]);
@@ -84,15 +90,12 @@ function Transaksionet() {
     // Indexed once instead of a linear scan per row: with a few thousand transactions the three
     // `.find`s below ran tens of thousands of comparisons every time the list was rebuilt.
     const accountsById = new Map(accounts.map((a) => [a.id, a]));
-    const categoriesById = new Map(categories.map((c) => [c.id, c]));
     const goalsById = new Map(goals.map((g) => [g.id, g]));
 
     const accountName = (id) => accountsById.get(id)?.emri || "-";
-    const category = (id) => categoriesById.get(id);
     const goalName = (id) => goalsById.get(id)?.emri;
 
     return sortByDateDesc(teFiltruara).map((tx) => {
-      const kat = category(tx.kategoriaId);
       const shenja = tx.lloji === "hyrje" ? 1 : tx.lloji === "shpenzim" ? -1 : 0;
       const klasa = shenja > 0 ? "fcp-pos" : shenja < 0 ? "fcp-neg" : "fcp-neutral";
       const qellimi = goalName(tx.qellimiId);
@@ -103,7 +106,7 @@ function Transaksionet() {
         Lloji: `<span class="fcp-pill" style="color:${TYPE_PILL_COLORS[tx.lloji]}">${
           TRANSACTION_TYPE_LABELS[tx.lloji] || tx.lloji
         }</span>`,
-        Kategoria: tx.lloji === "transfer" ? "-" : kat?.emri || "Pa kategori",
+        Kategoria: tx.lloji === "transfer" ? "-" : emriIPlote(categories, tx.kategoriaId, "Pa kategori"),
         // With one account for everything the column would repeat the same name on every row.
         ...(njeLlogari
           ? {}
@@ -219,13 +222,7 @@ function Transaksionet() {
               onChange={(e) => setFiltri((f) => ({ ...f, kategoria: e.target.value }))}
             >
               <option value="">Të gjitha</option>
-              {[...categories]
-                .sort((a, b) => a.emri.localeCompare(b.emri))
-                .map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.emri}
-                  </option>
-                ))}
+              <OpsionetKategorive categories={categories} />
             </Form.Select>
           </Form.Group>
 

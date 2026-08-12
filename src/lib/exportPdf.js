@@ -16,6 +16,7 @@ import {
 } from "./finance";
 import { currencySymbol, formatDate, plainAmount, toNumber } from "./format";
 import { accountTypeMeta, DEFAULT_CURRENCY, MONTHS_GENITIVE } from "./options";
+import { emriIPlote } from "./kategorite";
 
 /**
  * True for the open-ended bounds `periodBounds("gjithcka")` hands out. They are sentinels wide
@@ -176,7 +177,8 @@ export function statementRows({ accounts, categories, transactions, recurring = 
         lloji: tx.lloji,
         shenja,
         vlera,
-        kategoria: tx.lloji === "transfer" ? "Transfer" : nameOf(categories, tx.kategoriaId) || "Pa kategori",
+        kategoria:
+          tx.lloji === "transfer" ? "Transfer" : emriIPlote(categories, tx.kategoriaId, "Pa kategori"),
         llogaria:
           tx.lloji === "transfer"
             ? `${nameOf(accounts, tx.llogariaId)} → ${nameOf(accounts, tx.llogariaDestinacionId)}`
@@ -185,7 +187,7 @@ export function statementRows({ accounts, categories, transactions, recurring = 
           [tx.pershkrimi, tx.monedhaOrigjinale ? `(${plainAmount(tx.vleraOrigjinale)} ${tx.monedhaOrigjinale})` : ""]
             .filter(Boolean)
             .join(" ") ||
-          (tx.lloji === "transfer" ? "Transfer" : nameOf(categories, tx.kategoriaId)) ||
+          (tx.lloji === "transfer" ? "Transfer" : emriIPlote(categories, tx.kategoriaId)) ||
           "Transaksion",
         kesti: nrKesteve ? `${Math.min(kesti, nrKesteve)}/${nrKesteve}` : "",
         keste: nrKesteve > 0,

@@ -1,7 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Modal, Button, Form, Row, Col, Alert } from "react-bootstrap";
 import { useData } from "../Context/DataContext";
 import VleraInput from "./VleraInput";
+import OpsionetKategorive from "./OpsionetKategorive";
+import { nenkategorite } from "../lib/kategorite";
 import { makeId, STORES } from "../lib/db";
 import { monthLabel, toNumber } from "../lib/format";
 import "./ModalForms.css";
@@ -33,12 +35,11 @@ function ShtoBuxhetin({ show, onHide, initial, muajiAktual, kategoriaFillestare 
     );
   }, [show, initial, kategoriaFillestare]);
 
-  const kategoriteShpenzimit = useMemo(
-    () => categories.filter((c) => c.lloji === "shpenzim").sort((a, b) => a.emri.localeCompare(b.emri)),
-    [categories]
-  );
-
   const setField = (name, value) => setBudget((prev) => ({ ...prev, [name]: value }));
+
+  // A budget set on a category also covers everything filed under it (see `spentInMonth` in
+  // finance.js), which the form says out loud rather than leaving it to be discovered from a total.
+  const nenkategoriTeZgjedhura = nenkategorite(categories, budget.kategoriaId).length;
 
   const handleSave = async (e) => {
     e.preventDefault();
@@ -96,12 +97,13 @@ function ShtoBuxhetin({ show, onHide, initial, muajiAktual, kategoriaFillestare 
                 required
               >
                 <option value="">Zgjidh kategorinë...</option>
-                {kategoriteShpenzimit.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.emri}
-                  </option>
-                ))}
+                <OpsionetKategorive categories={categories} lloji="shpenzim" />
               </Form.Select>
+              {nenkategoriTeZgjedhura > 0 && (
+                <div className="fcp-modal-hint">
+                  Ky buxhet numëron edhe {nenkategoriTeZgjedhura} nënkategori të kësaj kategorie.
+                </div>
+              )}
             </Form.Group>
 
             <Form.Group as={Col} md={12} controlId="budget-vlera">

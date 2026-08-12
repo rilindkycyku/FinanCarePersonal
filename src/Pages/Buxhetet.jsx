@@ -16,6 +16,7 @@ import { useDialog } from "../Context/DialogContext";
 import { STORES } from "../lib/db";
 import { budgetProgress, effectiveBudgets, monthKeyBounds } from "../lib/finance";
 import { formatPercent, monthKey, monthLabel, plainAmount, todayISO, toNumber } from "../lib/format";
+import { emriIPlote, familjaSet, rrenjaE } from "../lib/kategorite";
 import { getIcon } from "../lib/icons";
 import "./Styles/PremiumTheme.css";
 import "./Styles/DizajniPergjithshem.css";
@@ -61,15 +62,20 @@ function Buxhetet() {
         );
     }
 
-    return progress.map((b) => ({
-      ...b,
-      eshteMuajiAktual,
-      ditetMbetura,
-      // Never negative: a blown budget leaves nothing per day, not a debt per day.
-      perDite: Math.max(b.mbetur, 0) / ditetMbetura,
-      shpenzuarSot: sotPerKategori.get(b.kategoriaId) || 0,
-    }));
-  }, [progress, transactions, muaji]);
+    return progress.map((b) => {
+      // Same family as the month's figure (see `spentInMonth`), or "sot" would report less than the
+      // bar above it for a budget set on a category that has subcategories.
+      const idet = familjaSet(categories, b.kategoriaId);
+      return {
+        ...b,
+        eshteMuajiAktual,
+        ditetMbetura,
+        // Never negative: a blown budget leaves nothing per day, not a debt per day.
+        perDite: Math.max(b.mbetur, 0) / ditetMbetura,
+        shpenzuarSot: [...idet].reduce((sum, id) => sum + (sotPerKategori.get(id) || 0), 0),
+      };
+    });
+  }, [progress, transactions, categories, muaji]);
 
   const totals = useMemo(() => {
     const buxheti = progress.reduce((sum, b) => sum + b.buxheti, 0);
@@ -83,13 +89,28 @@ function Buxhetet() {
     };
   }, [progress]);
 
-  // Expense categories with no budget for this month - offered as one-click chips.
+  /**
+   * Expense categories with no budget for this month - offered as one-click chips.
+   *
+   * Subcategories are held back unless the month actually used them: a budget on the parent already
+   * covers every one of them, so listing all of them would turn a short prompt into a wall of chips
+   * for detail nobody has budgeted at that level.
+   */
   const paBuxhet = useMemo(() => {
     const mbuluara = new Set(effectiveBudgets(budgets, muaji).map((b) => b.kategoriaId));
+    const { start, end } = monthKeyBounds(muaji);
+    const perdorura = new Set(
+      transactions
+        .filter((tx) => tx.lloji === "shpenzim" && tx.data >= start && tx.data <= end)
+        .map((tx) => tx.kategoriaId)
+    );
     return categories
       .filter((c) => c.lloji === "shpenzim" && !mbuluara.has(c.id))
-      .sort((a, b) => a.emri.localeCompare(b.emri));
-  }, [budgets, categories, muaji]);
+      .filter((c) => !mbuluara.has(rrenjaE(categories, c.id)))
+      .filter((c) => !c.prindi || perdorura.has(c.id))
+      .map((c) => ({ ...c, emri: emriIPlote(categories, c.id, c.emri) }))
+      .sort((a, b) => a.emri.localeCompare(b.emri, "sq"));
+  }, [budgets, categories, transactions, muaji]);
 
   const openNew = (kategoriaId = "") => {
     setEditing(null);
@@ -196,6 +217,7 @@ function Buxhetet() {
                       <div className="fcp-row-sub">
                         {money(b.shpenzuar)} nga {money(b.buxheti)} · {formatPercent(b.perqindja)}
                         {b.rimbartur > 0 && ` · përfshirë ${money(b.rimbartur)} të bartura`}
+                        {b.nenkategori > 0 && ` · me ${b.nenkategori} nënkategori`}
                       </div>
                     </div>
                     <div className="fcp-tracked-actions">

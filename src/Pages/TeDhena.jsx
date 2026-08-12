@@ -19,6 +19,7 @@ import { exportStatementPdf, statementFilename } from "../lib/exportPdf";
 import PdfViewerModal from "../Components/PdfViewerModal";
 import { backupStatus, periodBounds, sortByDateDesc } from "../lib/finance";
 import { formatDate, plainAmount } from "../lib/format";
+import { emriIPlote } from "../lib/kategorite";
 import { cilesiaFaturave, formatBytes } from "../lib/images";
 import { STATEMENT_PERIODS, TRANSACTION_TYPE_LABELS } from "../lib/options";
 import "./Styles/PremiumTheme.css";
@@ -174,7 +175,7 @@ function TeDhena() {
     const rows = sortByDateDesc(transactions).map((tx) => ({
       Data: tx.data,
       Lloji: TRANSACTION_TYPE_LABELS[tx.lloji] || tx.lloji,
-      Kategoria: tx.lloji === "transfer" ? "" : nameOf(categories, tx.kategoriaId),
+      Kategoria: tx.lloji === "transfer" ? "" : emriIPlote(categories, tx.kategoriaId),
       Llogaria: nameOf(accounts, tx.llogariaId),
       Destinacioni: tx.lloji === "transfer" ? nameOf(accounts, tx.llogariaDestinacionId) : "",
       Përshkrimi: tx.pershkrimi || "",

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Modal, Button, Form, Row, Col, Alert } from "react-bootstrap";
 import { useData } from "../Context/DataContext";
 import VleraInput from "./VleraInput";
+import OpsionetKategorive from "./OpsionetKategorive";
 import { makeId, STORES } from "../lib/db";
 import { toNumber, todayISO } from "../lib/format";
 import "./ModalForms.css";
@@ -178,11 +179,7 @@ function KryejPlanin({ show, onHide, plani }) {
               </Form.Label>
               <Form.Select value={form.kategoriaId} onChange={(e) => setField("kategoriaId", e.target.value)}>
                 <option value="">Zgjidh kategorinë...</option>
-                {kategorite.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.emri}
-                  </option>
-                ))}
+                <OpsionetKategorive categories={categories} lloji="shpenzim" />
               </Form.Select>
               {kategorite.length === 0 && (
                 <div className="fcp-modal-hint">Nuk ka kategori shpenzimi - shtoni një te faqja Kategoritë.</div>

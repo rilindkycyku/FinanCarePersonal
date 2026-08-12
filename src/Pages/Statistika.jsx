@@ -129,27 +129,55 @@ function Statistika() {
 
   const nameOf = (list, id, fallback = "-") => list.find((x) => x.id === id)?.emri || fallback;
 
+  /**
+   * A category ranking. A row that has subcategories carries them underneath it - the parent's
+   * figure is the group total, so the breakdown is what says whether "Ushqim & Pije" was the weekly
+   * market run or thirty small ones. The parent's own share is listed there too when it has one, so
+   * the sub-rows always add up to the line above them.
+   */
   const rankedRows = (list, max, klasa) =>
     list.length === 0 ? (
       <Empty>Nuk ka të dhëna për këtë periudhë.</Empty>
     ) : (
       list.map((k) => {
         const Icon = getIcon(k.ikona);
+        const ndarja =
+          k.nenkategorite?.length > 0
+            ? [
+                ...k.nenkategorite,
+                ...(k.vleraVetjake > 0
+                  ? [{ id: `${k.id}__vetjake`, emri: "Pa nënkategori", vlera: k.vleraVetjake, numri: k.numriVetjak }]
+                  : []),
+              ]
+            : [];
         return (
-          <div className="fcp-row" key={k.id}>
-            <div className="fcp-row-icon" style={{ color: k.ngjyra }}>
-              <Icon size={16} />
-            </div>
-            <div className="fcp-row-main">
-              <div className="fcp-row-title">{k.emri}</div>
-              <div className="fcp-row-sub">
-                {k.numri} × · {formatPercent(k.perqindja, 1)}
+          <div className="fcp-rreshtat-grup" key={k.id}>
+            <div className="fcp-row">
+              <div className="fcp-row-icon" style={{ color: k.ngjyra }}>
+                <Icon size={16} />
               </div>
+              <div className="fcp-row-main">
+                <div className="fcp-row-title">{k.emri}</div>
+                <div className="fcp-row-sub">
+                  {k.numri} × · {formatPercent(k.perqindja, 1)}
+                </div>
+              </div>
+              <div className="fcp-row-bar">
+                <ProgressBar value={(k.vlera / max) * 100} color={k.ngjyra} small />
+              </div>
+              <div className={`fcp-row-value ${klasa}`}>{money(k.vlera)}</div>
             </div>
-            <div className="fcp-row-bar">
-              <ProgressBar value={(k.vlera / max) * 100} color={k.ngjyra} small />
-            </div>
-            <div className={`fcp-row-value ${klasa}`}>{money(k.vlera)}</div>
+            {ndarja.length > 0 && (
+              <div className="fcp-nen-lista">
+                {ndarja.map((n) => (
+                  <div className="fcp-nen-rresht" key={n.id}>
+                    <span className="fcp-nen-emri">{n.emri}</span>
+                    <span className="fcp-row-sub">{n.numri} ×</span>
+                    <span className={`fcp-nen-vlera ${klasa}`}>{money(n.vlera)}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         );
       })

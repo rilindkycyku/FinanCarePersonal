@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Modal, Button, Form, Row, Col, Alert } from "react-bootstrap";
 import { useData } from "../Context/DataContext";
 import VleraInput from "./VleraInput";
+import OpsionetKategorive from "./OpsionetKategorive";
 import { makeId, STORES } from "../lib/db";
 import { monthLabel, toNumber } from "../lib/format";
 import { PLAN_PRIORITIES } from "../lib/options";
@@ -26,11 +27,6 @@ function ShtoPlanin({ show, onHide, initial, muajiAktual }) {
   const { categories, save, simboli } = useData();
   const [plan, setPlan] = useState(BLANK);
   const [error, setError] = useState("");
-
-  const kategorite = useMemo(
-    () => categories.filter((c) => c.lloji === "shpenzim").sort((a, b) => a.emri.localeCompare(b.emri)),
-    [categories]
-  );
 
   useEffect(() => {
     if (!show) return;
@@ -141,11 +137,7 @@ function ShtoPlanin({ show, onHide, initial, muajiAktual }) {
               <Form.Label>Kategoria (opsionale)</Form.Label>
               <Form.Select value={plan.kategoriaId} onChange={(e) => setField("kategoriaId", e.target.value)}>
                 <option value="">Pa kategori</option>
-                {kategorite.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.emri}
-                  </option>
-                ))}
+                <OpsionetKategorive categories={categories} lloji="shpenzim" />
               </Form.Select>
               <div className="fcp-modal-hint">Përdoret si kategori e parazgjedhur kur ta shënoni si të blerë.</div>
             </Form.Group>

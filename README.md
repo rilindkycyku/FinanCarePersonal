@@ -62,10 +62,21 @@ sa shpenzohet, sa mbetet dhe sa po kursesh.
   tuaja, një hyrje e përsëritur me ato që ju kanë borxh. Borxhi zbritet me vlerën që u pagua
   vërtet, jo me atë të planifikuar, pra bonuset e zbritura nga kësti reflektohen saktë; dhe kjo
   vlen njësoj kur konfirmoni një pagesë të vetme apo të gjitha përnjëherë.
-- **Kategoritë** - kategori të veçanta për hyrje dhe shpenzime, me ngjyrë e ikonë, dhe me numërimin
-  e përdorimit real të secilës.
+- **Kategoritë & nënkategoritë** - kategori të veçanta për hyrje dhe shpenzime, me ngjyrë e ikonë,
+  dhe me numërimin e përdorimit real të secilës. Çdo kategori mund të ketë **nënkategori** - p.sh.
+  *Ushqim & Pije › Market*, *› Furra*, *› Pije & Ujë*, ose *Kafe & Restorant › Kafe*, *› Drekë në
+  Punë*, *› Fast Food* - që i përgjigjen pyetjes që lista e sheshtë nuk e mbulonte: ishte market,
+  drekë në punë apo restorant? Lista mbetet **një nivel e thellë** me qëllim; një nivel i tretë nuk
+  shton përgjigje të re, vetëm punë arkivimi. Në formularë nënkategoritë shfaqen të grupuara nën
+  kategorinë e vet (te telefoni, lista e vetë shfletuesit i tregon si tituj), dhe kategoria kryesore
+  mbetet e zgjedhshme si më parë - *«diku te ushqimi, nuk po e ndaj»* është përgjigje e vërtetë.
+  Statistikat i mbledhin nënkategoritë te kategoria kryesore dhe e hapin ndarjen nën të, prandaj
+  pjesët vazhdojnë të mblidhen sa muaji. Kur fshihet një kategori kryesore, nënkategoritë e saj nuk
+  fshihen bashkë me të - ngrihen në kategori kryesore, sepse kanë transaksionet e veta.
 - **Buxhetet** - kufi mujor shpenzimi për kategori, me ecuri, sinjalizim kur teprohet, lëvizje nga
-  muaji në muaj dhe mundësi që një buxhet të vlejë vetëm për një muaj të caktuar.
+  muaji në muaj dhe mundësi që një buxhet të vlejë vetëm për një muaj të caktuar. Një buxhet mbi një
+  kategori kryesore numëron edhe nënkategoritë e saj, pra *200 € për Ushqim & Pije* mat marketin,
+  furrën dhe pijet bashkë; një buxhet mbi një nënkategori mat vetëm atë.
 - **Qëllimet e Kursimit** - synimi, afati, ecuria dhe kontributet. Një kontribut është transfer i
   vërtetë në llogarinë e kursimit, i etiketuar me qëllimin, pra paraja dhe ecuria janë e njëjta
   e dhënë.
@@ -95,7 +106,8 @@ sa shpenzohet, sa mbetet dhe sa po kursesh.
   origjinale mbahet për krahasim me ekstraktin e kartelës). Kursi i fundit për çdo monedhë mbahet
   mend, sepse aplikacioni nuk ka backend për t'i marrë kurset vetë.
 - **Statistikat** - hyrje kundrejt shpenzimeve për 6 muajt e fundit, bilanc mujor, ndarja sipas
-  kategorive e llogarive, mesatarja ditore dhe 5 shpenzimet më të mëdha, për periudhë të zgjedhur.
+  kategorive e llogarive (me nënkategoritë e hapura nën secilën kategori), mesatarja ditore dhe 5
+  shpenzimet më të mëdha, për periudhë të zgjedhur.
 - **Bilanci ndër muaj dhe parashikimi** - një vijë e vetme: muajt e kaluar me vijë të plotë, muajt
   që vijnë me vijë të ndërprerë. Parashikimi nuk supozon asgjë nga mesatarja e së kaluarës - ecën
   ditë për ditë mbi atë që dihet tashmë (transaksionet me datë të ardhshme, këstet e pagesat e
@@ -326,13 +338,13 @@ src/
   Context/    DataContext (ngarkon dhe ruan gjithçka), SyncContext (sinkronizimi automatik),
               ThemeContext, DialogContext
   lib/        db.js (IndexedDB), finance.js (çdo kalkulim), csv.js (leximi i ekstraktit),
+              kategorite.js (nënkategoritë: prindi, familja, pema e pickerave),
               rregullat.js (kujtesa e kategorive), images.js (përpunimi i fotove të faturave),
               zip.js (arkivi i kopjes së plotë), calc.js (llogaritësi i fushave të vlerës),
               supabase.js (klienti i vogël i projektit tuaj), sinkronizimi.js (rregullat e bashkimit),
               format.js, options.js, exportExcel.js
   Components/ NavBar, Footer, Tabela (kërkim/renditje/eksport), modalet e shtimit, Ui.jsx,
-              Faturat/ (fusha e fotove, galeria e një transaksioni, shikuesi)
-  Components/ NavBar, Footer, Tabela (kërkim/renditje/eksport), modalet e shtimit, Ui.jsx,
+              OpsionetKategorive (opsionet e grupuara të çdo pickeri kategorish),
               Faturat/ (fusha e fotove, galeria e një transaksioni, shikuesi)
   Pages/      Paneli, Transaksionet, Llogaritë, Borxhet & Kartelat, Kategoritë, Buxhetet,
               Qëllimet, Shpenzimet e Planifikuara, Pagesat e Përsëritura, Statistikat,

@@ -379,12 +379,18 @@ export function clearStore(store) {
  *
  * Deleting a default records its id in `kategoriTeHequra` on the profile, so a category the user
  * threw away stays gone - only genuinely new ones appear.
+ *
+ * A default *subcategory* is held to one more condition: its parent has to be there. Someone who
+ * deleted "Ushqim & Pije" a year ago said they do not use it, and shipping five of its
+ * subcategories into their list as five new top-level categories is not what they asked for.
  */
 export async function ensureDefaultCategories() {
   const [categories, profile] = await Promise.all([getAll(STORES.categories), getProfile()]);
   const hequra = new Set(profile?.kategoriTeHequra || []);
   const ekzistuese = new Set(categories.map((c) => c.id));
-  const munguara = DEFAULT_CATEGORIES.filter((c) => !ekzistuese.has(c.id) && !hequra.has(c.id));
+  const munguara = DEFAULT_CATEGORIES.filter(
+    (c) => !ekzistuese.has(c.id) && !hequra.has(c.id) && (!c.prindi || ekzistuese.has(c.prindi))
+  );
   if (munguara.length === 0) return false;
   await Promise.all(munguara.map((c) => put(STORES.categories, c)));
   return true;
