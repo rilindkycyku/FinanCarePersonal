@@ -244,9 +244,13 @@ përmes bazës suaj.
    skeda *Legacy*; aplikacioni i pranon të dyja, por i riu është ai që Supabase rekomandon dhe ai
    që mund të zëvendësohet i vetëm, pa i prishur çelësat e tjerë. Çelësat *secret* /
    *service_role* mos i kopjoni - aplikacioni i refuzon vetë nëse ngjiten gabimisht.
-3. Te faqja **Sinkronizimi** vendosni adresën e çelësin, pastaj shtypni **Konfiguro projektin**.
-   Aty ka dy rrugë për të njëjtin përfundim - një tabelë e vetme, rregulli RLS, ora e serverit dhe
-   një indeks:
+3. Te faqja **Sinkronizimi**, te *Hapi 2*, vendosni adresën, çelësin, email-in e fjalëkalimin -
+   dhe, po deshët, edhe **token-in e llogarisë** (`sbp_…`). Me të, tabela krijohet **gjatë vetë
+   lidhjes**: një formular, një buton, dhe pajisja del e lidhur me projektin gati. Pa të, lidhja
+   bëhet njësoj dhe tabelën e krijoni kur t&apos;ju duhet.
+
+   Po deshët ta bëni veçmas, butoni **Konfiguro projektin** jep të dyja rrugët për të njëjtin
+   përfundim - një tabelë e vetme, rregulli RLS, ora e serverit dhe një indeks:
    - **Automatikisht**: ngjitni një *personal access token* të llogarisë suaj Supabase
      ([Account → Access Tokens](https://supabase.com/dashboard/account/tokens), fillon me `sbp_`)
      dhe aplikacioni e ekzekuton vetë skriptin. Token-i përdoret **vetëm për atë thirrje dhe nuk
@@ -306,6 +310,25 @@ where store = 'transactions' and not deleted
 order by dita desc;
 ```
 
+### Kur skema ndryshon
+
+Bazën e administroni ju, pra nuk ka deploy që ta prekë dhe nuk ka mënyrë t&apos;ju gjejë dikush po
+t&apos;i duhet një ndryshim atje. Prandaj **aplikacioni është ai që di**: mban vetë listën e
+migrimeve (`src/lib/skema.js`), lexon te cili prej tyre ka arritur projekti juaj dhe i ekzekuton
+ato që mungojnë.
+
+- Versioni i projektit ruhet si një rresht i zakonshëm i tabelës që tashmë keni
+  (`store = 'meta'`) - jo si tabelë e vetën, e cila do të ishte një migrim për të krijuar gjënë që
+  mban shënim migrimet.
+- Faqja **Sinkronizimi** e krahason atë me versionin që sjell ky release. Kur projekti ka mbetur
+  pas, del një njoftim që thotë **cilat hapa** i mungojnë, me fjalë e jo me numra, dhe butoni
+  *Përditëso projektin* ekzekuton **vetëm ato** - jo gjithë skriptin nga e para.
+- Një projekt i konfiguruar para se të fillonte ky numërim lexohet si versioni 1, pra askush nuk
+  njoftohet kot.
+- Migrimet janë **vetëm-shtesë** dhe të përsëritshme pa dëm: një pajisje ende me versionin e vjetër
+  duhet të vazhdojë të sinkronizohet kundër një projekti që një pajisje e re sapo e përditësoi.
+  Prandaj një kolonë nuk hiqet në të njëjtin release që ndalon së shkruari në të.
+
 **Nënkategoritë nuk kërkojnë asnjë ndryshim te projekti juaj.** Prindi i një kategorie ruhet si një
 fushë e zakonshme brenda `data` (`{"id":"cat_…","emri":"Market","prindi":"cat_default_ushqim"}`),
 pra skripti SQL mbetet ai që ishte, nuk ka `ALTER TABLE` për të bërë, dhe një pajisje ende me
@@ -341,9 +364,11 @@ përditësohet. Kjo ishte arsyeja pse kolona është `jsonb` që në fillim.
   shenjë e verdhë kur ka ndryshime që presin, dhe një e kuqe kur përpjekja e fundit dështoi ose kur
   sesioni ka mbaruar. Kjo e fundit është arsyeja që ekziston: një pajisje që ka pushuar së
   sinkronizuari duket krejt normale, dhe askush nuk hap një faqe për diçka që e beson në rregull.
-  <br />Kur sesioni ka mbaruar - fjalëkalimi u ndryshua, projekti u ndal - kjo nuk rregullohet duke
-  pritur: dikush duhet ta shkruajë fjalëkalimin sërish. Prandaj vetëm ai rast e ndalon një herë
-  përdoruesin te Paneli, me një dritare që e thotë hapur dhe e çon te faqja; shtyrja mbahet mend sa
+  <br />Dy gjëra nuk rregullohen duke pritur: **sesioni i mbaruar** (fjalëkalimi u ndryshua,
+  projekti u ndal) dhe **projekti i pakonfiguruar** (tabela nuk është krijuar ende, pra çdo
+  sinkronizim dështon sapo niset). Prandaj vetëm këto dy raste e ndalojnë një herë përdoruesin te
+  **Paneli**, me një dritare që e thotë hapur dhe e çon me një buton te vendi ku zgjidhet - te
+  fjalëkalimi, ose direkt te dritarja e konfigurimit, e cila hapet vetë me të mbërritur; shtyrja mbahet mend sa
   kohë aplikacioni rri i hapur, dhe kthehet herën tjetër sepse mbetet e vërtetë.
 - **Fotot e faturave nuk sinkronizohen**: janë binare dhe pjesa më e madhe e hapësirës, pra do të
   kërkonin Supabase Storage. Për t&apos;i çuar diku tjetër mbetet arkivi ZIP.
@@ -360,6 +385,7 @@ src/
               ThemeContext, DialogContext
   lib/        db.js (IndexedDB), finance.js (çdo kalkulim), csv.js (leximi i ekstraktit),
               kategorite.js (nënkategoritë: prindi, familja, pema e pickerave),
+              skema.js (migrimet e projektit tuaj Supabase, të numëruara),
               rregullat.js (kujtesa e kategorive), images.js (përpunimi i fotove të faturave),
               zip.js (arkivi i kopjes së plotë), calc.js (llogaritësi i fushave të vlerës),
               supabase.js (klienti i vogël i projektit tuaj), sinkronizimi.js (rregullat e bashkimit),

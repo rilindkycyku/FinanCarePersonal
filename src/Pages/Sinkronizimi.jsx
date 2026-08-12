@@ -1,10 +1,13 @@
 import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Alert, Button, Card, Col, Form, InputGroup, Modal, Row, Spinner } from "react-bootstrap";
 import {
   AlertTriangle, Check, Cloud, CloudOff, Code2, Copy, Database, Download, Eye, EyeOff, ExternalLink,
   KeyRound, LogIn, RefreshCw, Save, ShieldCheck, Trash2, UserPlus, Wand2,
 } from "lucide-react";
 import NavBar from "../Components/NavBar";
+import ModaliKonfigurimit from "../Components/Sinkronizimi/ModaliKonfigurimit";
+import FushaSekrete from "../Components/Sinkronizimi/FushaSekrete";
 import Footer from "../Components/Footer";
 import PageTitle from "../Components/PageTitle";
 import PageLoading from "../Components/PageLoading";
@@ -12,8 +15,8 @@ import { useData } from "../Context/DataContext";
 import { useDialog } from "../Context/DialogContext";
 import { useSync } from "../Context/SyncContext";
 import {
-  LINKU_TOKENIT, SQL_INSTALIMI, dil, hyr, instaloSkemen, kontrolloCelesin, linkuSqlEditor,
-  ndryshoCelesin, normalizoUrl, pastroKonfigurimin, referencaProjektit, regjistrohu, ruajKonfigurimin,
+  LINKU_TOKENIT, dil, gjendjaSkemes, hyr, instaloSkemen, kontrolloCelesin, ndryshoCelesin,
+  normalizoUrl, pastroKonfigurimin, regjistrohu, ruajKonfigurimin,
 } from "../lib/supabase";
 import { fshiCloud, numeroCloud, rivendosKufijte } from "../lib/sinkronizimi";
 import "./Styles/PremiumTheme.css";
@@ -37,188 +40,6 @@ function emriProjektit(url) {
   }
 }
 
-/**
- * The setup script, in a dialog rather than in the page.
- *
- * Inline it was a twelve-line box that a phone renders as a narrow window onto lines it cannot
- * show - the reader scrolls sideways through SQL they are not meant to read anyway, since the
- * whole point is the copy button. In a dialog it gets the width of the screen, wraps instead of
- * clipping, and the button that matters is the one under it.
- */
-function ModaliSql({ show, onHide, url }) {
-  const [kopjuar, setKopjuar] = useState(false);
-  const [deshtoi, setDeshtoi] = useState(false);
-  // The token lives in this state and nowhere else: it is never saved, and the field is emptied the
-  // moment the dialog closes or the install succeeds.
-  const [token, setToken] = useState("");
-  const [duke, setDuke] = useState(false);
-  const [rezultati, setRezultati] = useState(null);
-  const ref = referencaProjektit(url);
-
-  useEffect(() => {
-    if (show) return;
-    setToken("");
-    setRezultati(null);
-  }, [show]);
-
-  const instalo = async () => {
-    if (duke) return;
-    setDuke(true);
-    setRezultati(null);
-    try {
-      await instaloSkemen(token, url);
-      setToken("");
-      setRezultati({ lloji: "success", teksti: "Projekti u konfigurua - tabela, rregulli RLS, ora e serverit dhe indeksi janë në vend." });
-    } catch (err) {
-      setRezultati({ lloji: "danger", teksti: err?.message || "Konfigurimi dështoi." });
-    } finally {
-      setDuke(false);
-    }
-  };
-
-  const kopjo = async () => {
-    try {
-      await navigator.clipboard.writeText(SQL_INSTALIMI);
-      setDeshtoi(false);
-      setKopjuar(true);
-      setTimeout(() => setKopjuar(false), 2500);
-    } catch {
-      // Clipboard refused (an insecure context, or permission denied). The text is right there to
-      // be selected by hand, which is worth saying rather than leaving a button that did nothing.
-      setDeshtoi(true);
-    }
-  };
-
-  // `scrollable` keeps the script scrolling inside the dialog while the header and the copy button
-  // stay put - otherwise a full-screen phone dialog shows a short box floating in an empty screen,
-  // and a long script pushes the button off the bottom.
-  return (
-    <Modal show={show} onHide={onHide} centered scrollable size="lg" fullscreen="sm-down" className="sp-modal">
-      <Modal.Header closeButton>
-        <Modal.Title className="h6 fw-bold mb-0">Konfigurimi i projektit</Modal.Title>
-      </Modal.Header>
-      <Modal.Body>
-        {/* Two ways to the same end. The automatic one is first because it is the one people want;
-            the script stays under it because it is the one that always works. */}
-        <h6 className="fw-bold mb-1">
-          <Wand2 size={15} className="me-1 text-primary" /> Konfiguroje vetë aplikacioni
-        </h6>
-        <p className="text-muted small mb-2">
-          Çelësi i projektit që ruhet në këtë pajisje lexon e shkruan rreshta - krijimin e tabelës
-          nuk e lejon Supabase ta bëjë me të, dhe kjo është mbrojtje, jo mangësi. Për këtë hap të
-          vetëm duhet <strong>token-i personal</strong> i llogarisë suaj Supabase:{" "}
-          <a href={LINKU_TOKENIT} target="_blank" rel="noreferrer">
-            Account → Access Tokens <ExternalLink size={12} />
-          </a>
-          . Përdoret vetëm për këtë thirrje dhe <strong>nuk ruhet askund</strong> - as në këtë
-          pajisje. Ai vlen për gjithë llogarinë tuaj Supabase, prandaj revokojeni pas tij nëse doni.
-        </p>
-        <InputGroup className="mb-2">
-          <Form.Control
-            type="password"
-            placeholder="sbp_..."
-            spellCheck={false}
-            autoComplete="off"
-            value={token}
-            onChange={(e) => setToken(e.target.value)}
-            disabled={duke}
-          />
-          <Button className="btn-primary" onClick={instalo} disabled={duke || !token.trim()}>
-            {duke ? <Spinner animation="border" size="sm" className="me-1" /> : <Wand2 size={15} className="me-1" />}
-            {duke ? "Duke konfiguruar..." : "Konfiguro"}
-          </Button>
-        </InputGroup>
-        {!ref && (
-          <div className="fcp-row-sub mb-2">
-            Adresa e projektit nuk duket si një adresë Supabase, prandaj kjo rrugë nuk e gjen dot
-            projektin - përdorni skriptin më poshtë.
-          </div>
-        )}
-        {rezultati && (
-          <Alert variant={rezultati.lloji} className="py-2 small">
-            {rezultati.teksti}
-          </Alert>
-        )}
-
-        <hr />
-
-        <h6 className="fw-bold mb-1">
-          <Code2 size={15} className="me-1 text-primary" /> Ose ekzekutojeni vetë skriptin
-        </h6>
-        <p className="text-muted small">
-          Te Supabase: <strong>SQL Editor → New query</strong>, ngjiteni dhe shtypni{" "}
-          <strong>Run</strong>. Ekzekutohet një herë, por përsëritja nuk prish gjë - çdo hap i tij e
-          kontrollon vetë nëse ekziston.
-        </p>
-        <pre
-          style={{
-            whiteSpace: "pre-wrap",
-            wordBreak: "break-word",
-            fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
-            fontSize: "0.78rem",
-            lineHeight: 1.6,
-            background: "var(--sp-surface-2)",
-            border: "1px solid var(--sp-border)",
-            borderRadius: 14,
-            padding: "1rem",
-            margin: 0,
-          }}
-        >
-          {SQL_INSTALIMI}
-        </pre>
-        {deshtoi && (
-          <div className="fcp-row-sub mt-2">
-            Shfletuesi nuk e lejoi kopjimin automatik - zgjidhni tekstin më sipër dhe kopjojeni vetë.
-          </div>
-        )}
-      </Modal.Body>
-      <Modal.Footer>
-        <Button variant="secondary" onClick={onHide}>
-          Mbyll
-        </Button>
-        <Button variant="outline-light" href={linkuSqlEditor(url)} target="_blank" rel="noreferrer">
-          <ExternalLink size={16} className="me-1" /> Hap SQL Editor
-        </Button>
-        <Button className="btn-primary" onClick={kopjo}>
-          {kopjuar ? <Check size={16} className="me-1" /> : <Copy size={16} className="me-1" />}
-          {kopjuar ? "U kopjua" : "Kopjo skriptin"}
-        </Button>
-      </Modal.Footer>
-    </Modal>
-  );
-}
-
-/**
- * A field whose value is hidden until asked for. Both things typed here are long strings copied
- * from somewhere else and impossible to proofread as dots - and a mistyped key fails with
- * "the project did not accept it", which does not tell anyone which character went wrong.
- */
-function FushaSekrete({ id, md, label, ndihma, ...props }) {
-  const [dukshem, setDukshem] = useState(false);
-  return (
-    <Form.Group as={Col} md={md} controlId={id}>
-      <Form.Label>{label}</Form.Label>
-      <InputGroup>
-        <Form.Control type={dukshem ? "text" : "password"} spellCheck={false} {...props} />
-        <Button
-          variant="outline-light"
-          onClick={() => setDukshem((v) => !v)}
-          // Keeps the button from taking focus on a tap, which would otherwise leave it sitting in
-          // its filled "pressed" state next to the field the user is typing in. Tabbing to it still
-          // works, and still shows the focus ring, so the toggle is not mouse-only.
-          onMouseDown={(e) => e.preventDefault()}
-          aria-label={dukshem ? "Fshih vlerën" : "Shfaq vlerën"}
-          aria-pressed={dukshem}
-          title={dukshem ? "Fshih" : "Shfaq"}
-        >
-          {dukshem ? <EyeOff size={16} /> : <Eye size={16} />}
-        </Button>
-      </InputGroup>
-      {ndihma && <div className="fcp-row-sub mt-1">{ndihma}</div>}
-    </Form.Group>
-  );
-}
-
 function Sinkronizimi() {
   const { transactions, loading } = useData();
   const dialog = useDialog();
@@ -234,11 +55,36 @@ function Sinkronizimi() {
     password: "",
   }));
   const [pune, setPune] = useState(null);
+  // Deliberately outside `form`: that object is prefilled from the saved configuration and written
+  // back to it, and this is the one string in the app that must never be saved anywhere.
+  const [tokeni, setTokeni] = useState("");
+  const [searchParams, setSearchParams] = useSearchParams();
   const [nCloud, setNCloud] = useState(null);
-  const [sqlHapur, setSqlHapur] = useState(false);
+  // Which migration the connected project has reached, and what it still owes - read from the
+  // project itself rather than from this device, since the project is the thing being migrated.
+  const [skema, setSkema] = useState(null);
+  // Read from the address on the very first render rather than in an effect: the failure
+  // announcement below decides whether to open a dialog during that same commit, and a `setState`
+  // from an effect would still be `false` when it looks.
+  const [sqlHapur, setSqlHapur] = useState(
+    () => new URLSearchParams(window.location.search).get("konfiguro") === "1"
+  );
   // The key-rotation field, closed until asked for: it is a once-a-year action sitting next to
   // buttons pressed every day.
   const [celesiIRi, setCelesiIRi] = useState(null);
+
+  /**
+   * `?konfiguro=1` opens the setup dialog straight away - the home screen sends people here with
+   * it when the project has no table yet, and a button that promised "set the project up" should
+   * not land on a page where the thing has to be found again. The param is dropped afterwards so a
+   * refresh does not reopen it.
+   */
+  useEffect(() => {
+    if (searchParams.get("konfiguro") !== "1") return;
+    const next = new URLSearchParams(searchParams);
+    next.delete("konfiguro");
+    setSearchParams(next, { replace: true });
+  }, [searchParams, setSearchParams]);
 
   const setField = (name, value) => setForm((prev) => ({ ...prev, [name]: value }));
 
@@ -277,10 +123,14 @@ function Sinkronizimi() {
     const celesi = `${gabim.kodi || ""}:${gabim.mesazhi}`;
     if (gabimiTreguar.current === celesi) return;
     gabimiTreguar.current = celesi;
+    // Nothing to announce while the dialog that fixes it is already on screen - which is exactly
+    // the case when the home screen sent the user straight here. A second dialog over the first
+    // would cover the field they came to fill in.
+    if (sqlHapur) return;
     njofto("danger", gabim.mesazhi, gabim.kodi === "tabela").then(pastroGabimin);
     // `njofto` is rebuilt on every render; depending on it would reopen the dialog for ever.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [gabim]);
+  }, [gabim, sqlHapur]);
 
   // How much is up there, asked once per visit - the one number that answers "did it really go?".
   useEffect(() => {
@@ -292,6 +142,27 @@ function Sinkronizimi() {
     numeroCloud()
       .then((n) => !anuluar && setNCloud(n))
       .catch(() => !anuluar && setNCloud(null));
+    return () => {
+      anuluar = true;
+    };
+  }, [lidhur, konfigurimi.fundit]);
+
+  /**
+   * Whether the project is still on an older migration than this release ships.
+   *
+   * Asked of the project, once per visit and again after every sync, because a release that
+   * changes the schema has no other way of reaching somebody's own database - nobody deploys to
+   * it, and the app is the only thing that knows what it should look like.
+   */
+  useEffect(() => {
+    if (!lidhur) {
+      setSkema(null);
+      return;
+    }
+    let anuluar = false;
+    gjendjaSkemes()
+      .then((gj) => !anuluar && setSkema(gj))
+      .catch(() => !anuluar && setSkema(null));
     return () => {
       anuluar = true;
     };
@@ -316,6 +187,20 @@ function Sinkronizimi() {
     setPune(mode);
     pastroGabimin();
     try {
+      // The table has to exist before the first sync, and this is the moment it can be made without
+      // sending anyone to a SQL editor. Skipped when no token was given, and never fatal: the
+      // account still gets created, and the missing table announces itself the usual way.
+      if (tokeni.trim()) {
+        try {
+          await instaloSkemen(tokeni, url, 0);
+          setTokeni("");
+        } catch (err) {
+          await njofto(
+            "warning",
+            `Tabela nuk u krijua dot: ${err?.message || "gabim i panjohur"} Lidhja vazhdon; tabelën mund ta krijoni te «Konfiguro projektin».`
+          );
+        }
+      }
       if (mode === "regjistrohu") {
         const { konfirmim } = await regjistrohu({ email: form.email, password: form.password, url, anonKey: celesi.celesi });
         if (konfirmim) {
@@ -456,7 +341,35 @@ function Sinkronizimi() {
           as ndonjë shërbim i FinanCarePersonal, nuk i sheh dhe nuk i ruan ato.
         </p>
 
-        <ModaliSql show={sqlHapur} onHide={() => setSqlHapur(false)} url={konfigurimi.url || normalizoUrl(form.url)} />
+        <ModaliKonfigurimit show={sqlHapur} onHide={() => setSqlHapur(false)} url={konfigurimi.url || normalizoUrl(form.url)}
+          nga={skema?.versioni ?? 0}
+          onGati={() => {
+            pastroGabimin();
+            gjendjaSkemes().then(setSkema).catch(() => undefined);
+            sinkronizoTani();
+          }} />
+
+        {/* A release can change what the project's table has to look like, and there is no deploy
+            that could do it - so the app compares what it ships with what the project reports and
+            says so here. `mungon` is a different message (the project was never set up at all),
+            already handled by the failure this page shows above. */}
+        {lidhur && skema?.perditeso && !skema.mungon && (
+          <Alert variant="warning">
+            Projekti juaj është në versionin {skema.versioni} të skemës, kurse ky aplikacion pret
+            versionin {skema.iFundit}. Deri sa të përditësohet, gjërat e reja mund të mos ruhen si
+            duhet.
+            <ul className="mb-0 mt-2 ps-3 small">
+              {skema.pezull.map((m) => (
+                <li key={m.versioni}>{m.emri}</li>
+              ))}
+            </ul>
+            <div className="mt-3">
+              <Button variant="outline-light" size="sm" onClick={() => setSqlHapur(true)}>
+                <Wand2 size={15} className="me-1" /> Përditëso projektin
+              </Button>
+            </div>
+          </Alert>
+        )}
 
         {/* Detected from what the last push came back with (sinkronizimi.js): a project set up
             before the trigger existed keeps whatever time the device sent, and then the order of
@@ -513,10 +426,10 @@ function Sinkronizimi() {
                   duhet. Çelësat <em>secret</em> / <em>service_role</em> mos i kopjoni kurrë këtu.
                 </li>
                 <li>
-                  Vendosini te <strong>Hapi 2</strong> më poshtë, pastaj shtypni{" "}
-                  <strong>Konfiguro projektin</strong>: aplikacioni e krijon vetë tabelën e vetme
-                  dhe rregullin që lejon vetëm llogarinë tuaj t&apos;i lexojë rreshtat - ose, po të
-                  parapëlqeni, ju jep skriptin për ta ekzekutuar te <strong>SQL Editor</strong>.
+                  Vendosini te <strong>Hapi 2</strong> më poshtë. Tabelën nuk keni pse ta krijoni
+                  vetë: shtoni aty edhe token-in e llogarisë dhe aplikacioni e krijon gjatë lidhjes.
+                  Butoni <strong>Konfiguro projektin</strong> e bën të njëjtën gjë veçmas, dhe jep
+                  edhe skriptin për ta ekzekutuar te <strong>SQL Editor</strong> po të parapëlqeni.
                 </li>
               </ol>
               <div>
@@ -584,6 +497,25 @@ function Sinkronizimi() {
                     value={form.password}
                     onChange={(e) => setField("password", e.target.value)}
                     autoComplete="current-password"
+                  />
+
+                  <FushaSekrete
+                    id="sync-token"
+                    md={12}
+                    label="Token-i i llogarisë Supabase (opsional - krijon vetë tabelën)"
+                    placeholder="sbp_…"
+                    value={tokeni}
+                    onChange={(e) => setTokeni(e.target.value)}
+                    autoComplete="off"
+                    ndihma={
+                      <>
+                        Lëreni bosh nëse tabelën e keni krijuar tashmë. Ndryshe merreni te{" "}
+                        <a href={LINKU_TOKENIT} target="_blank" rel="noreferrer">
+                          Account → Access Tokens <ExternalLink size={12} />
+                        </a>{" "}
+                        - përdoret vetëm tani, për të krijuar tabelën, dhe nuk ruhet askund.
+                      </>
+                    }
                   />
 
                   <Col md={12} className="d-flex flex-wrap gap-2">

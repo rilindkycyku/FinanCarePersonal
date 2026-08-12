@@ -13,7 +13,7 @@ import Footer from "../Components/Footer";
 import ShtoTransaksionin from "../Components/ShtoTransaksionin";
 import ButonPasqyra from "../Components/ButonPasqyra";
 import ShpenzimiDitor from "../Components/ShpenzimiDitor";
-import SesioniSkadoi from "../Components/SesioniSkadoi";
+import SinkronizimiNdaloi from "../Components/SinkronizimiNdaloi";
 import { Kpi, Panel, ProgressBar, Empty } from "../Components/Ui";
 import { useData } from "../Context/DataContext";
 import { emriIPlote } from "../lib/kategorite";
@@ -109,8 +109,9 @@ function Dashboard() {
       <NavBar />
 
       {/* The home screen is where the app is opened, so it is where a device that has quietly
-          stopped syncing gets to say so. */}
-      <SesioniSkadoi />
+          stopped syncing gets to say so - whether the session ran out or the project was never
+          finished being set up. */}
+      <SinkronizimiNdaloi />
 
       <div className="welcome-hero">
         <Container>
