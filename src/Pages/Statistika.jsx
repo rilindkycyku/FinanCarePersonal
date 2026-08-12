@@ -19,6 +19,7 @@ import {
 import { totalsByTag } from "../lib/etiketat";
 import { formatDate, formatPercent, monthKey, monthLabel, todayISO } from "../lib/format";
 import { accountTypeMeta } from "../lib/options";
+import { emriIPlote } from "../lib/kategorite";
 import { getIcon } from "../lib/icons";
 import "./Styles/PremiumTheme.css";
 import "./Styles/DizajniPergjithshem.css";
@@ -508,7 +509,7 @@ function Statistika() {
                       </div>
                       <div className="fcp-row-main">
                         <div className="fcp-row-title">
-                          {tx.pershkrimi || kategoria?.emri || "Shpenzim"}
+                          {tx.pershkrimi || emriIPlote(categories, tx.kategoriaId) || "Shpenzim"}
                         </div>
                         <div className="fcp-row-sub">
                           {formatDate(tx.data)}

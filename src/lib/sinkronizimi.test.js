@@ -13,6 +13,7 @@ import {
   KOHA_PARA_SINKRONIZIMIT, STORI_PROFILIT, celesiRreshtit, gjendjaLokale, ndryshimetLokale,
   planiIAplikimit, rreshtiNgaServeri, rreshtiPerServer,
 } from "./sinkronizimi";
+import { emriIPlote, pemaKategorive } from "./kategorite";
 
 /** A record that has been through the cloud: settled, dated by the server. */
 const tx = (id, perditesuar, extra = {}) => ({ id, vlera: 10, perditesuar, ...extra });
@@ -228,6 +229,19 @@ describe("përkthimi i rreshtave", () => {
     expect(server.data.id).toBe("t1");
   });
 
+  it("carries a subcategory's parent without a change to the user's table", () => {
+    // The cloud table keeps whole records in one `jsonb` column precisely so that a release which
+    // adds a field - `prindi` here - never asks the user to run an ALTER TABLE in their own
+    // project before their phone and laptop can talk again.
+    const kategoria = { id: "cat_market", emri: "Market", lloji: "shpenzim", prindi: "cat_ushqim" };
+    const server = rreshtiPerServer(
+      { store: "categories", id: kategoria.id, perditesuar: 7, fshire: false, data: kategoria },
+      "user-1"
+    );
+    expect(server.data).toMatchObject({ prindi: "cat_ushqim" });
+    expect(rreshtiNgaServeri(server).data).toEqual(kategoria);
+  });
+
   it("sends a deletion with no data at all", () => {
     const server = rreshtiPerServer(
       { store: "goals", id: "g1", perditesuar: 1, fshire: true, data: { fshij: "këtë" } },
@@ -235,6 +249,45 @@ describe("përkthimi i rreshtave", () => {
     );
     expect(server.deleted).toBe(true);
     expect(server.data).toBeNull();
+  });
+});
+
+describe("një kategori me nënkategori mes dy pajisjeve", () => {
+  /**
+   * The whole pipeline for the one thing subcategories add - a `prindi` pointing at another
+   * category - run end to end through the real functions: what the phone owes the cloud, how it is
+   * written to the table, how it comes back, and what the laptop then writes.
+   *
+   * The point being checked is that nothing along the way has to know the field exists.
+   */
+  const prindi = { id: "cat_ushqim", emri: "Ushqim & Pije", lloji: "shpenzim", sinkPezull: true, perditesuar: 100 };
+  const femija = { id: "cat_market", emri: "Market", lloji: "shpenzim", prindi: "cat_ushqim", sinkPezull: true, perditesuar: 100 };
+
+  const neCloud = () =>
+    ndryshimetLokale({ storet: { categories: [prindi, femija] } })
+      .map((rr) => rreshtiPerServer(rr, "user-1"))
+      .map((server) => rreshtiNgaServeri(server));
+
+  it("carries both, parent and child, with the link intact", () => {
+    const plani = planiIAplikimit(neCloud(), { kohet: new Map() });
+    expect(plani.shkruaj.map((r) => r.id)).toEqual(["cat_ushqim", "cat_market"]);
+    expect(plani.shkruaj.map((rr) => rr.data.prindi)).toEqual([undefined, "cat_ushqim"]);
+    // And the receiving device is not told these are its own unsent changes.
+    expect(plani.shkruaj.every((rr) => rr.data.sinkPezull === undefined)).toBe(true);
+  });
+
+  it("leaves a child readable even when its parent has not arrived yet", () => {
+    // Rows come back in pages, so a child can land in one round and its parent in the next. The
+    // tree is worked out when read (lib/kategorite.js), so the half-arrived state is a category at
+    // the top level for a moment - never a category missing from the page.
+    const vetemFemija = neCloud().filter((rr) => rr.id === "cat_market");
+    const plani = planiIAplikimit(vetemFemija, { kohet: new Map() });
+    const mbritur = plani.shkruaj.map((rr) => rr.data);
+    expect(pemaKategorive(mbritur, "shpenzim").map((c) => c.emri)).toEqual(["Market"]);
+    expect(emriIPlote(mbritur, "cat_market")).toBe("Market");
+    // …and once the parent lands too, it files itself under it with nothing to repair.
+    const plote = [...mbritur, { ...prindi, sinkPezull: undefined }];
+    expect(emriIPlote(plote, "cat_market")).toBe("Ushqim & Pije › Market");
   });
 });
 

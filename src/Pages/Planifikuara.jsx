@@ -21,6 +21,7 @@ import { STORES } from "../lib/db";
 import { overduePlans, planTotals, plansForMonth } from "../lib/finance";
 import { formatDate, formatPercent, monthKey, monthLabel, plainAmount, todayISO } from "../lib/format";
 import { planPriorityMeta } from "../lib/options";
+import { emriIPlote } from "../lib/kategorite";
 import { getIcon } from "../lib/icons";
 import "./Styles/PremiumTheme.css";
 import "./Styles/DizajniPergjithshem.css";
@@ -124,7 +125,7 @@ function Planifikuara() {
     Plani: p.emri,
     Statusi: p.kryer ? "Blerë" : "Për t'u blerë",
     Prioriteti: planPriorityMeta(p.prioriteti).short,
-    Kategoria: p.kategoriaId ? nameOf(categories, p.kategoriaId, "Pa kategori") : "Pa kategori",
+    Kategoria: emriIPlote(categories, p.kategoriaId, "Pa kategori"),
     Afati: p.afati ? formatDate(p.afati) : "-",
     [`Planifikuar (${simboli})`]: plainAmount(p.vlera),
     [`Shpenzuar (${simboli})`]: p.kryer ? plainAmount(p.vleraReale) : "",

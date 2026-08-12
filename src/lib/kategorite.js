@@ -25,8 +25,15 @@ export const NDARESI = " › ";
 
 const sipasEmrit = (a, b) => String(a.emri || "").localeCompare(String(b.emri || ""), "sq");
 
+/** Every category by id. A row that is not an object at all is dropped rather than indexed: the
+ * list can come from a hand-edited backup or from a half-applied sync, and one bad entry must not
+ * take the page with it. */
+function lista(categories) {
+  return (categories || []).filter((c) => c && typeof c === "object" && c.id);
+}
+
 function indeksi(categories) {
-  return new Map((categories || []).map((c) => [c.id, c]));
+  return new Map(lista(categories).map((c) => [c.id, c]));
 }
 
 /**
@@ -77,7 +84,7 @@ export function eshteNenkategori(categories, id) {
 export function nenkategorite(categories, prindiId) {
   if (!prindiId) return [];
   const byId = indeksi(categories);
-  return (categories || [])
+  return lista(categories)
     .filter((c) => c.id !== prindiId && rrenjaNga(byId, c)?.id === prindiId)
     .sort(sipasEmrit);
 }
@@ -112,12 +119,12 @@ export function emriIPlote(categories, id, fallback = "") {
  * to get both directions at once (the transactions filter, which lists everything).
  */
 export function pemaKategorive(categories, lloji) {
-  const lista = (categories || []).filter((c) => !lloji || c.lloji === lloji);
+  const perkatese = lista(categories).filter((c) => !lloji || c.lloji === lloji);
   const byId = indeksi(categories);
   const rrenjet = [];
   const femijet = new Map();
 
-  lista.forEach((c) => {
+  perkatese.forEach((c) => {
     const rrenja = rrenjaNga(byId, c);
     if (!rrenja || rrenja.id === c.id) {
       rrenjet.push(c);
@@ -139,7 +146,7 @@ export function prinderitEMundshem(categories, kategoria) {
   if (!kategoria?.lloji) return [];
   const byId = indeksi(categories);
   const eSaj = familjaSet(categories, kategoria.id);
-  return (categories || [])
+  return lista(categories)
     .filter((c) => c.lloji === kategoria.lloji && !eSaj.has(c.id) && !prindiVlefshem(byId, c))
     .sort(sipasEmrit);
 }

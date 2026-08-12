@@ -80,6 +80,15 @@ describe("kategorite", () => {
     expect(pemaKategorive(rreth, "shpenzim").map((c) => c.emri)).toEqual(["A", "B"]);
   });
 
+  it("survives a list carrying a row that is not a category at all", () => {
+    // A hand-edited backup or a half-applied sync can put anything in the array; one bad row must
+    // not take the page with it.
+    const ndotur = [null, undefined, "jo kategori", { emri: "pa id" }, ...lista];
+    expect(pemaKategorive(ndotur, "shpenzim").map((c) => c.emri)).toEqual(["Transport", "Ushqim & Pije"]);
+    expect(nenkategorite(ndotur, "ushqim").map((c) => c.emri)).toEqual(["Furra", "Market"]);
+    expect(emriIPlote(ndotur, "market")).toBe("Ushqim & Pije › Market");
+  });
+
   it("offers only top-level categories of the same direction as a parent", () => {
     const mundshem = prinderitEMundshem(lista, kategori("re", "E re"));
     expect(mundshem.map((c) => c.id)).toEqual(["transport", "ushqim"]);

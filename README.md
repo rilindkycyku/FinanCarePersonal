@@ -274,8 +274,8 @@ store:
 | --- | --- | --- | --- | --- | --- |
 | `a1b2…` | `transactions` | `tx_m4f2k9x` | `2026-08-11 18:02:18+00` | `false` | `{"id":"tx_m4f2k9x","data":"2026-08-11","lloji":"shpenzim","vlera":12.34,…}` |
 
-Një libër me 800 transaksione, 6 llogari e 25 kategori bëhet rreth 830 rreshta, plus një rresht për
-profilin. Fushat e vetë rekordit rrinë brenda kolonës `data` (jsonb) sepse tabela ndodhet te
+Një libër me 800 transaksione, 6 llogari e 55 kategori (me nënkategoritë) bëhet rreth 860 rreshta,
+plus një rresht për profilin. Fushat e vetë rekordit rrinë brenda kolonës `data` (jsonb) sepse tabela ndodhet te
 projekti **juaj**: po të kishte kolona të shtypura, çdo version i ri që shton një fushë do të
 kërkonte një `ALTER TABLE` te secili projekt përpara se aplikacioni të vazhdonte të punonte, dhe
 një pajisje ende me versionin e vjetër do të prishej. Kostoja është se rreshti nuk lexohet bukur te
@@ -290,6 +290,12 @@ from financare_records
 where store = 'transactions' and not deleted
 order by dita desc;
 ```
+
+**Nënkategoritë nuk kërkojnë asnjë ndryshim te projekti juaj.** Prindi i një kategorie ruhet si një
+fushë e zakonshme brenda `data` (`{"id":"cat_…","emri":"Market","prindi":"cat_default_ushqim"}`),
+pra skripti SQL mbetet ai që ishte, nuk ka `ALTER TABLE` për të bërë, dhe një pajisje ende me
+versionin e vjetër vazhdon të sinkronizohet - thjesht e ruan fushën pa e kuptuar, derisa të
+përditësohet. Kjo ishte arsyeja pse kolona është `jsonb` që në fillim.
 
 ### Si bashkohen ndryshimet
 
