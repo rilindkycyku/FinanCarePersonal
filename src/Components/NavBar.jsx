@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { useTheme } from "../Context/ThemeContext";
 import ButonPasqyra from "./ButonPasqyra";
+import TreguesiSinkronizimit from "./TreguesiSinkronizimit";
 import "./NavBar.css";
 
 // "Paneli" stays a standalone link; the rest is grouped into three dropdown categories instead
@@ -120,6 +121,7 @@ function NavBar() {
         })}
 
         <ButonPasqyra variant="icon" />
+        <TreguesiSinkronizimit />
 
         <button
           type="button"
@@ -134,6 +136,7 @@ function NavBar() {
 
       <div className="fcp-navbar-mobile-controls">
         <ButonPasqyra variant="icon" />
+        <TreguesiSinkronizimit />
         <button
           type="button"
           className="fcp-theme-toggle"

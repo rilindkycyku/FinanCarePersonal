@@ -297,7 +297,12 @@ order by dita desc;
   pajisje e re, që sapo ka mbjellë kategoritë e parazgjedhura me të njëjtat id, nuk i mbishkruan
   riemërtimet e pajisjes së vjetër.
 - Sinkronizimi bëhet vetë - kur hapet aplikacioni, pak sekonda pas çdo ndryshimi, kur ktheheni te
-  skeda dhe kur pajisja kthehet online - ose vetëm me buton, sipas çelësit te faqja.
+  skeda, kur pajisja kthehet online dhe çdo dhjetë minuta sa kohë faqja rri e hapur - ose vetëm me
+  buton, sipas çelësit te faqja.
+- **Gjendja duket te shiriti i sipërm**, në çdo faqe: një re e qetë kur gjithçka ka shkuar, një
+  shenjë e verdhë kur ka ndryshime që presin, dhe një e kuqe kur përpjekja e fundit dështoi ose kur
+  sesioni ka mbaruar. Kjo e fundit është arsyeja që ekziston: një pajisje që ka pushuar së
+  sinkronizuari duket krejt normale, dhe askush nuk hap një faqe për diçka që e beson në rregull.
 - **Fotot e faturave nuk sinkronizohen**: janë binare dhe pjesa më e madhe e hapësirës, pra do të
   kërkonin Supabase Storage. Për t&apos;i çuar diku tjetër mbetet arkivi ZIP.
 

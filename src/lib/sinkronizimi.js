@@ -604,6 +604,18 @@ export function rivendosKufijte() {
   return ruajKonfigurimin({ pulledAt: "", pushedAt: 0 });
 }
 
+/**
+ * Whether anything at all is still waiting to be sent from this device.
+ *
+ * Read once at startup, because the fact itself outlives the tab: a change saved on a train and
+ * still unsent is just as unsent after the app is closed and reopened, and an indicator that
+ * forgot it would go back to claiming everything is fine.
+ */
+export async function kaTePadergaura() {
+  const { pezull } = gjendjaLokale(await lexoGjendjen());
+  return pezull.size > 0;
+}
+
 export function fundiISinkronizimit() {
   return lexoKonfigurimin().fundit;
 }

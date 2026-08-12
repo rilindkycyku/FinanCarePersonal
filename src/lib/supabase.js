@@ -97,6 +97,18 @@ export function eshteLidhur(k = lexoKonfigurimin()) {
   return Boolean(k.url && k.anonKey && k.refreshToken);
 }
 
+/**
+ * A project has been set up on this device, whether or not the session still works.
+ *
+ * The difference matters to anything that reports state: a refresh the project refuses drops the
+ * tokens, so `eshteLidhur` turns false - and a device that judged itself by that alone would go
+ * completely quiet at the exact moment its user most needs telling that nothing is syncing any
+ * more.
+ */
+export function eshteKonfiguruar(k = lexoKonfigurimin()) {
+  return Boolean(k.url && k.anonKey);
+}
+
 // ---- validation of what the user pastes in ----
 
 /** Accepts `abcdefg.supabase.co`, the full URL, and either with a trailing slash - the three
