@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Alert, Button, Card, Col, Form, InputGroup, Modal, Row, Spinner } from "react-bootstrap";
 import {
   AlertTriangle, Check, Cloud, CloudOff, Code2, Copy, Database, Download, Eye, EyeOff, ExternalLink,
@@ -45,7 +46,7 @@ function emriProjektit(url) {
  * whole point is the copy button. In a dialog it gets the width of the screen, wraps instead of
  * clipping, and the button that matters is the one under it.
  */
-function ModaliSql({ show, onHide, url }) {
+function ModaliSql({ show, onHide, url, onGati }) {
   const [kopjuar, setKopjuar] = useState(false);
   const [deshtoi, setDeshtoi] = useState(false);
   // The token lives in this state and nowhere else: it is never saved, and the field is emptied the
@@ -68,7 +69,13 @@ function ModaliSql({ show, onHide, url }) {
     try {
       await instaloSkemen(token, url);
       setToken("");
-      setRezultati({ lloji: "success", teksti: "Projekti u konfigurua - tabela, rregulli RLS, ora e serverit dhe indeksi janë në vend." });
+      setRezultati({
+        lloji: "success",
+        teksti: "Projekti u konfigurua - tabela, rregulli RLS, ora e serverit dhe indeksi janë në vend. Sinkronizimi po vazhdon vetë.",
+      });
+      // The reason anyone opened this dialog is that syncing was failing, so the last step is not
+      // to announce success and wait to be pressed again - it is to go and sync.
+      onGati?.();
     } catch (err) {
       setRezultati({ lloji: "danger", teksti: err?.message || "Konfigurimi dështoi." });
     } finally {
@@ -234,11 +241,30 @@ function Sinkronizimi() {
     password: "",
   }));
   const [pune, setPune] = useState(null);
+  const [searchParams, setSearchParams] = useSearchParams();
   const [nCloud, setNCloud] = useState(null);
-  const [sqlHapur, setSqlHapur] = useState(false);
+  // Read from the address on the very first render rather than in an effect: the failure
+  // announcement below decides whether to open a dialog during that same commit, and a `setState`
+  // from an effect would still be `false` when it looks.
+  const [sqlHapur, setSqlHapur] = useState(
+    () => new URLSearchParams(window.location.search).get("konfiguro") === "1"
+  );
   // The key-rotation field, closed until asked for: it is a once-a-year action sitting next to
   // buttons pressed every day.
   const [celesiIRi, setCelesiIRi] = useState(null);
+
+  /**
+   * `?konfiguro=1` opens the setup dialog straight away - the home screen sends people here with
+   * it when the project has no table yet, and a button that promised "set the project up" should
+   * not land on a page where the thing has to be found again. The param is dropped afterwards so a
+   * refresh does not reopen it.
+   */
+  useEffect(() => {
+    if (searchParams.get("konfiguro") !== "1") return;
+    const next = new URLSearchParams(searchParams);
+    next.delete("konfiguro");
+    setSearchParams(next, { replace: true });
+  }, [searchParams, setSearchParams]);
 
   const setField = (name, value) => setForm((prev) => ({ ...prev, [name]: value }));
 
@@ -277,10 +303,14 @@ function Sinkronizimi() {
     const celesi = `${gabim.kodi || ""}:${gabim.mesazhi}`;
     if (gabimiTreguar.current === celesi) return;
     gabimiTreguar.current = celesi;
+    // Nothing to announce while the dialog that fixes it is already on screen - which is exactly
+    // the case when the home screen sent the user straight here. A second dialog over the first
+    // would cover the field they came to fill in.
+    if (sqlHapur) return;
     njofto("danger", gabim.mesazhi, gabim.kodi === "tabela").then(pastroGabimin);
     // `njofto` is rebuilt on every render; depending on it would reopen the dialog for ever.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [gabim]);
+  }, [gabim, sqlHapur]);
 
   // How much is up there, asked once per visit - the one number that answers "did it really go?".
   useEffect(() => {
@@ -456,7 +486,8 @@ function Sinkronizimi() {
           as ndonjë shërbim i FinanCarePersonal, nuk i sheh dhe nuk i ruan ato.
         </p>
 
-        <ModaliSql show={sqlHapur} onHide={() => setSqlHapur(false)} url={konfigurimi.url || normalizoUrl(form.url)} />
+        <ModaliSql show={sqlHapur} onHide={() => setSqlHapur(false)} url={konfigurimi.url || normalizoUrl(form.url)}
+          onGati={() => { pastroGabimin(); sinkronizoTani(); }} />
 
         {/* Detected from what the last push came back with (sinkronizimi.js): a project set up
             before the trigger existed keeps whatever time the device sent, and then the order of

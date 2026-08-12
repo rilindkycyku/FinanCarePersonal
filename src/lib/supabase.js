@@ -389,7 +389,7 @@ export async function rest(shtegu, { method = "GET", body, headers = {}, kthePer
   // the single most likely first-run failure, so it gets its own code and its own instruction.
   if (data?.code === "PGRST205" || res.status === 404) {
     throw gabimi(
-      `Tabela "${TABELA}" nuk ekziston në projekt - hapni SQL Editor te Supabase dhe ekzekutoni skriptin e mëposhtëm.`,
+      `Projekti nuk është konfiguruar ende - tabela "${TABELA}" nuk ekziston. Te faqja Sinkronizimi, «Konfiguro projektin» e krijon vetë.`,
       "tabela"
     );
   }
@@ -439,11 +439,19 @@ export function referencaProjektit(url) {
   }
 }
 
-/** That project's SQL editor, with a new empty query already open - the manual path, minus the
- * hunting through a dashboard for the right project. */
+/**
+ * That project's SQL editor, opened on a new query with the script **already in it** - so the
+ * manual path is a tap and then Run, with nothing to copy and no project to find.
+ *
+ * The `content` parameter is the dashboard's own way of being linked to with a query prefilled. If
+ * a future dashboard ignores it the link still lands on an empty editor of the right project,
+ * which is exactly where the copy button was aiming anyway - so there is no worse case here than
+ * the one we already had.
+ */
 export function linkuSqlEditor(url) {
   const ref = referencaProjektit(url);
-  return ref ? `https://supabase.com/dashboard/project/${ref}/sql/new` : "https://supabase.com/dashboard";
+  if (!ref) return "https://supabase.com/dashboard";
+  return `https://supabase.com/dashboard/project/${ref}/sql/new?content=${encodeURIComponent(SQL_INSTALIMI)}`;
 }
 
 /** Where the token is created, so the dialog can send people straight there. */

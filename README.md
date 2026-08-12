@@ -341,9 +341,11 @@ përditësohet. Kjo ishte arsyeja pse kolona është `jsonb` që në fillim.
   shenjë e verdhë kur ka ndryshime që presin, dhe një e kuqe kur përpjekja e fundit dështoi ose kur
   sesioni ka mbaruar. Kjo e fundit është arsyeja që ekziston: një pajisje që ka pushuar së
   sinkronizuari duket krejt normale, dhe askush nuk hap një faqe për diçka që e beson në rregull.
-  <br />Kur sesioni ka mbaruar - fjalëkalimi u ndryshua, projekti u ndal - kjo nuk rregullohet duke
-  pritur: dikush duhet ta shkruajë fjalëkalimin sërish. Prandaj vetëm ai rast e ndalon një herë
-  përdoruesin te Paneli, me një dritare që e thotë hapur dhe e çon te faqja; shtyrja mbahet mend sa
+  <br />Dy gjëra nuk rregullohen duke pritur: **sesioni i mbaruar** (fjalëkalimi u ndryshua,
+  projekti u ndal) dhe **projekti i pakonfiguruar** (tabela nuk është krijuar ende, pra çdo
+  sinkronizim dështon sapo niset). Prandaj vetëm këto dy raste e ndalojnë një herë përdoruesin te
+  **Paneli**, me një dritare që e thotë hapur dhe e çon me një buton te vendi ku zgjidhet - te
+  fjalëkalimi, ose direkt te dritarja e konfigurimit, e cila hapet vetë me të mbërritur; shtyrja mbahet mend sa
   kohë aplikacioni rri i hapur, dhe kthehet herën tjetër sepse mbetet e vërtetë.
 - **Fotot e faturave nuk sinkronizohen**: janë binare dhe pjesa më e madhe e hapësirës, pra do të
   kërkonin Supabase Storage. Për t&apos;i çuar diku tjetër mbetet arkivi ZIP.

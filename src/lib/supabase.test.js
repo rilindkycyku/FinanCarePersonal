@@ -103,10 +103,15 @@ describe("referencaProjektit", () => {
     expect(referencaProjektit("")).toBe("");
   });
 
-  it("links to that project's SQL editor, or to the dashboard when it cannot tell", () => {
-    expect(linkuSqlEditor("https://abcdefghijklmnopqrst.supabase.co")).toBe(
+  it("links to that project's SQL editor with the script already in it", () => {
+    const link = new URL(linkuSqlEditor("https://abcdefghijklmnopqrst.supabase.co"));
+    expect(link.origin + link.pathname).toBe(
       "https://supabase.com/dashboard/project/abcdefghijklmnopqrst/sql/new"
     );
+    expect(link.searchParams.get("content")).toBe(SQL_INSTALIMI);
+  });
+
+  it("falls back to the dashboard when the address names no project", () => {
     expect(linkuSqlEditor("https://baza.shtepia.dev")).toBe("https://supabase.com/dashboard");
   });
 });
