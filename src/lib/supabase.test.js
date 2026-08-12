@@ -61,5 +61,8 @@ describe("normalizoUrl", () => {
   it("returns nothing for what is not an address", () => {
     expect(normalizoUrl("")).toBe("");
     expect(normalizoUrl("çfarë projekti?")).toBe("");
+    // A bare word parses as a hostname once "https://" is prepended, so it has to be refused on
+    // purpose - otherwise a typo is only discovered by a request that fails a second later.
+    expect(normalizoUrl("projekti-im")).toBe("");
   });
 });

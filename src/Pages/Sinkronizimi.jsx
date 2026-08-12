@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Alert, Button, Card, Col, Form, InputGroup, Modal, Row, Spinner } from "react-bootstrap";
 import {
   AlertTriangle, Check, Cloud, CloudOff, Code2, Copy, Database, Download, Eye, EyeOff, ExternalLink,
@@ -157,7 +157,6 @@ function Sinkronizimi() {
     password: "",
   }));
   const [pune, setPune] = useState(null);
-  const [message, setMessage] = useState(null);
   const [nCloud, setNCloud] = useState(null);
   const [sqlHapur, setSqlHapur] = useState(false);
   // The key-rotation field, closed until asked for: it is a once-a-year action sitting next to
@@ -165,6 +164,46 @@ function Sinkronizimi() {
   const [celesiIRi, setCelesiIRi] = useState(null);
 
   const setField = (name, value) => setForm((prev) => ({ ...prev, [name]: value }));
+
+  /**
+   * Every result of a button on this page, said in a dialog rather than in a banner at the top.
+   *
+   * A banner appears above buttons that are often a screen further down, so on a phone the answer
+   * to "did that work?" lands off-screen - and the answer to a button press is the one thing
+   * nobody should have to go looking for. The same modal the rest of the app uses for its
+   * confirmations, so a failure here reads like every other message in the app.
+   *
+   * The single failure with a fix worth offering - a project whose setup SQL was never run - gets
+   * the script as its own button instead of a paragraph telling the user where to find it.
+   */
+  const njofto = async (lloji, teksti, sql = false) => {
+    const titulli = { success: "U krye", danger: "Gabim", warning: "Kujdes", info: "Njoftim" }[lloji];
+    if (!sql) {
+      await dialog.alert(teksti, { title: titulli, variant: lloji });
+      return;
+    }
+    const shfaq = await dialog.confirm(teksti, {
+      title: titulli,
+      variant: lloji,
+      confirmLabel: "Shfaq skriptin SQL",
+      cancelLabel: "Në rregull",
+    });
+    if (shfaq) setSqlHapur(true);
+  };
+
+  // A sync that failed on its own - at startup, on the timer, after a save - has nobody watching a
+  // return value, so it is announced here the same way a pressed button would be. Once per distinct
+  // failure: the same broken wifi retrying every ten minutes is one piece of news, not five.
+  const gabimiTreguar = useRef(null);
+  useEffect(() => {
+    if (!gabim) return;
+    const celesi = `${gabim.kodi || ""}:${gabim.mesazhi}`;
+    if (gabimiTreguar.current === celesi) return;
+    gabimiTreguar.current = celesi;
+    njofto("danger", gabim.mesazhi, gabim.kodi === "tabela").then(pastroGabimin);
+    // `njofto` is rebuilt on every render; depending on it would reopen the dialog for ever.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gabim]);
 
   // How much is up there, asked once per visit - the one number that answers "did it really go?".
   useEffect(() => {
@@ -184,30 +223,29 @@ function Sinkronizimi() {
   const lidhu = async (mode) => {
     const url = normalizoUrl(form.url);
     if (!url) {
-      setMessage({ type: "danger", text: "Adresa e projektit nuk duket e vlefshme - kopjoni «Project URL» nga Supabase (p.sh. https://abcdefgh.supabase.co)." });
+      njofto("danger", "Adresa e projektit nuk duket e vlefshme - kopjoni «Project URL» nga Supabase (p.sh. https://abcdefgh.supabase.co).");
       return;
     }
     const celesi = kontrolloCelesin(form.anonKey);
     if (!celesi.ok) {
-      setMessage({ type: "danger", text: celesi.gabim });
+      njofto("danger", celesi.gabim);
       return;
     }
     if (!form.email.trim() || !form.password) {
-      setMessage({ type: "danger", text: "Shkruani email-in dhe fjalëkalimin e llogarisë brenda projektit tuaj." });
+      njofto("danger", "Shkruani email-in dhe fjalëkalimin e llogarisë brenda projektit tuaj.");
       return;
     }
 
     setPune(mode);
-    setMessage(null);
     pastroGabimin();
     try {
       if (mode === "regjistrohu") {
         const { konfirmim } = await regjistrohu({ email: form.email, password: form.password, url, anonKey: celesi.celesi });
         if (konfirmim) {
-          setMessage({
-            type: "warning",
-            text: "Llogaria u krijua, por projekti kërkon konfirmim me email. Hapni linkun që sapo ju erdhi dhe pastaj shtypni «Hyr».",
-          });
+          await njofto(
+            "warning",
+            "Llogaria u krijua, por projekti kërkon konfirmim me email. Hapni linkun që sapo ju erdhi dhe pastaj shtypni «Hyr»."
+          );
           return;
         }
       } else {
@@ -219,39 +257,34 @@ function Sinkronizimi() {
       const permbledhja = await sinkronizoTani({ ngaFillimi: true });
       setForm((prev) => ({ ...prev, password: "" }));
       if (permbledhja) {
-        setMessage({
-          type: "success",
-          text: `U lidh me projektin. U morën ${permbledhja.marre} ndryshime dhe u dërguan ${permbledhja.derguar}.`,
-        });
+        njofto(
+          "success",
+          `U lidh me projektin. U morën ${permbledhja.marre} ndryshime dhe u dërguan ${permbledhja.derguar}.`
+        );
       }
     } catch (err) {
-      setMessage({ type: "danger", text: err?.message || "Lidhja dështoi.", sql: err?.kodi === "tabela" });
+      njofto("danger", err?.message || "Lidhja dështoi.", err?.kodi === "tabela");
     } finally {
       setPune(null);
     }
   };
 
   const handleSinkronizo = async (ngaFillimi = false) => {
-    setMessage(null);
     const permbledhja = await sinkronizoTani({ ngaFillimi });
     if (permbledhja) {
-      setMessage({
-        type: "success",
-        text: `U morën ${permbledhja.marre} ndryshime dhe u dërguan ${permbledhja.derguar}.`,
-      });
+      njofto("success", `U morën ${permbledhja.marre} ndryshime dhe u dërguan ${permbledhja.derguar}.`);
     }
   };
 
   const handleRuajCelesin = async (e) => {
     e.preventDefault();
     setPune("celesi");
-    setMessage(null);
     try {
       await ndryshoCelesin(celesiIRi);
       setCelesiIRi(null);
-      setMessage({ type: "success", text: "Çelësi u përditësua - kjo pajisje po e përdor atë të riun." });
+      njofto("success", "Çelësi u përditësua - kjo pajisje po e përdor atë të riun.");
     } catch (err) {
-      setMessage({ type: "danger", text: err?.message || "Çelësi nuk u ndryshua." });
+      njofto("danger", err?.message || "Çelësi nuk u ndryshua.");
     } finally {
       setPune(null);
     }
@@ -268,7 +301,7 @@ function Sinkronizimi() {
     if (!ok) return;
     await dil();
     pastroKonfigurimin();
-    setMessage({ type: "success", text: "Kjo pajisje u shkëput nga sinkronizimi." });
+    njofto("success", "Kjo pajisje u shkëput nga sinkronizimi.");
   };
 
   /**
@@ -314,9 +347,9 @@ function Sinkronizimi() {
     try {
       await fshiCloud();
       setNCloud(0);
-      setMessage({ type: "success", text: "Kopja në cloud u zbraz." });
+      njofto("success", "Kopja në cloud u zbraz.");
     } catch (err) {
-      setMessage({ type: "danger", text: err?.message || "Fshirja dështoi." });
+      njofto("danger", err?.message || "Fshirja dështoi.");
     } finally {
       setPune(null);
     }
@@ -345,32 +378,6 @@ function Sinkronizimi() {
           të dhënat udhëtojnë mes pajisjeve tuaja përmes <em>bazës suaj</em>. Askush tjetër, as unë
           as ndonjë shërbim i FinanCarePersonal, nuk i sheh dhe nuk i ruan ato.
         </p>
-
-        {message && (
-          <Alert variant={message.type} onClose={() => setMessage(null)} dismissible>
-            {message.text}
-            {message.sql && (
-              <div className="mt-3">
-                <Button variant="outline-light" size="sm" onClick={() => setSqlHapur(true)}>
-                  <Code2 size={15} className="me-1" /> Shfaq skriptin SQL
-                </Button>
-              </div>
-            )}
-          </Alert>
-        )}
-
-        {gabim && (
-          <Alert variant="danger" onClose={pastroGabimin} dismissible>
-            {gabim.mesazhi}
-            {gabim.kodi === "tabela" && (
-              <div className="mt-3">
-                <Button variant="outline-light" size="sm" onClick={() => setSqlHapur(true)}>
-                  <Code2 size={15} className="me-1" /> Shfaq skriptin SQL
-                </Button>
-              </div>
-            )}
-          </Alert>
-        )}
 
         <ModaliSql show={sqlHapur} onHide={() => setSqlHapur(false)} />
 

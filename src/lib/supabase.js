@@ -123,7 +123,12 @@ export function normalizoUrl(hyrja) {
   } catch {
     return "";
   }
-  if (u.protocol !== "https:" && u.hostname !== "localhost" && u.hostname !== "127.0.0.1") return "";
+  const lokal = u.hostname === "localhost" || u.hostname === "127.0.0.1";
+  if (u.protocol !== "https:" && !lokal) return "";
+  // A project address is a domain. Refusing a bare word here turns a typo into "that is not an
+  // address" while the field is still on screen, instead of a request that fails a second later
+  // with "the project could not be reached" - which reads like the project's fault, not the typo's.
+  if (!lokal && !u.hostname.includes(".")) return "";
   return `${u.origin}`;
 }
 
