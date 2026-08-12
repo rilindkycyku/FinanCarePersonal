@@ -13,6 +13,7 @@ import {
   SQL_INSTALIMI, instaloSkemen, kontrolloCelesin, kontrolloTokenin, linkuSqlEditor, normalizoUrl,
   referencaProjektit,
 } from "./supabase";
+import { SKEMA_VERSIONI, sqlPerMigrim } from "./skema";
 
 const jwt = (payload) => `eyJhbGciOiJIUzI1NiJ9.${btoa(JSON.stringify(payload))}.firma`;
 
@@ -131,7 +132,7 @@ describe("instaloSkemen", () => {
     const [adresa, opsionet] = fetchMock.mock.calls[0];
     expect(adresa).toBe("https://api.supabase.com/v1/projects/abcdefghijklmnopqrst/database/query");
     expect(opsionet.headers.Authorization).toBe(`Bearer ${token}`);
-    expect(JSON.parse(opsionet.body).query).toBe(SQL_INSTALIMI);
+    expect(JSON.parse(opsionet.body).query).toBe(sqlPerMigrim(0));
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
@@ -163,6 +164,19 @@ describe("instaloSkemen", () => {
     // of the project or of the token.
     vi.stubGlobal("fetch", vi.fn(async () => { throw new TypeError("Failed to fetch"); }));
     await expect(instaloSkemen(token, url)).rejects.toMatchObject({ kodi: "bllokuar" });
+  });
+
+  it("runs only the migrations the project is missing, and nothing when it is current", async () => {
+    const fetchMock = vi.fn(async () => new Response("[]", { status: 201 }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    // A project already on the newest migration has nothing to run - and is not sent an empty
+    // query to be polite about it.
+    await expect(instaloSkemen(token, url, SKEMA_VERSIONI)).resolves.toBe(true);
+    expect(fetchMock).not.toHaveBeenCalled();
+
+    await instaloSkemen(token, url, 0);
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body).query).toBe(sqlPerMigrim(0));
   });
 
   it("refuses before sending when the field holds the wrong string, or the project is not Supabase", async () => {

@@ -21,24 +21,14 @@
  * localStorage into full access to the database.
  */
 
+import {
+  ID_SKEMES, MIGRIMET, SKEMA_VERSIONI, SQL_INSTALIMI, STORI_META, TABELA, VERSIONI_PARA_NUMERIMIT,
+  migrimetPezull, sqlPerMigrim,
+} from "./skema";
+
 const CELESI_RUAJTJES = "financarepersonal.sinkronizimi";
 
-/** One table holds every record, keyed by (user, store, id) - see the SQL on the sync page. A
- * table per store would mean a new migration in every user's own project each time the app gains
- * one, which is not a thing this app can ship. */
-export const TABELA = "financare_records";
-
-/**
- * The version of the setup script this release ships.
- *
- * It exists so the page can tell "your project was set up with an older script" from "your project
- * is fine", and it is bumped **only** when the SQL below actually changes - which is meant to be
- * almost never. Adding a field to a record (subcategories' `prindi`, say) is not one of those
- * times: the record travels whole inside the `data` jsonb column, so Postgres never has to be told
- * about it. That is the reason the schema is one table with a JSON payload in the first place - a
- * user should not have to run SQL in their own project because this app gained a feature.
- */
-export const SKEMA_VERSIONI = 1;
+export { TABELA, SKEMA_VERSIONI, SQL_INSTALIMI } from "./skema";
 
 const BOSH = {
   url: "",
@@ -448,10 +438,10 @@ export function referencaProjektit(url) {
  * which is exactly where the copy button was aiming anyway - so there is no worse case here than
  * the one we already had.
  */
-export function linkuSqlEditor(url) {
+export function linkuSqlEditor(url, skripti = SQL_INSTALIMI) {
   const ref = referencaProjektit(url);
   if (!ref) return "https://supabase.com/dashboard";
-  return `https://supabase.com/dashboard/project/${ref}/sql/new?content=${encodeURIComponent(SQL_INSTALIMI)}`;
+  return `https://supabase.com/dashboard/project/${ref}/sql/new?content=${encodeURIComponent(skripti)}`;
 }
 
 /** Where the token is created, so the dialog can send people straight there. */
@@ -490,9 +480,12 @@ export function kontrolloTokenin(token) {
  * That failure is indistinguishable from being offline at this level, so it gets its own code
  * (`bllokuar`) and its own answer: use the script, it is right there.
  */
-export async function instaloSkemen(token, url) {
+export async function instaloSkemen(token, url, nga = 0) {
   const kontrolli = kontrolloTokenin(token);
   if (!kontrolli.ok) throw gabimi(kontrolli.gabim, "token");
+
+  const pezull = migrimetPezull(nga);
+  if (pezull.length === 0) return true;
 
   const ref = referencaProjektit(url || lexoKonfigurimin().url);
   if (!ref) {
@@ -507,7 +500,7 @@ export async function instaloSkemen(token, url) {
     res = await fetch(`${API_MANAGEMENT}/v1/projects/${ref}/database/query`, {
       method: "POST",
       headers: { Authorization: `Bearer ${kontrolli.token}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ query: SQL_INSTALIMI }),
+      body: JSON.stringify({ query: sqlPerMigrim(nga) }),
     });
   } catch {
     throw gabimi(
@@ -527,9 +520,68 @@ export async function instaloSkemen(token, url) {
     throw gabimi(data?.message || `Supabase u përgjigj me gabimin ${res.status}.`, "server");
   }
 
-  // Only the fact that it ran is remembered. The token itself goes no further than this function.
+  // The project itself is told where it got to, so every other device reads the answer rather than
+  // guessing from what its own copy of the app happens to ship. Best effort: the migration has run,
+  // and failing to write a marker must not report that as a failed migration.
+  await shenoVersioninSkemes(SKEMA_VERSIONI).catch(() => undefined);
+  // Only the fact that it ran is remembered here. The token goes no further than this function.
   ruajKonfigurimin({ skemaVersioni: SKEMA_VERSIONI });
   return true;
+}
+
+/**
+ * Which migration the connected project has reached.
+ *
+ * Read from the project rather than from this device, because the project is the thing that was
+ * migrated - a laptop that has never run one would otherwise report the phone's work as missing.
+ * A project holding the table but no marker was set up before the app started counting, which is
+ * migration 1 and nothing else (`VERSIONI_PARA_NUMERIMIT`).
+ *
+ * Throws with `kodi: "tabela"` when there is no table at all - that is not "out of date", it is
+ * "never set up", and the app says something different about it.
+ */
+export async function lexoVersioninSkemes() {
+  const rreshtat = await rest(
+    `${TABELA}?store=eq.${STORI_META}&record_id=eq.${ID_SKEMES}&select=data&limit=1`
+  );
+  const versioni = Number(rreshtat?.[0]?.data?.versioni);
+  return Number.isFinite(versioni) && versioni > 0 ? versioni : VERSIONI_PARA_NUMERIMIT;
+}
+
+/** Records that reading in the project's own table. */
+export async function shenoVersioninSkemes(versioni) {
+  const k = await siguroSesionin();
+  await rest(`${TABELA}?on_conflict=user_id,store,record_id`, {
+    method: "POST",
+    headers: { Prefer: "resolution=merge-duplicates,return=minimal" },
+    body: [
+      {
+        user_id: k.userId,
+        store: STORI_META,
+        record_id: ID_SKEMES,
+        deleted: false,
+        data: { versioni, perditesuar: new Date().toISOString() },
+      },
+    ],
+  });
+  return versioni;
+}
+
+/** What the sync page needs to decide between "up to date", "needs an update" and "never set up". */
+export async function gjendjaSkemes() {
+  try {
+    const versioni = await lexoVersioninSkemes();
+    return {
+      versioni,
+      iFundit: SKEMA_VERSIONI,
+      perditeso: versioni < SKEMA_VERSIONI,
+      pezull: migrimetPezull(versioni),
+      mungon: false,
+    };
+  } catch (err) {
+    if (err?.kodi !== "tabela") throw err;
+    return { versioni: 0, iFundit: SKEMA_VERSIONI, perditeso: true, pezull: MIGRIMET, mungon: true };
+  }
 }
 
 /**
@@ -568,55 +620,4 @@ export async function ndryshoCelesin(celesiIRi) {
   return ruajKonfigurimin({ anonKey: kontrolli.celesi });
 }
 
-/** The setup script, shown on the sync page with a copy button and run once by the user in their
- * own project's SQL editor. One table, one policy, one index. */
-export const SQL_INSTALIMI = `-- FinanCarePersonal · sinkronizimi
--- Ekzekutojeni një herë te Supabase → SQL Editor → New query → Run.
 
-create table if not exists public.${TABELA} (
-  user_id    uuid        not null default auth.uid() references auth.users on delete cascade,
-  store      text        not null,
-  record_id  text        not null,
-  updated_at timestamptz not null default now(),
-  deleted    boolean     not null default false,
-  data       jsonb,
-  primary key (user_id, store, record_id)
-);
-
--- Pa këtë çdo përdorues i projektit do t'i shihte rreshtat e tjetrit.
-alter table public.${TABELA} enable row level security;
-
-drop policy if exists "vetem rreshtat e mi" on public.${TABELA};
-create policy "vetem rreshtat e mi" on public.${TABELA}
-  for all
-  using (auth.uid() = user_id)
-  with check (auth.uid() = user_id);
-
--- Ora e serverit, jo ajo e telefonit: pa këtë, dy pajisje me orë të pabarabarta
--- do të krahasoheshin me njësi të ndryshme dhe një telefon i mbetur pas do të
--- humbte ndryshime që duhej t'i fitonte. Vlera e dërguar nga pajisja shpërfillet.
-create or replace function public.${TABELA}_ora()
-returns trigger
-language plpgsql
-as $$
-begin
-  new.updated_at := now();
-  return new;
-end;
-$$;
-
-drop trigger if exists ${TABELA}_ora on public.${TABELA};
-create trigger ${TABELA}_ora
-  before insert or update on public.${TABELA}
-  for each row execute function public.${TABELA}_ora();
-
--- Nëse projekti nuk i ekspozon vetvetiu tabelat e reja te Data API
--- ("Automatically expose new tables" i çaktivizuar), pa këto tabela ekziston
--- por API-ja e kthen si të palejuar. Vetëm përdoruesi i identifikuar merr të
--- drejta; rreshtat i filtron gjithsesi rregulli RLS më sipër.
-grant usage on schema public to anon, authenticated;
-grant select, insert, update, delete on public.${TABELA} to authenticated;
-
--- Sinkronizimi merr vetëm çka ka ndryshuar që nga hera e fundit.
-create index if not exists ${TABELA}_updated_at_idx
-  on public.${TABELA} (user_id, updated_at);`;

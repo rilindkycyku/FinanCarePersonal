@@ -39,6 +39,7 @@ import {
   putProfileRaw, putRaw, putRawShume, shenoFshirjen, shenoFshirjetShume,
 } from "./db";
 import { TABELA, lexoKonfigurimin, rest, ruajKonfigurimin, siguroSesionin } from "./supabase";
+import { STORI_META } from "./skema";
 
 /** The profile is a single record in a store of its own, so it travels under a fixed id. */
 export const STORI_PROFILIT = "profile";
@@ -569,7 +570,9 @@ export async function numeroCloud() {
   // `limit=1` keeps the body to one row; the number itself rides in the header. Deliberately no
   // `Range` header alongside it - a range asking for a row an empty table does not have is
   // answered with 416, and an empty cloud copy is exactly the state right after the delete button.
-  const res = await rest(`${TABELA}?select=record_id&limit=1`, {
+  // The schema marker is not one of the user's records, so it is left out of the count that
+  // answers "did my ledger actually get up there?".
+  const res = await rest(`${TABELA}?store=neq.${STORI_META}&select=record_id&limit=1`, {
     headers: { Prefer: "count=exact" },
     kthePergjigjen: true,
   });

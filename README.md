@@ -306,6 +306,25 @@ where store = 'transactions' and not deleted
 order by dita desc;
 ```
 
+### Kur skema ndryshon
+
+Bazën e administroni ju, pra nuk ka deploy që ta prekë dhe nuk ka mënyrë t&apos;ju gjejë dikush po
+t&apos;i duhet një ndryshim atje. Prandaj **aplikacioni është ai që di**: mban vetë listën e
+migrimeve (`src/lib/skema.js`), lexon te cili prej tyre ka arritur projekti juaj dhe i ekzekuton
+ato që mungojnë.
+
+- Versioni i projektit ruhet si një rresht i zakonshëm i tabelës që tashmë keni
+  (`store = 'meta'`) - jo si tabelë e vetën, e cila do të ishte një migrim për të krijuar gjënë që
+  mban shënim migrimet.
+- Faqja **Sinkronizimi** e krahason atë me versionin që sjell ky release. Kur projekti ka mbetur
+  pas, del një njoftim që thotë **cilat hapa** i mungojnë, me fjalë e jo me numra, dhe butoni
+  *Përditëso projektin* ekzekuton **vetëm ato** - jo gjithë skriptin nga e para.
+- Një projekt i konfiguruar para se të fillonte ky numërim lexohet si versioni 1, pra askush nuk
+  njoftohet kot.
+- Migrimet janë **vetëm-shtesë** dhe të përsëritshme pa dëm: një pajisje ende me versionin e vjetër
+  duhet të vazhdojë të sinkronizohet kundër një projekti që një pajisje e re sapo e përditësoi.
+  Prandaj një kolonë nuk hiqet në të njëjtin release që ndalon së shkruari në të.
+
 **Nënkategoritë nuk kërkojnë asnjë ndryshim te projekti juaj.** Prindi i një kategorie ruhet si një
 fushë e zakonshme brenda `data` (`{"id":"cat_…","emri":"Market","prindi":"cat_default_ushqim"}`),
 pra skripti SQL mbetet ai që ishte, nuk ka `ALTER TABLE` për të bërë, dhe një pajisje ende me
@@ -362,6 +381,7 @@ src/
               ThemeContext, DialogContext
   lib/        db.js (IndexedDB), finance.js (çdo kalkulim), csv.js (leximi i ekstraktit),
               kategorite.js (nënkategoritë: prindi, familja, pema e pickerave),
+              skema.js (migrimet e projektit tuaj Supabase, të numëruara),
               rregullat.js (kujtesa e kategorive), images.js (përpunimi i fotove të faturave),
               zip.js (arkivi i kopjes së plotë), calc.js (llogaritësi i fushave të vlerës),
               supabase.js (klienti i vogël i projektit tuaj), sinkronizimi.js (rregullat e bashkimit),

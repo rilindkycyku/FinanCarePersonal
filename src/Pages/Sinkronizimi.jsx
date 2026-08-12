@@ -15,8 +15,8 @@ import { useData } from "../Context/DataContext";
 import { useDialog } from "../Context/DialogContext";
 import { useSync } from "../Context/SyncContext";
 import {
-  dil, hyr, kontrolloCelesin, ndryshoCelesin, normalizoUrl, pastroKonfigurimin, regjistrohu,
-  ruajKonfigurimin,
+  dil, gjendjaSkemes, hyr, kontrolloCelesin, ndryshoCelesin, normalizoUrl, pastroKonfigurimin,
+  regjistrohu, ruajKonfigurimin,
 } from "../lib/supabase";
 import { fshiCloud, numeroCloud, rivendosKufijte } from "../lib/sinkronizimi";
 import "./Styles/PremiumTheme.css";
@@ -57,6 +57,9 @@ function Sinkronizimi() {
   const [pune, setPune] = useState(null);
   const [searchParams, setSearchParams] = useSearchParams();
   const [nCloud, setNCloud] = useState(null);
+  // Which migration the connected project has reached, and what it still owes - read from the
+  // project itself rather than from this device, since the project is the thing being migrated.
+  const [skema, setSkema] = useState(null);
   // Read from the address on the very first render rather than in an effect: the failure
   // announcement below decides whether to open a dialog during that same commit, and a `setState`
   // from an effect would still be `false` when it looks.
@@ -136,6 +139,27 @@ function Sinkronizimi() {
     numeroCloud()
       .then((n) => !anuluar && setNCloud(n))
       .catch(() => !anuluar && setNCloud(null));
+    return () => {
+      anuluar = true;
+    };
+  }, [lidhur, konfigurimi.fundit]);
+
+  /**
+   * Whether the project is still on an older migration than this release ships.
+   *
+   * Asked of the project, once per visit and again after every sync, because a release that
+   * changes the schema has no other way of reaching somebody's own database - nobody deploys to
+   * it, and the app is the only thing that knows what it should look like.
+   */
+  useEffect(() => {
+    if (!lidhur) {
+      setSkema(null);
+      return;
+    }
+    let anuluar = false;
+    gjendjaSkemes()
+      .then((gj) => !anuluar && setSkema(gj))
+      .catch(() => !anuluar && setSkema(null));
     return () => {
       anuluar = true;
     };
@@ -301,7 +325,34 @@ function Sinkronizimi() {
         </p>
 
         <ModaliKonfigurimit show={sqlHapur} onHide={() => setSqlHapur(false)} url={konfigurimi.url || normalizoUrl(form.url)}
-          onGati={() => { pastroGabimin(); sinkronizoTani(); }} />
+          nga={skema?.versioni ?? 0}
+          onGati={() => {
+            pastroGabimin();
+            gjendjaSkemes().then(setSkema).catch(() => undefined);
+            sinkronizoTani();
+          }} />
+
+        {/* A release can change what the project's table has to look like, and there is no deploy
+            that could do it - so the app compares what it ships with what the project reports and
+            says so here. `mungon` is a different message (the project was never set up at all),
+            already handled by the failure this page shows above. */}
+        {lidhur && skema?.perditeso && !skema.mungon && (
+          <Alert variant="warning">
+            Projekti juaj është në versionin {skema.versioni} të skemës, kurse ky aplikacion pret
+            versionin {skema.iFundit}. Deri sa të përditësohet, gjërat e reja mund të mos ruhen si
+            duhet.
+            <ul className="mb-0 mt-2 ps-3 small">
+              {skema.pezull.map((m) => (
+                <li key={m.versioni}>{m.emri}</li>
+              ))}
+            </ul>
+            <div className="mt-3">
+              <Button variant="outline-light" size="sm" onClick={() => setSqlHapur(true)}>
+                <Wand2 size={15} className="me-1" /> Përditëso projektin
+              </Button>
+            </div>
+          </Alert>
+        )}
 
         {/* Detected from what the last push came back with (sinkronizimi.js): a project set up
             before the trigger existed keeps whatever time the device sent, and then the order of

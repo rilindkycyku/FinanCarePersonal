@@ -4,6 +4,7 @@ import { Check, Code2, Copy, ExternalLink, Wand2 } from "lucide-react";
 import {
   LINKU_TOKENIT, SQL_INSTALIMI, instaloSkemen, linkuSqlEditor, referencaProjektit,
 } from "../../lib/supabase";
+import { migrimetPezull, sqlPerMigrim } from "../../lib/skema";
 import "../ModalForms.css";
 
 const RRUGET = [
@@ -12,7 +13,7 @@ const RRUGET = [
 ];
 
 /** The automatic route: one account token, one call, and the project has its table. */
-function Vetekonfigurimi({ url, onGati }) {
+function Vetekonfigurimi({ url, nga, pezull, onGati }) {
   // The token lives in this state and nowhere else - never saved, never sent anywhere but the one
   // request, and cleared the moment it has been used.
   const [token, setToken] = useState("");
@@ -25,12 +26,15 @@ function Vetekonfigurimi({ url, onGati }) {
     setDuke(true);
     setRezultati(null);
     try {
-      await instaloSkemen(token, url);
+      await instaloSkemen(token, url, nga);
       setToken("");
+      // Says what actually ran, which for an update is not the same thing as for a first setup.
       setRezultati({
         lloji: "success",
         teksti:
-          "Projekti u konfigurua - tabela, rregulli RLS, ora e serverit dhe indeksi janë në vend. Sinkronizimi po vazhdon vetë.",
+          nga > 0
+            ? `Projekti u përditësua: ${pezull.map((m) => m.emri.toLowerCase()).join(", ")}. Sinkronizimi po vazhdon vetë.`
+            : "Projekti u konfigurua - tabela, rregulli RLS, ora e serverit dhe indeksi janë në vend. Sinkronizimi po vazhdon vetë.",
       });
       // The reason anyone opened this dialog is that syncing was failing, so the last step is not
       // to announce success and wait to be pressed again - it is to go and sync.
@@ -85,7 +89,7 @@ function Vetekonfigurimi({ url, onGati }) {
 }
 
 /** The route that always works, whatever a browser or an API decides: the script itself. */
-function Skripti({ kopjuar, deshtoi }) {
+function Skripti({ kopjuar, deshtoi, skripti, pezull }) {
   return (
     <>
       <p className="text-muted small">
@@ -93,6 +97,13 @@ function Skripti({ kopjuar, deshtoi }) {
         mjafton <strong>Run</strong>. Ekzekutohet një herë, por përsëritja nuk prish gjë: çdo hap i
         tij e kontrollon vetë nëse ekziston.
       </p>
+      {pezull.length > 0 && (
+        <ul className="text-muted small ps-3">
+          {pezull.map((m) => (
+            <li key={m.versioni}>{m.emri}</li>
+          ))}
+        </ul>
+      )}
       <pre
         style={{
           whiteSpace: "pre-wrap",
@@ -107,7 +118,7 @@ function Skripti({ kopjuar, deshtoi }) {
           margin: 0,
         }}
       >
-        {SQL_INSTALIMI}
+        {skripti}
       </pre>
       {deshtoi && (
         <div className="fcp-row-sub mt-2">
@@ -131,8 +142,12 @@ function Skripti({ kopjuar, deshtoi }) {
  * self-hosted project with no reference to name, or simply someone who would rather not hand over
  * an account token.
  */
-function ModaliKonfigurimit({ show, onHide, url, onGati }) {
+function ModaliKonfigurimit({ show, onHide, url, nga = 0, onGati }) {
   const [rruga, setRruga] = useState("vete");
+  // A project part-way through the list is shown only what it still owes; one that has nothing at
+  // all (or has never been read) is shown the whole thing.
+  const pezull = migrimetPezull(nga);
+  const skripti = nga > 0 && pezull.length > 0 ? sqlPerMigrim(nga) : SQL_INSTALIMI;
   const [kopjuar, setKopjuar] = useState(false);
   const [deshtoi, setDeshtoi] = useState(false);
 
@@ -147,7 +162,7 @@ function ModaliKonfigurimit({ show, onHide, url, onGati }) {
 
   const kopjo = async () => {
     try {
-      await navigator.clipboard.writeText(SQL_INSTALIMI);
+      await navigator.clipboard.writeText(skripti);
       setDeshtoi(false);
       setKopjuar(true);
       setTimeout(() => setKopjuar(false), 2500);
@@ -183,9 +198,9 @@ function ModaliKonfigurimit({ show, onHide, url, onGati }) {
         </div>
 
         {rruga === "vete" ? (
-          show && <Vetekonfigurimi url={url} onGati={onGati} />
+          show && <Vetekonfigurimi url={url} nga={nga} pezull={pezull} onGati={onGati} />
         ) : (
-          <Skripti kopjuar={kopjuar} deshtoi={deshtoi} />
+          <Skripti kopjuar={kopjuar} deshtoi={deshtoi} skripti={skripti} pezull={pezull} />
         )}
       </Modal.Body>
       <Modal.Footer>
@@ -194,7 +209,7 @@ function ModaliKonfigurimit({ show, onHide, url, onGati }) {
         </Button>
         {rruga === "skript" && (
           <>
-            <Button className="btn-primary" href={linkuSqlEditor(url)} target="_blank" rel="noreferrer">
+            <Button className="btn-primary" href={linkuSqlEditor(url, skripti)} target="_blank" rel="noreferrer">
               <ExternalLink size={16} className="me-1" /> Hap SQL Editor
             </Button>
             <Button variant="outline-light" onClick={kopjo}>
