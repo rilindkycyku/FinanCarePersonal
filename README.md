@@ -244,9 +244,13 @@ përmes bazës suaj.
    skeda *Legacy*; aplikacioni i pranon të dyja, por i riu është ai që Supabase rekomandon dhe ai
    që mund të zëvendësohet i vetëm, pa i prishur çelësat e tjerë. Çelësat *secret* /
    *service_role* mos i kopjoni - aplikacioni i refuzon vetë nëse ngjiten gabimisht.
-3. Te faqja **Sinkronizimi** vendosni adresën e çelësin, pastaj shtypni **Konfiguro projektin**.
-   Aty ka dy rrugë për të njëjtin përfundim - një tabelë e vetme, rregulli RLS, ora e serverit dhe
-   një indeks:
+3. Te faqja **Sinkronizimi**, te *Hapi 2*, vendosni adresën, çelësin, email-in e fjalëkalimin -
+   dhe, po deshët, edhe **token-in e llogarisë** (`sbp_…`). Me të, tabela krijohet **gjatë vetë
+   lidhjes**: një formular, një buton, dhe pajisja del e lidhur me projektin gati. Pa të, lidhja
+   bëhet njësoj dhe tabelën e krijoni kur t&apos;ju duhet.
+
+   Po deshët ta bëni veçmas, butoni **Konfiguro projektin** jep të dyja rrugët për të njëjtin
+   përfundim - një tabelë e vetme, rregulli RLS, ora e serverit dhe një indeks:
    - **Automatikisht**: ngjitni një *personal access token* të llogarisë suaj Supabase
      ([Account → Access Tokens](https://supabase.com/dashboard/account/tokens), fillon me `sbp_`)
      dhe aplikacioni e ekzekuton vetë skriptin. Token-i përdoret **vetëm për atë thirrje dhe nuk
