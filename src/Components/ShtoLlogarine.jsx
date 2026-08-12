@@ -17,7 +17,7 @@ const BLANK = {
 };
 
 /** Add/edit one account (cash, bank, card, savings…). `bilanciFillestar` is the balance the
- * account already had when it was added — every transaction is applied on top of it. */
+ * account already had when it was added - every transaction is applied on top of it. */
 function ShtoLlogarine({ show, onHide, initial }) {
   const { save, simboli, njeLlogari, llogariaKryesore } = useData();
   // Archiving the account everything is booked into would leave the app with nowhere to write, so

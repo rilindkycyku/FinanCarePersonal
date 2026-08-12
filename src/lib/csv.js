@@ -1,7 +1,7 @@
 /**
  * Reading a bank or card statement exported as CSV.
  *
- * Everything here is pure and runs in the browser — the file is never uploaded anywhere, same as
+ * Everything here is pure and runs in the browser - the file is never uploaded anywhere, same as
  * the rest of the app. The work is in the guessing: no two banks agree on the delimiter, the date
  * order, where the minus sign goes, or whether debit and credit are one column or two, and the
  * user should not have to normalise a file by hand before it can be read.
@@ -15,7 +15,7 @@ import { toNumber } from "./format";
 
 // ── The file itself ─────────────────────────────────────────────────────────
 
-/** The delimiter that splits the header row into the most columns — which is what a delimiter
+/** The delimiter that splits the header row into the most columns - which is what a delimiter
  * does, and what none of the others will do by accident. */
 export function detectDelimiter(text) {
   const rreshti = String(text).split(/\r?\n/).find((r) => r.trim() !== "") || "";
@@ -33,7 +33,7 @@ function splitLine(line, delimiter) {
   for (let i = 0; i < line.length; i += 1) {
     const c = line[i];
     if (c === '"') {
-      // A doubled quote inside a quoted field is a literal quote — the CSV way of escaping.
+      // A doubled quote inside a quoted field is a literal quote - the CSV way of escaping.
       if (brendaThonjezave && line[i + 1] === '"') {
         aktuale += '"';
         i += 1;
@@ -138,7 +138,7 @@ const muajtShkurt = {
  * `12 Mar 2026`, and ignores a time riding along after the date.
  *
  * `dita e para` decides the ambiguous case: `03/04/2026` is 3 April here and 4 March in a file
- * from an American bank, and nothing in the string can tell them apart — so it is a setting the
+ * from an American bank, and nothing in the string can tell them apart - so it is a setting the
  * import screen exposes rather than a guess made in silence. Where one of the two numbers is
  * greater than 12 the order is certain and the setting is ignored.
  */
@@ -261,7 +261,7 @@ export function guessMapping(headers, rows = []) {
 /**
  * The parsed rows as candidate transactions, each carrying why it is what it is.
  *
- * Nothing is written here — the import screen shows these, lets each be included or excluded and
+ * Nothing is written here - the import screen shows these, lets each be included or excluded and
  * categorised, and only then are they saved. A row that could not be read keeps its place in the
  * list with `gabim` set, because a row silently missing from an import is a row of money the user
  * will never know was dropped.
@@ -313,7 +313,7 @@ export function rowsToTransactions(rows, mapping, { ditaEPare = true, shenjaPerk
 }
 
 /**
- * Marks candidates that look like something already in the ledger — the second import of an
+ * Marks candidates that look like something already in the ledger - the second import of an
  * overlapping statement is the normal case, not the exception.
  *
  * Same day, same amount and same direction is the test. Description is deliberately left out of it:

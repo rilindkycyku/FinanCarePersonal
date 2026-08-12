@@ -54,7 +54,7 @@ function ShtoQellimin({ show, onHide, initial }) {
       vleraSynim: toNumber(goal.vleraSynim),
       vleraFillestare: toNumber(goal.vleraFillestare),
       dataSynim: goal.dataSynim || null,
-      // Single-account mode hides the picker — every goal is held in the one account there is.
+      // Single-account mode hides the picker - every goal is held in the one account there is.
       llogariaId: (njeLlogari ? llogariaKryesore?.id : goal.llogariaId) || null,
       ngjyra: goal.ngjyra,
       pershkrimi: goal.pershkrimi.trim(),

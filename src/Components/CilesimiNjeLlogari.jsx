@@ -15,7 +15,7 @@ import "../Pages/Styles/Personal.css";
  *
  * With the mode on, every form books into a single main account and stops asking which one, so
  * cash, bank and card are no longer tracked apart. Turning it on offers to merge whatever accounts
- * already exist into the main one — otherwise their balances and transactions would be stranded on
+ * already exist into the main one - otherwise their balances and transactions would be stranded on
  * accounts nothing points at any more.
  */
 function CilesimiNjeLlogari({ onMessage }) {

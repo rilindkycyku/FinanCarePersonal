@@ -1,5 +1,5 @@
 /* ══════════════════════════════════════════════════════════════
-   FINANCAREPERSONAL — shared page widgets
+   FINANCAREPERSONAL - shared page widgets
    KPI tiles, panels, progress bars and list rows, all built on the
    --sp-* tokens from PremiumTheme.css so both themes come for free.
    ══════════════════════════════════════════════════════════════ */
@@ -528,7 +528,7 @@ button.hero-cta {
   align-self: center;
 }
 
-/* Category grid — compact cards, since there are many of them. */
+/* Category grid - compact cards, since there are many of them. */
 .fcp-cat-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
@@ -876,7 +876,7 @@ body.light-mode .fcp-month-nav {
   background: linear-gradient(180deg, rgba(239, 68, 68, 0.09), var(--sp-surface) 55%) !important;
 }
 
-/* Without this the shared card hover would paint the border emerald — the one colour this card
+/* Without this the shared card hover would paint the border emerald - the one colour this card
    should never go. */
 .card.profile-card.fcp-zona-rrezik:hover {
   border-color: rgba(239, 68, 68, 0.6) !important;
@@ -893,7 +893,7 @@ body.light-mode .card.profile-card.fcp-zona-rrezik:hover {
 
 /* ── Balance line chart (GrafikuBilancit) ─────────────────────────────────────
    The SVG is stretched to the panel width with `preserveAspectRatio="none"`, so every stroke in it
-   carries `vector-effect: non-scaling-stroke` and nothing round or textual is drawn inside it —
+   carries `vector-effect: non-scaling-stroke` and nothing round or textual is drawn inside it -
    the dots and the month labels are positioned over and under it instead. */
 .fcp-line-chart {
   position: relative;
@@ -968,8 +968,8 @@ body.light-mode .card.profile-card.fcp-zona-rrezik:hover {
 .fcp-line-labels span.parashikim { color: var(--sp-cyan); }
 
 /* ── CSV import preview (ImportoCsv) ──────────────────────────────────────────
-   Rows that will not be imported stay on screen rather than being filtered away — a row silently
-   missing from an import is money the user never learns was dropped — so they are dimmed instead,
+   Rows that will not be imported stay on screen rather than being filtered away - a row silently
+   missing from an import is money the user never learns was dropped - so they are dimmed instead,
    and unreadable ones carry the red edge that says "read me, do not scroll past". */
 .fcp-csv-table {
   --bs-table-bg: transparent;

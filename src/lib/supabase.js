@@ -7,7 +7,7 @@
  * belonging to FinanCarePersonal, because there is none.
  *
  * `@supabase/supabase-js` would do the same job, but it is ~120 kB for what turns out to be four
- * HTTP calls — a password grant, a token refresh, a PostgREST select and a PostgREST upsert — and
+ * HTTP calls - a password grant, a token refresh, a PostgREST select and a PostgREST upsert - and
  * this is a PWA that people install on a phone. Same reasoning as the hand-rolled ZIP writer.
  *
  * ---- what is stored on this device ----
@@ -16,14 +16,14 @@
  * `localStorage` (supabase-js keeps its own session there too). None of it is more sensitive than
  * what is already in IndexedDB: the *ledger itself* sits in this browser in plain form, so a
  * device someone else can unlock was already showing them every transaction. What matters is that
- * the key saved here is the **public** one — see `kontrolloCelesin`, which refuses a service-role
+ * the key saved here is the **public** one - see `kontrolloCelesin`, which refuses a service-role
  * key outright, since that one bypasses row-level security and would turn a stolen backup of
  * localStorage into full access to the database.
  */
 
 const CELESI_RUAJTJES = "financarepersonal.sinkronizimi";
 
-/** One table holds every record, keyed by (user, store, id) — see the SQL on the sync page. A
+/** One table holds every record, keyed by (user, store, id) - see the SQL on the sync page. A
  * table per store would mean a new migration in every user's own project each time the app gains
  * one, which is not a thing this app can ship. */
 export const TABELA = "financare_records";
@@ -40,7 +40,7 @@ const BOSH = {
   automatik: true,
   // Sync watermarks: the newest `updated_at` already pulled, and the local clock reading of the
   // last successful push. Kept here rather than in the profile because the profile is itself one
-  // of the things being synced — a watermark travelling between devices would be nonsense.
+  // of the things being synced - a watermark travelling between devices would be nonsense.
   pulledAt: "",
   pushedAt: 0,
   fundit: null,
@@ -79,7 +79,7 @@ export function ruajKonfigurimin(patch) {
   return i;
 }
 
-/** Forgets the project, the key and the session — everything this device knew about the cloud
+/** Forgets the project, the key and the session - everything this device knew about the cloud
  * copy. The cloud copy itself is untouched, and so is the ledger in IndexedDB. */
 export function pastroKonfigurimin() {
   try {
@@ -97,9 +97,21 @@ export function eshteLidhur(k = lexoKonfigurimin()) {
   return Boolean(k.url && k.anonKey && k.refreshToken);
 }
 
+/**
+ * A project has been set up on this device, whether or not the session still works.
+ *
+ * The difference matters to anything that reports state: a refresh the project refuses drops the
+ * tokens, so `eshteLidhur` turns false - and a device that judged itself by that alone would go
+ * completely quiet at the exact moment its user most needs telling that nothing is syncing any
+ * more.
+ */
+export function eshteKonfiguruar(k = lexoKonfigurimin()) {
+  return Boolean(k.url && k.anonKey);
+}
+
 // ---- validation of what the user pastes in ----
 
-/** Accepts `abcdefg.supabase.co`, the full URL, and either with a trailing slash — the three
+/** Accepts `abcdefg.supabase.co`, the full URL, and either with a trailing slash - the three
  * shapes people actually copy out of the Supabase dashboard. */
 export function normalizoUrl(hyrja) {
   const tekst = String(hyrja || "").trim().replace(/\/+$/, "");
@@ -117,7 +129,7 @@ export function normalizoUrl(hyrja) {
 
 /** The payload of a Supabase key that is a JWT, or null for anything else (the newer
  * `sb_publishable_…` / `sb_secret_…` keys, or nonsense). Only the `role` claim is read, and it is
- * read to *refuse* a key, never to trust one — the project itself is the thing that validates it. */
+ * read to *refuse* a key, never to trust one - the project itself is the thing that validates it. */
 function payloadJwt(celesi) {
   const pjeset = String(celesi).split(".");
   if (pjeset.length !== 3) return null;
@@ -135,24 +147,24 @@ function payloadJwt(celesi) {
  * That key ignores row-level security by design, which means it is the one credential that must
  * never sit in a browser: with it, anything that can read this device's localStorage can read and
  * rewrite the whole database. The dashboard prints it two lines under the public key, so pasting
- * the wrong one is an ordinary mistake — worth catching loudly rather than "working" and quietly
+ * the wrong one is an ordinary mistake - worth catching loudly rather than "working" and quietly
  * leaving the database wide open.
  */
 export function kontrolloCelesin(celesi) {
   const tekst = String(celesi || "").trim();
-  if (!tekst) return { ok: false, gabim: "Shkruani çelësin publik (anon / publishable) të projektit." };
+  if (!tekst) return { ok: false, gabim: "Shkruani çelësin publik (publishable, ose anon i vjetër) të projektit." };
   if (/^sb_secret_/i.test(tekst)) {
-    return { ok: false, gabim: "Ky është çelësi sekret (secret) — ai nuk vendoset kurrë në shfletues. Përdorni çelësin publishable." };
+    return { ok: false, gabim: "Ky është çelësi sekret (secret) - ai nuk vendoset kurrë në shfletues. Përdorni çelësin publishable." };
   }
   const payload = payloadJwt(tekst);
   if (payload?.role === "service_role") {
-    return { ok: false, gabim: "Ky është çelësi service_role — ai anashkalon çdo rregull sigurie dhe nuk duhet ruajtur në shfletues. Përdorni çelësin anon public." };
+    return { ok: false, gabim: "Ky është çelësi service_role - ai anashkalon çdo rregull sigurie dhe nuk duhet ruajtur në shfletues. Përdorni çelësin anon public." };
   }
   if (payload && payload.role && payload.role !== "anon") {
-    return { ok: false, gabim: `Çelësi ka rolin "${payload.role}"; duhet çelësi anon public i projektit.` };
+    return { ok: false, gabim: `Çelësi ka rolin "${payload.role}"; duhet çelësi publik i projektit.` };
   }
   if (!payload && !/^sb_publishable_/i.test(tekst)) {
-    return { ok: false, gabim: "Çelësi nuk duket si një çelës Supabase (anon public ose sb_publishable_…)." };
+    return { ok: false, gabim: "Çelësi nuk duket si një çelës Supabase (sb_publishable_… ose anon i vjetër)." };
   }
   return { ok: true, celesi: tekst };
 }
@@ -178,21 +190,21 @@ async function trupi(res) {
 function mesazhiGabimit(res, data) {
   const kod = data?.error_code || data?.code || "";
   const teksti = data?.msg || data?.message || data?.error_description || data?.error || "";
-  if (res.status === 0) return "Nuk u arrit projekti — kontrolloni internetin dhe adresën e projektit.";
+  if (res.status === 0) return "Nuk u arrit projekti - kontrolloni internetin dhe adresën e projektit.";
   if (/invalid login credentials/i.test(teksti) || kod === "invalid_credentials") {
     return "Email-i ose fjalëkalimi nuk përputhen me këtë projekt.";
   }
   if (/email not confirmed/i.test(teksti) || kod === "email_not_confirmed") {
-    return "Email-i nuk është konfirmuar ende — hapni linkun që ju dërgoi Supabase, ose çaktivizoni konfirmimin te Authentication → Providers → Email.";
+    return "Email-i nuk është konfirmuar ende - hapni linkun që ju dërgoi Supabase, ose çaktivizoni konfirmimin te Authentication → Providers → Email.";
   }
   if (/user already registered/i.test(teksti) || kod === "user_already_exists") {
-    return "Kjo llogari ekziston tashmë në projekt — përdorni «Hyr» në vend të «Krijo llogari».";
+    return "Kjo llogari ekziston tashmë në projekt - përdorni «Hyr» në vend të «Krijo llogari».";
   }
   if (/weak password|password should be/i.test(teksti) || kod === "weak_password") {
     return "Fjalëkalimi është shumë i shkurtër për këtë projekt (zakonisht duhen të paktën 6 karaktere).";
   }
   if (/signups not allowed|signup is disabled/i.test(teksti) || kod === "signup_disabled") {
-    return "Projekti i ka çaktivizuar regjistrimet e reja — aktivizojini te Authentication → Providers → Email.";
+    return "Projekti i ka çaktivizuar regjistrimet e reja - aktivizojini te Authentication → Providers → Email.";
   }
   if (res.status === 401 && !teksti) return "Çelësi publik nuk pranohet nga ky projekt.";
   if (/Invalid API key|No API key found/i.test(teksti)) {
@@ -210,7 +222,7 @@ async function fetchAuth(k, shtegu, body) {
       body: JSON.stringify(body),
     });
   } catch {
-    throw gabimi("Projekti nuk u arrit — kontrolloni internetin dhe adresën e projektit.", "rrjeti");
+    throw gabimi("Projekti nuk u arrit - kontrolloni internetin dhe adresën e projektit.", "rrjeti");
   }
   const data = await trupi(res);
   if (!res.ok) throw gabimi(mesazhiGabimit(res, data), res.status === 401 ? "celesi" : "auth");
@@ -233,13 +245,13 @@ function ruajSesionin(data, shtese = {}) {
 export async function hyr({ email, password, url, anonKey }) {
   const k = { ...lexoKonfigurimin(), ...(url ? { url } : {}), ...(anonKey ? { anonKey } : {}) };
   const data = await fetchAuth(k, "token?grant_type=password", { email: email.trim(), password });
-  if (!data.access_token) throw gabimi("Projekti nuk ktheu një sesion — provoni sërish.", "auth");
+  if (!data.access_token) throw gabimi("Projekti nuk ktheu një sesion - provoni sërish.", "auth");
   return ruajSesionin(data, { url: k.url, anonKey: k.anonKey });
 }
 
 /**
  * Creates the account inside the user's own project. With email confirmation on (the Supabase
- * default) there is no session in the answer — the account exists but has to be confirmed first,
+ * default) there is no session in the answer - the account exists but has to be confirmed first,
  * which is reported rather than treated as a failure.
  */
 export async function regjistrohu({ email, password, url, anonKey }) {
@@ -254,13 +266,13 @@ export async function regjistrohu({ email, password, url, anonKey }) {
  * so a session left alone for a week keeps working without asking for the password again.
  *
  * A refresh the project rejects (password changed elsewhere, user deleted, project paused) drops
- * the tokens but keeps the URL and the key — the user has to type the password again, not set the
+ * the tokens but keeps the URL and the key - the user has to type the password again, not set the
  * whole thing up again.
  */
 export async function siguroSesionin() {
   const k = lexoKonfigurimin();
   if (!k.url || !k.anonKey) throw gabimi("Sinkronizimi nuk është konfiguruar.", "pakonfiguruar");
-  if (!k.refreshToken) throw gabimi("Nuk ka sesion — hyni sërish me email dhe fjalëkalim.", "sesioni");
+  if (!k.refreshToken) throw gabimi("Nuk ka sesion - hyni sërish me email dhe fjalëkalim.", "sesioni");
   if (k.accessToken && Date.now() < k.skadonMe - 60_000) return k;
 
   let data;
@@ -269,7 +281,7 @@ export async function siguroSesionin() {
   } catch (err) {
     if (err.kodi === "rrjeti") throw err;
     ruajKonfigurimin({ accessToken: "", refreshToken: "", skadonMe: 0 });
-    throw gabimi("Sesioni skadoi — hyni sërish me email dhe fjalëkalim.", "sesioni");
+    throw gabimi("Sesioni skadoi - hyni sërish me email dhe fjalëkalim.", "sesioni");
   }
   return ruajSesionin(data);
 }
@@ -291,7 +303,7 @@ export async function dil() {
 
 /**
  * A PostgREST call against the user's project, authenticated as the signed-in user so row-level
- * security applies to it. Returns the parsed body, or null when the caller asked for none —
+ * security applies to it. Returns the parsed body, or null when the caller asked for none -
  * except with `kthePergjigjen`, for the one caller that needs a header (the row count, which
  * PostgREST reports in `Content-Range` rather than in the body).
  */
@@ -310,7 +322,7 @@ export async function rest(shtegu, { method = "GET", body, headers = {}, kthePer
       body: body === undefined ? undefined : JSON.stringify(body),
     });
   } catch {
-    throw gabimi("Projekti nuk u arrit — kontrolloni internetin.", "rrjeti");
+    throw gabimi("Projekti nuk u arrit - kontrolloni internetin.", "rrjeti");
   }
   if (res.ok) return kthePergjigjen ? res : trupi(res);
 
@@ -319,14 +331,50 @@ export async function rest(shtegu, { method = "GET", body, headers = {}, kthePer
   // the single most likely first-run failure, so it gets its own code and its own instruction.
   if (data?.code === "PGRST205" || res.status === 404) {
     throw gabimi(
-      `Tabela "${TABELA}" nuk ekziston në projekt — hapni SQL Editor te Supabase dhe ekzekutoni skriptin e mëposhtëm.`,
+      `Tabela "${TABELA}" nuk ekziston në projekt - hapni SQL Editor te Supabase dhe ekzekutoni skriptin e mëposhtëm.`,
       "tabela"
     );
   }
   if (res.status === 401 || res.status === 403) {
-    throw gabimi("Projekti nuk e lejoi këtë veprim — kontrolloni që rregullat RLS të skriptit janë krijuar.", "leje");
+    throw gabimi("Projekti nuk e lejoi këtë veprim - kontrolloni që rregullat RLS të skriptit janë krijuar.", "leje");
   }
   throw gabimi(data?.message || `Projekti u përgjigj me gabimin ${res.status}.`, "server");
+}
+
+/**
+ * Swaps the saved public key for a new one - the day the user rotates it in Supabase.
+ *
+ * The new key is tried before it is kept, because it is being typed into the very device that
+ * would need it to talk to the project: saving a mistyped key first and discovering it afterwards
+ * would leave the device unable to sync until it was disconnected and set up from scratch. The
+ * check runs while the *old* key still works, so the session it needs is refreshed with the key
+ * that is on its way out.
+ *
+ * Only the key. A different project URL means a different database, with its own users and its own
+ * rows, so nothing about the current session would carry over - that is a reconnection, not an
+ * edit, and the page says so.
+ */
+export async function ndryshoCelesin(celesiIRi) {
+  const kontrolli = kontrolloCelesin(celesiIRi);
+  if (!kontrolli.ok) throw gabimi(kontrolli.gabim, "celesi");
+
+  const k = await siguroSesionin();
+  let res;
+  try {
+    res = await fetch(`${k.url}/rest/v1/${TABELA}?select=record_id&limit=1`, {
+      headers: { apikey: kontrolli.celesi, Authorization: `Bearer ${k.accessToken}` },
+    });
+  } catch {
+    throw gabimi("Projekti nuk u arrit - kontrolloni internetin.", "rrjeti");
+  }
+  if (!res.ok) {
+    const data = await trupi(res);
+    if (res.status === 401 || res.status === 403) {
+      throw gabimi("Projekti nuk e pranoi çelësin e ri - kontrolloni se është kopjuar i plotë dhe nga ky projekt.", "celesi");
+    }
+    throw gabimi(data?.message || `Projekti u përgjigj me gabimin ${res.status}.`, "server");
+  }
+  return ruajKonfigurimin({ anonKey: kontrolli.celesi });
 }
 
 /** The setup script, shown on the sync page with a copy button and run once by the user in their
@@ -352,6 +400,24 @@ create policy "vetem rreshtat e mi" on public.${TABELA}
   for all
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
+
+-- Ora e serverit, jo ajo e telefonit: pa këtë, dy pajisje me orë të pabarabarta
+-- do të krahasoheshin me njësi të ndryshme dhe një telefon i mbetur pas do të
+-- humbte ndryshime që duhej t'i fitonte. Vlera e dërguar nga pajisja shpërfillet.
+create or replace function public.${TABELA}_ora()
+returns trigger
+language plpgsql
+as $$
+begin
+  new.updated_at := now();
+  return new;
+end;
+$$;
+
+drop trigger if exists ${TABELA}_ora on public.${TABELA};
+create trigger ${TABELA}_ora
+  before insert or update on public.${TABELA}
+  for each row execute function public.${TABELA}_ora();
 
 -- Nëse projekti nuk i ekspozon vetvetiu tabelat e reja te Data API
 -- ("Automatically expose new tables" i çaktivizuar), pa këto tabela ekziston

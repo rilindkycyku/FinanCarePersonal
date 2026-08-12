@@ -7,13 +7,13 @@ import { hapesiraRuajtjes, makeId } from "../../lib/db";
 import { PRANO_FOTO, formatBytes, pergatitFaturen } from "../../lib/images";
 import "./Faturat.css";
 
-// A camera tile only makes sense where there is a camera — on a laptop `capture` just opens the
+// A camera tile only makes sense where there is a camera - on a laptop `capture` just opens the
 // same file dialog as the tile next to it, which reads as a broken duplicate.
 const KA_KAMERE = typeof window !== "undefined" && window.matchMedia?.("(pointer: coarse)").matches;
 
 /**
  * One thumbnail. Thumbnails are stored as binary, so each needs an object URL for as long as it is
- * on screen and released the moment it is not — left alone they would pile up until the tab is
+ * on screen and released the moment it is not - left alone they would pile up until the tab is
  * reloaded. (A thumbnail written by the first version of this feature is a data URL string and is
  * used as-is.)
  */
@@ -37,7 +37,7 @@ function Miniatura({ thumb, alt }) {
  * The invoice-photo field: a grid of thumbnails with tiles for adding more, either from the phone's
  * gallery or straight from its camera.
  *
- * The list is *staged*, not saved — new pictures are held in memory as `{ ...meta, blob }` and
+ * The list is *staged*, not saved - new pictures are held in memory as `{ ...meta, blob }` and
  * removals are only marked, so closing a form without saving changes nothing on disk. Whoever owns
  * the form calls `sinkronizoFaturat(txId, faturat)` once the record itself is written.
  */
@@ -156,7 +156,7 @@ function FaturaFusha({ faturat = [], onChange, ndihma }) {
       <div className="fcp-modal-hint">
         {faturat.length > 0 ? (
           <>
-            {faturat.length} foto · {formatBytes(totali)} — ruhen vetëm në këtë shfletues.
+            {faturat.length} foto · {formatBytes(totali)} - ruhen vetëm në këtë shfletues.
           </>
         ) : (
           ndihma || "Fotoja e faturës zvogëlohet dhe ruhet bashkë me transaksionin, në këtë pajisje."

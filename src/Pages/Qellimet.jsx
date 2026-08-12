@@ -69,7 +69,7 @@ function Qellimet() {
     );
     if (!ok) return;
 
-    // The contributions themselves are real money movements, so they stay in the ledger — only the
+    // The contributions themselves are real money movements, so they stay in the ledger - only the
     // goal record goes, and their `qellimiId` simply stops resolving to anything.
     await destroy(STORES.goals, goal.id);
   };

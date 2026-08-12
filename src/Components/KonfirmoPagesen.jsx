@@ -17,8 +17,8 @@ import "./ModalForms.css";
  * Confirmation step for recurring payments that have come due.
  *
  * A card is paid once a month, not instalment by instalment: every plan on the same card is
- * settled together on the statement date. So the dialog collects the whole group — every schedule
- * of the same card due up to the payment date — books them all on that one date, and shows the
+ * settled together on the statement date. So the dialog collects the whole group - every schedule
+ * of the same card due up to the payment date - books them all on that one date, and shows the
  * total that will leave the account.
  *
  * The planned amount is only ever a plan (collected bonus points come off the minimum payment, the
@@ -26,7 +26,7 @@ import "./ModalForms.css";
  * each row takes a plus-or-minus adjustment. The schedules keep their planned figures unless
  * "ruaj për muajt e ardhshëm" is ticked.
  *
- * The list itself stays read-only — a card's instalment is a fixed figure and is read, not typed.
+ * The list itself stays read-only - a card's instalment is a fixed figure and is read, not typed.
  * The adjustment fields live in their own section behind an edit button, so on a phone they are
  * reachable without scrolling the table sideways.
  */
@@ -44,7 +44,7 @@ function KonfirmoPagesen({ show, rec, onHide, gjithcka = false }) {
 
   // Grouped the way the user actually pays. When the payment comes off an account that is itself a
   // card or a loan, that account *is* the card. Otherwise (one account for everything, or
-  // instalments paid from the bank) the category stands in for it — "Këste të Kartelës" and such.
+  // instalments paid from the bank) the category stands in for it - "Këste të Kartelës" and such.
   const llogaria = accounts.find((a) => a.id === rec?.llogariaId);
   const sipasLlogarise = !njeLlogari && ["karte", "kredi"].includes(llogaria?.lloji);
   // "Regjistro të gjitha" settles every schedule that has come due, not just one card's.
@@ -69,14 +69,14 @@ function KonfirmoPagesen({ show, rec, onHide, gjithcka = false }) {
   /**
    * One row per schedule of the group that owes something by the payment date. The date doubles as
    * the cut-off, so moving it to the statement day pulls in the instalments that fall due before
-   * it — which is exactly how a card statement works.
+   * it - which is exactly how a card statement works.
    */
   const rreshtat = useMemo(() => {
     if (!show || !rec) return [];
     return recurring
       .filter((r) => r.aktiv !== false && nGrup(r))
       .map((r) => {
-        const { transactions: occ } = generateDueTransactions(r, dataPageses, makeId);
+        const { transactions: occ } = generateDueTransactions(r, dataPageses);
         if (occ.length === 0) return null;
         const fx = r.monedhaOrigjinale || null;
         const njesia = fx ? toNumber(r.vleraOrigjinale) : toNumber(r.vlera);
@@ -167,7 +167,7 @@ function KonfirmoPagesen({ show, rec, onHide, gjithcka = false }) {
     perfshira.forEach((rresht) => {
       // Same pure helper the bulk action uses, so the schedule advances exactly as it would have;
       // only the dates, amounts and note are laid on top.
-      const { transactions: occ, updated } = generateDueTransactions(rresht.rec, dataPageses, makeId);
+      const { transactions: occ, updated } = generateDueTransactions(rresht.rec, dataPageses);
       const rregullim = toNumber(rresht.rregullim);
 
       occ.forEach((tx, i) => {
@@ -202,7 +202,7 @@ function KonfirmoPagesen({ show, rec, onHide, gjithcka = false }) {
       if (rresht.fx && toNumber(rresht.kursi) > 0) kurset[rresht.fx] = toNumber(rresht.kursi);
     });
 
-    // The note goes down by what was actually paid, not by what was planned — bonus points taken
+    // The note goes down by what was actually paid, not by what was planned - bonus points taken
     // off the minimum payment reduce the card balance by the smaller figure, which is the point.
     entries.push(
       ...debtPaymentsFromTransactions(borxhet, txsEKrijuara, makeId).map((d) => [STORES.borxhet, d])
@@ -309,7 +309,7 @@ function KonfirmoPagesen({ show, rec, onHide, gjithcka = false }) {
             </tfoot>
           </Table>
 
-          {/* The planned figure of a card instalment is fixed — it is only ever nudged for this one
+          {/* The planned figure of a card instalment is fixed - it is only ever nudged for this one
               statement, so the fields for that live here rather than inside the list. */}
           <div className={`fcp-adjust${rregulloHapur ? " hapur" : ""}`}>
             <div className="fcp-adjust-head">

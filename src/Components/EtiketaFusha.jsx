@@ -11,7 +11,7 @@ import {
  *
  * Those suggestions are the point of the field. A tag only groups things when it is spelled the
  * same way every time, and asking someone to remember whether they wrote "pushime2026" or "Pushime
- * 2026" three months ago is how a tag list becomes twenty near-duplicates — so every tag already in
+ * 2026" three months ago is how a tag list becomes twenty near-duplicates - so every tag already in
  * use is one tap away, and typing narrows them before it creates anything new.
  *
  * `onChange` receives a cleaned array; the caller stores it as `etiketat` on the record.
@@ -42,7 +42,7 @@ function EtiketaFusha({ etiketat = [], onChange, sugjerime = [], ndihma }) {
   const hiq = (emri) => onChange(etiketat.filter((e) => e !== emri));
 
   const tastet = (e) => {
-    // Enter belongs to the field while there is something to commit — without this it would submit
+    // Enter belongs to the field while there is something to commit - without this it would submit
     // the whole transaction form with the tag still half-typed and unsaved.
     if (e.key === "Enter" || e.key === "," || e.key === ";") {
       if (!normalizoEtiketen(teksti)) return;
@@ -78,7 +78,7 @@ function EtiketaFusha({ etiketat = [], onChange, sugjerime = [], ndihma }) {
           disabled={plot}
           onChange={(e) => setTeksti(e.target.value)}
           onKeyDown={tastet}
-          // Leaving the field keeps what was typed rather than throwing it away — the common way to
+          // Leaving the field keeps what was typed rather than throwing it away - the common way to
           // lose a tag is to type it and then reach straight for "Ruaj".
           onBlur={() => shto(teksti)}
         />

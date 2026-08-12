@@ -1,7 +1,7 @@
 /**
  * Client-side image handling for invoice photos. There is no server to resize or store anything,
  * so every picture is decoded, rotated upright, shrunk and re-encoded here in the browser before it
- * ever reaches IndexedDB — a 4 MB phone photo lands as a ~200 KB file plus a tiny thumbnail. That
+ * ever reaches IndexedDB - a 4 MB phone photo lands as a ~200 KB file plus a tiny thumbnail. That
  * matters more than it would with a backend: the browser gives the whole app a single storage quota,
  * and once it is full every write fails, not just the pictures.
  */
@@ -10,11 +10,11 @@
  * How hard a photo is squeezed. A receipt is read, not printed, so even the top setting is far
  * below what a phone camera produces. The middle one is the default: on a photographed bill, WebP
  * at 0.75 is indistinguishable from 0.82 when zoomed to 1:1 on the item lines, and a quarter
- * smaller — quality nobody can see is only storage nobody gets back.
+ * smaller - quality nobody can see is only storage nobody gets back.
  */
 export const CILESITE_FATURAVE = {
   larte: { etiketa: "E lartë", maxAne: 2000, cilesia: 0.8, ndihma: "Për fatura me shkrim shumë të imët." },
-  normale: { etiketa: "Normale", maxAne: 1600, cilesia: 0.75, ndihma: "Rreth 130 KB për foto — zgjedhja e parazgjedhur." },
+  normale: { etiketa: "Normale", maxAne: 1600, cilesia: 0.75, ndihma: "Rreth 130 KB për foto - zgjedhja e parazgjedhur." },
   kursim: { etiketa: "Kursim hapësire", maxAne: 1200, cilesia: 0.7, ndihma: "Rreth 100 KB për foto, ende e lexueshme." },
 };
 
@@ -24,14 +24,14 @@ export function cilesiaFaturave(celes) {
   return CILESITE_FATURAVE[celes] || CILESITE_FATURAVE[CILESIA_PARAZGJEDHUR];
 }
 
-// Thumbnails live inside the metadata record — the only part of an invoice kept in memory — so a
+// Thumbnails live inside the metadata record - the only part of an invoice kept in memory - so a
 // grid of invoices renders without touching the full-size files at all. Stored as a Blob rather
 // than a base64 data URL: base64 costs a third more bytes on disk and, worse, is a string sitting
 // in the JS heap for every invoice the app has ever taken.
 const THUMB_ANE = 240;
 const THUMB_CILESIA = 0.6;
 
-/** Anything bigger is refused before decoding — it is a photo library, not an invoice. */
+/** Anything bigger is refused before decoding - it is a photo library, not an invoice. */
 export const MAX_BURIMI_BYTES = 30 * 1024 * 1024;
 
 /** What the file pickers accept. HEIC from an iPhone is included even though only Safari can
@@ -44,7 +44,7 @@ let webpMbeshtetet = null;
  * WebP where the browser can encode it (on a photographed receipt it is ~40% smaller than JPEG at
  * the same quality), JPEG everywhere else. The check is made against what `toDataURL` actually
  * returns and not against a version number, because a canvas asked for a format it cannot encode
- * does not fail — it quietly hands back PNG. That is not a theoretical worry: asking Chromium for
+ * does not fail - it quietly hands back PNG. That is not a theoretical worry: asking Chromium for
  * AVIF here yields a PNG *ten times larger* than the WebP, which is why AVIF is not attempted.
  */
 function tipiDales() {
@@ -58,13 +58,13 @@ function tipiDales() {
 }
 
 async function dekodo(file) {
-  // `from-image` is what turns a photo taken in landscape the right way up — without it the EXIF
+  // `from-image` is what turns a photo taken in landscape the right way up - without it the EXIF
   // orientation is dropped by the canvas and the receipt is stored on its side.
   if (typeof createImageBitmap === "function") {
     try {
       return await createImageBitmap(file, { imageOrientation: "from-image" });
     } catch {
-      // Older Safari rejects the options object — the <img> path below applies EXIF by itself.
+      // Older Safari rejects the options object - the <img> path below applies EXIF by itself.
     }
   }
   const url = URL.createObjectURL(file);
@@ -115,7 +115,7 @@ export function blobNeDataUrl(blob) {
   });
 }
 
-/** Thumbnails are Blobs, but the first version of this feature stored them as data URL strings —
+/** Thumbnails are Blobs, but the first version of this feature stored them as data URL strings -
  * both shapes are read, so a database written by it keeps showing its pictures. */
 export function thumbNeDataUrl(thumb) {
   if (!thumb) return Promise.resolve(null);
@@ -133,7 +133,7 @@ export function dataUrlNeBlob(dataUrl) {
 
 /**
  * Turns a picked file into everything an invoice record needs: the stored (shrunk) image, its
- * thumbnail and the metadata shown in the list — all binary. Throws with a message meant to be put
+ * thumbnail and the metadata shown in the list - all binary. Throws with a message meant to be put
  * in front of the user, since the whole operation happens on their own device.
  */
 export async function pergatitFaturen(file, celesiCilesise) {
@@ -150,7 +150,7 @@ export async function pergatitFaturen(file, celesiCilesise) {
   try {
     burimi = await dekodo(file);
   } catch (err) {
-    throw new Error(`"${file.name}" nuk mund të hapet — ${err.message}.`);
+    throw new Error(`"${file.name}" nuk mund të hapet - ${err.message}.`);
   }
 
   try {
@@ -205,7 +205,7 @@ export async function ringjeshFaturen(blob, celesiCilesise) {
 }
 
 /** Download name for a stored invoice. The picture was re-encoded on the way in, so the extension
- * comes from what is actually stored — a HEIC picked on an iPhone is downloaded as the WebP/JPEG
+ * comes from what is actually stored - a HEIC picked on an iPhone is downloaded as the WebP/JPEG
  * it became, not under a name no viewer could open. */
 export function emriSkedarit(fatura) {
   const nenshtresa = String(fatura?.tipi || "").split("/")[1] || "jpg";

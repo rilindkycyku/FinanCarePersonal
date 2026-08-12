@@ -21,7 +21,7 @@ const BLANK = {
 };
 
 /**
- * Add/edit a debt note — a credit card, a loan, an instalment plan, money borrowed from or lent
+ * Add/edit a debt note - a credit card, a loan, an instalment plan, money borrowed from or lent
  * to someone. The note is not an account: it is stored on its own and never reaches the balance
  * maths, so what is written here changes nothing in "Bilanci Total".
  *

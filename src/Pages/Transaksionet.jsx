@@ -133,12 +133,12 @@ function Transaksionet() {
                   emri
                 )}</span>`
             )
-            .join(" ") || "—",
+            .join(" ") || "-",
         // Its own column rather than a marker glued to the description, so the count stays a plain
         // number in the Excel/PDF export.
         Fatura: numriFaturave[tx.id]
           ? `<span class="fcp-fatura-nb">${numriFaturave[tx.id]}</span>`
-          : "—",
+          : "-",
         [`Vlera (${simboli})`]: `<span class="${klasa}">${plainAmount(shenja === 0 ? tx.vlera : shenja * tx.vlera)}</span>`,
       };
     });
@@ -152,7 +152,7 @@ function Transaksionet() {
   /**
    * Most entries are near-copies of an earlier one, so this opens the form pre-filled from the row
    * but as a new record: no id (or `krijuar`) to edit in place, dated today, and stripped of the
-   * links that belonged to the original — a repeat is not another instalment of the recurring
+   * links that belonged to the original - a repeat is not another instalment of the recurring
    * payment or debt the source was booked against.
    */
   const onRepeat = (id) => {
@@ -229,7 +229,7 @@ function Transaksionet() {
             </Form.Select>
           </Form.Group>
 
-          {/* Only worth a slot once something is tagged — until then it would be an empty picker
+          {/* Only worth a slot once something is tagged - until then it would be an empty picker
               explaining nothing. */}
           {etiketatEPerdorura.length > 0 && (
             <Form.Group as={Col} xs={6} md={3} controlId="filtri-etiketa">

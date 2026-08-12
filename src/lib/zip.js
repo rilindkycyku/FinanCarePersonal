@@ -3,13 +3,13 @@
  *
  * The archive is what makes a backup *with photos* possible at all on a phone. The JSON export has
  * to base64-encode every picture, which means the whole backup exists as one enormous string in
- * memory — a year of invoices is a 222 MB string, and a phone browser runs out of memory long
+ * memory - a year of invoices is a 222 MB string, and a phone browser runs out of memory long
  * before it finishes. Here the entries are the stored `Blob`s themselves: the final archive
  * references them instead of copying them, so only one picture is ever held in memory (to checksum
  * it) no matter how large the backup gets.
  *
  * Everything is stored uncompressed (method 0). JPEG and WebP are already compressed, so deflating
- * them again buys nothing measurable and costs the CPU of every byte — and "stored" keeps this
+ * them again buys nothing measurable and costs the CPU of every byte - and "stored" keeps this
  * file small enough to read in one sitting. Reading still understands deflate, through the
  * browser's own `DecompressionStream`, so an archive repacked by a zip tool still imports.
  *
@@ -59,7 +59,7 @@ export async function krijoZip(hyrjet) {
 
   for (const { emri, blob } of hyrjet) {
     const emriBytes = enc.encode(emri);
-    // Read once, checksum, then let it go — what lands in the archive is the original blob.
+    // Read once, checksum, then let it go - what lands in the archive is the original blob.
     const bytes = new Uint8Array(await blob.arrayBuffer());
     const crc = crc32(bytes);
     const madhesia = bytes.length;
@@ -116,7 +116,7 @@ export async function krijoZip(hyrjet) {
   return new Blob([...pjeset, ...qendrore, fundi.buffer], { type: "application/zip" });
 }
 
-/** True when the blob starts with the ZIP magic — used to tell a `.zip` backup from a `.json` one
+/** True when the blob starts with the ZIP magic - used to tell a `.zip` backup from a `.json` one
  * without trusting the file name. */
 export async function eshteZip(blob) {
   const koka = new Uint8Array(await blob.slice(0, 4).arrayBuffer());
@@ -124,7 +124,7 @@ export async function eshteZip(blob) {
 }
 
 /**
- * A ZIP entry records no media type, and a blob sliced out of one carries an empty `type` — which
+ * A ZIP entry records no media type, and a blob sliced out of one carries an empty `type` - which
  * would then be stored as the type of an imported photo. The name is the only thing the format
  * gives us to go on, and since these archives are written by this app the extension is exactly
  * what the picture was encoded as.

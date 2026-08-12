@@ -43,7 +43,7 @@ function EksportoTeDhenat({ teDhenatJSON, emriDokumentit }) {
     }, 50);
   };
 
-  /** Builds the list as a PDF and opens the preview — nothing is written to disk at this point.
+  /** Builds the list as a PDF and opens the preview - nothing is written to disk at this point.
    * jsPDF is pulled in on demand, the same way the statement does it. */
   const handleShikoPdf = async () => {
     if (pdfPo) return;

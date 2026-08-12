@@ -1,0 +1,60 @@
+/* The sync state, as one icon in the nav bar. Same size and shape as the theme toggle beside it,
+   so it reads as part of the same row of controls rather than as a notification. */
+
+.fcp-tregues {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  margin-left: 0.25rem;
+  border-radius: 8px;
+  border: 1px solid var(--sp-border, rgba(255, 255, 255, 0.1));
+  background: var(--sp-surface-2, #162033);
+  color: var(--sp-text-muted, #94a3b8);
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.fcp-tregues:hover {
+  color: var(--sp-emerald, #10b981);
+  border-color: var(--sp-emerald, #10b981);
+}
+
+/* Working, and nothing to report: as quiet as the page allows while still being there. */
+.fcp-tregues-mire {
+  opacity: 0.55;
+}
+
+.fcp-tregues-duke {
+  color: var(--sp-emerald, #10b981);
+}
+
+/* Waiting to be sent - amber, because nothing is wrong yet, it just has not left the device. */
+.fcp-tregues-pret {
+  color: #f59e0b;
+  border-color: rgba(245, 158, 11, 0.4);
+}
+
+/* The one state worth interrupting for: the device believes it is synced and is not. */
+.fcp-tregues-gabim {
+  color: var(--sp-red, #ef4444);
+  border-color: rgba(239, 68, 68, 0.45);
+  background: rgba(239, 68, 68, 0.12);
+}
+
+.fcp-tregues-rrotullo {
+  animation: fcp-tregues-spin 1s linear infinite;
+}
+
+@keyframes fcp-tregues-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fcp-tregues-rrotullo {
+    animation: none;
+  }
+}

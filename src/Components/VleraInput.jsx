@@ -11,7 +11,7 @@ import "./ModalForms.css";
  * symbol pinned inside it, and a calculator button that opens a keypad pre-filled with whatever is
  * already in the field.
  *
- * `onChange` hands back the plain string value rather than an event — the calculator and the
+ * `onChange` hands back the plain string value rather than an event - the calculator and the
  * keyboard write to the same field, so callers should not have to care which one produced it.
  */
 function VleraInput({

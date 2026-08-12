@@ -12,7 +12,7 @@
 // a European locale gives a comma for the decimal point.
 const NORMALISE = { "×": "*", x: "*", X: "*", "÷": "/", ":": "/", "−": "-", "–": "-", ",": "." };
 
-/** Characters an expression may contain — used to reject pasted text before it reaches the field. */
+/** Characters an expression may contain - used to reject pasted text before it reaches the field. */
 export function isValidCalcInput(value) {
   return /^[\d\s+\-*/.,():×÷−–xX]*$/.test(String(value ?? ""));
 }
@@ -36,7 +36,7 @@ function tokenize(expression) {
         raw += src[i] === "," ? "." : src[i];
         i += 1;
       }
-      // "1.2.3" is a typo, not a number — bail out rather than silently reading "1.2".
+      // "1.2.3" is a typo, not a number - bail out rather than silently reading "1.2".
       if (raw.split(".").length > 2) return null;
       const num = parseFloat(raw);
       if (!Number.isFinite(num)) return null;

@@ -20,7 +20,7 @@ const blank = (lloji = "pagese") => ({
 /**
  * One line on a debt note: a payment that brings it down, or a "shtesë" (a new purchase on the
  * card, interest, a fee) that puts it back up. The line is stored inside the note itself, so by
- * default nothing here touches the ledger at all — the debt goes down, the accounts do not move.
+ * default nothing here touches the ledger at all - the debt goes down, the accounts do not move.
  *
  * "Zbrite edhe nga llogaria" is the opt-in for the other half: it additionally books a real
  * transaction on the chosen account, because paying a card off usually *is* money leaving the

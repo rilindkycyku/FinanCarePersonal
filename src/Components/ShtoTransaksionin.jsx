@@ -67,7 +67,7 @@ function ShtoTransaksionin({
     setFaturaLista(initial ? faturat.filter((f) => f.transaksioniId === initial.id) : []);
     if (initial) {
       // In single-account mode the pickers are hidden, so an id pointing at an account that no
-      // longer exists could never be corrected by hand — it falls back to the main account.
+      // longer exists could never be corrected by hand - it falls back to the main account.
       const exists = (id) => accounts.some((a) => a.id === id);
       const fixed = (id) => (njeLlogari && id && !exists(id) ? llogariaKryesore?.id || "" : id);
       setTx({
@@ -126,7 +126,7 @@ function ShtoTransaksionin({
   );
 
   // Completed goals are dropped from the picker, except the one already attached to the
-  // transaction being edited — otherwise reopening an old contribution would silently lose its tag.
+  // transaction being edited - otherwise reopening an old contribution would silently lose its tag.
   const qellimetAktive = useMemo(
     () =>
       goals
@@ -151,7 +151,7 @@ function ShtoTransaksionin({
   const setField = (name, value) => setTx((prev) => ({ ...prev, [name]: value }));
 
   /**
-   * Typing a description fills the category in from what was picked for that shop last time — but
+   * Typing a description fills the category in from what was picked for that shop last time - but
    * only while the field is still empty, so a suggestion can never overwrite a deliberate choice.
    * `sugjeruar` is what tells the hint below the field to appear, and it goes as soon as the user
    * picks anything themselves.
@@ -172,7 +172,7 @@ function ShtoTransaksionin({
   const changeType = (lloji) => {
     setTx((prev) => {
       // Categories belong to exactly one direction, so a category picked for the previous type
-      // would be invalid — clear it unless it happens to fit the new one.
+      // would be invalid - clear it unless it happens to fit the new one.
       const keepCategory = categories.find((c) => c.id === prev.kategoriaId)?.lloji === lloji;
       return {
         ...prev,
@@ -202,7 +202,7 @@ function ShtoTransaksionin({
     if (!(vlera > 0)) return setError("Vlera duhet të jetë një numër më i madh se zero.");
     if (!tx.llogariaId) return setError(isTransfer ? "Zgjidhni llogarinë burim." : "Zgjidhni llogarinë.");
     if (isTransfer && !tx.llogariaDestinacionId) return setError("Zgjidhni llogarinë e destinacionit.");
-    // Same account on both ends is a no-op transfer — rejected, except in single-account mode where
+    // Same account on both ends is a no-op transfer - rejected, except in single-account mode where
     // it is exactly how a goal contribution is earmarked without the money leaving the account.
     if (isTransfer && !njeLlogari && tx.llogariaDestinacionId === tx.llogariaId) {
       return setError("Llogaria e destinacionit duhet të jetë e ndryshme nga burimi.");

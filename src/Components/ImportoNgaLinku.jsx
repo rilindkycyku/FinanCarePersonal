@@ -5,7 +5,7 @@ import { importAllData } from "../lib/db";
 import { decodeTransferLink } from "../lib/transferQr";
 
 /**
- * Opens a transfer that arrived as a link — the QR another device showed, scanned with the phone's
+ * Opens a transfer that arrived as a link - the QR another device showed, scanned with the phone's
  * own camera app rather than one built into this page.
  *
  * The payload rides in the fragment, which never reaches a server, and it is cleared from the

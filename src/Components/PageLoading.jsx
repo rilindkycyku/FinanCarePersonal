@@ -6,7 +6,7 @@ import "../Pages/Styles/Personal.css";
 
 /**
  * Shown while the first IndexedDB read is in flight. Without it every page would paint its
- * computed figures from empty arrays for a frame or two — a dashboard reading "0,00 €" and
+ * computed figures from empty arrays for a frame or two - a dashboard reading "0,00 €" and
  * "0 llogari aktive" before the real data lands, which looks like data loss rather than loading.
  */
 function PageLoading({ title }) {

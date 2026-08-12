@@ -7,7 +7,7 @@ import SortIcon from "./SortIcon";
 import useSortableData from "../../Context/useSortableData";
 
 // Cycled across whatever distinct values `filterField` finds, so each one gets a stable,
-// visually distinct color — mirrors the colored "Lloji" chip row on FinanCare's own Lista e
+// visually distinct color - mirrors the colored "Lloji" chip row on FinanCare's own Lista e
 // Faturave filter panel.
 const PILL_COLORS = ["#10b981", "#06b6d4", "#8b5cf6", "#f59e0b", "#f43f5e", "#ec4899", "#84cc16", "#3b82f6"];
 
@@ -26,7 +26,7 @@ function formatDate(dateStr) {
 /** Ported from FinanCare's Tabela.jsx (search + sort + optional date range + pagination +
  * Excel export + row actions), trimmed to what FinanCarePersonal's list pages need, with a plain
  * date-range input instead of CustomDatePicker so react-datepicker isn't pulled in. `data` is an
- * array of display-row objects — plain objects whose keys are the column headers shown, each with
+ * array of display-row objects - plain objects whose keys are the column headers shown, each with
  * an `ID` field used for row keys and the action callbacks. Cell values may contain markup (the
  * coloured amount/type pills), which the Excel export strips back to plain text. */
 function Tabela({
@@ -277,7 +277,7 @@ function Tabela({
                               </button>
                             )}
                             {/* A second slot, because a row can have two actions that are neither
-                                editing nor deleting — Transaksionet wants both "repeat this one"
+                                editing nor deleting - Transaksionet wants both "repeat this one"
                                 and "its invoice photos". */}
                             {funksionButonExtra2 && (
                               <button

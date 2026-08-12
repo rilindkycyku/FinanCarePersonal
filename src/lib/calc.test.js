@@ -14,6 +14,17 @@ describe("evaluateExpression", () => {
     expect(evaluateExpression("  40  ")).toBe(40);
   });
 
+  it("reads the dashes a phone keyboard produces as a minus", () => {
+    // A phone's number pad and a paste from a spreadsheet can both give U+2212 or an en dash
+    // instead of the hyphen. They are the same subtraction to whoever typed them — and, being
+    // punctuation-shaped, they are exactly what a tidy-up of dashes across the project would
+    // helpfully "fix" into something the parser no longer recognises.
+    expect(evaluateExpression("100 − 20")).toBe(80);
+    expect(evaluateExpression("100 – 20")).toBe(80);
+    expect(isValidCalcInput("100 − 20")).toBe(true);
+    expect(isValidCalcInput("100 – 20")).toBe(true);
+  });
+
   it("applies the usual operator precedence", () => {
     expect(evaluateExpression("2 + 3 * 4")).toBe(14);
     expect(evaluateExpression("(2 + 3) * 4")).toBe(20);

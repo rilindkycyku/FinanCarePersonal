@@ -27,7 +27,7 @@ export function formatMoney(value, currency = DEFAULT_CURRENCY) {
   return `${numberFormatter.format(toNumber(value))} ${currencySymbol(currency)}`;
 }
 
-/** Same, but always carries an explicit +/- sign — used for transaction rows and net figures. */
+/** Same, but always carries an explicit +/- sign - used for transaction rows and net figures. */
 export function formatSignedMoney(value, currency = DEFAULT_CURRENCY) {
   const n = toNumber(value);
   const sign = n > 0 ? "+" : n < 0 ? "-" : "";
@@ -48,7 +48,7 @@ export function formatPercent(value, decimals = 0) {
  * Text made safe to put inside a table cell's markup.
  *
  * The list pages hand Tabela strings that carry their own markup (the coloured pills), which it
- * renders as HTML — so anything the *user* typed and that ends up inside one has to be escaped
+ * renders as HTML - so anything the *user* typed and that ends up inside one has to be escaped
  * first, or a tag like `<b>` would silently rewrite the row it sits in.
  */
 export function escapeHtml(value) {

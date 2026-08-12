@@ -18,7 +18,7 @@ const BLANK = {
 };
 
 /**
- * Add/edit a planned purchase — something the user knows is coming this month but has not bought
+ * Add/edit a planned purchase - something the user knows is coming this month but has not bought
  * yet. Nothing here books money: the plan only reserves its amount so the daily allowance stops
  * offering it. The purchase itself is recorded later, from the "Shëno si të blerë" action.
  */
@@ -160,7 +160,7 @@ function ShtoPlanin({ show, onHide, initial, muajiAktual }) {
                 ))}
               </Form.Select>
               <div className="fcp-modal-hint">
-                Vetëm renditje — çdo plan i pablerë zbritet njësoj nga shpenzimi ditor.
+                Vetëm renditje - çdo plan i pablerë zbritet njësoj nga shpenzimi ditor.
               </div>
             </Form.Group>
 

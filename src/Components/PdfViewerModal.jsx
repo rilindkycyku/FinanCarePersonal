@@ -7,7 +7,7 @@ import "./PdfViewerModal.css";
 const RENDER_WIDTH = 900;
 
 /**
- * Shows a generated PDF inside the app before it is saved — the statement, or any list exported
+ * Shows a generated PDF inside the app before it is saved - the statement, or any list exported
  * from a table. Nothing reaches the Downloads folder until "Shkarko PDF" is pressed.
  *
  * The pages are rasterized with pdf.js onto canvases rather than handed to the browser's own PDF

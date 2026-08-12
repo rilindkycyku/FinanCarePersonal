@@ -1,8 +1,8 @@
 /**
  * Account statement as a real PDF, laid out the way a bank statement is: a summary band across the
  * top of the first page (who it covers, the period's figures ending in the closing balance, and a
- * ring of where the money went), then the movements split into sections by what the money did —
- * payments in, purchases, instalments, transfers — each with its own total.
+ * ring of where the money went), then the movements split into sections by what the money did -
+ * payments in, purchases, instalments, transfers - each with its own total.
  *
  * The band spans the full width rather than sitting in a sidebar, so the tables below it can use
  * the whole page and a continuation page never shows an empty column where a sidebar used to be.
@@ -19,15 +19,15 @@ import { accountTypeMeta, DEFAULT_CURRENCY, MONTHS_GENITIVE } from "./options";
 
 /**
  * True for the open-ended bounds `periodBounds("gjithcka")` hands out. They are sentinels wide
- * enough to hold every record, not a period — printing them gives "01/01/0001 - 31/12/9999".
+ * enough to hold every record, not a period - printing them gives "01/01/0001 - 31/12/9999".
  */
 export function isFullHistoryRange(start, end) {
   return Number(String(start).slice(0, 4)) <= 1 && Number(String(end).slice(0, 4)) >= 9999;
 }
 
 /**
- * What to call this statement. A personal statement is remembered by its month — "Pasqyra e
- * korrikut 2026" — so a reference number is only produced for a range that is not a whole month or
+ * What to call this statement. A personal statement is remembered by its month - "Pasqyra e
+ * korrikut 2026" - so a reference number is only produced for a range that is not a whole month or
  * year.
  */
 export function statementTitle(start, end) {
@@ -85,7 +85,7 @@ const chunkedBase64 = (buffer) => {
 };
 
 /** Embeds the app's Quicksand so the statement reads as part of the product, not a jsPDF default.
- * Returns the family to use — helvetica when the files cannot be fetched. */
+ * Returns the family to use - helvetica when the files cannot be fetched. */
 async function embedFonts(doc) {
   try {
     await Promise.all(
@@ -190,7 +190,7 @@ export function statementRows({ accounts, categories, transactions, recurring = 
         kesti: nrKesteve ? `${Math.min(kesti, nrKesteve)}/${nrKesteve}` : "",
         keste: nrKesteve > 0,
         // Across the whole ledger a transfer nets to zero, but printing "0.00" next to a real
-        // movement reads as a bug — the section shows the sum that moved and says it changes
+        // movement reads as a bug - the section shows the sum that moved and says it changes
         // nothing.
         shfaq: shenja === 0 ? toNumber(tx.vlera) : vlera,
       };
@@ -198,7 +198,7 @@ export function statementRows({ accounts, categories, transactions, recurring = 
 
   const fillestar = openingBalance(accounts, transactions, start, llogariaId);
 
-  // What the instalment plans still owe after this period — the "shuma e mbetur me këste" figure.
+  // What the instalment plans still owe after this period - the "shuma e mbetur me këste" figure.
   const mbeturKeste = recurring
     .filter((r) => r.aktiv !== false && Math.floor(toNumber(r.nrKesteve)) > 0)
     .reduce((sum, r) => {
@@ -224,7 +224,7 @@ export function statementRows({ accounts, categories, transactions, recurring = 
       transferet: rows.filter((r) => r.shenja === 0),
     },
     nrRreshtave: rows.length,
-    // The span the movements actually cover — what an open-ended statement prints instead of the
+    // The span the movements actually cover - what an open-ended statement prints instead of the
     // sentinel bounds it was asked for. `rows` runs oldest first.
     nga: rows[0]?.data || null,
     deri: rows.length > 0 ? rows[rows.length - 1].data : null,
@@ -332,7 +332,7 @@ export async function exportStatementPdf({
     doc.text(titull.toUpperCase(), x + 12, bandY + 18);
   };
 
-  // A — who and what this statement covers. Label left, value right, so the panel holds everything
+  // A - who and what this statement covers. Label left, value right, so the panel holds everything
   // that identifies the document rather than just a name and a currency.
   panel(xA, wA, "Të dhënat e pasqyrës");
   let ay = bandY + 34;
@@ -341,7 +341,7 @@ export async function exportStatementPdf({
   /**
    * A value right-aligned in what the row has left over after its label. The panel is 148 pt wide,
    * so a date range or a long account name is stepped down a little first and, if that still will
-   * not hold it, dropped onto its own line across the panel — being cut short used to lose the
+   * not hold it, dropped onto its own line across the panel - being cut short used to lose the
    * year off the period ("01/01 - 31/12/2026"). Returns the extra height the second line took.
    */
   const vleraNePanel = (teksti, hapesira, y) => {
@@ -385,7 +385,7 @@ export async function exportStatementPdf({
     ay += 13 + vleraNePanel(String(value), wA - 24 - doc.getTextWidth(label) - 8, ay);
   });
 
-  // B — the figures, ending in the closing balance
+  // B - the figures, ending in the closing balance
   panel(xB, wB, "Përmbledhja e periudhës");
   let by = bandY + 36;
   [
@@ -411,7 +411,7 @@ export async function exportStatementPdf({
   setText(11, "bold", CLR.white);
   doc.text(money(t.perfundimtar), xB + wB - 20, by + 20, { align: "right" });
 
-  // C — where the money went, as a ring that survives a long tail of categories
+  // C - where the money went, as a ring that survives a long tail of categories
   panel(xC, wC, "Ku shkuan paratë");
 
   const hexToRgb = (hex) => {
@@ -441,12 +441,12 @@ export async function exportStatementPdf({
     const xLegjenda = qendraX + rrezja + trashesia / 2 + 8;
 
     /**
-     * A ring segment as one filled band — jsPDF has no arc primitive, so both edges of the band are
+     * A ring segment as one filled band - jsPDF has no arc primitive, so both edges of the band are
      * walked as short straight steps and the whole shape is filled in a single path.
      *
      * Drawing the segment as a row of short thick strokes instead left the ring visibly combed: a
      * stroke is a chord, so its square ends fall inside the ring's curve, and every joint showed as
-     * a pale stripe across the colour — worst on the widest slices, which are the ones being read.
+     * a pale stripe across the colour - worst on the widest slices, which are the ones being read.
      */
     const segment = (nga, deri, ngjyra) => {
       const jashtem = rrezja + trashesia / 2;
@@ -526,7 +526,7 @@ export async function exportStatementPdf({
   }
 
   // ── Sections ──────────────────────────────────────────────
-  // Two columns while everything fits on the first page: the purchases — always the longest list —
+  // Two columns while everything fits on the first page: the purchases - always the longest list -
   // run down the right, everything else down the left. Once the purchases outrun the page they
   // carry on across the full width, since by then the left column has nothing left to hold.
   const seksioniShpenzimeve = {
@@ -555,7 +555,7 @@ export async function exportStatementPdf({
 
   /** Column widths per layout, so a table reads the same narrow or wide. */
   const kolonat = (gjeresi, keste) => {
-    // 54 pt is what "01/07/2026" needs at 7.2 pt with the cell's padding — anything less wraps the
+    // 54 pt is what "01/07/2026" needs at 7.2 pt with the cell's padding - anything less wraps the
     // date onto a second line.
     const data = gjeresi < 300 ? 54 : 52;
     const vlera = gjeresi < 300 ? 58 : 70;
@@ -594,7 +594,7 @@ export async function exportStatementPdf({
     const k = kolonat(gjeresi, seksioni.keste);
     const totali = totaliI(seksioni);
 
-    // `??` passes `false` straight through — it only steps aside for null/undefined — so the
+    // `??` passes `false` straight through - it only steps aside for null/undefined - so the
     // shorter `gjeresi < 300 && …` form handed jsPDF a literal `false` for every section drawn at
     // full width without an explicit title, and the whole statement died on "Type of text must be
     // string or Array". Full width is what the year and full-history statements use, which is why
@@ -798,7 +798,7 @@ export async function exportStatementPdf({
       );
 
       // The period's figures, carried onto every page after the summary: what came in, what went
-      // out and what is left — the three numbers someone flips pages looking for.
+      // out and what is left - the three numbers someone flips pages looking for.
       const shifrat = [
         ["Hyrjet", t.hyrjet, CLR.emerald],
         ["Shpenzimet", -t.daljet, CLR.red],
@@ -862,7 +862,7 @@ export async function exportStatementPdf({
 
 /* ── The table exports ─────────────────────────────────────────
    Any list page's own rows as a printable sheet, next to the Excel export. Same jsPDF/autoTable
-   pair the statement uses — a second PDF engine for a plain table would be hard to justify — and
+   pair the statement uses - a second PDF engine for a plain table would be hard to justify - and
    the same rule as the Excel export for which columns get a total, so the two agree. */
 
 /** Cells may carry the table's coloured markup; print the text only. */
@@ -879,7 +879,7 @@ const numriIQelizes = (value) => {
 };
 
 /**
- * Builds a list as a PDF and hands back the blob — the caller shows it in the viewer and saves it
+ * Builds a list as a PDF and hands back the blob - the caller shows it in the viewer and saves it
  * only if asked. Portrait up to six columns, landscape beyond, where portrait A4 stops being
  * readable.
  */
@@ -903,7 +903,7 @@ export async function buildListPdfBlob({ titulli, headers, rows, profile = {} })
   const monedha = profile.monedha || DEFAULT_CURRENCY;
   const pronari = profile.emri || "FinanCarePersonal";
 
-  // Totals for every column that holds nothing but numbers — the same ones the Excel export sums.
+  // Totals for every column that holds nothing but numbers - the same ones the Excel export sums.
   const totalet = {};
   headers.forEach((h) => {
     if (PA_TOTAL.test(h)) return;

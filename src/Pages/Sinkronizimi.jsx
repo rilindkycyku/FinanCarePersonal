@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import { Alert, Button, Card, Col, Form, Row, Spinner } from "react-bootstrap";
+import { Alert, Button, Card, Col, Form, InputGroup, Modal, Row, Spinner } from "react-bootstrap";
 import {
-  AlertTriangle, Check, Cloud, CloudOff, Copy, Database, Download, ExternalLink, LogIn, RefreshCw,
-  ShieldCheck, Trash2, UserPlus,
+  AlertTriangle, Check, Cloud, CloudOff, Code2, Copy, Database, Download, Eye, EyeOff, ExternalLink,
+  KeyRound, LogIn, RefreshCw, Save, ShieldCheck, Trash2, UserPlus,
 } from "lucide-react";
 import NavBar from "../Components/NavBar";
 import Footer from "../Components/Footer";
@@ -12,8 +12,8 @@ import { useData } from "../Context/DataContext";
 import { useDialog } from "../Context/DialogContext";
 import { useSync } from "../Context/SyncContext";
 import {
-  SQL_INSTALIMI, dil, hyr, kontrolloCelesin, normalizoUrl, pastroKonfigurimin, regjistrohu,
-  ruajKonfigurimin,
+  SQL_INSTALIMI, dil, hyr, kontrolloCelesin, ndryshoCelesin, normalizoUrl, pastroKonfigurimin,
+  regjistrohu, ruajKonfigurimin,
 } from "../lib/supabase";
 import { fshiCloud, numeroCloud, rivendosKufijte } from "../lib/sinkronizimi";
 import "./Styles/PremiumTheme.css";
@@ -23,12 +23,12 @@ import "./Styles/Personal.css";
 
 /** ms epoch / ISO → "10.08.2026, 21:14", or a dash when it never happened. */
 function kohaLexueshme(vlera) {
-  if (!vlera) return "—";
+  if (!vlera) return "-";
   const data = new Date(vlera);
-  return Number.isNaN(data.getTime()) ? "—" : data.toLocaleString("sq-AL");
+  return Number.isNaN(data.getTime()) ? "-" : data.toLocaleString("sq-AL");
 }
 
-/** The project's subdomain, which is what people recognise — the full URL is mostly noise. */
+/** The project's subdomain, which is what people recognise - the full URL is mostly noise. */
 function emriProjektit(url) {
   try {
     return new URL(url).hostname;
@@ -37,41 +37,108 @@ function emriProjektit(url) {
   }
 }
 
-/** The SQL box: read-only, monospace, and one button away from the clipboard, because it exists to
- * be pasted into someone else's SQL editor and nothing else. */
-function SkriptiSql() {
+/**
+ * The setup script, in a dialog rather than in the page.
+ *
+ * Inline it was a twelve-line box that a phone renders as a narrow window onto lines it cannot
+ * show - the reader scrolls sideways through SQL they are not meant to read anyway, since the
+ * whole point is the copy button. In a dialog it gets the width of the screen, wraps instead of
+ * clipping, and the button that matters is the one under it.
+ */
+function ModaliSql({ show, onHide }) {
   const [kopjuar, setKopjuar] = useState(false);
+  const [deshtoi, setDeshtoi] = useState(false);
 
   const kopjo = async () => {
     try {
       await navigator.clipboard.writeText(SQL_INSTALIMI);
+      setDeshtoi(false);
       setKopjuar(true);
       setTimeout(() => setKopjuar(false), 2500);
     } catch {
-      // Clipboard permission refused (or an insecure context): the text is on screen and can be
-      // selected by hand, so there is nothing to report.
+      // Clipboard refused (an insecure context, or permission denied). The text is right there to
+      // be selected by hand, which is worth saying rather than leaving a button that did nothing.
+      setDeshtoi(true);
     }
   };
 
+  // `scrollable` keeps the script scrolling inside the dialog while the header and the copy button
+  // stay put - otherwise a full-screen phone dialog shows a short box floating in an empty screen,
+  // and a long script pushes the button off the bottom.
   return (
-    <div className="mb-3">
-      <div className="d-flex justify-content-between align-items-center mb-2">
-        <span className="fcp-row-sub">SQL Editor → New query → ngjiteni → Run</span>
-        <Button variant="outline-light" size="sm" onClick={kopjo}>
-          {kopjuar ? <Check size={15} className="me-1" /> : <Copy size={15} className="me-1" />}
-          {kopjuar ? "U kopjua" : "Kopjo"}
+    <Modal show={show} onHide={onHide} centered scrollable size="lg" fullscreen="sm-down" className="sp-modal">
+      <Modal.Header closeButton>
+        <Modal.Title className="h6 fw-bold mb-0">Skripti SQL i sinkronizimit</Modal.Title>
+      </Modal.Header>
+      <Modal.Body>
+        <p className="text-muted small">
+          Te Supabase: <strong>SQL Editor → New query</strong>, ngjiteni dhe shtypni{" "}
+          <strong>Run</strong>. Ekzekutohet një herë, por përsëritja nuk prish gjë - çdo hap i tij e
+          kontrollon vetë nëse ekziston.
+        </p>
+        <pre
+          style={{
+            whiteSpace: "pre-wrap",
+            wordBreak: "break-word",
+            fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
+            fontSize: "0.78rem",
+            lineHeight: 1.6,
+            background: "var(--sp-surface-2)",
+            border: "1px solid var(--sp-border)",
+            borderRadius: 14,
+            padding: "1rem",
+            margin: 0,
+          }}
+        >
+          {SQL_INSTALIMI}
+        </pre>
+        {deshtoi && (
+          <div className="fcp-row-sub mt-2">
+            Shfletuesi nuk e lejoi kopjimin automatik - zgjidhni tekstin më sipër dhe kopjojeni vetë.
+          </div>
+        )}
+      </Modal.Body>
+      <Modal.Footer>
+        <Button variant="secondary" onClick={onHide}>
+          Mbyll
         </Button>
-      </div>
-      <Form.Control
-        as="textarea"
-        readOnly
-        value={SQL_INSTALIMI}
-        rows={12}
-        spellCheck={false}
-        style={{ fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace", fontSize: "0.78rem", whiteSpace: "pre" }}
-        onFocus={(e) => e.target.select()}
-      />
-    </div>
+        <Button className="btn-primary" onClick={kopjo}>
+          {kopjuar ? <Check size={16} className="me-1" /> : <Copy size={16} className="me-1" />}
+          {kopjuar ? "U kopjua" : "Kopjo skriptin"}
+        </Button>
+      </Modal.Footer>
+    </Modal>
+  );
+}
+
+/**
+ * A field whose value is hidden until asked for. Both things typed here are long strings copied
+ * from somewhere else and impossible to proofread as dots - and a mistyped key fails with
+ * "the project did not accept it", which does not tell anyone which character went wrong.
+ */
+function FushaSekrete({ id, md, label, ndihma, ...props }) {
+  const [dukshem, setDukshem] = useState(false);
+  return (
+    <Form.Group as={Col} md={md} controlId={id}>
+      <Form.Label>{label}</Form.Label>
+      <InputGroup>
+        <Form.Control type={dukshem ? "text" : "password"} spellCheck={false} {...props} />
+        <Button
+          variant="outline-light"
+          onClick={() => setDukshem((v) => !v)}
+          // Keeps the button from taking focus on a tap, which would otherwise leave it sitting in
+          // its filled "pressed" state next to the field the user is typing in. Tabbing to it still
+          // works, and still shows the focus ring, so the toggle is not mouse-only.
+          onMouseDown={(e) => e.preventDefault()}
+          aria-label={dukshem ? "Fshih vlerën" : "Shfaq vlerën"}
+          aria-pressed={dukshem}
+          title={dukshem ? "Fshih" : "Shfaq"}
+        >
+          {dukshem ? <EyeOff size={16} /> : <Eye size={16} />}
+        </Button>
+      </InputGroup>
+      {ndihma && <div className="fcp-row-sub mt-1">{ndihma}</div>}
+    </Form.Group>
   );
 }
 
@@ -92,10 +159,14 @@ function Sinkronizimi() {
   const [pune, setPune] = useState(null);
   const [message, setMessage] = useState(null);
   const [nCloud, setNCloud] = useState(null);
+  const [sqlHapur, setSqlHapur] = useState(false);
+  // The key-rotation field, closed until asked for: it is a once-a-year action sitting next to
+  // buttons pressed every day.
+  const [celesiIRi, setCelesiIRi] = useState(null);
 
   const setField = (name, value) => setForm((prev) => ({ ...prev, [name]: value }));
 
-  // How much is up there, asked once per visit — the one number that answers "did it really go?".
+  // How much is up there, asked once per visit - the one number that answers "did it really go?".
   useEffect(() => {
     if (!lidhur) {
       setNCloud(null);
@@ -113,7 +184,7 @@ function Sinkronizimi() {
   const lidhu = async (mode) => {
     const url = normalizoUrl(form.url);
     if (!url) {
-      setMessage({ type: "danger", text: "Adresa e projektit nuk duket e vlefshme — kopjoni «Project URL» nga Supabase (p.sh. https://abcdefgh.supabase.co)." });
+      setMessage({ type: "danger", text: "Adresa e projektit nuk duket e vlefshme - kopjoni «Project URL» nga Supabase (p.sh. https://abcdefgh.supabase.co)." });
       return;
     }
     const celesi = kontrolloCelesin(form.anonKey);
@@ -171,11 +242,26 @@ function Sinkronizimi() {
     }
   };
 
+  const handleRuajCelesin = async (e) => {
+    e.preventDefault();
+    setPune("celesi");
+    setMessage(null);
+    try {
+      await ndryshoCelesin(celesiIRi);
+      setCelesiIRi(null);
+      setMessage({ type: "success", text: "Çelësi u përditësua - kjo pajisje po e përdor atë të riun." });
+    } catch (err) {
+      setMessage({ type: "danger", text: err?.message || "Çelësi nuk u ndryshua." });
+    } finally {
+      setPune(null);
+    }
+  };
+
   const handleShkeputu = async () => {
     const ok = await dialog.confirm(
       <>
         Kjo pajisje ndalon së sinkronizuari dhe harron projektin, çelësin dhe sesionin. Të dhënat
-        tuaja mbeten të plota si këtu ashtu edhe në Supabase — mund të rilidheni kur të doni.
+        tuaja mbeten të plota si këtu ashtu edhe në Supabase - mund të rilidheni kur të doni.
       </>,
       { title: "Shkëput sinkronizimin", confirmLabel: "Shkëput" }
     );
@@ -185,18 +271,45 @@ function Sinkronizimi() {
     setMessage({ type: "success", text: "Kjo pajisje u shkëput nga sinkronizimi." });
   };
 
+  /**
+   * Two gates, like the wipe on the settings page and for the same reason: this one reaches past
+   * the device it is pressed on. The first spells out what disappears, the second only unlocks
+   * once the word is typed - a stray double-tap can dismiss one dialog, never both.
+   */
   const handleFshiCloud = async () => {
     const ok = await dialog.confirm(
       <>
-        Fshihen të gjitha rreshtat tuaj në tabelën <code>financare_records</code> të projektit tuaj.
-        Të dhënat në këtë shfletues nuk preken, por{" "}
-        <strong>pajisjet e tjera që nuk kanë sinkronizuar ende</strong> nuk do t&apos;i marrin dot
-        më ndryshimet e ngarkuara deri tani. Sinkronizimi i radhës nga kjo pajisje e ringarkon
-        gjithçka që keni këtu.
+        Fshihen të gjitha rreshtat tuaj në tabelën <code>financare_records</code> të projektit tuaj -
+        aktualisht <strong>{nCloud === null ? "…" : nCloud}</strong> rreshta.
+        <ul className="text-start mt-2 mb-2 ps-4">
+          <li>Të dhënat në këtë shfletues nuk preken.</li>
+          <li>
+            Pajisjet e tjera që nuk kanë sinkronizuar ende <strong>nuk i marrin dot</strong>{" "}
+            ndryshimet e ngarkuara deri tani.
+          </li>
+          <li>Sinkronizimi i radhës nga kjo pajisje e ringarkon gjithçka që keni këtu.</li>
+        </ul>
+        Nëse doni thjesht ta ndalni sinkronizimin, përdorni <strong>Shkëput këtë pajisje</strong> -
+        kopja mbetet e paprekur.
       </>,
-      { title: "Fshi kopjen në cloud", confirmLabel: "Fshi kopjen", variant: "danger", requireText: "FSHI" }
+      { title: "Fshi kopjen në cloud", confirmLabel: "E kuptoj, vazhdo", variant: "danger" }
     );
     if (!ok) return;
+
+    const konfirmimi = await dialog.confirm(
+      <>
+        Hapi i fundit. Rreshtat te projekti juaj Supabase fshihen përgjithmonë dhe veprimi nuk
+        zhbëhet nga këtu.
+      </>,
+      {
+        title: "Konfirmimi i Fundit",
+        confirmLabel: "Fshi kopjen",
+        cancelLabel: "Hiq dorë",
+        variant: "danger",
+        requireText: "FSHI",
+      }
+    );
+    if (!konfirmimi) return;
     setPune("fshij");
     try {
       await fshiCloud();
@@ -228,7 +341,7 @@ function Sinkronizimi() {
         </h4>
         <p className="text-muted mb-4">
           Aplikacioni nuk ka server. Nëse doni të njëjtat të dhëna në telefon dhe në kompjuter,
-          lidhni një projekt <strong>Supabase tuajin</strong> — falas për një përdorim si ky — dhe
+          lidhni një projekt <strong>Supabase tuajin</strong> - falas për një përdorim si ky - dhe
           të dhënat udhëtojnë mes pajisjeve tuaja përmes <em>bazës suaj</em>. Askush tjetër, as unë
           as ndonjë shërbim i FinanCarePersonal, nuk i sheh dhe nuk i ruan ato.
         </p>
@@ -238,7 +351,9 @@ function Sinkronizimi() {
             {message.text}
             {message.sql && (
               <div className="mt-3">
-                <SkriptiSql />
+                <Button variant="outline-light" size="sm" onClick={() => setSqlHapur(true)}>
+                  <Code2 size={15} className="me-1" /> Shfaq skriptin SQL
+                </Button>
               </div>
             )}
           </Alert>
@@ -249,9 +364,30 @@ function Sinkronizimi() {
             {gabim.mesazhi}
             {gabim.kodi === "tabela" && (
               <div className="mt-3">
-                <SkriptiSql />
+                <Button variant="outline-light" size="sm" onClick={() => setSqlHapur(true)}>
+                  <Code2 size={15} className="me-1" /> Shfaq skriptin SQL
+                </Button>
               </div>
             )}
+          </Alert>
+        )}
+
+        <ModaliSql show={sqlHapur} onHide={() => setSqlHapur(false)} />
+
+        {/* Detected from what the last push came back with (sinkronizimi.js): a project set up
+            before the trigger existed keeps whatever time the device sent, and then the order of
+            the whole table depends on every device's clock being right. */}
+        {lidhur && konfigurimi.oraServerit === false && (
+          <Alert variant="warning">
+            Projekti juaj nuk po e vendos vetë orën e rreshtave - ka gjasa ta keni konfiguruar para
+            se skripti ta shtonte atë hap. Ekzekutojeni skriptin sërish (përsëritja është e sigurt):
+            pa të, një pajisje me orë të pasaktë mund t&apos;i mbajë ndryshimet e veta pa u parë nga
+            të tjerat.
+            <div className="mt-3">
+              <Button variant="outline-light" size="sm" onClick={() => setSqlHapur(true)}>
+                <Code2 size={15} className="me-1" /> Shfaq skriptin SQL
+              </Button>
+            </div>
           </Alert>
         )}
 
@@ -259,7 +395,7 @@ function Sinkronizimi() {
           <>
             {konfigurimi.url && (
               <Alert variant="warning">
-                Sesioni i kësaj pajisjeje nuk vlen më. Projekti dhe çelësi janë ende këtu — mjafton
+                Sesioni i kësaj pajisjeje nuk vlen më. Projekti dhe çelësi janë ende këtu - mjafton
                 fjalëkalimi dhe <strong>Hyr dhe sinkronizo</strong>; hapin e parë mund ta kaloni.
               </Alert>
             )}
@@ -267,7 +403,7 @@ function Sinkronizimi() {
             <Card className="profile-card border-0 p-4 mb-4">
               <h5 className="fw-bold mb-3">
                 <Database size={18} className="me-2 text-primary" />
-                Hapi 1 — Krijoni projektin dhe tabelën
+                Hapi 1 - Krijoni projektin dhe tabelën
               </h5>
               <ol className="text-muted small ps-3 mb-3" style={{ lineHeight: 1.9 }}>
                 <li>
@@ -275,7 +411,7 @@ function Sinkronizimi() {
                   <a href="https://supabase.com/dashboard" target="_blank" rel="noreferrer">
                     supabase.com/dashboard <ExternalLink size={12} />
                   </a>{" "}
-                  dhe krijoni një projekt të ri (plani falas mjafton — një vit transaksionesh zë
+                  dhe krijoni një projekt të ri (plani falas mjafton - një vit transaksionesh zë
                   disa megabajt).
                 </li>
                 <li>
@@ -284,18 +420,25 @@ function Sinkronizimi() {
                   llogarinë tuaj t&apos;i lexojë rreshtat.
                 </li>
                 <li>
-                  Te <strong>Project Settings → API</strong> merrni <strong>Project URL</strong> dhe
-                  çelësin <strong>anon public</strong> (jo <em>service_role</em> — atë mos e kopjoni
-                  kurrë këtu).
+                  Te <strong>Project Settings</strong> merrni <strong>Project URL</strong> (te{" "}
+                  <em>Data API</em>) dhe çelësin <strong>publishable</strong> -{" "}
+                  <code>sb_publishable_…</code> te <em>API Keys</em>. Nëse projekti juaj ka ende
+                  çelësin e vjetër <em>anon</em> te skeda <em>Legacy</em>, edhe ai punon; i riu është
+                  ai që Supabase rekomandon dhe ai që mund ta zëvendësoni vetëm atë kur t&apos;ju
+                  duhet. Çelësat <em>secret</em> / <em>service_role</em> mos i kopjoni kurrë këtu.
                 </li>
               </ol>
-              <SkriptiSql />
+              <div>
+                <Button className="btn-primary" onClick={() => setSqlHapur(true)}>
+                  <Code2 size={16} className="me-1" /> Shfaq skriptin SQL
+                </Button>
+              </div>
             </Card>
 
             <Card className="profile-card border-0 p-4 mb-4">
               <h5 className="fw-bold mb-3">
                 <LogIn size={18} className="me-2 text-primary" />
-                Hapi 2 — Lidhni këtë pajisje
+                Hapi 2 - Lidhni këtë pajisje
               </h5>
               <p className="text-muted small mb-3">
                 Llogaria krijohet brenda projektit tuaj, jo diku tjetër. Përdorni të njëjtin email
@@ -320,18 +463,16 @@ function Sinkronizimi() {
                     />
                   </Form.Group>
 
-                  <Form.Group as={Col} md={5} controlId="sync-key">
-                    <Form.Label>Çelësi anon public</Form.Label>
-                    <Form.Control
-                      type="password"
-                      placeholder="eyJhbGciOi… ose sb_publishable_…"
-                      value={form.anonKey}
-                      onChange={(e) => setField("anonKey", e.target.value)}
-                      autoComplete="off"
-                      spellCheck={false}
-                    />
-                    <div className="fcp-row-sub mt-1">Çelësi publik i projektit, i destinuar për shfletues.</div>
-                  </Form.Group>
+                  <FushaSekrete
+                    id="sync-key"
+                    md={5}
+                    label="Çelësi publik"
+                    placeholder="sb_publishable_… ose eyJhbGciOi…"
+                    value={form.anonKey}
+                    onChange={(e) => setField("anonKey", e.target.value)}
+                    autoComplete="off"
+                    ndihma="Publishable (ose anon i vjetër) - çelësi i destinuar për shfletues."
+                  />
 
                   <Form.Group as={Col} md={6} controlId="sync-email">
                     <Form.Label>Email</Form.Label>
@@ -344,16 +485,15 @@ function Sinkronizimi() {
                     />
                   </Form.Group>
 
-                  <Form.Group as={Col} md={6} controlId="sync-password">
-                    <Form.Label>Fjalëkalimi</Form.Label>
-                    <Form.Control
-                      type="password"
-                      placeholder="të paktën 6 karaktere"
-                      value={form.password}
-                      onChange={(e) => setField("password", e.target.value)}
-                      autoComplete="current-password"
-                    />
-                  </Form.Group>
+                  <FushaSekrete
+                    id="sync-password"
+                    md={6}
+                    label="Fjalëkalimi"
+                    placeholder="të paktën 6 karaktere"
+                    value={form.password}
+                    onChange={(e) => setField("password", e.target.value)}
+                    autoComplete="current-password"
+                  />
 
                   <Col md={12} className="d-flex flex-wrap gap-2">
                     <Button type="submit" className="btn-primary" disabled={Boolean(pune)}>
@@ -434,6 +574,48 @@ function Sinkronizimi() {
                   <CloudOff size={16} className="me-1" /> Shkëput këtë pajisje
                 </Button>
               </div>
+
+              {celesiIRi === null ? (
+                <button
+                  type="button"
+                  className="btn btn-link p-0 mt-3 text-decoration-none fcp-row-sub"
+                  onClick={() => setCelesiIRi(konfigurimi.anonKey || "")}
+                >
+                  <KeyRound size={14} className="me-1" /> Ndrysho çelësin publik
+                </button>
+              ) : (
+                <Form onSubmit={handleRuajCelesin} className="mt-3">
+                  <Row className="g-2 align-items-end">
+                    <FushaSekrete
+                      id="sync-celesi-ri"
+                      md={7}
+                      label="Çelësi publik i ri"
+                      placeholder="sb_publishable_…"
+                      value={celesiIRi}
+                      onChange={(e) => setCelesiIRi(e.target.value)}
+                      // Opens holding the current key, so it can be revealed and compared with the
+                      // dashboard - but selected on focus, because the reason anyone is here is to
+                      // paste a different one over it.
+                      onFocus={(e) => e.target.select()}
+                      autoComplete="off"
+                      ndihma="Provohet te projekti para se të ruhet, pra një çelës i gabuar nuk e lë pajisjen pa sinkronizim. Për të kaluar te një projekt tjetër duhet shkëputja."
+                    />
+                    <Col md={5} className="d-flex gap-2">
+                      <Button type="submit" className="btn-primary" disabled={pune === "celesi"}>
+                        {pune === "celesi" ? (
+                          <Spinner animation="border" size="sm" className="me-2" />
+                        ) : (
+                          <Save size={16} className="me-1" />
+                        )}
+                        Ruaj çelësin
+                      </Button>
+                      <Button variant="secondary" onClick={() => setCelesiIRi(null)} disabled={pune === "celesi"}>
+                        Anulo
+                      </Button>
+                    </Col>
+                  </Row>
+                </Form>
+              )}
             </Card>
 
             <Card className="profile-card fcp-zona-rrezik border-0 p-4 mb-4">
@@ -467,13 +649,14 @@ function Sinkronizimi() {
           </h5>
           <ul className="text-muted small ps-3 mb-0" style={{ lineHeight: 1.9 }}>
             <li>
-              <strong>Çelësi anon nuk është fjalëkalim.</strong> Ai është publik nga natyra — çdo
-              aplikacion Supabase e dërgon te shfletuesi. Ajo që mbron të dhënat është rregulli RLS
-              i skriptit: pa hyrë me email dhe fjalëkalim, çelësi nuk lexon dot asnjë rresht.
+              <strong>Çelësi publik nuk është fjalëkalim.</strong> Ai është publik nga natyra - çdo
+              aplikacion Supabase e dërgon te shfletuesi, dhe vetë Supabase-i shkruan se mund të
+              ndahet lirisht. Ajo që mbron të dhënat është rregulli RLS i skriptit: pa hyrë me email
+              dhe fjalëkalim, çelësi nuk lexon dot asnjë rresht.
             </li>
             <li>
-              <strong>Çelësin service_role mos e vendosni kurrë këtu.</strong> Ai i anashkalon
-              rregullat. Aplikacioni e refuzon vetë nëse ngjitet gabimisht.
+              <strong>Çelësat secret / service_role mos i vendosni kurrë këtu.</strong> Ata i
+              anashkalojnë rregullat. Aplikacioni i refuzon vetë nëse ngjiten gabimisht.
             </li>
             <li>
               <strong>Kredencialet ruhen në këtë pajisje</strong> (localStorage), bashkë me sesionin.
