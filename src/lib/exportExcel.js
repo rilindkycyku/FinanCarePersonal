@@ -1,6 +1,6 @@
 import { saveAs } from "file-saver";
 import { getProfile } from "./db";
-import { currencySymbol } from "./format";
+import { cellText, currencySymbol } from "./format";
 import { DEFAULT_CURRENCY } from "./options";
 import { NDARESI, emriIPlote } from "./kategorite";
 
@@ -37,9 +37,9 @@ const font = (bold = false, color = CLR.valueFg, size = 11) => ({
   name: "Calibri",
 });
 
-// Table cells are allowed to carry markup (coloured amount pills, type badges), so the export
-// takes the text content only - otherwise the spreadsheet would show raw `<span>` tags.
-const stripTags = (value) => String(value ?? "").replace(/<[^>]*>/g, "").trim();
+// A cell may be a `markup()` value (the coloured amount pills, type badges), which carries the
+// plain text the spreadsheet wants alongside the HTML the screen wants.
+const stripTags = cellText;
 
 // Column headers that hold identifiers or dates: never summed, even though they parse as numbers.
 const NON_SUMMABLE = /^(id|data|dita|muaji|viti|numri|nr\.?|afati|frekuenca|përqindja|perqindja|%)/i;

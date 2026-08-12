@@ -18,7 +18,7 @@ import { useData } from "../Context/DataContext";
 import { useDialog } from "../Context/DialogContext";
 import { STORES } from "../lib/db";
 import { debtProgress, debtTotals, frequencyLabel } from "../lib/finance";
-import { formatDate, formatPercent, plainAmount, todayISO } from "../lib/format";
+import { formatDate, formatPercent, markup, plainAmount, todayISO } from "../lib/format";
 import { debtTypeMeta } from "../lib/options";
 import { getIcon } from "../lib/icons";
 import "./Styles/PremiumTheme.css";
@@ -138,7 +138,10 @@ function Borxhet() {
     Afati: d.dataMbarimit ? formatDate(d.dataMbarimit) : "-",
     [`Totali (${simboli})`]: plainAmount(d.totali),
     [`Paguar (${simboli})`]: plainAmount(d.paguar),
-    [`Mbetur (${simboli})`]: `<span class="${d.mbetur > 0 ? "fcp-neg" : "fcp-pos"}">${plainAmount(d.mbetur)}</span>`,
+    [`Mbetur (${simboli})`]: markup(
+      `<span class="${d.mbetur > 0 ? "fcp-neg" : "fcp-pos"}">${plainAmount(d.mbetur)}</span>`,
+      plainAmount(d.mbetur)
+    ),
     Përqindja: formatPercent(d.perqindja),
   }));
 

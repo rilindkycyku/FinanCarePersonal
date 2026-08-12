@@ -1,0 +1,68 @@
+/* Styles for EksportoTeDhenat.jsx, moved out of a `<style>` block inside the component so they are
+   minified and cached with the rest of the CSS instead of being written into the document each
+   time the export dialog mounts. */
+
+.column-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.75rem;
+  max-height: 340px;
+  overflow-y: auto;
+  padding: 0.5rem;
+}
+.column-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  /* A `<button>` now, so it needs its own text alignment back - the default is centred, which
+     ragged the column names against their checkboxes. */
+  text-align: left;
+  background: var(--sp-surface-2);
+  padding: 0.6rem 0.75rem;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid var(--sp-border);
+  color: var(--sp-text-muted);
+  font-size: 0.82rem;
+  font-weight: 500;
+}
+.column-item:hover {
+  background: var(--sp-surface-3);
+  color: var(--sp-text);
+}
+.column-item.active {
+  background: var(--sp-emerald-glow);
+  border-color: var(--sp-emerald);
+  color: var(--sp-emerald);
+  font-weight: 700;
+}
+.check-box {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  border: 2px solid var(--sp-border);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--sp-surface);
+  color: transparent;
+}
+.column-item.active .check-box {
+  background: var(--sp-emerald);
+  border-color: var(--sp-emerald);
+  color: white;
+}
+.btn-small-link {
+  background: none;
+  border: none;
+  color: var(--sp-emerald);
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0;
+  cursor: pointer;
+}
+.btn-small-link:hover {
+  text-decoration: underline;
+}

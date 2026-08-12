@@ -14,7 +14,7 @@ import { useData } from "../Context/DataContext";
 import { useDialog } from "../Context/DialogContext";
 import { STORES } from "../lib/db";
 import { accountBalance, debtTotals, totalBalance, totalsByAccount, txSignForAccount } from "../lib/finance";
-import { plainAmount } from "../lib/format";
+import { markup, plainAmount } from "../lib/format";
 import { accountTypeMeta } from "../lib/options";
 import { getIcon } from "../lib/icons";
 import "./Styles/PremiumTheme.css";
@@ -91,7 +91,10 @@ function Llogarite() {
     [`Bilanci Fillestar (${simboli})`]: plainAmount(a.bilanciFillestar),
     [`Hyrjet (${simboli})`]: plainAmount(a.hyrjet),
     [`Daljet (${simboli})`]: plainAmount(a.daljet),
-    [`Bilanci (${simboli})`]: `<span class="${a.bilanci < 0 ? "fcp-neg" : "fcp-pos"}">${plainAmount(a.bilanci)}</span>`,
+    [`Bilanci (${simboli})`]: markup(
+      `<span class="${a.bilanci < 0 ? "fcp-neg" : "fcp-pos"}">${plainAmount(a.bilanci)}</span>`,
+      plainAmount(a.bilanci)
+    ),
   }));
 
   const renderCard = (account) => {

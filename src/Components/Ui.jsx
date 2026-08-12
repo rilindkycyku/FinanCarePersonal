@@ -40,12 +40,23 @@ export function Panel({ title, icon, action, actionTo, children }) {
   );
 }
 
-export function ProgressBar({ value, color, over, small }) {
+export function ProgressBar({ value, color, over, small, label }) {
+  // A budget of zero, or a goal with no target, divides by zero somewhere upstream and arrives here
+  // as NaN or Infinity. `Math.max(NaN, 0)` is NaN, which the browser drops as an invalid width and
+  // leaves the bar drawn at whatever the previous render put there.
+  const perqindja = Number.isFinite(value) ? Math.min(Math.max(value, 0), 100) : 0;
   return (
-    <div className={`fcp-progress${small ? " fcp-progress-sm" : ""}`}>
+    <div
+      className={`fcp-progress${small ? " fcp-progress-sm" : ""}`}
+      role="progressbar"
+      aria-valuenow={Math.round(perqindja)}
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-label={label}
+    >
       <div
         className={`fcp-progress-fill${over ? " over" : ""}`}
-        style={{ width: `${Math.min(Math.max(value, 0), 100)}%`, background: over ? undefined : color }}
+        style={{ width: `${perqindja}%`, background: over ? undefined : color }}
       />
     </div>
   );

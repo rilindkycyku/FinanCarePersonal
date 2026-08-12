@@ -152,6 +152,7 @@ function NavBar() {
           onClick={() => setMobileOpen((open) => !open)}
           aria-label={mobileOpen ? "Mbyll menynë" : "Hap menynë"}
           aria-expanded={mobileOpen}
+          aria-controls="fcp-mobile-menu"
         >
           {mobileOpen ? <X size={17} /> : <Menu size={17} />}
         </button>
@@ -161,7 +162,7 @@ function NavBar() {
         <div className="fcp-mobile-backdrop" onClick={() => setMobileOpen(false)} aria-hidden="true" />
       )}
 
-      <div className={`fcp-mobile-menu${mobileOpen ? " open" : ""}`}>
+      <div id="fcp-mobile-menu" className={`fcp-mobile-menu${mobileOpen ? " open" : ""}`}>
         <Link to="/" className="fcp-mobile-brand" aria-label="Shko te Paneli">
           <img src={logo} alt="FinanCare" className="fcp-mobile-brand-logo" />
         </Link>

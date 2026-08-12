@@ -1,10 +1,10 @@
 import { useMemo, useState } from "react";
 import { parseISO, isValid, isWithinInterval } from "date-fns";
+import { cellText } from "../lib/format";
 
-// Cells may carry markup (the coloured amount/type pills), and money columns must sort by value
-// rather than alphabetically - "-45.00" is less than "9.00", which a string compare gets wrong.
-const cellText = (value) => String(value ?? "").replace(/<[^>]*>/g, "").trim();
-
+// Money columns must sort by value rather than alphabetically - "-45.00" is less than "9.00", which
+// a string compare gets wrong. `cellText` reads the plain text a `markup()` cell carries, so the
+// coloured amounts sort on the number they show rather than on the span around it.
 const cellNumber = (value) => {
   const text = cellText(value);
   if (text === "") return null;

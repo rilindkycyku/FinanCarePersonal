@@ -4,6 +4,7 @@ import { Download, CheckCircle2, FileText } from "lucide-react";
 import { exportListExcel } from "../../lib/exportExcel";
 import { useData } from "../../Context/DataContext";
 import PdfViewerModal from "../PdfViewerModal";
+import "./EksportoTeDhenat.css";
 
 /** Column-picker + Excel/PDF export, ported from FinanCare's EksportoTeDhenat.jsx. Excel is written
  * straight to disk (a spreadsheet has nothing to preview), while the PDF opens in the viewer first
@@ -92,22 +93,33 @@ function EksportoTeDhenat({ teDhenatJSON, emriDokumentit }) {
           </p>
 
           <div className="d-flex gap-2 mb-3">
-            <button className="btn-small-link" onClick={selectAll}>
+            <button type="button" className="btn-small-link" onClick={selectAll}>
               Zgjidh të gjitha
             </button>
             <span className="text-muted">|</span>
-            <button className="btn-small-link" onClick={selectNone}>
+            <button type="button" className="btn-small-link" onClick={selectNone}>
               Pastro
             </button>
           </div>
 
+          {/* Real buttons rather than clickable divs: the column picker is the only way to choose
+              what gets exported, and it used to be unreachable without a mouse. */}
           <div className="column-grid">
-            {Object.keys(teDhenatJSON[0] || {}).map((header, index) => (
-              <div key={index} className={`column-item ${selectedHeaders.includes(header) ? "active" : ""}`} onClick={() => handleCheckboxChange(header)}>
-                <div className="check-box">{selectedHeaders.includes(header) && <CheckCircle2 size={14} />}</div>
-                <span>{header}</span>
-              </div>
-            ))}
+            {Object.keys(teDhenatJSON[0] || {}).map((header) => {
+              const zgjedhur = selectedHeaders.includes(header);
+              return (
+                <button
+                  type="button"
+                  key={header}
+                  className={`column-item ${zgjedhur ? "active" : ""}`}
+                  onClick={() => handleCheckboxChange(header)}
+                  aria-pressed={zgjedhur}
+                >
+                  <span className="check-box">{zgjedhur && <CheckCircle2 size={14} />}</span>
+                  <span>{header}</span>
+                </button>
+              );
+            })}
           </div>
         </Modal.Body>
         <Modal.Footer className="border-0 pt-0">
@@ -152,70 +164,6 @@ function EksportoTeDhenat({ teDhenatJSON, emriDokumentit }) {
         title={emriDokumentit || "Eksporti i të Dhënave"}
         onHide={() => setPdf(null)}
       />
-
-      <style>{`
-        .column-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-          gap: 0.75rem;
-          max-height: 340px;
-          overflow-y: auto;
-          padding: 0.5rem;
-        }
-        .column-item {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          background: var(--sp-surface-2);
-          padding: 0.6rem 0.75rem;
-          border-radius: 10px;
-          cursor: pointer;
-          transition: all 0.2s ease;
-          border: 1px solid var(--sp-border);
-          color: var(--sp-text-muted);
-          font-size: 0.82rem;
-          font-weight: 500;
-        }
-        .column-item:hover {
-          background: var(--sp-surface-3);
-          color: var(--sp-text);
-        }
-        .column-item.active {
-          background: var(--sp-emerald-glow);
-          border-color: var(--sp-emerald);
-          color: var(--sp-emerald);
-          font-weight: 700;
-        }
-        .check-box {
-          width: 18px;
-          height: 18px;
-          flex-shrink: 0;
-          border: 2px solid var(--sp-border);
-          border-radius: 4px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: var(--sp-surface);
-          color: transparent;
-        }
-        .column-item.active .check-box {
-          background: var(--sp-emerald);
-          border-color: var(--sp-emerald);
-          color: white;
-        }
-        .btn-small-link {
-          background: none;
-          border: none;
-          color: var(--sp-emerald);
-          font-size: 0.75rem;
-          font-weight: 700;
-          padding: 0;
-          cursor: pointer;
-        }
-        .btn-small-link:hover {
-          text-decoration: underline;
-        }
-      `}</style>
     </div>
   );
 }

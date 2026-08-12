@@ -15,7 +15,7 @@ import { useData } from "../Context/DataContext";
 import { useDialog } from "../Context/DialogContext";
 import { STORES } from "../lib/db";
 import { budgetProgress, effectiveBudgets, monthKeyBounds } from "../lib/finance";
-import { formatPercent, monthKey, monthLabel, plainAmount, todayISO, toNumber } from "../lib/format";
+import { formatPercent, markup, monthKey, monthLabel, plainAmount, todayISO, toNumber } from "../lib/format";
 import { emriIPlote, familjaSet, rrenjaE } from "../lib/kategorite";
 import { getIcon } from "../lib/icons";
 import "./Styles/PremiumTheme.css";
@@ -143,7 +143,10 @@ function Buxhetet() {
     Vlefshmëria: b.muaji ? monthLabel(b.muaji) : "Çdo muaj",
     [`Buxheti (${simboli})`]: plainAmount(b.buxheti),
     [`Shpenzuar (${simboli})`]: plainAmount(b.shpenzuar),
-    [`Mbetur (${simboli})`]: `<span class="${b.tepruar ? "fcp-neg" : "fcp-pos"}">${plainAmount(b.mbetur)}</span>`,
+    [`Mbetur (${simboli})`]: markup(
+      `<span class="${b.tepruar ? "fcp-neg" : "fcp-pos"}">${plainAmount(b.mbetur)}</span>`,
+      plainAmount(b.mbetur)
+    ),
     [`Ditore (${simboli})`]: plainAmount(b.perDite),
     Përqindja: formatPercent(b.perqindja),
   }));

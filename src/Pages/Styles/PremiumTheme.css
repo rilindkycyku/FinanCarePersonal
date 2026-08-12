@@ -1,4 +1,7 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap');
+/* Inter is declared in `src/index.css` and served from this origin - see the note there for why it
+   is not imported from fonts.googleapis.com. JetBrains Mono is gone with it: the only thing set in
+   it was the calculator's display, which already names `ui-monospace, monospace` after it, and
+   every platform's own monospace draws that line just as well as a second font download would. */
 
 /* ══════════════════════════════════════════════════════════════
    FINANCARE - Premium Core Theme System

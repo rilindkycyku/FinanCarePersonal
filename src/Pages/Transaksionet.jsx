@@ -17,7 +17,7 @@ import { STORES } from "../lib/db";
 import { cashflow, sortByDateDesc } from "../lib/finance";
 import { etiketatE, kaEtiketen, ngjyraEtiketes, perdorimiEtiketave } from "../lib/etiketat";
 import { emriIPlote, familjaSet } from "../lib/kategorite";
-import { escapeHtml, formatMoney, formatPercent, plainAmount, todayISO, toNumber } from "../lib/format";
+import { escapeHtml, formatMoney, formatPercent, markup, plainAmount, todayISO, toNumber } from "../lib/format";
 import { TRANSACTION_TYPE_LABELS } from "../lib/options";
 import "./Styles/PremiumTheme.css";
 import "./Styles/DizajniPergjithshem.css";
@@ -100,12 +100,17 @@ function Transaksionet() {
       const klasa = shenja > 0 ? "fcp-pos" : shenja < 0 ? "fcp-neg" : "fcp-neutral";
       const qellimi = goalName(tx.qellimiId);
 
+      const llojiEtiketa = TRANSACTION_TYPE_LABELS[tx.lloji] || tx.lloji;
+      const etiketat = etiketatE(tx);
+      const vlera = plainAmount(shenja === 0 ? tx.vlera : shenja * tx.vlera);
+
       return {
         ID: tx.id,
         Data: tx.data,
-        Lloji: `<span class="fcp-pill" style="color:${TYPE_PILL_COLORS[tx.lloji]}">${
-          TRANSACTION_TYPE_LABELS[tx.lloji] || tx.lloji
-        }</span>`,
+        Lloji: markup(
+          `<span class="fcp-pill" style="color:${TYPE_PILL_COLORS[tx.lloji]}">${escapeHtml(llojiEtiketa)}</span>`,
+          llojiEtiketa
+        ),
         Kategoria: tx.lloji === "transfer" ? "-" : emriIPlote(categories, tx.kategoriaId, "Pa kategori"),
         // With one account for everything the column would repeat the same name on every row.
         ...(njeLlogari
@@ -125,24 +130,27 @@ function Transaksionet() {
           ]
             .filter(Boolean)
             .join(" ") || "-",
-        // Escaped, unlike the columns above it: a tag is free text the user typed, and this cell is
-        // rendered as markup. Separated by spaces rather than by commas because the export strips
-        // the chips back to their text content.
-        Etiketat:
-          etiketatE(tx)
-            .map(
-              (emri) =>
-                `<span class="fcp-etiketa-tag" style="--etiketa-color:${ngjyraEtiketes(emri)}">${escapeHtml(
-                  emri
-                )}</span>`
+        // A tag is free text the user typed and this cell is drawn as chips, so the name is escaped
+        // into the markup while the plain form travels beside it for the search and the export.
+        Etiketat: etiketat.length
+          ? markup(
+              etiketat
+                .map(
+                  (emri) =>
+                    `<span class="fcp-etiketa-tag" style="--etiketa-color:${ngjyraEtiketes(emri)}">${escapeHtml(
+                      emri
+                    )}</span>`
+                )
+                .join(" "),
+              etiketat.join(" ")
             )
-            .join(" ") || "-",
+          : "-",
         // Its own column rather than a marker glued to the description, so the count stays a plain
         // number in the Excel/PDF export.
         Fatura: numriFaturave[tx.id]
-          ? `<span class="fcp-fatura-nb">${numriFaturave[tx.id]}</span>`
+          ? markup(`<span class="fcp-fatura-nb">${numriFaturave[tx.id]}</span>`, String(numriFaturave[tx.id]))
           : "-",
-        [`Vlera (${simboli})`]: `<span class="${klasa}">${plainAmount(shenja === 0 ? tx.vlera : shenja * tx.vlera)}</span>`,
+        [`Vlera (${simboli})`]: markup(`<span class="${klasa}">${vlera}</span>`, vlera),
       };
     });
   }, [teFiltruara, accounts, categories, goals, numriFaturave, simboli, njeLlogari]);

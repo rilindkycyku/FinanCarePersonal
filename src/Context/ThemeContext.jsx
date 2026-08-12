@@ -1,7 +1,11 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 
 const THEME_KEY = "financarepersonal-theme";
 const ThemeContext = createContext(null);
+
+// The colour a phone paints its address bar and task-switcher card with. index.html ships the dark
+// one; switching to the light theme used to leave a black bar sitting above a white page.
+const THEME_COLORS = { dark: "#080f1a", light: "#f1f5f9" };
 
 function readInitialTheme() {
   try {
@@ -19,6 +23,7 @@ export function ThemeProvider({ children }) {
 
   useEffect(() => {
     document.body.classList.toggle("light-mode", theme === "light");
+    document.querySelector('meta[name="theme-color"]')?.setAttribute("content", THEME_COLORS[theme]);
     try {
       localStorage.setItem(THEME_KEY, theme);
     } catch {
@@ -26,9 +31,11 @@ export function ThemeProvider({ children }) {
     }
   }, [theme]);
 
-  const toggleTheme = () => setTheme((t) => (t === "dark" ? "light" : "dark"));
+  const toggleTheme = useCallback(() => setTheme((t) => (t === "dark" ? "light" : "dark")), []);
 
-  return <ThemeContext.Provider value={{ theme, toggleTheme }}>{children}</ThemeContext.Provider>;
+  const value = useMemo(() => ({ theme, toggleTheme }), [theme, toggleTheme]);
+
+  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }
 
 export function useTheme() {

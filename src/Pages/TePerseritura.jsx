@@ -16,7 +16,7 @@ import { useData } from "../Context/DataContext";
 import { useDialog } from "../Context/DialogContext";
 import { STORES } from "../lib/db";
 import { annualOutlook, dueRecurring, frequencyLabel, generateDueTransactions, isRecurringDue } from "../lib/finance";
-import { formatDate, formatMoney, plainAmount, todayISO } from "../lib/format";
+import { formatDate, formatMoney, markup, plainAmount, todayISO } from "../lib/format";
 import { emriIPlote } from "../lib/kategorite";
 import { getIcon } from "../lib/icons";
 import "./Styles/PremiumTheme.css";
@@ -101,9 +101,12 @@ function TePerseritura() {
     Kategoria: emriIPlote(categories, r.kategoriaId, "-"),
     ...(njeLlogari ? {} : { Llogaria: nameOf(accounts, r.llogariaId) }),
     Statusi: !r.aktiv ? "Joaktive" : isRecurringDue(r, today) ? "Ka arritur" : "Aktive",
-    [`Vlera (${simboli})`]: `<span class="${r.lloji === "hyrje" ? "fcp-pos" : "fcp-neg"}">${plainAmount(
-      r.lloji === "hyrje" ? r.vlera : -r.vlera
-    )}</span>`,
+    [`Vlera (${simboli})`]: markup(
+      `<span class="${r.lloji === "hyrje" ? "fcp-pos" : "fcp-neg"}">${plainAmount(
+        r.lloji === "hyrje" ? r.vlera : -r.vlera
+      )}</span>`,
+      plainAmount(r.lloji === "hyrje" ? r.vlera : -r.vlera)
+    ),
   }));
 
   if (loading) return <PageLoading title="Pagesat e Përsëritura" />;
