@@ -15,8 +15,8 @@ import { useData } from "../Context/DataContext";
 import { useDialog } from "../Context/DialogContext";
 import { useSync } from "../Context/SyncContext";
 import {
-  LINKU_TOKENIT, dil, gjendjaSkemes, hyr, instaloSkemen, kontrolloCelesin, ndryshoCelesin,
-  normalizoUrl, pastroKonfigurimin, regjistrohu, ruajKonfigurimin,
+  dil, gjendjaSkemes, hyr, kontrolloCelesin, ndryshoCelesin, normalizoUrl, pastroKonfigurimin,
+  regjistrohu, ruajKonfigurimin,
 } from "../lib/supabase";
 import { fshiCloud, numeroCloud, rivendosKufijte } from "../lib/sinkronizimi";
 import "./Styles/PremiumTheme.css";
@@ -55,9 +55,6 @@ function Sinkronizimi() {
     password: "",
   }));
   const [pune, setPune] = useState(null);
-  // Deliberately outside `form`: that object is prefilled from the saved configuration and written
-  // back to it, and this is the one string in the app that must never be saved anywhere.
-  const [tokeni, setTokeni] = useState("");
   const [searchParams, setSearchParams] = useSearchParams();
   const [nCloud, setNCloud] = useState(null);
   // Which migration the connected project has reached, and what it still owes - read from the
@@ -187,20 +184,6 @@ function Sinkronizimi() {
     setPune(mode);
     pastroGabimin();
     try {
-      // The table has to exist before the first sync, and this is the moment it can be made without
-      // sending anyone to a SQL editor. Skipped when no token was given, and never fatal: the
-      // account still gets created, and the missing table announces itself the usual way.
-      if (tokeni.trim()) {
-        try {
-          await instaloSkemen(tokeni, url, 0);
-          setTokeni("");
-        } catch (err) {
-          await njofto(
-            "warning",
-            `Tabela nuk u krijua dot: ${err?.message || "gabim i panjohur"} Lidhja vazhdon; tabelën mund ta krijoni te «Konfiguro projektin».`
-          );
-        }
-      }
       if (mode === "regjistrohu") {
         const { konfirmim } = await regjistrohu({ email: form.email, password: form.password, url, anonKey: celesi.celesi });
         if (konfirmim) {
@@ -426,10 +409,10 @@ function Sinkronizimi() {
                   duhet. Çelësat <em>secret</em> / <em>service_role</em> mos i kopjoni kurrë këtu.
                 </li>
                 <li>
-                  Vendosini te <strong>Hapi 2</strong> më poshtë. Tabelën nuk keni pse ta krijoni
-                  vetë: shtoni aty edhe token-in e llogarisë dhe aplikacioni e krijon gjatë lidhjes.
-                  Butoni <strong>Konfiguro projektin</strong> e bën të njëjtën gjë veçmas, dhe jep
-                  edhe skriptin për ta ekzekutuar te <strong>SQL Editor</strong> po të parapëlqeni.
+                  Shtypni <strong>Konfiguro projektin</strong> këtu poshtë: hapet redaktori i
+                  projektit tuaj me skriptin brenda dhe mjafton <strong>Run</strong>. Tabelën nuk e
+                  krijon dot çelësi që ngjitni te Hapi 2 - Supabase nuk ia lejon atij këtë punë, dhe
+                  kjo është mbrojtje, jo mangësi.
                 </li>
               </ol>
               <div>
@@ -497,25 +480,6 @@ function Sinkronizimi() {
                     value={form.password}
                     onChange={(e) => setField("password", e.target.value)}
                     autoComplete="current-password"
-                  />
-
-                  <FushaSekrete
-                    id="sync-token"
-                    md={12}
-                    label="Token-i i llogarisë Supabase (opsional - krijon vetë tabelën)"
-                    placeholder="sbp_…"
-                    value={tokeni}
-                    onChange={(e) => setTokeni(e.target.value)}
-                    autoComplete="off"
-                    ndihma={
-                      <>
-                        Lëreni bosh nëse tabelën e keni krijuar tashmë. Ndryshe merreni te{" "}
-                        <a href={LINKU_TOKENIT} target="_blank" rel="noreferrer">
-                          Account → Access Tokens <ExternalLink size={12} />
-                        </a>{" "}
-                        - përdoret vetëm tani, për të krijuar tabelën, dhe nuk ruhet askund.
-                      </>
-                    }
                   />
 
                   <Col md={12} className="d-flex flex-wrap gap-2">

@@ -66,8 +66,8 @@ function SinkronizimiNdaloi() {
             <>
               Projekti juaj Supabase është i lidhur, por tabela ku shkojnë të dhënat nuk është
               krijuar ende - prandaj çdo sinkronizim dështon sapo niset. Të dhënat tuaja janë të
-              plota këtu; mjafton një hap i vetëm te faqja e sinkronizimit dhe aplikacioni e krijon
-              vetë.
+              plota këtu; te faqja e sinkronizimit skripti hapet gati te projekti juaj dhe një
+              <strong> Run</strong> e mbaron punën.
             </>
           ) : (
             <>
