@@ -70,9 +70,12 @@ sa shpenzohet, sa mbetet dhe sa po kursesh.
   kryesore - fatura sipas llojit, udhëtimi i ndarë në bileta, fjetje e transferë, sigurimet një nga
   një - përveç atyre ku ndarja nuk do të shtonte asgjë (*Karburant*, *Këste të Kartelës*,
   *Shpenzime të Tjera*). Lista mbetet **një nivel e thellë** me qëllim; një nivel i tretë nuk
-  shton përgjigje të re, vetëm punë arkivimi. Në formularë nënkategoritë shfaqen të grupuara nën
-  kategorinë e vet (te telefoni, lista e vetë shfletuesit i tregon si tituj), dhe kategoria kryesore
-  mbetet e zgjedhshme si më parë - *«diku te ushqimi, nuk po e ndaj»* është përgjigje e vërtetë.
+  shton përgjigje të re, vetëm punë arkivimi. Në formularë kategoria zgjidhet me një **dritare të
+  vetën, jo me listën e shfletuesit**: hapet vetëm me kategoritë kryesore, dhe ajo që ka nënkategori
+  i *shfaq* ato kur e prekni - pra nuk shkarrisni dot mbi pesëdhjetë rreshta për të gjetur
+  *Veteriner*. Brenda grupit kategoria kryesore mbetet e zgjedhshme si *«(në përgjithësi)»* -
+  *«diku te ushqimi, nuk po e ndaj»* është përgjigje e vërtetë. Kutia e kërkimit i pret të dyja
+  nivelet përnjëherë dhe nuk kërkon as shkronjat me theks: *keste* gjen *Këste të Kartelës*.
   Statistikat i mbledhin nënkategoritë te kategoria kryesore dhe e hapin ndarjen nën të, prandaj
   pjesët vazhdojnë të mblidhen sa muaji. Kur fshihet një kategori kryesore, nënkategoritë e saj nuk
   fshihen bashkë me të - ngrihen në kategori kryesore, sepse kanë transaksionet e veta.
@@ -387,14 +390,14 @@ src/
   Context/    DataContext (ngarkon dhe ruan gjithçka), SyncContext (sinkronizimi automatik),
               ThemeContext, DialogContext
   lib/        db.js (IndexedDB), finance.js (çdo kalkulim), csv.js (leximi i ekstraktit),
-              kategorite.js (nënkategoritë: prindi, familja, pema e pickerave),
+              kategorite.js (nënkategoritë: prindi, familja, pema e kërkimi i zgjedhësit),
               skema.js (migrimet e projektit tuaj Supabase, të numëruara),
               rregullat.js (kujtesa e kategorive), images.js (përpunimi i fotove të faturave),
               zip.js (arkivi i kopjes së plotë), calc.js (llogaritësi i fushave të vlerës),
               supabase.js (klienti i vogël i projektit tuaj), sinkronizimi.js (rregullat e bashkimit),
               format.js, options.js, exportExcel.js
   Components/ NavBar, Footer, Tabela (kërkim/renditje/eksport), modalet e shtimit, Ui.jsx,
-              OpsionetKategorive (opsionet e grupuara të çdo pickeri kategorish),
+              ZgjedhesiKategorive (zgjedhësi me dritare i çdo fushe kategorie),
               Faturat/ (fusha e fotove, galeria e një transaksioni, shikuesi)
   Pages/      Paneli, Transaksionet, Llogaritë, Borxhet & Kartelat, Kategoritë, Buxhetet,
               Qëllimet, Shpenzimet e Planifikuara, Pagesat e Përsëritura, Statistikat,

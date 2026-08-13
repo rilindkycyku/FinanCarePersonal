@@ -7,7 +7,7 @@ import Footer from "../Components/Footer";
 import PageTitle from "../Components/PageTitle";
 import PageLoading from "../Components/PageLoading";
 import PunaNeVazhdim from "../Components/PunaNeVazhdim";
-import OpsionetKategorive from "../Components/OpsionetKategorive";
+import ZgjedhesiKategorive from "../Components/ZgjedhesiKategorive";
 import { Empty } from "../Components/Ui";
 import { useData } from "../Context/DataContext";
 import { useDialog } from "../Context/DialogContext";
@@ -336,14 +336,16 @@ function ImportoCsv() {
 
                   <Form.Group as={Col} md={4} controlId="kategoria-masive">
                     <Form.Label>Plotëso kategorinë që mungon</Form.Label>
-                    <Form.Select value="" onChange={(e) => plotesoKategorine(e.target.value)}>
-                      <option value="">Zgjidh një kategori...</option>
-                      {categories.map((c) => (
-                        <option key={c.id} value={c.id}>
-                          {c.emri} ({c.lloji === "hyrje" ? "hyrje" : "shpenzim"})
-                        </option>
-                      ))}
-                    </Form.Select>
+                    {/* Always empty: this picker is an action, not a field - it fills the rows
+                        below and goes back to offering the whole list. */}
+                    <ZgjedhesiKategorive
+                      id="kategoria-masive"
+                      categories={categories}
+                      value=""
+                      onChange={plotesoKategorine}
+                      placeholder="Zgjidh një kategori..."
+                      title="Plotëso kategorinë që mungon"
+                    />
                     <div className="fcp-row-sub mt-1">
                       Vendoset vetëm te rreshtat e përfshirë që s&apos;kanë ende kategori dhe që janë të atij lloji.
                     </div>
@@ -423,14 +425,15 @@ function ImportoCsv() {
                                 <span className="fcp-row-sub">-</span>
                               ) : (
                                 <>
-                                  <Form.Select
+                                  <ZgjedhesiKategorive
                                     size="sm"
+                                    categories={categories}
+                                    lloji={r.lloji}
                                     value={z.kategoriaId}
-                                    onChange={(e) => vendos(r.celesi, { kategoriaId: e.target.value })}
-                                  >
-                                    <option value="">Pa kategori</option>
-                                    <OpsionetKategorive categories={categories} lloji={r.lloji} />
-                                  </Form.Select>
+                                    onChange={(kategoriaId) => vendos(r.celesi, { kategoriaId })}
+                                    placeholder="Pa kategori"
+                                    emptyLabel="Pa kategori"
+                                  />
                                   {z.sugjeruar && z.kategoriaId && (
                                     <div className="fcp-row-sub">
                                       <Wand2 size={11} className="me-1" />

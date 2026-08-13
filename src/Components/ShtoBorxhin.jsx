@@ -5,7 +5,7 @@ import { makeId, STORES } from "../lib/db";
 import { toNumber, todayISO } from "../lib/format";
 import { DEBT_TYPES, debtTypeMeta } from "../lib/options";
 import VleraInput from "./VleraInput";
-import OpsionetKategorive from "./OpsionetKategorive";
+import ZgjedhesiKategorive from "./ZgjedhesiKategorive";
 import { ColorPicker } from "./Pickers";
 import "./ModalForms.css";
 
@@ -175,10 +175,15 @@ function ShtoBorxhin({ show, onHide, initial, llojiFillestar }) {
 
             <Form.Group as={Col} md={6} controlId="debt-kategoriaid">
               <Form.Label>Kategoria e Parazgjedhur (opsional)</Form.Label>
-              <Form.Select value={debt.kategoriaId} onChange={(e) => setField("kategoriaId", e.target.value)}>
-                <option value="">Pa kategori</option>
-                <OpsionetKategorive categories={categories} lloji="shpenzim" />
-              </Form.Select>
+              <ZgjedhesiKategorive
+                id="debt-kategoriaid"
+                categories={categories}
+                lloji="shpenzim"
+                value={debt.kategoriaId}
+                onChange={(kategoriaId) => setField("kategoriaId", kategoriaId)}
+                placeholder="Pa kategori"
+                emptyLabel="Pa kategori"
+              />
               <div className="fcp-modal-hint">
                 Përdoret vetëm kur zgjidhni ta zbrisni një pagesë edhe nga një llogari e vërtetë.
               </div>

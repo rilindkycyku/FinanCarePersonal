@@ -9,7 +9,7 @@ import PageLoading from "../Components/PageLoading";
 import Tabela from "../Components/Tabela/Tabela";
 import ShtoTransaksionin from "../Components/ShtoTransaksionin";
 import FaturatModal from "../Components/Faturat/FaturatModal";
-import OpsionetKategorive from "../Components/OpsionetKategorive";
+import ZgjedhesiKategorive from "../Components/ZgjedhesiKategorive";
 import { Kpi } from "../Components/Ui";
 import { useData } from "../Context/DataContext";
 import { useDialog } from "../Context/DialogContext";
@@ -226,13 +226,15 @@ function Transaksionet() {
                 <Filter size={12} className="me-1" />
                 Kategoria
               </Form.Label>
-              <Form.Select
+              <ZgjedhesiKategorive
+                id="filtri-kategoria"
+                categories={categories}
                 value={filtri.kategoria}
-                onChange={(e) => setFiltri((f) => ({ ...f, kategoria: e.target.value }))}
-              >
-                <option value="">Të gjitha</option>
-                <OpsionetKategorive categories={categories} />
-              </Form.Select>
+                onChange={(kategoria) => setFiltri((f) => ({ ...f, kategoria }))}
+                placeholder="Të gjitha"
+                emptyLabel="Të gjitha"
+                title="Filtro sipas kategorisë"
+              />
             </Form.Group>
 
             {/* Only worth a slot once something is tagged - until then it would be an empty picker

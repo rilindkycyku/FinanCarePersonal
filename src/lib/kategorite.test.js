@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   emriIPlote,
+  kerkoKategorite,
   familja,
   mundTeKeteNjePrind,
   nenkategorite,
@@ -87,6 +88,37 @@ describe("kategorite", () => {
     expect(pemaKategorive(ndotur, "shpenzim").map((c) => c.emri)).toEqual(["Transport", "Ushqim & Pije"]);
     expect(nenkategorite(ndotur, "ushqim").map((c) => c.emri)).toEqual(["Furra", "Market"]);
     expect(emriIPlote(ndotur, "market")).toBe("Ushqim & Pije › Market");
+  });
+
+  it("searches across both levels, and pulls a whole group in when the parent matches", () => {
+    expect(kerkoKategorite(lista, "shpenzim", "mark").map((c) => c.emriPlote)).toEqual([
+      "Ushqim & Pije › Market",
+    ]);
+    // The parent matching is a request for everything filed under it.
+    expect(kerkoKategorite(lista, "shpenzim", "ushqim").map((c) => c.emriPlote)).toEqual([
+      "Ushqim & Pije",
+      "Ushqim & Pije › Furra",
+      "Ushqim & Pije › Market",
+    ]);
+    // The direction still decides what is searchable at all, and an empty search is not "match
+    // everything" - the picker shows its tree then.
+    expect(kerkoKategorite(lista, "shpenzim", "rroga")).toEqual([]);
+    expect(kerkoKategorite(lista, "hyrje", "rrog").map((c) => c.id)).toEqual(["rroga"]);
+    expect(kerkoKategorite(lista, "shpenzim", "   ")).toEqual([]);
+  });
+
+  it("matches what a phone keyboard types: no accents, any case", () => {
+    const me = [kategori("keste", "Këste të Kartelës"), kategori("kafshe", "Kafshët Shtëpiake")];
+    expect(kerkoKategorite(me, "shpenzim", "keste").map((c) => c.id)).toEqual(["keste"]);
+    expect(kerkoKategorite(me, "shpenzim", "KAFSHET").map((c) => c.id)).toEqual(["kafshe"]);
+    expect(kerkoKategorite(me, "shpenzim", "kartelës").map((c) => c.id)).toEqual(["keste"]);
+  });
+
+  it("says where each hit sits, so a result row reads on its own", () => {
+    const [gjetja] = kerkoKategorite(lista, "shpenzim", "furra");
+    expect(gjetja.prindi.emri).toBe("Ushqim & Pije");
+    expect(gjetja.prindi.femijet).toBeUndefined();
+    expect(kerkoKategorite(lista, "shpenzim", "transport")[0].prindi).toBe(null);
   });
 
   it("offers only top-level categories of the same direction as a parent", () => {

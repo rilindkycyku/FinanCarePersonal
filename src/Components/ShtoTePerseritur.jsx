@@ -4,7 +4,7 @@ import { TrendingUp, TrendingDown } from "lucide-react";
 import { useData } from "../Context/DataContext";
 import MonedhaTjeter from "./MonedhaTjeter";
 import VleraInput from "./VleraInput";
-import OpsionetKategorive from "./OpsionetKategorive";
+import ZgjedhesiKategorive from "./ZgjedhesiKategorive";
 import { makeId, STORES } from "../lib/db";
 import { currencySymbol, formatMoney, toNumber, todayISO } from "../lib/format";
 import { convertedAmount, currencyFields, debtProgress, lastInstallmentDate } from "../lib/finance";
@@ -256,10 +256,14 @@ function ShtoTePerseritur({ show, onHide, initial }) {
               <Form.Label>
                 Kategoria <span className="text-danger">*</span>
               </Form.Label>
-              <Form.Select value={rec.kategoriaId} onChange={(e) => setField("kategoriaId", e.target.value)} required>
-                <option value="">Zgjidh kategorinë...</option>
-                <OpsionetKategorive categories={categories} lloji={rec.lloji} />
-              </Form.Select>
+              <ZgjedhesiKategorive
+                id="rec-kategoriaid"
+                categories={categories}
+                lloji={rec.lloji}
+                value={rec.kategoriaId}
+                onChange={(kategoriaId) => setField("kategoriaId", kategoriaId)}
+                required
+              />
             </Form.Group>
 
             <Form.Group as={Col} md={6} controlId="rec-dataetjetres">

@@ -139,6 +139,45 @@ export function pemaKategorive(categories, lloji) {
 }
 
 /**
+ * Diacritics folded away and case dropped, so a search box answers to what is typed rather than to
+ * what is spelled: "keste" finds "Këste të Kartelës", "pergjithesi" finds "përgjithësi". Albanian
+ * names carry ë and ç on nearly every other word and nobody reaches for them on a phone keyboard.
+ */
+const paTheks = (teksti) =>
+  String(teksti ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+
+/**
+ * A flat search over one direction's tree, for the picker's search box: every category whose own
+ * name matches, plus - when a parent matches - everything filed under it, since "ushqim" is a
+ * reasonable way to ask for "Ushqim & Pije › Market".
+ *
+ * Each hit carries `emriPlote` ("Ushqim & Pije › Market") and the `prindi` record it belongs to, so
+ * a result row can say where the category sits without the list around it to place it. Results come
+ * out grouped by parent and in the tree's own order; an empty search returns nothing rather than
+ * everything, because the caller shows the tree in that case.
+ */
+export function kerkoKategorite(categories, lloji, teksti) {
+  const kerkimi = paTheks(teksti);
+  if (!kerkimi) return [];
+
+  const gjetjet = [];
+  pemaKategorive(categories, lloji).forEach((rrenja) => {
+    const rrenjaPerputhet = paTheks(rrenja.emri).includes(kerkimi);
+    const { femijet, ...vetRrenja } = rrenja;
+    if (rrenjaPerputhet) gjetjet.push({ ...vetRrenja, prindi: null, emriPlote: rrenja.emri });
+    femijet.forEach((femija) => {
+      if (!rrenjaPerputhet && !paTheks(femija.emri).includes(kerkimi)) return;
+      gjetjet.push({ ...femija, prindi: vetRrenja, emriPlote: `${rrenja.emri}${NDARESI}${femija.emri}` });
+    });
+  });
+  return gjetjet;
+}
+
+/**
  * The categories that may be chosen as a parent for `kategoria`: same direction, top-level only
  * (one level deep), and never itself or anything already filed under it.
  */

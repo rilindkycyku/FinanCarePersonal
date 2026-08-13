@@ -5,7 +5,7 @@ import { useData } from "../Context/DataContext";
 import MonedhaTjeter from "./MonedhaTjeter";
 import VleraInput from "./VleraInput";
 import EtiketaFusha from "./EtiketaFusha";
-import OpsionetKategorive from "./OpsionetKategorive";
+import ZgjedhesiKategorive from "./ZgjedhesiKategorive";
 import FaturaFusha from "./Faturat/FaturaFusha";
 import { makeId, sinkronizoFaturat, STORES } from "../lib/db";
 import { currencySymbol, formatMoney, toNumber, todayISO } from "../lib/format";
@@ -428,14 +428,14 @@ function ShtoTransaksionin({
                 <Form.Label>
                   Kategoria <span className="text-danger">*</span>
                 </Form.Label>
-                <Form.Select
+                <ZgjedhesiKategorive
+                  id="tx-kategoriaid"
+                  categories={categories}
+                  lloji={tx.lloji}
                   value={tx.kategoriaId}
-                  onChange={(e) => setTx((prev) => ({ ...prev, kategoriaId: e.target.value, sugjeruar: false }))}
+                  onChange={(kategoriaId) => setTx((prev) => ({ ...prev, kategoriaId, sugjeruar: false }))}
                   required
-                >
-                  <option value="">Zgjidh kategorinë...</option>
-                  <OpsionetKategorive categories={categories} lloji={tx.lloji} />
-                </Form.Select>
+                />
                 {tx.sugjeruar && tx.kategoriaId && (
                   <div className="fcp-modal-hint">
                     <Wand2 size={12} className="me-1" />

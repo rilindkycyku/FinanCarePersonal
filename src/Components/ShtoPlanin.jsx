@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Modal, Button, Form, Row, Col, Alert } from "react-bootstrap";
 import { useData } from "../Context/DataContext";
 import VleraInput from "./VleraInput";
-import OpsionetKategorive from "./OpsionetKategorive";
+import ZgjedhesiKategorive from "./ZgjedhesiKategorive";
 import { makeId, STORES } from "../lib/db";
 import { monthLabel, toNumber } from "../lib/format";
 import { PLAN_PRIORITIES } from "../lib/options";
@@ -135,10 +135,15 @@ function ShtoPlanin({ show, onHide, initial, muajiAktual }) {
 
             <Form.Group as={Col} md={6} controlId="plan-kategoriaid">
               <Form.Label>Kategoria (opsionale)</Form.Label>
-              <Form.Select value={plan.kategoriaId} onChange={(e) => setField("kategoriaId", e.target.value)}>
-                <option value="">Pa kategori</option>
-                <OpsionetKategorive categories={categories} lloji="shpenzim" />
-              </Form.Select>
+              <ZgjedhesiKategorive
+                id="plan-kategoriaid"
+                categories={categories}
+                lloji="shpenzim"
+                value={plan.kategoriaId}
+                onChange={(kategoriaId) => setField("kategoriaId", kategoriaId)}
+                placeholder="Pa kategori"
+                emptyLabel="Pa kategori"
+              />
               <div className="fcp-modal-hint">Përdoret si kategori e parazgjedhur kur ta shënoni si të blerë.</div>
             </Form.Group>
 
