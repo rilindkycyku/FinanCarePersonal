@@ -100,24 +100,29 @@ function Statistika() {
   const maxHyrje = stats.hyrjet[0]?.vlera || 1;
   const maxEtiketa = stats.etiketat[0]?.vlera || 1;
 
-  const mesatarjaDitore = useMemo(() => {
-    // Average daily spend across the days the period actually covers, so "Ky muaj" isn't
-    // understated early in the month.
+  /**
+   * How many days the period has actually covered so far - the divisor behind every "për ditë"
+   * figure on this page.
+   *
+   * A month in progress counts up to today, not to its last day: on the 5th, a tag with 300 € spent
+   * against it is running at 60 €/day, and dividing by 31 would report 9,68 € and call a month's
+   * pace comfortable a week into it. A month already finished, and any past year, counts in full.
+   * "Gjithçka" has no bounds to read, so it measures from the first transaction to the last.
+   */
+  const ditetEPeriudhes = useMemo(() => {
     const { start, end } = periodBounds(period);
     if (!start || !end) {
       const datat = stats.periudha.map((tx) => tx.data).filter(Boolean).sort();
-      if (datat.length === 0) return 0;
-      const ditet = Math.max(
-        1,
-        (new Date(datat[datat.length - 1]) - new Date(datat[0])) / 86400000 + 1
-      );
-      return stats.flows.shpenzimet / ditet;
+      if (datat.length === 0) return 1;
+      return Math.max(1, (new Date(datat[datat.length - 1]) - new Date(datat[0])) / 86400000 + 1);
     }
     const sot = todayISO();
     const fundi = end > sot ? sot : end;
-    const ditet = Math.max(1, (new Date(fundi) - new Date(start)) / 86400000 + 1);
-    return stats.flows.shpenzimet / ditet;
-  }, [period, stats.flows.shpenzimet, stats.periudha]);
+    return Math.max(1, (new Date(fundi) - new Date(start)) / 86400000 + 1);
+  }, [period, stats.periudha]);
+
+  const perDite = (vlera) => vlera / ditetEPeriudhes;
+  const mesatarjaDitore = perDite(stats.flows.shpenzimet);
 
   /** Only a month can be compared with "the month before it", so the panel follows the period
    * selector and steps aside for the year and all-time views. */
@@ -131,12 +136,24 @@ function Statistika() {
   const nameOf = (list, id, fallback = "-") => list.find((x) => x.id === id)?.emri || fallback;
 
   /**
+   * The amount, with what it comes to per day underneath. Only worth saying where the figure is a
+   * rate you could be over or under - a month's spending on a tag or a category. A salary paid once
+   * is not "34,09 € në ditë", so the income ranking is left as the plain total.
+   */
+  const vleraMePerDite = (vlera, klasa) => (
+    <div className="fcp-row-value-wrap">
+      <div className={`fcp-row-value ${klasa}`}>{money(vlera)}</div>
+      <div className="fcp-row-perdite">{money(perDite(vlera))}/ditë</div>
+    </div>
+  );
+
+  /**
    * A category ranking. A row that has subcategories carries them underneath it - the parent's
    * figure is the group total, so the breakdown is what says whether "Ushqim & Pije" was the weekly
    * market run or thirty small ones. The parent's own share is listed there too when it has one, so
    * the sub-rows always add up to the line above them.
    */
-  const rankedRows = (list, max, klasa) =>
+  const rankedRows = (list, max, klasa, mePerDite) =>
     list.length === 0 ? (
       <Empty>Nuk ka të dhëna për këtë periudhë.</Empty>
     ) : (
@@ -166,7 +183,11 @@ function Statistika() {
               <div className="fcp-row-bar">
                 <ProgressBar value={(k.vlera / max) * 100} color={k.ngjyra} small />
               </div>
-              <div className={`fcp-row-value ${klasa}`}>{money(k.vlera)}</div>
+              {mePerDite ? (
+                vleraMePerDite(k.vlera, klasa)
+              ) : (
+                <div className={`fcp-row-value ${klasa}`}>{money(k.vlera)}</div>
+              )}
             </div>
             {ndarja.length > 0 && (
               <div className="fcp-nen-lista">
@@ -225,6 +246,9 @@ function Statistika() {
             <Kpi
               label="Mesatarja Ditore e Shpenzimeve"
               value={money(mesatarjaDitore)}
+              // Says its own divisor, because "ky muaj" means the days so far and not the whole
+              // month - the number is otherwise hard to check against the total above it.
+              sub={`Ndarë me ${Math.round(ditetEPeriudhes)} ditë`}
               icon={CalendarRange}
               color="amber"
             />
@@ -392,7 +416,7 @@ function Statistika() {
 
             <Col xl={6}>
               <Panel title="Shpenzimet sipas Kategorisë" icon={TrendingDown}>
-                {rankedRows(stats.shpenzimet, maxShpenzim, "fcp-neg")}
+                {rankedRows(stats.shpenzimet, maxShpenzim, "fcp-neg", true)}
               </Panel>
             </Col>
 
@@ -422,7 +446,7 @@ function Statistika() {
                       <div className="fcp-row-bar">
                         <ProgressBar value={(et.vlera / maxEtiketa) * 100} color={et.ngjyra} small />
                       </div>
-                      <div className="fcp-row-value fcp-neg">{money(et.vlera)}</div>
+                      {vleraMePerDite(et.vlera, "fcp-neg")}
                     </div>
                   ))}
                 </Panel>

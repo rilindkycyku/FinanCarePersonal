@@ -273,6 +273,22 @@
   flex: 0 0 70px;
 }
 
+/* An amount with its daily rate under it, on the statistics rankings. The two are stacked rather
+   than run into the sub-line on the left, which on a phone is already carrying the count and the
+   share and would wrap onto a third line. */
+.fcp-row-value-wrap {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.fcp-row-perdite {
+  font-size: 0.64rem;
+  font-weight: 700;
+  color: var(--sp-text-muted);
+  white-space: nowrap;
+  margin-top: 0.05rem;
+}
+
 /* ── Amount colours (also used inside table cells) ────────── */
 .fcp-pos { color: var(--sp-emerald) !important; }
 .fcp-neg { color: var(--sp-red-text) !important; }
