@@ -11,7 +11,7 @@
 import { describe, expect, it } from "vitest";
 import {
   KOHA_PARA_SINKRONIZIMIT, STORI_PROFILIT, celesiRreshtit, gjendjaLokale, ndryshimetLokale,
-  planiIAplikimit, rreshtiNgaServeri, rreshtiPerServer,
+  pastampuarat, planiIAplikimit, rreshtiNgaServeri, rreshtiPerServer,
 } from "./sinkronizimi";
 import { emriIPlote, pemaKategorive } from "./kategorite";
 
@@ -172,11 +172,60 @@ describe("planiIAplikimit", () => {
   });
 });
 
+/**
+ * The bug this covers cost a real ledger: a browser that had been used for months before sync was
+ * connected sent up its categories and three new transactions, and nothing else - ever. Records
+ * written before sync existed carry no timestamp, so an earlier pass dated them and left it there;
+ * dated but unflagged, they were owed to nobody. `ndryshimetLokale` sends what is flagged, and
+ * `migroPezullimet` re-flags only what changed after the last push, which they predate by
+ * definition. So they sat in IndexedDB while every new record synced perfectly.
+ */
+describe("një ledger që ekzistonte para se të lidhej sinkronizimi", () => {
+  const paDate = { id: "t1", vlera: 10 };
+  const iStampuar = { id: "t2", vlera: 20, perditesuar: KOHA_PARA_SINKRONIZIMIT };
+
+  it("owes the cloud both what was never stamped and what an earlier pass only stamped", () => {
+    const punet = pastampuarat({
+      storet: { transactions: [paDate, iStampuar, tx("t3", 900)] },
+      profili: { valuta: "EUR" },
+    });
+    expect(punet.map((p) => p.rekordi.id ?? STORI_PROFILIT)).toEqual(["t1", "t2", STORI_PROFILIT]);
+    // t3 has a date from the server, so it has been through the cloud and is nobody's debt.
+    expect(punet.map((p) => p.store)).toEqual(["transactions", "transactions", STORI_PROFILIT]);
+  });
+
+  it("leaves alone what is already marked, so a sync is not a rewrite of the whole ledger", () => {
+    const punet = pastampuarat({
+      storet: { transactions: [{ ...iStampuar, sinkPezull: true }] },
+    });
+    expect(punet).toEqual([]);
+  });
+
+  it("sends them on an ordinary sync, with nobody asking for a full upload", () => {
+    // The whole chain, as `stampoPastampuarat` runs it: mark what predates sync, then push what is
+    // marked. Before the fix the marking step only dated them, so this came out empty and the
+    // ledger stayed in the browser however many times it was synced.
+    const gjendja = { storet: { transactions: [{ ...paDate }, { ...iStampuar }] } };
+    for (const { rekordi } of pastampuarat(gjendja)) {
+      rekordi.perditesuar = KOHA_PARA_SINKRONIZIMIT;
+      rekordi.sinkPezull = true;
+    }
+    expect(ndryshimetLokale(gjendja).map((r) => r.id)).toEqual(["t1", "t2"]);
+  });
+});
+
 describe("një pajisje e re që lidhet me një kopje ekzistuese", () => {
   // A fresh install seeds the default categories with the same fixed ids the real device has been
   // renaming for months. They are written by the database's own upgrade step, so they carry no
-  // timestamp and no unsent flag - which is what stops them winning anything.
-  const kategoriaEParazgjedhur = { id: "kat_ushqim", emri: "Ushqim", perditesuar: KOHA_PARA_SINKRONIZIMIT };
+  // timestamp - and the first sync marks them unsent, because a record the cloud has never
+  // confirmed is exactly what that mark means. What stops them winning anything is the date: a
+  // placeholder is not an edit, so they lose to any row the cloud actually holds.
+  const kategoriaEParazgjedhur = {
+    id: "kat_ushqim",
+    emri: "Ushqim",
+    perditesuar: KOHA_PARA_SINKRONIZIMIT,
+    sinkPezull: true,
+  };
   const eRiemeruar = {
     store: "categories",
     id: "kat_ushqim",
@@ -201,6 +250,13 @@ describe("një pajisje e re që lidhet me një kopje ekzistuese", () => {
       gjithcka: true,
     });
     expect(rreshtat.map((r) => r.id)).toEqual(["t1"]);
+  });
+
+  it("does not let a seeded default count as an unsent change", () => {
+    // Marked, but not on those terms: were it in `pezull`, the rename coming down would be skipped
+    // as "last round's news" and the untouched default would go up over it.
+    const { pezull: tePezulluara } = gjendjaLokale({ storet: { categories: [kategoriaEParazgjedhur] } });
+    expect([...tePezulluara]).toEqual([]);
   });
 });
 

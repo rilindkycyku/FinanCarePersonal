@@ -100,16 +100,25 @@ export function ndryshimetLokale({ storet = {}, profili = null, fshirjet = [], g
   return rreshtat;
 }
 
-/** `${store}:${id}` → what this device holds for it: the timestamp, and whether the change is still
- * waiting to be sent. Deletions included. The whole of the local side, as the merge sees it. */
+/**
+ * `${store}:${id}` → what this device holds for it: the timestamp, and whether the change is still
+ * waiting to be sent. Deletions included. The whole of the local side, as the merge sees it.
+ *
+ * A record dated `KOHA_PARA_SINKRONIZIMIT` is the one exception to "unsent wins". It is flagged so
+ * that it *reaches* a cloud that has never held it, but it predates sync and its date is a
+ * placeholder, not an edit anyone made - so against a row the cloud actually has it must lose. Without
+ * that, a fresh install's seeded categories would count as unsent changes and would overwrite months
+ * of the real device's renames on their way up.
+ */
 export function gjendjaLokale({ storet = {}, profili = null, fshirjet = [] }) {
   const kohet = new Map();
   const pezull = new Set();
 
   const shto = (store, id, rekordi) => {
     const celesi = celesiRreshtit(store, id);
-    kohet.set(celesi, Number(rekordi?.perditesuar) || 0);
-    if (rekordi?.sinkPezull) pezull.add(celesi);
+    const koha = Number(rekordi?.perditesuar) || 0;
+    kohet.set(celesi, koha);
+    if (rekordi?.sinkPezull && koha !== KOHA_PARA_SINKRONIZIMIT) pezull.add(celesi);
   };
 
   for (const [store, rekordet] of Object.entries(storet)) {
@@ -255,29 +264,76 @@ export async function lexoGjendjen() {
  *
  * Dated to the epoch instead, an unstamped record loses every comparison and wins nothing it
  * should not: anything the cloud holds for the same id is by definition a later edit, and anything
- * the cloud has never seen still gets pushed, because a first push sends everything regardless of
- * age. Records the user actually edits are stamped properly by db.js from then on.
+ * the cloud has never seen still gets pushed. Records the user actually edits are stamped properly
+ * by db.js from then on.
+ *
+ * The date is also what marks such a record as still owed to the cloud - see `pastampuarat`.
  */
 export const KOHA_PARA_SINKRONIZIMIT = 1;
 
 /**
- * Gives that timestamp to whatever is still without one, in memory as well as on disk, so the push
- * a few lines later can see them.
+ * Which records predate sync, and so are still owed to the cloud.
+ *
+ * Two kinds, and they are the same thing at different moments. A record with **no** timestamp was
+ * written before this release, or seeded by the database's own upgrade step - accounts and default
+ * categories are created there, by `store.add`, which goes nowhere near the flag `put` sets. A
+ * record dated exactly `KOHA_PARA_SINKRONIZIMIT` is one of those on a later pass: stamped by an
+ * earlier sync, and *still* never accepted by the cloud.
+ *
+ * Both have to be marked as unsent, and the second is the one that was missing. Stamping alone left
+ * them dated but unflagged, which meant `ndryshimetLokale` skipped them and `migroPezullimet` -
+ * which only re-flags what changed after the last push - skipped them too, being older than any
+ * push. A ledger that predated sync therefore never went up at all: nothing was owed, nothing was
+ * sent, and the counters on the sync page disagreed for ever with no way to act on it. Everything
+ * written afterwards synced perfectly, which is exactly why it went unnoticed.
+ *
+ * Being flagged does not make them win anything - `gjendjaLokale` keeps them out of the "unsent
+ * beats the cloud" rule - so the seeded defaults of a second device still lose to the real device's
+ * edits. The mark only means "the cloud has not confirmed this", and the first push that succeeds
+ * replaces the placeholder date with the server's own, after which nothing here matches them again.
  */
-export async function stampoPastampuarat(gjendja, kur = KOHA_PARA_SINKRONIZIMIT) {
+export function pastampuarat({ storet = {}, profili = null } = {}, kur = KOHA_PARA_SINKRONIZIMIT) {
   const punet = [];
-  for (const [store, rekordet] of Object.entries(gjendja.storet)) {
-    for (const rekordi of rekordet) {
-      if (!rekordi?.id || rekordi.perditesuar) continue;
-      rekordi.perditesuar = kur;
-      punet.push(putRaw(store, rekordi));
+
+  const shto = (store, rekordi) => {
+    const koha = Number(rekordi?.perditesuar) || 0;
+    // Been through the cloud, which is the only thing that gives a record a real date.
+    if (koha !== 0 && koha !== kur) return;
+    // Already dated and already marked: nothing to write, it is on its way out as it is.
+    if (koha === kur && rekordi.sinkPezull) return;
+    punet.push({ store, rekordi });
+  };
+
+  for (const [store, rekordet] of Object.entries(storet)) {
+    for (const rekordi of rekordet ?? []) {
+      if (rekordi?.id) shto(store, rekordi);
     }
   }
-  if (gjendja.profili && Object.keys(gjendja.profili).length > 0 && !gjendja.profili.perditesuar) {
-    gjendja.profili.perditesuar = kur;
-    punet.push(putProfileRaw(gjendja.profili));
+  if (profili && Object.keys(profili).length > 0) shto(STORI_PROFILIT, profili);
+  return punet;
+}
+
+/**
+ * Marks them, in memory as well as on disk, so the push a few lines later can see them.
+ *
+ * One write transaction per store rather than per record: on the first sync after connecting, a
+ * ledger kept for a year is *entirely* in this list, and a round trip through the database engine
+ * for each row of it is the app looking frozen on a phone.
+ */
+export async function stampoPastampuarat(gjendja, kur = KOHA_PARA_SINKRONIZIMIT) {
+  const punet = pastampuarat(gjendja, kur);
+  const perStore = new Map();
+
+  for (const { store, rekordi } of punet) {
+    rekordi.perditesuar = kur;
+    rekordi.sinkPezull = true;
+    if (store === STORI_PROFILIT) continue;
+    if (!perStore.has(store)) perStore.set(store, []);
+    perStore.get(store).push(rekordi);
   }
-  await Promise.all(punet);
+
+  for (const [store, rekordet] of perStore) await putRawShume(store, rekordet);
+  if (punet.some(({ store }) => store === STORI_PROFILIT)) await putProfileRaw(gjendja.profili);
   return punet.length;
 }
 
