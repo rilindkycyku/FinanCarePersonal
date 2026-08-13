@@ -1,4 +1,7 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap');
+/* Inter is declared in `src/index.css` and served from this origin - see the note there for why it
+   is not imported from fonts.googleapis.com. JetBrains Mono is gone with it: the only thing set in
+   it was the calculator's display, which already names `ui-monospace, monospace` after it, and
+   every platform's own monospace draws that line just as well as a second font download would. */
 
 /* ══════════════════════════════════════════════════════════════
    FINANCARE - Premium Core Theme System
@@ -18,6 +21,12 @@
   --sp-cyan:        #06b6d4;
   --sp-cyan-glow:   rgba(6,182,212,0.12);
   --sp-red:         #ef4444;
+  /* The same red as text. `--sp-red` is tuned for fills, borders and icons, where it looks right;
+     as small bold text on the app's surfaces it lands at 4.33 against the 4.5 that WCAG AA asks
+     for - close enough to pass unnoticed and not close enough to read comfortably. Every negative
+     amount in the app is drawn in it, so it gets a lighter shade of its own rather than dragging
+     the fills lighter with it. */
+  --sp-red-text:    #f87171;
   --sp-text:        #f1f5f9;
   --sp-text-soft:   #e2e8f0;
   --sp-text-muted:  #94a3b8;
@@ -34,6 +43,82 @@ body {
   font-family: 'Inter', sans-serif !important;
   margin: 0;
   min-height: 100vh;
+}
+
+/* Bootstrap's own `.card` carries `color: var(--bs-body-color)` - a near-black meant for a white
+   card. The app repaints the card's background through `.profile-card`, `.sp-card` and friends but
+   never its text, so anything inside one without a colour rule of its own inherited that near-black
+   onto a dark surface: the "Si funksionon" heading on Importo CSV was drawn at a contrast of 1.15
+   and read as an empty line. Headings are named as well as the card because Bootstrap sets
+   `--bs-heading-color` on them separately. */
+.card,
+.card > .card-body {
+  color: var(--sp-text);
+}
+
+.card h1,
+.card h2,
+.card h3,
+.card h4,
+.card h5,
+.card h6 {
+  color: inherit;
+}
+
+/* ── Alerts ───────────────────────────────────────────────────
+   Twenty-seven alerts across the app and not one rule for them until now, so every warning and
+   error was drawn in Bootstrap's stock palette: pale panels with near-black text, dropped into a
+   dark page. The worst of it was the backup notice, where a `btn-outline-light` sat on
+   `alert-secondary` at a contrast of 1.21 - a white button on a white-grey strip, effectively
+   invisible. Tinted from the same tokens as the rest of the app so both themes follow. */
+.alert {
+  border-radius: var(--sp-radius-md);
+  border: 1px solid transparent;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.alert-danger    { background: rgba(239, 68, 68, 0.12);  border-color: rgba(239, 68, 68, 0.4);  color: #fca5a5; }
+.alert-warning   { background: rgba(245, 158, 11, 0.12); border-color: rgba(245, 158, 11, 0.4); color: #fcd34d; }
+.alert-info      { background: rgba(6, 182, 212, 0.12);  border-color: rgba(6, 182, 212, 0.4);  color: #67e8f9; }
+.alert-secondary { background: var(--sp-surface-2);      border-color: var(--sp-border);        color: var(--sp-text-soft); }
+
+/* Bootstrap gives `strong` and links inside an alert their own darker colour, which undoes the
+   above on the one word that most wanted to be read. */
+.alert strong,
+.alert .alert-link,
+.alert a:not(.btn) {
+  color: inherit;
+}
+
+body.light-mode .alert-danger  { background: rgba(220, 38, 38, 0.08);  border-color: rgba(220, 38, 38, 0.3);  color: #991b1b; }
+body.light-mode .alert-warning { background: rgba(180, 83, 9, 0.10);   border-color: rgba(180, 83, 9, 0.3);   color: #92400e; }
+body.light-mode .alert-info    { background: rgba(2, 132, 199, 0.08);  border-color: rgba(2, 132, 199, 0.3);  color: #075985; }
+
+/* `btn-outline-light` is Bootstrap's near-white outline button, which the pages use as their
+   secondary action. It only ever worked over a dark surface, and vanished both on the pale alerts
+   above and everywhere in the light theme. Same neutral treatment as the tables' own outline
+   button, from tokens, so it holds in either theme and on any of these backgrounds. */
+.btn-outline-light {
+  border: 1px solid var(--sp-border) !important;
+  background: var(--sp-surface-3) !important;
+  color: var(--sp-text) !important;
+}
+
+.btn-outline-light:hover,
+.btn-outline-light:focus-visible {
+  border-color: var(--sp-emerald) !important;
+  background: var(--sp-surface-2) !important;
+  color: var(--sp-emerald) !important;
+}
+
+/* Bootstrap's `<code>` is a fixed pink meant for a white page - 3.62 against the app's surfaces. */
+code {
+  color: var(--sp-emerald);
+  background: var(--sp-surface-3);
+  padding: 0.1em 0.35em;
+  border-radius: 5px;
+  font-size: 0.86em;
 }
 
 /* Premium Scrollbar */
@@ -521,6 +606,7 @@ body.light-mode {
   --sp-cyan:        #0284c7;
   --sp-cyan-glow:   rgba(2, 132, 199, 0.12);
   --sp-red:         #dc2626;
+  --sp-red-text:    #b91c1c;
   --sp-text:        #0f172a;
   --sp-text-soft:   #334155;
   --sp-text-muted:  #64748b;

@@ -18,7 +18,10 @@
   margin-bottom: 1.5rem;
 }
 
-.fcp-page-head h2 {
+/* The page title is the page's `h1` - it was an `h2` under a document that had no `h1` at all, so
+   a screen reader's heading list opened one level down with nothing above it. The size is set here
+   rather than inherited from the tag, so nothing about the page looks different. */
+.fcp-page-head h1 {
   font-weight: 900;
   letter-spacing: -0.02em;
   font-size: 1.5rem;
@@ -270,9 +273,25 @@
   flex: 0 0 70px;
 }
 
+/* An amount with its daily rate under it, on the statistics rankings. The two are stacked rather
+   than run into the sub-line on the left, which on a phone is already carrying the count and the
+   share and would wrap onto a third line. */
+.fcp-row-value-wrap {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.fcp-row-perdite {
+  font-size: 0.64rem;
+  font-weight: 700;
+  color: var(--sp-text-muted);
+  white-space: nowrap;
+  margin-top: 0.05rem;
+}
+
 /* ── Amount colours (also used inside table cells) ────────── */
 .fcp-pos { color: var(--sp-emerald) !important; }
-.fcp-neg { color: var(--sp-red) !important; }
+.fcp-neg { color: var(--sp-red-text) !important; }
 .fcp-neutral { color: var(--sp-cyan) !important; }
 
 /* ── Pills / badges ───────────────────────────────────────── */
@@ -445,6 +464,16 @@
   text-transform: uppercase;
 }
 
+/* The heading on a card that is really a section of the page - "Kopje e Plotë (ZIP)", "Pamja",
+   "Hapi 1". They were all `h5` regardless of where they sat, so a page ran h1 straight to h5 and a
+   screen reader's outline lost the level in between. They are `h2`/`h3` by position now; this
+   holds the size they were drawn at, so nothing on screen moved. */
+.fcp-card-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
 /* ── Mobile ───────────────────────────────────────────────── */
 /* Phones. The root is a step smaller here (index.css), so every rem below is already ~6% down on
    what it draws elsewhere; the sizes that were near the readable floor are nudged up a notch so
@@ -454,7 +483,7 @@
     gap: 0.6rem;
     margin-bottom: 0.9rem;
   }
-  .fcp-page-head h2 { font-size: 1.15rem; }
+  .fcp-page-head h1 { font-size: 1.15rem; }
   .fcp-page-head p { font-size: 0.76rem; }
   .fcp-kpi-col { margin-bottom: 0.4rem; }
   .fcp-kpi {
@@ -950,7 +979,7 @@ body.light-mode .fcp-month-nav {
   font-weight: 800;
 }
 
-.fcp-trend.up { color: var(--sp-red); }
+.fcp-trend.up { color: var(--sp-red-text); }
 .fcp-trend.down { color: var(--sp-emerald); }
 
 /* ── The danger zone in Cilësimet ─────────────────────────────

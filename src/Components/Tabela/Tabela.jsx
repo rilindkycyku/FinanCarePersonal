@@ -1,18 +1,17 @@
-import { useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { Button, Col, Form, InputGroup, Pagination, Row, Card } from "react-bootstrap";
 import { Plus, Search, Filter, Eraser, Edit3, Trash2, Eye, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import EksportoTeDhenat from "./EksportoTeDhenat";
 import SortIcon from "./SortIcon";
 import useSortableData from "../../Context/useSortableData";
+import { cellText, isMarkup } from "../../lib/format";
+import "./Tabela.css";
 
 // Cycled across whatever distinct values `filterField` finds, so each one gets a stable,
 // visually distinct color - mirrors the colored "Lloji" chip row on FinanCare's own Lista e
 // Faturave filter panel.
 const PILL_COLORS = ["#10b981", "#06b6d4", "#8b5cf6", "#f59e0b", "#f43f5e", "#ec4899", "#84cc16", "#3b82f6"];
-
-/** Text content of a cell, so filtering/labelling ignore any markup the cell carries. */
-const cellText = (value) => String(value ?? "").replace(/<[^>]*>/g, "").trim();
 
 function formatDate(dateStr) {
   try {
@@ -55,6 +54,9 @@ function Tabela({
   mosShfaqPaginimin,
   shfaqEksporto,
 }) {
+  // Unique per instance, so the filter labels point at their own controls even if a page ever grows
+  // a second table.
+  const idBaza = useId();
   const [searchQuery, setSearchQuery] = useState("");
   const [itemsPerPage, setItemsPerPage] = useState(mosShfaqPaginimin ? Math.max(data.length, 20) : 20);
   const [startDate, setStartDate] = useState("");
@@ -83,7 +85,41 @@ function Tabela({
   const headeri = data.length > 0 ? Object.keys(data[0]) : [];
   const filteredHeaders = mosShfaqID ? headeri.filter((header) => header !== "ID") : headeri;
 
-  const renderCellContent = (content) => <div dangerouslySetInnerHTML={{ __html: content ?? "" }} />;
+  // Only what a page deliberately wrapped in `markup()` is HTML; the rest is the text the user
+  // typed and is rendered as such, so a name with an "&" or a "<" in it survives the trip.
+  const renderCellContent = (content) =>
+    isMarkup(content) ? <div dangerouslySetInnerHTML={{ __html: content.html }} /> : <div>{cellText(content)}</div>;
+
+  // The horizontal scrollbar sits under every table, so the "swipe sideways" hint below it is only
+  // honest when there is in fact something out of view. Re-measured on resize and whenever the
+  // columns or the row count change - hiding a column or filtering down to short rows can take a
+  // table that overflowed and make it fit.
+  const scrollRef = useRef(null);
+  const [teketOverflow, setTeketOverflow] = useState(false);
+
+  const matOverflow = useCallback(() => {
+    const el = scrollRef.current;
+    if (el) setTeketOverflow(el.scrollWidth > el.clientWidth + 1);
+  }, []);
+
+  useEffect(() => {
+    matOverflow();
+    if (typeof ResizeObserver === "undefined") {
+      window.addEventListener("resize", matOverflow);
+      return () => window.removeEventListener("resize", matOverflow);
+    }
+    const observer = new ResizeObserver(matOverflow);
+    if (scrollRef.current) observer.observe(scrollRef.current);
+    return () => observer.disconnect();
+  }, [matOverflow, filteredHeaders.length, items.length]);
+
+  /** A header cell doubles as the sort control, so it answers the keyboard as a button would. */
+  const onHeaderKeyDown = (header) => (e) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      requestSort(header);
+    }
+  };
 
   return (
     <div className="tabela-premium-wrapper p-2">
@@ -92,7 +128,7 @@ function Tabela({
           <div className="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
             {!mosShfaqTitullin && (
               <div>
-                <h4 className="premium-table-title mb-1">{tableName}</h4>
+                <h2 className="premium-table-title mb-1">{tableName}</h2>
                 <p className="text-muted small mb-0">Menaxhoni të dhënat tuaja financiare me saktësi dhe shpejtësi.</p>
               </div>
             )}
@@ -113,30 +149,35 @@ function Tabela({
             <div className="premium-filter-bar mb-3">
               <Row className="g-2 align-items-end">
                 <Col md={3} lg={3}>
-                  <Form.Label className="premium-filter-label">
+                  <Form.Label htmlFor={`${idBaza}-kerko`} className="premium-filter-label">
                     <Search size={14} className="me-1" /> Kërko
                   </Form.Label>
                   <InputGroup className="premium-input-group">
-                    <Form.Control type="text" placeholder="Filtroni të dhënat..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+                    <Form.Control id={`${idBaza}-kerko`} type="text" placeholder="Filtroni të dhënat..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
                   </InputGroup>
                 </Col>
 
                 {dateField && (
                   <Col md={4} lg={4}>
-                    <Form.Label className="premium-filter-label">
+                    {/* One heading over two inputs, so the heading cannot be the label for either of
+                        them - each says which end of the range it is on its own. */}
+                    <Form.Label as="div" className="premium-filter-label">
                       <Filter size={14} className="me-1" /> Filtrimi sipas Datës
                     </Form.Label>
                     <div className="d-flex gap-2">
-                      <Form.Control className="premium-select" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
-                      <Form.Control className="premium-select" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+                      <Form.Control aria-label="Data nga" className="premium-select" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+                      <Form.Control aria-label="Data deri" className="premium-select" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
                     </div>
                   </Col>
                 )}
 
                 {!mosShfaqPaginimin && (
                   <Col md={2} lg={2}>
-                    <Form.Label className="premium-filter-label">Rreshta</Form.Label>
+                    <Form.Label htmlFor={`${idBaza}-rreshta`} className="premium-filter-label">
+                      Rreshta
+                    </Form.Label>
                     <Form.Select
+                      id={`${idBaza}-rreshta`}
                       value={itemsPerPage}
                       onChange={(e) => {
                         setItemsPerPage(parseInt(e.target.value));
@@ -205,12 +246,26 @@ function Tabela({
           )}
 
           <div className="premium-table-scroll-wrap">
-            <div className={`premium-table-container ${data.length > 0 ? "" : "d-none"}`}>
+            <div ref={scrollRef} className={`premium-table-container ${data.length > 0 ? "" : "d-none"}`}>
               <table className="premium-table mb-0">
                 <thead>
                   <tr>
                     {filteredHeaders.map((header) => (
-                      <th key={header} onClick={() => requestSort(header)} className="premium-th">
+                      <th
+                        key={header}
+                        onClick={() => requestSort(header)}
+                        onKeyDown={onHeaderKeyDown(header)}
+                        className="premium-th"
+                        tabIndex={0}
+                        aria-sort={
+                          sortConfig?.key === header
+                            ? sortConfig.direction === "ascending"
+                              ? "ascending"
+                              : "descending"
+                            : "none"
+                        }
+                        title={`Rendit sipas "${header}"`}
+                      >
                         <div className="d-flex align-items-center justify-content-between">
                           <span>{header}</span>
                           <span className="th-sort-icon">
@@ -297,7 +352,7 @@ function Tabela({
                 </tbody>
               </table>
             </div>
-            <div className="premium-scroll-hint">← Rrëshqit për të parë më shumë →</div>
+            {teketOverflow && <div className="premium-scroll-hint">← Rrëshqit për të parë më shumë →</div>}
           </div>
 
           {/* `total` and not `data.length`: a search that matches nothing still leaves rows in
@@ -307,7 +362,7 @@ function Tabela({
               <div className="empty-icon-wrapper">
                 <Search size={48} />
               </div>
-              <h5>Nuk u gjet asnjë të dhënë</h5>
+              <h3 className="fcp-card-title">Nuk u gjet asnjë të dhënë</h3>
               <p>Provoni të ndryshoni filtrat ose të shtoni të dhëna të reja.</p>
             </div>
           )}
@@ -352,160 +407,6 @@ function Tabela({
           )}
         </Card.Body>
       </Card>
-
-      <style>{`
-        .premium-main-card {
-          border-radius: 16px;
-          border: 1px solid var(--sp-border) !important;
-          box-shadow: 0 20px 50px rgba(0,0,0,0.3);
-          background: var(--sp-surface) !important;
-          overflow: visible !important;
-        }
-        .premium-main-card > .card-body { overflow: visible !important; }
-        .premium-table-title { font-weight: 900; color: var(--sp-text); letter-spacing: -0.02em; font-size: 1.1rem; }
-        .btn-premium-shto {
-          background: linear-gradient(135deg, var(--sp-emerald) 0%, #059669 100%) !important;
-          border: none !important;
-          border-radius: 10px !important;
-          font-weight: 800 !important;
-          font-size: 0.85rem !important;
-          padding: 0.5rem 1.1rem !important;
-          box-shadow: 0 8px 15px var(--sp-emerald-glow) !important;
-          transition: all 0.2s ease !important;
-        }
-        .btn-premium-shto:hover { transform: translateY(-2px); filter: brightness(1.1); }
-        .btn-premium-outline {
-          border: 1px solid var(--sp-border) !important;
-          color: var(--sp-text-soft) !important;
-          background: var(--sp-surface-2) !important;
-          border-radius: 10px !important;
-          font-weight: 700 !important;
-          font-size: 0.85rem !important;
-          padding: 0.5rem 1rem !important;
-          transition: all 0.2s ease !important;
-        }
-        .btn-premium-outline:hover { border-color: var(--sp-emerald) !important; color: var(--sp-emerald) !important; background: var(--sp-surface-3) !important; }
-        .premium-filter-bar { background: var(--sp-surface-2); padding: 1rem; border-radius: 12px; border: 1px solid var(--sp-border); }
-        .premium-filter-label { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; color: var(--sp-text-muted); margin-bottom: 0.4rem; letter-spacing: 0.05em; }
-        .premium-filter-pills-wrap { margin-top: 0.9rem; padding-top: 0.9rem; border-top: 1px solid var(--sp-border); }
-        .premium-filter-pills { display: flex; flex-wrap: wrap; gap: 0.5rem; }
-        .premium-filter-pill {
-          border: 1px solid var(--pill-color);
-          color: var(--pill-color);
-          background: transparent;
-          border-radius: 999px;
-          padding: 0.4rem 0.9rem;
-          font-size: 0.75rem;
-          font-weight: 800;
-          cursor: pointer;
-          transition: all 0.15s ease;
-          white-space: nowrap;
-        }
-        .premium-filter-pill:hover { background: rgba(255,255,255,0.08); }
-        .premium-filter-pill.active { background: var(--pill-color); color: #0b1220; box-shadow: 0 4px 14px rgba(0,0,0,0.3); }
-        .premium-input-group .form-control, .premium-select {
-          background: var(--sp-surface-3) !important;
-          color: var(--sp-text) !important;
-          border-radius: 8px !important;
-          border: 1px solid var(--sp-border) !important;
-          font-weight: 600;
-          font-size: 0.85rem !important;
-          padding: 0.45rem 0.75rem !important;
-        }
-        .premium-input-group .form-control::placeholder, .premium-select::placeholder { color: var(--sp-text-muted) !important; opacity: 0.8 !important; }
-        .premium-input-group .form-control:focus, .premium-select:focus { border-color: var(--sp-emerald) !important; box-shadow: 0 0 0 4px var(--sp-emerald-glow) !important; }
-        .btn-premium-pastro {
-          background: var(--sp-surface-3) !important;
-          border: 1px solid var(--sp-border) !important;
-          border-radius: 8px !important;
-          font-weight: 800 !important;
-          font-size: 0.85rem !important;
-          color: var(--sp-text-muted) !important;
-          padding: 0.45rem 1rem !important;
-          transition: all 0.2s ease;
-        }
-        .btn-premium-pastro:hover { color: var(--sp-red) !important; border-color: var(--sp-red) !important; }
-        .premium-table-container {
-          border: 1px solid var(--sp-border);
-          border-radius: 16px;
-          background: var(--sp-surface);
-          overflow-x: scroll;
-          -webkit-overflow-scrolling: touch;
-          scrollbar-width: thin;
-          scrollbar-color: var(--sp-text-muted) var(--sp-surface-3);
-        }
-        .premium-table-container::-webkit-scrollbar { height: 8px; }
-        .premium-table-container::-webkit-scrollbar-track { background: var(--sp-surface-3); border-radius: 0 0 16px 16px; }
-        .premium-table-container::-webkit-scrollbar-thumb { background: var(--sp-text-muted); border-radius: 10px; border: 2px solid var(--sp-surface-3); }
-        .premium-table { width: 100%; min-width: 100%; border-collapse: collapse; }
-        .premium-table-scroll-wrap { position: relative; }
-        .premium-scroll-hint { display: none; }
-        @media (max-width: 768px) {
-          .premium-scroll-hint { display: flex; align-items: center; justify-content: center; gap: 0.4rem; color: var(--sp-text-muted); font-size: 0.72rem; font-weight: 600; padding: 0.4rem 0; letter-spacing: 0.05em; }
-        }
-        .premium-th, .premium-td { white-space: nowrap !important; }
-        .premium-th {
-          padding: 0.75rem 1rem;
-          background: var(--sp-surface-2) !important;
-          color: var(--sp-text-muted) !important;
-          text-transform: uppercase;
-          font-size: 0.65rem;
-          font-weight: 800;
-          letter-spacing: 0.1em;
-          cursor: pointer;
-          border: none !important;
-          text-align: left;
-        }
-        .premium-td {
-          padding: 0.7rem 1rem !important;
-          font-size: 0.8rem !important;
-          font-weight: 500 !important;
-          color: var(--sp-text) !important;
-          border-top: 1px solid var(--sp-border) !important;
-          background: var(--sp-surface) !important;
-        }
-        .premium-tr:hover .premium-td { background: var(--sp-surface-2) !important; }
-        .premium-empty-state { text-align: center; padding: 3rem 1.5rem; background: var(--sp-surface-2); border-radius: 16px; color: var(--sp-text-muted); }
-        .date-badge { background: var(--sp-surface-3); color: var(--sp-emerald); padding: 0.25rem 0.55rem; border-radius: 6px; font-size: 0.7rem; font-weight: 800; border: 1px solid var(--sp-border); }
-        .empty-icon-wrapper { color: var(--sp-surface-3); margin-bottom: 1rem; }
-        .btn-action {
-          width: 28px; height: 28px; border-radius: 8px; border: none;
-          display: flex; align-items: center; justify-content: center;
-          transition: all 0.2s ease; background: var(--sp-surface-3);
-        }
-        .btn-action.info { color: var(--sp-cyan); }
-        .btn-action.edit { color: #f59e0b; }
-        .btn-action.delete { color: var(--sp-red); }
-        .btn-action.status { color: #f59e0b; }
-        .btn-action:hover { transform: translateY(-2px); background: var(--sp-surface-2); box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
-        .btn-action:disabled { opacity: 0.35; cursor: not-allowed; pointer-events: none; }
-        .premium-pagination-wrapper { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem; color: var(--sp-text-muted); font-size: 0.8rem; }
-        .premium-pagination .page-item .page-link {
-          background: var(--sp-surface-2) !important; border: 1px solid var(--sp-border) !important; border-radius: 8px !important;
-          margin: 0 3px; font-weight: 800; color: var(--sp-text-muted) !important;
-          width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; font-size: 0.8rem;
-        }
-        .premium-pagination .page-item.active .page-link { background: var(--sp-emerald) !important; color: white !important; border-color: var(--sp-emerald) !important; box-shadow: 0 5px 15px var(--sp-emerald-glow); }
-        .premium-pagination .page-item .page-link:hover:not(.active) { background: var(--sp-surface-3) !important; color: var(--sp-text) !important; border-color: var(--sp-emerald) !important; }
-        /* Phones run a smaller root (index.css), so these rem values are already a step down on
-           what they draw elsewhere; the labels near the floor are pinned up a notch and the
-           padding gives up the room instead - a table is mostly padding at this width. */
-        @media (max-width: 575.98px) {
-          .premium-main-card .card-body { padding: 0.6rem !important; }
-          .premium-table-title { font-size: 0.9rem; }
-          .premium-filter-bar { padding: 0.5rem; }
-          .premium-filter-label { font-size: 0.62rem; margin-bottom: 0.25rem; }
-          .btn-premium-shto, .btn-premium-outline, .btn-premium-pastro {
-            font-size: 0.75rem !important; padding: 0.35rem 0.7rem !important;
-          }
-          .premium-filter-pill { font-size: 0.7rem; padding: 0.3rem 0.6rem; }
-          .premium-th { font-size: 0.62rem; padding: 0.45rem 0.55rem; }
-          .premium-td { font-size: 0.75rem !important; padding: 0.4rem 0.55rem !important; }
-          .date-badge { font-size: 0.68rem; padding: 0.15rem 0.4rem; }
-          .premium-pagination-wrapper { font-size: 0.74rem; gap: 0.5rem; }
-          .premium-pagination .page-item .page-link { width: 28px; height: 28px; font-size: 0.74rem; }
-        }
-      `}</style>
     </div>
   );
 }

@@ -18,7 +18,7 @@ import { useData } from "../Context/DataContext";
 import { useDialog } from "../Context/DialogContext";
 import { STORES } from "../lib/db";
 import { debtProgress, debtTotals, frequencyLabel } from "../lib/finance";
-import { formatDate, formatPercent, plainAmount, todayISO } from "../lib/format";
+import { formatDate, formatPercent, markup, plainAmount, todayISO } from "../lib/format";
 import { debtTypeMeta } from "../lib/options";
 import { getIcon } from "../lib/icons";
 import "./Styles/PremiumTheme.css";
@@ -138,7 +138,10 @@ function Borxhet() {
     Afati: d.dataMbarimit ? formatDate(d.dataMbarimit) : "-",
     [`Totali (${simboli})`]: plainAmount(d.totali),
     [`Paguar (${simboli})`]: plainAmount(d.paguar),
-    [`Mbetur (${simboli})`]: `<span class="${d.mbetur > 0 ? "fcp-neg" : "fcp-pos"}">${plainAmount(d.mbetur)}</span>`,
+    [`Mbetur (${simboli})`]: markup(
+      `<span class="${d.mbetur > 0 ? "fcp-neg" : "fcp-pos"}">${plainAmount(d.mbetur)}</span>`,
+      plainAmount(d.mbetur)
+    ),
     Përqindja: formatPercent(d.perqindja),
   }));
 
@@ -311,142 +314,144 @@ function Borxhet() {
       <PageTitle title="Borxhet & Kartelat" />
       <NavBar />
 
-      <Container className="pt-4">
-        <div className="fcp-page-head">
-          <div>
-            <h2>Borxhet & Kartelat</h2>
-            <p>Kartelat e kreditit, kreditë dhe huatë - të mbajtura si shënim, jashtë bilancit tuaj.</p>
-          </div>
-          <Button className="btn-primary" onClick={() => openNew(null)}>
-            <Plus size={16} className="me-1" /> Shto Borxh
-          </Button>
-        </div>
-
-        <Alert variant="info" className="d-flex align-items-start gap-2">
-          <Info size={16} className="flex-shrink-0 mt-1" />
-          <span>
-            Këto janë vetëm shënime: nuk hyjnë në <strong>Bilancin Total</strong>, as në hyrjet,
-            shpenzimet apo statistikat e muajit. Një pagesë e zbret borxhin këtu, dhe vetëm nëse e
-            shënjoni <em>&quot;Zbrite edhe nga llogaria&quot;</em> krijohet edhe një transaksion i vërtetë.
-          </span>
-        </Alert>
-
-        <Row className="g-2 g-md-4">
-          <Kpi
-            label="Borxh i Mbetur"
-            value={money(totals.detyrimet.mbetur)}
-            sub={`${totals.detyrimet.numri} borxhe · ${totals.detyrimet.perfunduara} të mbyllura`}
-            icon={Receipt}
-            color="danger"
-          />
-          <Kpi
-            label="Paguar Gjithsej"
-            value={money(totals.detyrimet.paguar)}
-            sub={
-              totals.detyrimet.totali > 0
-                ? `${formatPercent((totals.detyrimet.paguar / totals.detyrimet.totali) * 100, 1)} e borxhit total`
-                : undefined
-            }
-            icon={CheckCircle2}
-            color="emerald"
-          />
-          <Kpi
-            label="Për t'u Marrë"
-            value={money(totals.kerkesat.mbetur)}
-            sub={`${totals.kerkesat.numri} hua të dhëna`}
-            icon={HandCoins}
-            color="cyan"
-          />
-          <Kpi label="Rreshta Gjithsej" value={progress.reduce((s, d) => s + d.pagesat.length, 0)} icon={Hash} color="violet" />
-        </Row>
-
-        <section className="mb-4">
-          <div className="fcp-section-head">
-            <h4 className="fcp-section-title mb-0">
-              <Receipt size={20} className="text-primary" />
-              Borxhet e Mia
-            </h4>
-            <Button size="sm" variant="outline-light" onClick={() => openNew("karte")}>
-              <Plus size={14} className="me-1" /> Kartelë, kredi ose borxh
+      <main className="fcp-main">
+        <Container className="pt-4">
+          <div className="fcp-page-head">
+            <div>
+              <h1>Borxhet & Kartelat</h1>
+              <p>Kartelat e kreditit, kreditë dhe huatë - të mbajtura si shënim, jashtë bilancit tuaj.</p>
+            </div>
+            <Button className="btn-primary" onClick={() => openNew(null)}>
+              <Plus size={16} className="me-1" /> Shto Borxh
             </Button>
           </div>
-          <p className="fcp-row-sub mb-3">
-            Sa u keni borxh të tjerëve. Një pagesë e zbret borxhin, dhe nëse e shënjoni, ua zbret edhe
-            llogarinë.
-          </p>
-          {miat.length === 0 ? (
-            <Empty>
-              Nuk ka borxhe të regjistruara. Shtoni një kartelë ose një kredi dhe ndiqni sa ju ka mbetur
-              - pa e prekur bilancin e llogarive.
-            </Empty>
-          ) : (
-            miat.map(renderDebt)
-          )}
-        </section>
 
-        <section className="mb-4">
-          <div className="fcp-section-head">
-            <h4 className="fcp-section-title mb-0">
-              <HandCoins size={20} className="text-primary" />
-              Më Kanë Borxh
-            </h4>
-            <Button size="sm" variant="outline-light" onClick={() => openNew("huadhene")}>
-              <Plus size={14} className="me-1" /> Hua e dhënë
-            </Button>
-          </div>
-          <p className="fcp-row-sub mb-3">
-            Paratë që ua keni dhënë të tjerëve. Këtu funksionon anasjelltas: kur ju kthejnë një pjesë,
-            shuma e mbetur zbret dhe - nëse e shënjoni - llogaria juaj <strong>shtohet</strong> në vend
-            që të zbritet.
-          </p>
-          {meKane.length === 0 ? (
-            <Empty>
-              Askush nuk ju ka borxh për momentin. Shtoni një hua të dhënë për të mbajtur shënim se kush
-              ju ka marrë para dhe sa ju ka kthyer.
-            </Empty>
-          ) : (
-            meKane.map(renderDebt)
-          )}
-        </section>
+          <Alert variant="info" className="d-flex align-items-start gap-2">
+            <Info size={16} className="flex-shrink-0 mt-1" />
+            <span>
+              Këto janë vetëm shënime: nuk hyjnë në <strong>Bilancin Total</strong>, as në hyrjet,
+              shpenzimet apo statistikat e muajit. Një pagesë e zbret borxhin këtu, dhe vetëm nëse e
+              shënjoni <em>&quot;Zbrite edhe nga llogaria&quot;</em> krijohet edhe një transaksion i vërtetë.
+            </span>
+          </Alert>
 
-        {arkivuara.length > 0 && (
+          <Row className="g-2 g-md-4">
+            <Kpi
+              label="Borxh i Mbetur"
+              value={money(totals.detyrimet.mbetur)}
+              sub={`${totals.detyrimet.numri} borxhe · ${totals.detyrimet.perfunduara} të mbyllura`}
+              icon={Receipt}
+              color="danger"
+            />
+            <Kpi
+              label="Paguar Gjithsej"
+              value={money(totals.detyrimet.paguar)}
+              sub={
+                totals.detyrimet.totali > 0
+                  ? `${formatPercent((totals.detyrimet.paguar / totals.detyrimet.totali) * 100, 1)} e borxhit total`
+                  : undefined
+              }
+              icon={CheckCircle2}
+              color="emerald"
+            />
+            <Kpi
+              label="Për t'u Marrë"
+              value={money(totals.kerkesat.mbetur)}
+              sub={`${totals.kerkesat.numri} hua të dhëna`}
+              icon={HandCoins}
+              color="cyan"
+            />
+            <Kpi label="Rreshta Gjithsej" value={progress.reduce((s, d) => s + d.pagesat.length, 0)} icon={Hash} color="violet" />
+          </Row>
+
           <section className="mb-4">
-            <h4 className="fcp-section-title">
-              <Archive size={20} className="text-primary" />
-              Të Arkivuara
-            </h4>
-            {arkivuara.map(renderDebt)}
+            <div className="fcp-section-head">
+              <h2 className="fcp-section-title mb-0">
+                <Receipt size={20} className="text-primary" />
+                Borxhet e Mia
+              </h2>
+              <Button size="sm" variant="outline-light" onClick={() => openNew("karte")}>
+                <Plus size={14} className="me-1" /> Kartelë, kredi ose borxh
+              </Button>
+            </div>
+            <p className="fcp-row-sub mb-3">
+              Sa u keni borxh të tjerëve. Një pagesë e zbret borxhin, dhe nëse e shënjoni, ua zbret edhe
+              llogarinë.
+            </p>
+            {miat.length === 0 ? (
+              <Empty>
+                Nuk ka borxhe të regjistruara. Shtoni një kartelë ose një kredi dhe ndiqni sa ju ka mbetur
+                - pa e prekur bilancin e llogarive.
+              </Empty>
+            ) : (
+              miat.map(renderDebt)
+            )}
           </section>
-        )}
 
-        <div className="fcp-row-sub mb-4">
-          <Wallet size={13} className="me-1" />
-          Bilanci i llogarive nuk ndryshon nga kjo faqe - shikojeni te <strong>Llogaritë</strong>.
-        </div>
-      </Container>
+          <section className="mb-4">
+            <div className="fcp-section-head">
+              <h2 className="fcp-section-title mb-0">
+                <HandCoins size={20} className="text-primary" />
+                Më Kanë Borxh
+              </h2>
+              <Button size="sm" variant="outline-light" onClick={() => openNew("huadhene")}>
+                <Plus size={14} className="me-1" /> Hua e dhënë
+              </Button>
+            </div>
+            <p className="fcp-row-sub mb-3">
+              Paratë që ua keni dhënë të tjerëve. Këtu funksionon anasjelltas: kur ju kthejnë një pjesë,
+              shuma e mbetur zbret dhe - nëse e shënjoni - llogaria juaj <strong>shtohet</strong> në vend
+              që të zbritet.
+            </p>
+            {meKane.length === 0 ? (
+              <Empty>
+                Askush nuk ju ka borxh për momentin. Shtoni një hua të dhënë për të mbajtur shënim se kush
+                ju ka marrë para dhe sa ju ka kthyer.
+              </Empty>
+            ) : (
+              meKane.map(renderDebt)
+            )}
+          </section>
 
-      {rows.length > 0 && <Tabela data={rows} tableName="Borxhet & Kartelat" filterField="Statusi" mosShfaqID />}
+          {arkivuara.length > 0 && (
+            <section className="mb-4">
+              <h2 className="fcp-section-title">
+                <Archive size={20} className="text-primary" />
+                Të Arkivuara
+              </h2>
+              {arkivuara.map(renderDebt)}
+            </section>
+          )}
 
-      <ShtoBorxhin
-        show={showDebt}
-        onHide={() => {
-          setShowDebt(false);
-          setEditing(null);
-          setLlojiFillestar(null);
-        }}
-        initial={editing}
-        llojiFillestar={llojiFillestar}
-      />
+          <div className="fcp-row-sub mb-4">
+            <Wallet size={13} className="me-1" />
+            Bilanci i llogarive nuk ndryshon nga kjo faqe - shikojeni te <strong>Llogaritë</strong>.
+          </div>
+        </Container>
 
-      <ShtoPagesenBorxhit
-        show={Boolean(payingFor)}
-        onHide={() => {
-          setPayingFor(null);
-          setEditingEntry(null);
-        }}
-        borxhi={payingFor}
-        initial={editingEntry}
-      />
+        {rows.length > 0 && <Tabela data={rows} tableName="Borxhet & Kartelat" filterField="Statusi" mosShfaqID />}
+
+        <ShtoBorxhin
+          show={showDebt}
+          onHide={() => {
+            setShowDebt(false);
+            setEditing(null);
+            setLlojiFillestar(null);
+          }}
+          initial={editing}
+          llojiFillestar={llojiFillestar}
+        />
+
+        <ShtoPagesenBorxhit
+          show={Boolean(payingFor)}
+          onHide={() => {
+            setPayingFor(null);
+            setEditingEntry(null);
+          }}
+          borxhi={payingFor}
+          initial={editingEntry}
+        />
+      </main>
 
       <Footer />
     </div>

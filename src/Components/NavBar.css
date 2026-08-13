@@ -195,11 +195,31 @@
     border-left: 1px solid var(--sp-border, rgba(255, 255, 255, 0.1));
     box-shadow: -12px 0 30px rgba(0, 0, 0, 0.35);
     transform: translateX(100%);
-    transition: transform 0.2s ease;
+    /* Parked off-screen the drawer was still a rendered element, so its fourteen links stayed in
+       the tab order and in the accessibility tree: tabbing off the hamburger walked a keyboard or
+       a screen reader through a menu nobody could see. `visibility` takes it out of both, and is
+       held until the slide-out has finished so the drawer does not blink out of existence on the
+       way closed. */
+    visibility: hidden;
+    transition: transform 0.2s ease, visibility 0s linear 0.2s;
   }
 
   .fcp-mobile-menu.open {
     transform: translateX(0);
+    visibility: visible;
+    transition: transform 0.2s ease, visibility 0s;
+  }
+}
+
+/* Nothing moves for anyone who has asked the system for less of it. */
+@media (prefers-reduced-motion: reduce) {
+  .fcp-mobile-menu,
+  .fcp-mobile-menu.open {
+    transition: none;
+  }
+
+  .fcp-mobile-backdrop {
+    animation: none;
   }
 }
 

@@ -312,362 +312,364 @@ function Sinkronizimi() {
       />
       <NavBar />
 
-      <div className="containerDashboardP">
-        <h4 className="fcp-section-title">
-          {lidhur ? <Cloud size={22} className="text-primary" /> : <CloudOff size={22} className="text-primary" />}
-          Sinkronizimi mes pajisjeve
-        </h4>
-        <p className="text-muted mb-4">
-          Aplikacioni nuk ka server. Nëse doni të njëjtat të dhëna në telefon dhe në kompjuter,
-          lidhni një projekt <strong>Supabase tuajin</strong> - falas për një përdorim si ky - dhe
-          të dhënat udhëtojnë mes pajisjeve tuaja përmes <em>bazës suaj</em>. Askush tjetër, as unë
-          as ndonjë shërbim i FinanCarePersonal, nuk i sheh dhe nuk i ruan ato.
-        </p>
+      <main className="fcp-main">
+        <div className="containerDashboardP">
+          <h1 className="fcp-section-title">
+            {lidhur ? <Cloud size={22} className="text-primary" /> : <CloudOff size={22} className="text-primary" />}
+            Sinkronizimi mes pajisjeve
+          </h1>
+          <p className="text-muted mb-4">
+            Aplikacioni nuk ka server. Nëse doni të njëjtat të dhëna në telefon dhe në kompjuter,
+            lidhni një projekt <strong>Supabase tuajin</strong> - falas për një përdorim si ky - dhe
+            të dhënat udhëtojnë mes pajisjeve tuaja përmes <em>bazës suaj</em>. Askush tjetër, as unë
+            as ndonjë shërbim i FinanCarePersonal, nuk i sheh dhe nuk i ruan ato.
+          </p>
 
-        <ModaliKonfigurimit show={sqlHapur} onHide={() => setSqlHapur(false)} url={konfigurimi.url || normalizoUrl(form.url)}
-          nga={skema?.versioni ?? 0}
-          onGati={() => {
-            pastroGabimin();
-            gjendjaSkemes().then(setSkema).catch(() => undefined);
-            sinkronizoTani();
-          }} />
+          <ModaliKonfigurimit show={sqlHapur} onHide={() => setSqlHapur(false)} url={konfigurimi.url || normalizoUrl(form.url)}
+            nga={skema?.versioni ?? 0}
+            onGati={() => {
+              pastroGabimin();
+              gjendjaSkemes().then(setSkema).catch(() => undefined);
+              sinkronizoTani();
+            }} />
 
-        {/* A release can change what the project's table has to look like, and there is no deploy
-            that could do it - so the app compares what it ships with what the project reports and
-            says so here. `mungon` is a different message (the project was never set up at all),
-            already handled by the failure this page shows above. */}
-        {lidhur && skema?.perditeso && !skema.mungon && (
-          <Alert variant="warning">
-            Projekti juaj është në versionin {skema.versioni} të skemës, kurse ky aplikacion pret
-            versionin {skema.iFundit}. Deri sa të përditësohet, gjërat e reja mund të mos ruhen si
-            duhet.
-            <ul className="mb-0 mt-2 ps-3 small">
-              {skema.pezull.map((m) => (
-                <li key={m.versioni}>{m.emri}</li>
-              ))}
-            </ul>
-            <div className="mt-3">
-              <Button variant="outline-light" size="sm" onClick={() => setSqlHapur(true)}>
-                <Wand2 size={15} className="me-1" /> Përditëso projektin
-              </Button>
-            </div>
-          </Alert>
-        )}
-
-        {/* Detected from what the last push came back with (sinkronizimi.js): a project set up
-            before the trigger existed keeps whatever time the device sent, and then the order of
-            the whole table depends on every device's clock being right. */}
-        {lidhur && konfigurimi.oraServerit === false && (
-          <Alert variant="warning">
-            Projekti juaj nuk po e vendos vetë orën e rreshtave - ka gjasa ta keni konfiguruar para
-            se skripti ta shtonte atë hap. Ekzekutojeni skriptin sërish (përsëritja është e sigurt):
-            pa të, një pajisje me orë të pasaktë mund t&apos;i mbajë ndryshimet e veta pa u parë nga
-            të tjerat.
-            <div className="mt-3">
-              <Button variant="outline-light" size="sm" onClick={() => setSqlHapur(true)}>
-                <Code2 size={15} className="me-1" /> Konfiguro projektin
-              </Button>
-            </div>
-          </Alert>
-        )}
-
-        {!lidhur ? (
-          <>
-            {konfigurimi.url && (
-              <Alert variant="warning">
-                Sesioni i kësaj pajisjeje nuk vlen më. Projekti dhe çelësi janë ende këtu - mjafton
-                fjalëkalimi dhe <strong>Hyr dhe sinkronizo</strong>; hapin e parë mund ta kaloni.
-              </Alert>
-            )}
-
-            <Card className="profile-card border-0 p-4 mb-4">
-              <h5 className="fw-bold mb-3">
-                <Database size={18} className="me-2 text-primary" />
-                Hapi 1 - Krijoni projektin dhe tabelën
-              </h5>
-              <ol className="text-muted small ps-3 mb-3" style={{ lineHeight: 1.9 }}>
-                <li>
-                  Hapni{" "}
-                  <a href="https://supabase.com/dashboard" target="_blank" rel="noreferrer">
-                    supabase.com/dashboard <ExternalLink size={12} />
-                  </a>{" "}
-                  dhe krijoni një projekt të ri (plani falas mjafton - një vit transaksionesh zë
-                  disa megabajt).
-                </li>
-                <li>
-                  Te <strong>Authentication → URL Configuration</strong> vendosni{" "}
-                  <strong>Site URL</strong> te adresa e këtij aplikacioni. Parazgjedhja e Supabase
-                  është <code>http://localhost:3000</code>, pra linku i konfirmimit do të hapte një
-                  faqe që nuk ekziston. Me adresën e duhur, ai link ju kthen këtu tashmë të futur.
-                </li>
-                <li>
-                  Te <strong>Project Settings</strong> merrni <strong>Project URL</strong> (te{" "}
-                  <em>Data API</em>) dhe çelësin <strong>publishable</strong> -{" "}
-                  <code>sb_publishable_…</code> te <em>API Keys</em>. Nëse projekti juaj ka ende
-                  çelësin e vjetër <em>anon</em> te skeda <em>Legacy</em>, edhe ai punon; i riu është
-                  ai që Supabase rekomandon dhe ai që mund ta zëvendësoni vetëm atë kur t&apos;ju
-                  duhet. Çelësat <em>secret</em> / <em>service_role</em> mos i kopjoni kurrë këtu.
-                </li>
-                <li>
-                  Shtypni <strong>Konfiguro projektin</strong> këtu poshtë: hapet redaktori i
-                  projektit tuaj me skriptin brenda dhe mjafton <strong>Run</strong>. Tabelën nuk e
-                  krijon dot çelësi që ngjitni te Hapi 2 - Supabase nuk ia lejon atij këtë punë, dhe
-                  kjo është mbrojtje, jo mangësi.
-                </li>
-              </ol>
-              <div>
-                <Button className="btn-primary" onClick={() => setSqlHapur(true)}>
-                  <Wand2 size={16} className="me-1" /> Konfiguro projektin
+          {/* A release can change what the project's table has to look like, and there is no deploy
+              that could do it - so the app compares what it ships with what the project reports and
+              says so here. `mungon` is a different message (the project was never set up at all),
+              already handled by the failure this page shows above. */}
+          {lidhur && skema?.perditeso && !skema.mungon && (
+            <Alert variant="warning">
+              Projekti juaj është në versionin {skema.versioni} të skemës, kurse ky aplikacion pret
+              versionin {skema.iFundit}. Deri sa të përditësohet, gjërat e reja mund të mos ruhen si
+              duhet.
+              <ul className="mb-0 mt-2 ps-3 small">
+                {skema.pezull.map((m) => (
+                  <li key={m.versioni}>{m.emri}</li>
+                ))}
+              </ul>
+              <div className="mt-3">
+                <Button variant="outline-light" size="sm" onClick={() => setSqlHapur(true)}>
+                  <Wand2 size={15} className="me-1" /> Përditëso projektin
                 </Button>
               </div>
-            </Card>
+            </Alert>
+          )}
 
-            <Card className="profile-card border-0 p-4 mb-4">
-              <h5 className="fw-bold mb-3">
-                <LogIn size={18} className="me-2 text-primary" />
-                Hapi 2 - Lidhni këtë pajisje
-              </h5>
-              <p className="text-muted small mb-3">
-                Llogaria krijohet brenda projektit tuaj, jo diku tjetër. Përdorni të njëjtin email
-                dhe fjalëkalim në çdo pajisje që doni të mbani në hap. Herën e parë shtypni{" "}
-                <strong>Krijo llogari</strong>, në pajisjet e tjera <strong>Hyr</strong>.
-              </p>
-              <Form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  lidhu("hyr");
-                }}
-              >
-                <Row className="g-3">
-                  <Form.Group as={Col} md={7} controlId="sync-url">
-                    <Form.Label>Project URL</Form.Label>
-                    <Form.Control
-                      placeholder="https://abcdefgh.supabase.co"
-                      value={form.url}
-                      onChange={(e) => setField("url", e.target.value)}
-                      autoComplete="off"
-                      spellCheck={false}
-                    />
-                  </Form.Group>
-
-                  <FushaSekrete
-                    id="sync-key"
-                    md={5}
-                    label="Çelësi publik"
-                    placeholder="sb_publishable_… ose eyJhbGciOi…"
-                    value={form.anonKey}
-                    onChange={(e) => setField("anonKey", e.target.value)}
-                    autoComplete="off"
-                    ndihma="Publishable (ose anon i vjetër) - çelësi i destinuar për shfletues."
-                  />
-
-                  <Form.Group as={Col} md={6} controlId="sync-email">
-                    <Form.Label>Email</Form.Label>
-                    <Form.Control
-                      type="email"
-                      placeholder="ju@shembull.com"
-                      value={form.email}
-                      onChange={(e) => setField("email", e.target.value)}
-                      autoComplete="username"
-                    />
-                  </Form.Group>
-
-                  <FushaSekrete
-                    id="sync-password"
-                    md={6}
-                    label="Fjalëkalimi"
-                    placeholder="të paktën 6 karaktere"
-                    value={form.password}
-                    onChange={(e) => setField("password", e.target.value)}
-                    autoComplete="current-password"
-                  />
-
-                  <Col md={12} className="d-flex flex-wrap gap-2">
-                    <Button type="submit" className="btn-primary" disabled={Boolean(pune)}>
-                      {pune === "hyr" ? (
-                        <Spinner animation="border" size="sm" className="me-2" />
-                      ) : (
-                        <LogIn size={16} className="me-1" />
-                      )}
-                      Hyr dhe sinkronizo
-                    </Button>
-                    <Button variant="outline-light" onClick={() => lidhu("regjistrohu")} disabled={Boolean(pune)}>
-                      {pune === "regjistrohu" ? (
-                        <Spinner animation="border" size="sm" className="me-2" />
-                      ) : (
-                        <UserPlus size={16} className="me-1" />
-                      )}
-                      Krijo llogari
-                    </Button>
-                  </Col>
-                </Row>
-              </Form>
-            </Card>
-          </>
-        ) : (
-          <>
-            <Card className="profile-card border-0 p-4 mb-4">
-              <div className="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
-                <div>
-                  <h5 className="fw-bold mb-1">E lidhur me projektin tuaj</h5>
-                  <div className="fcp-row-sub">
-                    {emriProjektit(konfigurimi.url)} · {konfigurimi.email}
-                  </div>
-                </div>
-                <div className="text-end">
-                  <div className="fcp-row-sub">Sinkronizimi i fundit</div>
-                  <div className="fw-bold">{kohaLexueshme(fundit?.kur)}</div>
-                </div>
+          {/* Detected from what the last push came back with (sinkronizimi.js): a project set up
+              before the trigger existed keeps whatever time the device sent, and then the order of
+              the whole table depends on every device's clock being right. */}
+          {lidhur && konfigurimi.oraServerit === false && (
+            <Alert variant="warning">
+              Projekti juaj nuk po e vendos vetë orën e rreshtave - ka gjasa ta keni konfiguruar para
+              se skripti ta shtonte atë hap. Ekzekutojeni skriptin sërish (përsëritja është e sigurt):
+              pa të, një pajisje me orë të pasaktë mund t&apos;i mbajë ndryshimet e veta pa u parë nga
+              të tjerat.
+              <div className="mt-3">
+                <Button variant="outline-light" size="sm" onClick={() => setSqlHapur(true)}>
+                  <Code2 size={15} className="me-1" /> Konfiguro projektin
+                </Button>
               </div>
+            </Alert>
+          )}
 
-              {fundit?.gabim ? (
-                <Alert variant="warning" className="py-2 px-3 small">
-                  Përpjekja e fundit dështoi: {fundit.gabim}
+          {!lidhur ? (
+            <>
+              {konfigurimi.url && (
+                <Alert variant="warning">
+                  Sesioni i kësaj pajisjeje nuk vlen më. Projekti dhe çelësi janë ende këtu - mjafton
+                  fjalëkalimi dhe <strong>Hyr dhe sinkronizo</strong>; hapin e parë mund ta kaloni.
                 </Alert>
-              ) : (
-                fundit && (
-                  <p className="text-muted small mb-3">
-                    Herën e fundit u morën <strong>{fundit.marre}</strong> ndryshime dhe u dërguan{" "}
-                    <strong>{fundit.derguar}</strong>. Në cloud ndodhen{" "}
-                    <strong>{nCloud === null ? "…" : nCloud}</strong> rreshta; në këtë shfletues{" "}
-                    <strong>{transactions.length}</strong> transaksione.
-                  </p>
-                )
               )}
 
-              <Form.Check
-                type="switch"
-                id="sync-automatik"
-                className="mb-1"
-                label="Sinkronizo automatikisht"
-                checked={automatik}
-                onChange={(e) => ruajKonfigurimin({ automatik: e.target.checked })}
-              />
-              <div className="fcp-row-sub mb-3">
-                Kur është aktiv, sinkronizimi bëhet vetë: kur hapet aplikacioni, pak sekonda pas çdo
-                ndryshimi, kur ktheheni te skeda dhe kur pajisja kthehet online. Kur është joaktiv,
-                asgjë nuk del nga shfletuesi derisa ta shtypni butonin vetë.
-              </div>
+              <Card className="profile-card border-0 p-4 mb-4">
+                <h2 className="fcp-card-title fw-bold mb-3">
+                  <Database size={18} className="me-2 text-primary" />
+                  Hapi 1 - Krijoni projektin dhe tabelën
+                </h2>
+                <ol className="text-muted small ps-3 mb-3" style={{ lineHeight: 1.9 }}>
+                  <li>
+                    Hapni{" "}
+                    <a href="https://supabase.com/dashboard" target="_blank" rel="noreferrer">
+                      supabase.com/dashboard <ExternalLink size={12} />
+                    </a>{" "}
+                    dhe krijoni një projekt të ri (plani falas mjafton - një vit transaksionesh zë
+                    disa megabajt).
+                  </li>
+                  <li>
+                    Te <strong>Authentication → URL Configuration</strong> vendosni{" "}
+                    <strong>Site URL</strong> te adresa e këtij aplikacioni. Parazgjedhja e Supabase
+                    është <code>http://localhost:3000</code>, pra linku i konfirmimit do të hapte një
+                    faqe që nuk ekziston. Me adresën e duhur, ai link ju kthen këtu tashmë të futur.
+                  </li>
+                  <li>
+                    Te <strong>Project Settings</strong> merrni <strong>Project URL</strong> (te{" "}
+                    <em>Data API</em>) dhe çelësin <strong>publishable</strong> -{" "}
+                    <code>sb_publishable_…</code> te <em>API Keys</em>. Nëse projekti juaj ka ende
+                    çelësin e vjetër <em>anon</em> te skeda <em>Legacy</em>, edhe ai punon; i riu është
+                    ai që Supabase rekomandon dhe ai që mund ta zëvendësoni vetëm atë kur t&apos;ju
+                    duhet. Çelësat <em>secret</em> / <em>service_role</em> mos i kopjoni kurrë këtu.
+                  </li>
+                  <li>
+                    Shtypni <strong>Konfiguro projektin</strong> këtu poshtë: hapet redaktori i
+                    projektit tuaj me skriptin brenda dhe mjafton <strong>Run</strong>. Tabelën nuk e
+                    krijon dot çelësi që ngjitni te Hapi 2 - Supabase nuk ia lejon atij këtë punë, dhe
+                    kjo është mbrojtje, jo mangësi.
+                  </li>
+                </ol>
+                <div>
+                  <Button className="btn-primary" onClick={() => setSqlHapur(true)}>
+                    <Wand2 size={16} className="me-1" /> Konfiguro projektin
+                  </Button>
+                </div>
+              </Card>
 
-              <div className="d-flex flex-wrap gap-2">
-                <Button className="btn-primary" onClick={() => handleSinkronizo(false)} disabled={duke}>
-                  {duke ? <Spinner animation="border" size="sm" className="me-2" /> : <RefreshCw size={16} className="me-1" />}
-                  Sinkronizo tani
-                </Button>
-                <Button variant="outline-light" onClick={() => handleSinkronizo(true)} disabled={duke}>
-                  <Download size={16} className="me-1" /> Shkarko gjithçka nga cloud
-                </Button>
-                <Button variant="outline-light" onClick={handleShkeputu} disabled={duke || Boolean(pune)}>
-                  <CloudOff size={16} className="me-1" /> Shkëput këtë pajisje
-                </Button>
-              </div>
-
-              {celesiIRi === null ? (
-                <button
-                  type="button"
-                  className="btn btn-link p-0 mt-3 text-decoration-none fcp-row-sub"
-                  onClick={() => setCelesiIRi(konfigurimi.anonKey || "")}
+              <Card className="profile-card border-0 p-4 mb-4">
+                <h2 className="fcp-card-title fw-bold mb-3">
+                  <LogIn size={18} className="me-2 text-primary" />
+                  Hapi 2 - Lidhni këtë pajisje
+                </h2>
+                <p className="text-muted small mb-3">
+                  Llogaria krijohet brenda projektit tuaj, jo diku tjetër. Përdorni të njëjtin email
+                  dhe fjalëkalim në çdo pajisje që doni të mbani në hap. Herën e parë shtypni{" "}
+                  <strong>Krijo llogari</strong>, në pajisjet e tjera <strong>Hyr</strong>.
+                </p>
+                <Form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    lidhu("hyr");
+                  }}
                 >
-                  <KeyRound size={14} className="me-1" /> Ndrysho çelësin publik
-                </button>
-              ) : (
-                <Form onSubmit={handleRuajCelesin} className="mt-3">
-                  <Row className="g-2 align-items-end">
+                  <Row className="g-3">
+                    <Form.Group as={Col} md={7} controlId="sync-url">
+                      <Form.Label>Project URL</Form.Label>
+                      <Form.Control
+                        placeholder="https://abcdefgh.supabase.co"
+                        value={form.url}
+                        onChange={(e) => setField("url", e.target.value)}
+                        autoComplete="off"
+                        spellCheck={false}
+                      />
+                    </Form.Group>
+
                     <FushaSekrete
-                      id="sync-celesi-ri"
-                      md={7}
-                      label="Çelësi publik i ri"
-                      placeholder="sb_publishable_…"
-                      value={celesiIRi}
-                      onChange={(e) => setCelesiIRi(e.target.value)}
-                      // Opens holding the current key, so it can be revealed and compared with the
-                      // dashboard - but selected on focus, because the reason anyone is here is to
-                      // paste a different one over it.
-                      onFocus={(e) => e.target.select()}
+                      id="sync-key"
+                      md={5}
+                      label="Çelësi publik"
+                      placeholder="sb_publishable_… ose eyJhbGciOi…"
+                      value={form.anonKey}
+                      onChange={(e) => setField("anonKey", e.target.value)}
                       autoComplete="off"
-                      ndihma="Provohet te projekti para se të ruhet, pra një çelës i gabuar nuk e lë pajisjen pa sinkronizim. Për të kaluar te një projekt tjetër duhet shkëputja."
+                      ndihma="Publishable (ose anon i vjetër) - çelësi i destinuar për shfletues."
                     />
-                    <Col md={5} className="d-flex gap-2">
-                      <Button type="submit" className="btn-primary" disabled={pune === "celesi"}>
-                        {pune === "celesi" ? (
+
+                    <Form.Group as={Col} md={6} controlId="sync-email">
+                      <Form.Label>Email</Form.Label>
+                      <Form.Control
+                        type="email"
+                        placeholder="ju@shembull.com"
+                        value={form.email}
+                        onChange={(e) => setField("email", e.target.value)}
+                        autoComplete="username"
+                      />
+                    </Form.Group>
+
+                    <FushaSekrete
+                      id="sync-password"
+                      md={6}
+                      label="Fjalëkalimi"
+                      placeholder="të paktën 6 karaktere"
+                      value={form.password}
+                      onChange={(e) => setField("password", e.target.value)}
+                      autoComplete="current-password"
+                    />
+
+                    <Col md={12} className="d-flex flex-wrap gap-2">
+                      <Button type="submit" className="btn-primary" disabled={Boolean(pune)}>
+                        {pune === "hyr" ? (
                           <Spinner animation="border" size="sm" className="me-2" />
                         ) : (
-                          <Save size={16} className="me-1" />
+                          <LogIn size={16} className="me-1" />
                         )}
-                        Ruaj çelësin
+                        Hyr dhe sinkronizo
                       </Button>
-                      <Button variant="secondary" onClick={() => setCelesiIRi(null)} disabled={pune === "celesi"}>
-                        Anulo
+                      <Button variant="outline-light" onClick={() => lidhu("regjistrohu")} disabled={Boolean(pune)}>
+                        {pune === "regjistrohu" ? (
+                          <Spinner animation="border" size="sm" className="me-2" />
+                        ) : (
+                          <UserPlus size={16} className="me-1" />
+                        )}
+                        Krijo llogari
                       </Button>
                     </Col>
                   </Row>
                 </Form>
-              )}
-            </Card>
+              </Card>
+            </>
+          ) : (
+            <>
+              <Card className="profile-card border-0 p-4 mb-4">
+                <div className="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
+                  <div>
+                    <h2 className="fcp-card-title fw-bold mb-1">E lidhur me projektin tuaj</h2>
+                    <div className="fcp-row-sub">
+                      {emriProjektit(konfigurimi.url)} · {konfigurimi.email}
+                    </div>
+                  </div>
+                  <div className="text-end">
+                    <div className="fcp-row-sub">Sinkronizimi i fundit</div>
+                    <div className="fw-bold">{kohaLexueshme(fundit?.kur)}</div>
+                  </div>
+                </div>
 
-            <Card className="profile-card fcp-zona-rrezik border-0 p-4 mb-4">
-              <h5 className="fw-bold mb-2">
-                <AlertTriangle size={18} className="me-2 fcp-neg" />
-                Kopja në cloud
-              </h5>
-              <p className="text-muted small mb-3">
-                Zbraz tabelën te projekti juaj. Përdoreni nëse doni të nisni sinkronizimin nga e
-                para ose të hiqni gjithçka nga Supabase; ledgeri në këtë shfletues nuk preket dhe
-                sinkronizimi i radhës e ringarkon nga këtu.
-              </p>
-              <div>
-                <Button variant="danger" onClick={handleFshiCloud} disabled={pune === "fshij"}>
-                  {pune === "fshij" ? (
-                    <Spinner animation="border" size="sm" className="me-2" />
-                  ) : (
-                    <Trash2 size={16} className="me-1" />
-                  )}
-                  Fshi kopjen në cloud
-                </Button>
-              </div>
-            </Card>
-          </>
-        )}
+                {fundit?.gabim ? (
+                  <Alert variant="warning" className="py-2 px-3 small">
+                    Përpjekja e fundit dështoi: {fundit.gabim}
+                  </Alert>
+                ) : (
+                  fundit && (
+                    <p className="text-muted small mb-3">
+                      Herën e fundit u morën <strong>{fundit.marre}</strong> ndryshime dhe u dërguan{" "}
+                      <strong>{fundit.derguar}</strong>. Në cloud ndodhen{" "}
+                      <strong>{nCloud === null ? "…" : nCloud}</strong> rreshta; në këtë shfletues{" "}
+                      <strong>{transactions.length}</strong> transaksione.
+                    </p>
+                  )
+                )}
 
-        <Card className="profile-card border-0 p-4 mb-4">
-          <h5 className="fw-bold mb-3">
-            <ShieldCheck size={18} className="me-2 text-primary" />
-            Sa e sigurt është
-          </h5>
-          <ul className="text-muted small ps-3 mb-0" style={{ lineHeight: 1.9 }}>
-            <li>
-              <strong>Çelësi publik nuk është fjalëkalim.</strong> Ai është publik nga natyra - çdo
-              aplikacion Supabase e dërgon te shfletuesi, dhe vetë Supabase-i shkruan se mund të
-              ndahet lirisht. Ajo që mbron të dhënat është rregulli RLS i skriptit: pa hyrë me email
-              dhe fjalëkalim, çelësi nuk lexon dot asnjë rresht.
-            </li>
-            <li>
-              <strong>Çelësat secret / service_role mos i vendosni kurrë këtu.</strong> Ata i
-              anashkalojnë rregullat. Aplikacioni i refuzon vetë nëse ngjiten gabimisht.
-            </li>
-            <li>
-              <strong>Kredencialet ruhen në këtë pajisje</strong> (localStorage), bashkë me sesionin.
-              Nuk janë më të ndjeshme se vetë ledgeri, që tashmë ndodhet i plotë në këtë shfletues:
-              kush hyn në pajisjen tuaj i sheh transaksionet ashtu ose ashtu. Në një kompjuter të
-              përbashkët përdorni <strong>Shkëput këtë pajisje</strong> kur mbaroni.
-            </li>
-            <li>
-              <strong>Të dhënat shkojnë vetëm te projekti juaj</strong>, i vendosur në rajonin që
-              zgjidhni ju, dhe udhëtojnë përmes HTTPS. FinanCarePersonal mbetet pa server.
-            </li>
-            <li>
-              <strong>Fotot e faturave nuk sinkronizohen.</strong> Ato janë pjesa më e madhe e
-              hapësirës dhe kërkojnë Supabase Storage; për t&apos;i çuar në një pajisje tjetër
-              përdorni kopjen ZIP te faqja <strong>Eksporto / Importo</strong>.
-            </li>
-            <li>
-              <strong>Fiton ndryshimi më i fundit.</strong> Nëse i njëjti transaksion redaktohet në
-              dy pajisje pa qenë online në mes, mbetet versioni i ruajtur më vonë. Rreshtat e
-              ndryshëm nuk përplasen kurrë.
-            </li>
-          </ul>
-        </Card>
-      </div>
+                <Form.Check
+                  type="switch"
+                  id="sync-automatik"
+                  className="mb-1"
+                  label="Sinkronizo automatikisht"
+                  checked={automatik}
+                  onChange={(e) => ruajKonfigurimin({ automatik: e.target.checked })}
+                />
+                <div className="fcp-row-sub mb-3">
+                  Kur është aktiv, sinkronizimi bëhet vetë: kur hapet aplikacioni, pak sekonda pas çdo
+                  ndryshimi, kur ktheheni te skeda dhe kur pajisja kthehet online. Kur është joaktiv,
+                  asgjë nuk del nga shfletuesi derisa ta shtypni butonin vetë.
+                </div>
+
+                <div className="d-flex flex-wrap gap-2">
+                  <Button className="btn-primary" onClick={() => handleSinkronizo(false)} disabled={duke}>
+                    {duke ? <Spinner animation="border" size="sm" className="me-2" /> : <RefreshCw size={16} className="me-1" />}
+                    Sinkronizo tani
+                  </Button>
+                  <Button variant="outline-light" onClick={() => handleSinkronizo(true)} disabled={duke}>
+                    <Download size={16} className="me-1" /> Shkarko gjithçka nga cloud
+                  </Button>
+                  <Button variant="outline-light" onClick={handleShkeputu} disabled={duke || Boolean(pune)}>
+                    <CloudOff size={16} className="me-1" /> Shkëput këtë pajisje
+                  </Button>
+                </div>
+
+                {celesiIRi === null ? (
+                  <button
+                    type="button"
+                    className="btn btn-link p-0 mt-3 text-decoration-none fcp-row-sub"
+                    onClick={() => setCelesiIRi(konfigurimi.anonKey || "")}
+                  >
+                    <KeyRound size={14} className="me-1" /> Ndrysho çelësin publik
+                  </button>
+                ) : (
+                  <Form onSubmit={handleRuajCelesin} className="mt-3">
+                    <Row className="g-2 align-items-end">
+                      <FushaSekrete
+                        id="sync-celesi-ri"
+                        md={7}
+                        label="Çelësi publik i ri"
+                        placeholder="sb_publishable_…"
+                        value={celesiIRi}
+                        onChange={(e) => setCelesiIRi(e.target.value)}
+                        // Opens holding the current key, so it can be revealed and compared with the
+                        // dashboard - but selected on focus, because the reason anyone is here is to
+                        // paste a different one over it.
+                        onFocus={(e) => e.target.select()}
+                        autoComplete="off"
+                        ndihma="Provohet te projekti para se të ruhet, pra një çelës i gabuar nuk e lë pajisjen pa sinkronizim. Për të kaluar te një projekt tjetër duhet shkëputja."
+                      />
+                      <Col md={5} className="d-flex gap-2">
+                        <Button type="submit" className="btn-primary" disabled={pune === "celesi"}>
+                          {pune === "celesi" ? (
+                            <Spinner animation="border" size="sm" className="me-2" />
+                          ) : (
+                            <Save size={16} className="me-1" />
+                          )}
+                          Ruaj çelësin
+                        </Button>
+                        <Button variant="secondary" onClick={() => setCelesiIRi(null)} disabled={pune === "celesi"}>
+                          Anulo
+                        </Button>
+                      </Col>
+                    </Row>
+                  </Form>
+                )}
+              </Card>
+
+              <Card className="profile-card fcp-zona-rrezik border-0 p-4 mb-4">
+                <h2 className="fcp-card-title fw-bold mb-2">
+                  <AlertTriangle size={18} className="me-2 fcp-neg" />
+                  Kopja në cloud
+                </h2>
+                <p className="text-muted small mb-3">
+                  Zbraz tabelën te projekti juaj. Përdoreni nëse doni të nisni sinkronizimin nga e
+                  para ose të hiqni gjithçka nga Supabase; ledgeri në këtë shfletues nuk preket dhe
+                  sinkronizimi i radhës e ringarkon nga këtu.
+                </p>
+                <div>
+                  <Button variant="danger" onClick={handleFshiCloud} disabled={pune === "fshij"}>
+                    {pune === "fshij" ? (
+                      <Spinner animation="border" size="sm" className="me-2" />
+                    ) : (
+                      <Trash2 size={16} className="me-1" />
+                    )}
+                    Fshi kopjen në cloud
+                  </Button>
+                </div>
+              </Card>
+            </>
+          )}
+
+          <Card className="profile-card border-0 p-4 mb-4">
+            <h2 className="fcp-card-title fw-bold mb-3">
+              <ShieldCheck size={18} className="me-2 text-primary" />
+              Sa e sigurt është
+            </h2>
+            <ul className="text-muted small ps-3 mb-0" style={{ lineHeight: 1.9 }}>
+              <li>
+                <strong>Çelësi publik nuk është fjalëkalim.</strong> Ai është publik nga natyra - çdo
+                aplikacion Supabase e dërgon te shfletuesi, dhe vetë Supabase-i shkruan se mund të
+                ndahet lirisht. Ajo që mbron të dhënat është rregulli RLS i skriptit: pa hyrë me email
+                dhe fjalëkalim, çelësi nuk lexon dot asnjë rresht.
+              </li>
+              <li>
+                <strong>Çelësat secret / service_role mos i vendosni kurrë këtu.</strong> Ata i
+                anashkalojnë rregullat. Aplikacioni i refuzon vetë nëse ngjiten gabimisht.
+              </li>
+              <li>
+                <strong>Kredencialet ruhen në këtë pajisje</strong> (localStorage), bashkë me sesionin.
+                Nuk janë më të ndjeshme se vetë ledgeri, që tashmë ndodhet i plotë në këtë shfletues:
+                kush hyn në pajisjen tuaj i sheh transaksionet ashtu ose ashtu. Në një kompjuter të
+                përbashkët përdorni <strong>Shkëput këtë pajisje</strong> kur mbaroni.
+              </li>
+              <li>
+                <strong>Të dhënat shkojnë vetëm te projekti juaj</strong>, i vendosur në rajonin që
+                zgjidhni ju, dhe udhëtojnë përmes HTTPS. FinanCarePersonal mbetet pa server.
+              </li>
+              <li>
+                <strong>Fotot e faturave nuk sinkronizohen.</strong> Ato janë pjesa më e madhe e
+                hapësirës dhe kërkojnë Supabase Storage; për t&apos;i çuar në një pajisje tjetër
+                përdorni kopjen ZIP te faqja <strong>Eksporto / Importo</strong>.
+              </li>
+              <li>
+                <strong>Fiton ndryshimi më i fundit.</strong> Nëse i njëjti transaksion redaktohet në
+                dy pajisje pa qenë online në mes, mbetet versioni i ruajtur më vonë. Rreshtat e
+                ndryshëm nuk përplasen kurrë.
+              </li>
+            </ul>
+          </Card>
+        </div>
+      </main>
 
       <Footer />
     </div>

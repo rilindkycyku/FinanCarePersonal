@@ -15,7 +15,7 @@ import { useData } from "../Context/DataContext";
 import { useDialog } from "../Context/DialogContext";
 import { STORES } from "../lib/db";
 import { budgetProgress, effectiveBudgets, monthKeyBounds } from "../lib/finance";
-import { formatPercent, monthKey, monthLabel, plainAmount, todayISO, toNumber } from "../lib/format";
+import { formatPercent, markup, monthKey, monthLabel, plainAmount, todayISO, toNumber } from "../lib/format";
 import { emriIPlote, familjaSet, rrenjaE } from "../lib/kategorite";
 import { getIcon } from "../lib/icons";
 import "./Styles/PremiumTheme.css";
@@ -143,7 +143,10 @@ function Buxhetet() {
     Vlefshmëria: b.muaji ? monthLabel(b.muaji) : "Çdo muaj",
     [`Buxheti (${simboli})`]: plainAmount(b.buxheti),
     [`Shpenzuar (${simboli})`]: plainAmount(b.shpenzuar),
-    [`Mbetur (${simboli})`]: `<span class="${b.tepruar ? "fcp-neg" : "fcp-pos"}">${plainAmount(b.mbetur)}</span>`,
+    [`Mbetur (${simboli})`]: markup(
+      `<span class="${b.tepruar ? "fcp-neg" : "fcp-pos"}">${plainAmount(b.mbetur)}</span>`,
+      plainAmount(b.mbetur)
+    ),
     [`Ditore (${simboli})`]: plainAmount(b.perDite),
     Përqindja: formatPercent(b.perqindja),
   }));
@@ -155,158 +158,160 @@ function Buxhetet() {
       <PageTitle title="Buxhetet" />
       <NavBar />
 
-      <Container className="pt-4">
-        <div className="fcp-page-head">
-          <div>
-            <h2>Buxhetet</h2>
-            <p>Caktoni një kufi mujor shpenzimi për secilën kategori dhe ndiqni sa ka mbetur.</p>
-          </div>
-          <div className="d-flex align-items-center gap-2 flex-wrap">
-            <div className="fcp-month-nav">
-              <button type="button" onClick={() => shiftMonth(-1)} aria-label="Muaji i kaluar">
-                <ChevronLeft size={16} />
-              </button>
-              <span className="fcp-month-nav-label">{monthLabel(muaji)}</span>
-              <button type="button" onClick={() => shiftMonth(1)} aria-label="Muaji i ardhshëm">
-                <ChevronRight size={16} />
-              </button>
+      <main className="fcp-main">
+        <Container className="pt-4">
+          <div className="fcp-page-head">
+            <div>
+              <h1>Buxhetet</h1>
+              <p>Caktoni një kufi mujor shpenzimi për secilën kategori dhe ndiqni sa ka mbetur.</p>
             </div>
-            <Button className="btn-primary" onClick={() => openNew()}>
-              <Plus size={16} className="me-1" /> Shto Buxhet
-            </Button>
+            <div className="d-flex align-items-center gap-2 flex-wrap">
+              <div className="fcp-month-nav">
+                <button type="button" onClick={() => shiftMonth(-1)} aria-label="Muaji i kaluar">
+                  <ChevronLeft size={16} />
+                </button>
+                <span className="fcp-month-nav-label">{monthLabel(muaji)}</span>
+                <button type="button" onClick={() => shiftMonth(1)} aria-label="Muaji i ardhshëm">
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+              <Button className="btn-primary" onClick={() => openNew()}>
+                <Plus size={16} className="me-1" /> Shto Buxhet
+              </Button>
+            </div>
           </div>
-        </div>
 
-        <Row className="g-2 g-md-4">
-          <Kpi label="Buxheti i Muajit" value={money(totals.buxheti)} icon={PiggyBank} color="cyan" />
-          <Kpi label="Shpenzuar" value={money(totals.shpenzuar)} icon={TrendingDown} color="danger" />
-          <Kpi
-            label="Mbetur"
-            value={money(totals.mbetur)}
-            icon={Wallet}
-            color={totals.mbetur < 0 ? "danger" : "emerald"}
-            sub={`${formatPercent(totals.perqindja)} e buxhetit u shfrytëzua`}
-          />
-          <Kpi
-            label="Kategori të Tepruara"
-            value={totals.tepruara}
-            icon={AlertTriangle}
-            color={totals.tepruara > 0 ? "danger" : "emerald"}
-          />
-        </Row>
+          <Row className="g-2 g-md-4">
+            <Kpi label="Buxheti i Muajit" value={money(totals.buxheti)} icon={PiggyBank} color="cyan" />
+            <Kpi label="Shpenzuar" value={money(totals.shpenzuar)} icon={TrendingDown} color="danger" />
+            <Kpi
+              label="Mbetur"
+              value={money(totals.mbetur)}
+              icon={Wallet}
+              color={totals.mbetur < 0 ? "danger" : "emerald"}
+              sub={`${formatPercent(totals.perqindja)} e buxhetit u shfrytëzua`}
+            />
+            <Kpi
+              label="Kategori të Tepruara"
+              value={totals.tepruara}
+              icon={AlertTriangle}
+              color={totals.tepruara > 0 ? "danger" : "emerald"}
+            />
+          </Row>
 
-        <section className="mb-4">
-          <h4 className="fcp-section-title">
-            <PiggyBank size={20} className="text-primary" />
-            Ecuria - {monthLabel(muaji)}
-          </h4>
+          <section className="mb-4">
+            <h2 className="fcp-section-title">
+              <PiggyBank size={20} className="text-primary" />
+              Ecuria - {monthLabel(muaji)}
+            </h2>
 
-          {progress.length === 0 ? (
-            <Empty>Nuk ka buxhete për këtë muaj. Shtoni një kufi mujor për kategoritë që doni të kontrolloni.</Empty>
-          ) : (
-            progressiDitor.map((b) => {
-              const Icon = getIcon(b.ikona);
-              return (
-                <div className={`fcp-tracked${b.tepruar ? " over" : ""}`} key={b.id}>
-                  <div className="fcp-tracked-head">
-                    <div className="fcp-row-icon" style={{ color: b.ngjyra }}>
-                      <Icon size={16} />
-                    </div>
-                    <div className="fcp-row-main">
-                      <div className="fcp-row-title">{b.emri}</div>
-                      <div className="fcp-row-sub">
-                        {money(b.shpenzuar)} nga {money(b.buxheti)} · {formatPercent(b.perqindja)}
-                        {b.rimbartur > 0 && ` · përfshirë ${money(b.rimbartur)} të bartura`}
-                        {b.nenkategori > 0 && ` · me ${b.nenkategori} nënkategori`}
+            {progress.length === 0 ? (
+              <Empty>Nuk ka buxhete për këtë muaj. Shtoni një kufi mujor për kategoritë që doni të kontrolloni.</Empty>
+            ) : (
+              progressiDitor.map((b) => {
+                const Icon = getIcon(b.ikona);
+                return (
+                  <div className={`fcp-tracked${b.tepruar ? " over" : ""}`} key={b.id}>
+                    <div className="fcp-tracked-head">
+                      <div className="fcp-row-icon" style={{ color: b.ngjyra }}>
+                        <Icon size={16} />
+                      </div>
+                      <div className="fcp-row-main">
+                        <div className="fcp-row-title">{b.emri}</div>
+                        <div className="fcp-row-sub">
+                          {money(b.shpenzuar)} nga {money(b.buxheti)} · {formatPercent(b.perqindja)}
+                          {b.rimbartur > 0 && ` · përfshirë ${money(b.rimbartur)} të bartura`}
+                          {b.nenkategori > 0 && ` · me ${b.nenkategori} nënkategori`}
+                        </div>
+                      </div>
+                      <div className="fcp-tracked-actions">
+                        <button
+                          type="button"
+                          className="fcp-icon-action edit"
+                          title="Ndrysho"
+                          onClick={() => openEdit(b)}
+                        >
+                          <Edit3 size={14} />
+                        </button>
+                        <button
+                          type="button"
+                          className="fcp-icon-action delete"
+                          title="Fshij"
+                          onClick={() => onDelete(b)}
+                        >
+                          <Trash2 size={14} />
+                        </button>
                       </div>
                     </div>
-                    <div className="fcp-tracked-actions">
-                      <button
-                        type="button"
-                        className="fcp-icon-action edit"
-                        title="Ndrysho"
-                        onClick={() => openEdit(b)}
-                      >
-                        <Edit3 size={14} />
-                      </button>
-                      <button
-                        type="button"
-                        className="fcp-icon-action delete"
-                        title="Fshij"
-                        onClick={() => onDelete(b)}
-                      >
-                        <Trash2 size={14} />
+
+                    <ProgressBar value={b.perqindja} color={b.ngjyra} over={b.tepruar} />
+
+                    <div className="fcp-row-sub mt-1">
+                      {b.tepruar
+                        ? "Buxheti u mbarua - çdo shpenzim i ri e kalon kufirin."
+                        : `${money(b.perDite)}/ditë për ${b.ditetMbetura} ${
+                            b.ditetMbetura === 1 ? "ditë të mbetur" : "ditë të mbetura"
+                          }`}
+                      {b.eshteMuajiAktual && b.shpenzuarSot > 0 && (
+                        <span className={b.shpenzuarSot > b.perDite ? " fcp-neg" : ""}>
+                          {" "}· {money(b.shpenzuarSot)} sot
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="fcp-tracked-foot">
+                      <span className={b.tepruar ? "fcp-neg" : ""}>
+                        {b.tepruar ? `Tepruar me ${money(Math.abs(b.mbetur))}` : `Mbeten ${money(b.mbetur)}`}
+                        {/* How this month compares with the last one, which is what tells you whether
+                            a budget is drifting rather than just how full it is. */}
+                        {b.ndryshimi !== null && (
+                          <span className={`fcp-trend ${b.ndryshimi > 0 ? "up" : "down"}`}>
+                            {b.ndryshimi > 0 ? "▲" : "▼"} {formatPercent(Math.abs(b.ndryshimi))} ndaj muajit të kaluar
+                          </span>
+                        )}
+                      </span>
+                      <button type="button" className="fcp-chip" onClick={() => toggleScope(b)}>
+                        {b.muaji ? `Vetëm ${monthLabel(b.muaji)} - bëje për çdo muaj` : `Çdo muaj - bëje vetëm për ${monthLabel(muaji)}`}
                       </button>
                     </div>
                   </div>
-
-                  <ProgressBar value={b.perqindja} color={b.ngjyra} over={b.tepruar} />
-
-                  <div className="fcp-row-sub mt-1">
-                    {b.tepruar
-                      ? "Buxheti u mbarua - çdo shpenzim i ri e kalon kufirin."
-                      : `${money(b.perDite)}/ditë për ${b.ditetMbetura} ${
-                          b.ditetMbetura === 1 ? "ditë të mbetur" : "ditë të mbetura"
-                        }`}
-                    {b.eshteMuajiAktual && b.shpenzuarSot > 0 && (
-                      <span className={b.shpenzuarSot > b.perDite ? " fcp-neg" : ""}>
-                        {" "}· {money(b.shpenzuarSot)} sot
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="fcp-tracked-foot">
-                    <span className={b.tepruar ? "fcp-neg" : ""}>
-                      {b.tepruar ? `Tepruar me ${money(Math.abs(b.mbetur))}` : `Mbeten ${money(b.mbetur)}`}
-                      {/* How this month compares with the last one, which is what tells you whether
-                          a budget is drifting rather than just how full it is. */}
-                      {b.ndryshimi !== null && (
-                        <span className={`fcp-trend ${b.ndryshimi > 0 ? "up" : "down"}`}>
-                          {b.ndryshimi > 0 ? "▲" : "▼"} {formatPercent(Math.abs(b.ndryshimi))} ndaj muajit të kaluar
-                        </span>
-                      )}
-                    </span>
-                    <button type="button" className="fcp-chip" onClick={() => toggleScope(b)}>
-                      {b.muaji ? `Vetëm ${monthLabel(b.muaji)} - bëje për çdo muaj` : `Çdo muaj - bëje vetëm për ${monthLabel(muaji)}`}
-                    </button>
-                  </div>
-                </div>
-              );
-            })
-          )}
-        </section>
-
-        {paBuxhet.length > 0 && (
-          <section className="mb-4">
-            <h4 className="fcp-section-title">
-              <Plus size={20} className="text-primary" />
-              Kategori pa Buxhet
-            </h4>
-            <div className="fcp-chips">
-              {paBuxhet.map((c) => (
-                <button type="button" className="fcp-chip" key={c.id} onClick={() => openNew(c.id)}>
-                  <span className="fcp-dot" style={{ background: c.ngjyra }} />
-                  {c.emri}
-                </button>
-              ))}
-            </div>
+                );
+              })
+            )}
           </section>
-        )}
-      </Container>
 
-      {rows.length > 0 && <Tabela data={rows} tableName={`Buxhetet - ${monthLabel(muaji)}`} mosShfaqID />}
+          {paBuxhet.length > 0 && (
+            <section className="mb-4">
+              <h2 className="fcp-section-title">
+                <Plus size={20} className="text-primary" />
+                Kategori pa Buxhet
+              </h2>
+              <div className="fcp-chips">
+                {paBuxhet.map((c) => (
+                  <button type="button" className="fcp-chip" key={c.id} onClick={() => openNew(c.id)}>
+                    <span className="fcp-dot" style={{ background: c.ngjyra }} />
+                    {c.emri}
+                  </button>
+                ))}
+              </div>
+            </section>
+          )}
+        </Container>
 
-      <ShtoBuxhetin
-        show={showModal}
-        onHide={() => {
-          setShowModal(false);
-          setEditing(null);
-          setPrefill("");
-        }}
-        initial={editing}
-        kategoriaFillestare={prefill}
-        muajiAktual={muaji}
-      />
+        {rows.length > 0 && <Tabela data={rows} tableName={`Buxhetet - ${monthLabel(muaji)}`} mosShfaqID />}
+
+        <ShtoBuxhetin
+          show={showModal}
+          onHide={() => {
+            setShowModal(false);
+            setEditing(null);
+            setPrefill("");
+          }}
+          initial={editing}
+          kategoriaFillestare={prefill}
+          muajiAktual={muaji}
+        />
+      </main>
 
       <Footer />
     </div>

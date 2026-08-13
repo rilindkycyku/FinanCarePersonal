@@ -1,5 +1,8 @@
+// Bootstrap's stylesheet only. Its JavaScript bundle used to be imported next to it and was never
+// once asked for anything: react-bootstrap implements the dropdowns, modals and offcanvas itself in
+// React, and nothing in this app carries a `data-bs-*` attribute for Bootstrap's own scripts to
+// pick up. It was Popper and the whole widget library parsed on the critical path to do nothing.
 import "bootstrap/dist/css/bootstrap.min.css";
-import "bootstrap/dist/js/bootstrap.bundle.min";
 import ReactDOM from "react-dom/client";
 import { Analytics } from "@vercel/analytics/react";
 import "./index.css";

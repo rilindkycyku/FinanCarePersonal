@@ -204,6 +204,10 @@ përfshirë fotot e faturave - asnjë foto nuk ngarkohet askund. Asgjë nuk dër
 dhe nuk kërkohet llogari. Pastrimi i të dhënave të faqes i fshin ato - përdorni
 **Eksporto / Importo** për të mbajtur një kopje JSON.
 
+As vetë faqja nuk kërkon gjë nga jashtë: shkronjat (Inter) shërbehen nga i njëjti domen si
+aplikacioni, jo nga Google Fonts, prandaj hapja e faqes nuk i tregon askujt se ju e hapët - dhe
+ndërfaqja duket njësoj edhe offline, ku më parë do të binte te shkronjat e sistemit.
+
 I vetmi rast kur diçka del nga shfletuesi është kur e vendosni vetë: te faqja **Sinkronizimi**
 lidhni një projekt Supabase **tuajin** dhe që nga ai çast libri i llogarive (jo fotot) shkon te
 *baza juaj*, në rajonin që zgjidhni ju, përmes HTTPS. Projekti, çelësi publik dhe sesioni ruhen në

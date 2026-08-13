@@ -1,13 +1,37 @@
+/* ── Inter, served from this origin ───────────────────────────────────────
+   Previously an `@import` of fonts.googleapis.com at the top of PremiumTheme.css. That is the one
+   place a font must never be declared: the browser cannot see it until the stylesheet has been
+   downloaded and parsed, so the font CSS and then the font files queue up behind it in a chain of
+   round trips, all of it blocking the first paint. It also contradicted two things the app claims
+   about itself - that it works offline, which it did not once the service worker had nothing to
+   serve for a third-party host, and that nothing about the user reaches anyone else, when every
+   page load announced them to Google.
+
+   One variable file per subset covers the whole 400-900 range the interface uses, in place of the
+   six static weights the old import fetched. `unicode-range` keeps latin-ext out of the way until
+   a character actually needs it - Albanian's ë and ç live in the latin subset.
+
+   (The Quicksand files next to these are not declared here on purpose: nothing on screen is set in
+   them. `lib/exportPdf.js` fetches them by URL to embed in the PDF statement.) */
 @font-face {
-  font-family: "Quicksand";
-  src: url("/fonts/Quicksand-Regular.ttf") format("truetype");
-  font-weight: 400;
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 400 900;
+  font-display: swap;
+  src: url("/fonts/Inter-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304,
+    U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
 @font-face {
-  font-family: "Quicksand";
-  src: url("/fonts/Quicksand-Bold.ttf") format("truetype");
-  font-weight: 700;
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 400 900;
+  font-display: swap;
+  src: url("/fonts/Inter-latin-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308,
+    U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113,
+    U+2C60-2C7F, U+A720-A7FF;
 }
 
 * {

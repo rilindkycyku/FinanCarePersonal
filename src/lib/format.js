@@ -45,11 +45,8 @@ export function formatPercent(value, decimals = 0) {
 }
 
 /**
- * Text made safe to put inside a table cell's markup.
- *
- * The list pages hand Tabela strings that carry their own markup (the coloured pills), which it
- * renders as HTML - so anything the *user* typed and that ends up inside one has to be escaped
- * first, or a tag like `<b>` would silently rewrite the row it sits in.
+ * Text made safe to put inside a table cell's markup - see `markup()` below, which is where the
+ * app's own HTML cells are built and the only place this is normally needed.
  */
 export function escapeHtml(value) {
   return String(value ?? "")
@@ -57,6 +54,46 @@ export function escapeHtml(value) {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
+}
+
+/**
+ * A table cell the app has drawn itself: a coloured amount, a type pill, a tag chip.
+ *
+ * Tabela used to render *every* cell as HTML, which quietly made a rule of the exception. Almost
+ * all of a row is text the user typed - an account called "M&S", a description reading
+ * "servisi <300 €" - and putting that through `innerHTML` either mangles it (everything from the
+ * `<` to the next `>` is read as a tag and disappears) or, with the ledger now able to arrive from
+ * a Supabase project over sync, runs it. Only values wrapped here are treated as markup; anything
+ * else is rendered as the text it is.
+ *
+ * The plain-text form is carried alongside rather than recovered by stripping tags, so sorting,
+ * searching and the Excel/PDF exports read the value instead of guessing at it.
+ */
+class Markup {
+  constructor(html, text) {
+    this.html = html;
+    this.text = text;
+  }
+
+  /** So anything that stringifies a cell without knowing about this class still gets the text. */
+  toString() {
+    return this.text;
+  }
+}
+
+export function markup(html, text) {
+  return new Markup(html, String(text ?? ""));
+}
+
+/** The plain text of a cell, whatever form it arrived in. */
+export function cellText(value) {
+  if (value instanceof Markup) return value.text.trim();
+  return String(value ?? "").trim();
+}
+
+/** True when the cell carries markup the app built and Tabela should render as HTML. */
+export function isMarkup(value) {
+  return value instanceof Markup;
 }
 
 export function formatDate(dateStr) {

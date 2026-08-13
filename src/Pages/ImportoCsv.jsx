@@ -214,251 +214,253 @@ function ImportoCsv() {
       <PageTitle title="Importo nga CSV" />
       <NavBar />
 
-      {duke && (
-        <PunaNeVazhdim
-          titulli="Duke regjistruar transaksionet..."
-          ndihma="Çdo rresht i zgjedhur po shkruhet në bazë. Ndërprerja tani do të linte gjysmën e ekstraktit brenda."
-        />
-      )}
+      <main className="fcp-main">
+        {duke && (
+          <PunaNeVazhdim
+            titulli="Duke regjistruar transaksionet..."
+            ndihma="Çdo rresht i zgjedhur po shkruhet në bazë. Ndërprerja tani do të linte gjysmën e ekstraktit brenda."
+          />
+        )}
 
-      <Container className="py-4">
-        <div className="fcp-page-head">
-          <div>
-            <h2>Importo nga Ekstrakti (CSV)</h2>
-            <p>
-              Shkarkoni ekstraktin e bankës ose të kartelës si CSV dhe lexojeni këtu. Skedari nuk dërgohet askund -
-              lexohet brenda shfletuesit, si çdo gjë tjetër në këtë aplikacion.
-            </p>
+        <Container className="py-4">
+          <div className="fcp-page-head">
+            <div>
+              <h1>Importo nga Ekstrakti (CSV)</h1>
+              <p>
+                Shkarkoni ekstraktin e bankës ose të kartelës si CSV dhe lexojeni këtu. Skedari nuk dërgohet askund -
+                lexohet brenda shfletuesit, si çdo gjë tjetër në këtë aplikacion.
+              </p>
+            </div>
+            <Button className="btn-primary" onClick={() => fileRef.current?.click()}>
+              <Upload size={16} className="me-1" /> {file ? "Zgjidh skedar tjetër" : "Zgjidh skedarin"}
+            </Button>
+            <input ref={fileRef} type="file" accept=".csv,.txt,text/csv,text/plain" hidden onChange={handleFile} />
           </div>
-          <Button className="btn-primary" onClick={() => fileRef.current?.click()}>
-            <Upload size={16} className="me-1" /> {file ? "Zgjidh skedar tjetër" : "Zgjidh skedarin"}
-          </Button>
-          <input ref={fileRef} type="file" accept=".csv,.txt,text/csv,text/plain" hidden onChange={handleFile} />
-        </div>
 
-        {mesazhi && (
-          <Alert variant={mesazhi.type} onClose={() => setMesazhi(null)} dismissible>
-            {mesazhi.text}
-          </Alert>
-        )}
+          {mesazhi && (
+            <Alert variant={mesazhi.type} onClose={() => setMesazhi(null)} dismissible>
+              {mesazhi.text}
+            </Alert>
+          )}
 
-        {!parsed ? (
-          <Card className="profile-card border-0 p-4">
-            <h5 className="fw-bold mb-2">
-              <FileSpreadsheet size={18} className="me-2 text-primary" />
-              Si funksionon
-            </h5>
-            <ol className="text-muted small mb-0 ps-3">
-              <li>Zgjidhni skedarin CSV të ekstraktit.</li>
-              <li>
-                Aplikacioni gjen vetë ndarësin, kolonat e datës, përshkrimit dhe vlerës - dhe ju i korrigjoni nëse e ka
-                gabim.
-              </li>
-              <li>
-                Rreshtat që i keni tashmë në regjistër shënohen si dublikatë dhe lihen jashtë; rreshtat që nuk lexohen
-                dot shfaqen me arsyen, jo të fshehur.
-              </li>
-              <li>Kategoritë propozohen nga zgjedhjet tuaja të mëparshme dhe mësohen nga ato që korrigjoni.</li>
-              <li>Asgjë nuk regjistrohet derisa ta shtypni butonin e fundit.</li>
-            </ol>
-          </Card>
-        ) : (
-          <>
-            <Card className="profile-card border-0 p-4 mb-4">
-              <h5 className="fw-bold mb-3">Kolonat</h5>
-              <Row className="g-3">
-                {KOLONAT.filter(
-                  (k) =>
-                    k.gjithmone || (mapping.dyKolona ? k.vetemDyKolona : k.vetemNjeKolone)
-                ).map((k) => (
-                  <Form.Group as={Col} md={4} key={k.celesi} controlId={`kolona-${k.celesi}`}>
-                    <Form.Label>{k.label}</Form.Label>
-                    <Form.Select
-                      value={mapping[k.celesi]}
-                      onChange={(e) => setMapping((prev) => ({ ...prev, [k.celesi]: Number(e.target.value) }))}
-                    >
-                      <option value={-1}>- asnjë -</option>
-                      {parsed.headers.map((h, i) => (
-                        <option key={h + i} value={i}>
-                          {h}
-                        </option>
-                      ))}
-                    </Form.Select>
-                  </Form.Group>
-                ))}
-
-                <Col md={4} className="d-flex align-items-end">
-                  <Form.Check
-                    type="switch"
-                    id="dy-kolona"
-                    label="Dy kolona (dalje / hyrje)"
-                    checked={mapping.dyKolona}
-                    onChange={(e) => setMapping((prev) => ({ ...prev, dyKolona: e.target.checked }))}
-                  />
-                </Col>
-
-                <Col md={4} className="d-flex align-items-end">
-                  <Form.Check
-                    type="switch"
-                    id="dita-e-pare"
-                    label="Data është ditë/muaj/vit"
-                    checked={opsionet.ditaEPare}
-                    onChange={(e) => setOpsionet((p) => ({ ...p, ditaEPare: e.target.checked }))}
-                  />
-                </Col>
-
-                <Col md={4} className="d-flex align-items-end">
-                  <Form.Check
-                    type="switch"
-                    id="shenja-perkundert"
-                    label="Shenja është e kundërt"
-                    checked={opsionet.shenjaPerkundert}
-                    onChange={(e) => setOpsionet((p) => ({ ...p, shenjaPerkundert: e.target.checked }))}
-                  />
-                </Col>
-
-                {!njeLlogari && (
-                  <Form.Group as={Col} md={4} controlId="llogaria-csv">
-                    <Form.Label>
-                      Llogaria <span className="text-danger">*</span>
-                    </Form.Label>
-                    <Form.Select value={llogaria} onChange={(e) => setLlogaria(e.target.value)}>
-                      <option value="">Zgjidh llogarinë...</option>
-                      {aktive.map((a) => (
-                        <option key={a.id} value={a.id}>
-                          {a.emri}
-                        </option>
-                      ))}
-                    </Form.Select>
-                  </Form.Group>
-                )}
-
-                <Form.Group as={Col} md={4} controlId="kategoria-masive">
-                  <Form.Label>Plotëso kategorinë që mungon</Form.Label>
-                  <Form.Select value="" onChange={(e) => plotesoKategorine(e.target.value)}>
-                    <option value="">Zgjidh një kategori...</option>
-                    {categories.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.emri} ({c.lloji === "hyrje" ? "hyrje" : "shpenzim"})
-                      </option>
-                    ))}
-                  </Form.Select>
-                  <div className="fcp-row-sub mt-1">
-                    Vendoset vetëm te rreshtat e përfshirë që s&apos;kanë ende kategori dhe që janë të atij lloji.
-                  </div>
-                </Form.Group>
-              </Row>
-
-              <div className="fcp-row-sub mt-3">
-                {file?.name} · ndarësi &laquo;{parsed.delimiter === "\t" ? "tab" : parsed.delimiter}&raquo; ·{" "}
-                {gjendja.gjithsej} rreshta: <strong>{gjendja.perfshira}</strong> për t&apos;u regjistruar,{" "}
-                {gjendja.dublikate} dublikatë, {gjendja.gabime} të palexueshëm.
-                {gjendja.paKategori > 0 && ` ${gjendja.paKategori} pa kategori.`}
-              </div>
-              <div className="fcp-row-sub">
-                Gjithsej: <span className="fcp-pos">+{money(gjendja.hyrje)}</span>{" "}
-                <span className="fcp-neg">-{money(gjendja.shpenzime)}</span>
-              </div>
+          {!parsed ? (
+            <Card className="profile-card border-0 p-4">
+              <h2 className="fcp-card-title fw-bold mb-2">
+                <FileSpreadsheet size={18} className="me-2 text-primary" />
+                Si funksionon
+              </h2>
+              <ol className="text-muted small mb-0 ps-3">
+                <li>Zgjidhni skedarin CSV të ekstraktit.</li>
+                <li>
+                  Aplikacioni gjen vetë ndarësin, kolonat e datës, përshkrimit dhe vlerës - dhe ju i korrigjoni nëse e ka
+                  gabim.
+                </li>
+                <li>
+                  Rreshtat që i keni tashmë në regjistër shënohen si dublikatë dhe lihen jashtë; rreshtat që nuk lexohen
+                  dot shfaqen me arsyen, jo të fshehur.
+                </li>
+                <li>Kategoritë propozohen nga zgjedhjet tuaja të mëparshme dhe mësohen nga ato që korrigjoni.</li>
+                <li>Asgjë nuk regjistrohet derisa ta shtypni butonin e fundit.</li>
+              </ol>
             </Card>
+          ) : (
+            <>
+              <Card className="profile-card border-0 p-4 mb-4">
+                <h2 className="fcp-card-title fw-bold mb-3">Kolonat</h2>
+                <Row className="g-3">
+                  {KOLONAT.filter(
+                    (k) =>
+                      k.gjithmone || (mapping.dyKolona ? k.vetemDyKolona : k.vetemNjeKolone)
+                  ).map((k) => (
+                    <Form.Group as={Col} md={4} key={k.celesi} controlId={`kolona-${k.celesi}`}>
+                      <Form.Label>{k.label}</Form.Label>
+                      <Form.Select
+                        value={mapping[k.celesi]}
+                        onChange={(e) => setMapping((prev) => ({ ...prev, [k.celesi]: Number(e.target.value) }))}
+                      >
+                        <option value={-1}>- asnjë -</option>
+                        {parsed.headers.map((h, i) => (
+                          <option key={h + i} value={i}>
+                            {h}
+                          </option>
+                        ))}
+                      </Form.Select>
+                    </Form.Group>
+                  ))}
 
-            <div className="d-flex gap-2 flex-wrap mb-3">
-              <Button size="sm" variant="outline-light" onClick={() => zgjidhTeGjitha(true)}>
-                Përfshi të gjitha
-              </Button>
-              <Button size="sm" variant="outline-light" onClick={() => zgjidhTeGjitha(false)}>
-                Hiq të gjitha
-              </Button>
-              <Button className="btn-primary ms-auto" onClick={importo} disabled={duke || gjendja.perfshira === 0}>
-                <Check size={16} className="me-1" />
-                {duke ? "Duke regjistruar..." : `Regjistro ${gjendja.perfshira} transaksione`}
-              </Button>
-            </div>
+                  <Col md={4} className="d-flex align-items-end">
+                    <Form.Check
+                      type="switch"
+                      id="dy-kolona"
+                      label="Dy kolona (dalje / hyrje)"
+                      checked={mapping.dyKolona}
+                      onChange={(e) => setMapping((prev) => ({ ...prev, dyKolona: e.target.checked }))}
+                    />
+                  </Col>
 
-            {rreshtat.length === 0 ? (
-              <Empty>Asnjë rresht nuk u lexua nga ky skedar.</Empty>
-            ) : (
-              <div className="table-responsive">
-                <Table className="fcp-csv-table align-middle">
-                  <thead>
-                    <tr>
-                      <th style={{ width: 40 }}>#</th>
-                      <th style={{ width: 44 }} />
-                      <th>Data</th>
-                      <th>Përshkrimi</th>
-                      <th>Kategoria</th>
-                      <th className="text-end">Vlera</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {rreshtat.map((r) => {
-                      const z = zgjedhja(r);
-                      return (
-                        <tr key={r.celesi} className={r.gabim ? "fcp-csv-gabim" : z.perfshij ? "" : "fcp-csv-jashte"}>
-                          <td className="fcp-row-sub">{r.rreshti}</td>
-                          <td>
-                            <Form.Check
-                              type="checkbox"
-                              aria-label={`Përfshi rreshtin ${r.rreshti}`}
-                              checked={z.perfshij}
-                              disabled={Boolean(r.gabim)}
-                              onChange={(e) => vendos(r.celesi, { perfshij: e.target.checked })}
-                            />
-                          </td>
-                          <td>{r.data ? formatDate(r.data) : <span className="fcp-neg">-</span>}</td>
-                          <td>
-                            <div className="fcp-row-title">{r.pershkrimi || "-"}</div>
-                            {r.gabim && (
-                              <div className="fcp-row-sub fcp-neg">
-                                <CircleAlert size={12} className="me-1" />
-                                {r.gabim}: {r.origjinali.join(" | ")}
-                              </div>
-                            )}
-                            {r.dublikat && (
-                              <div className="fcp-row-sub">Ekziston tashmë një lëvizje e njëjtë në këtë datë.</div>
-                            )}
-                          </td>
-                          <td style={{ minWidth: 190 }}>
-                            {r.gabim ? (
-                              <span className="fcp-row-sub">-</span>
-                            ) : (
-                              <>
-                                <Form.Select
-                                  size="sm"
-                                  value={z.kategoriaId}
-                                  onChange={(e) => vendos(r.celesi, { kategoriaId: e.target.value })}
-                                >
-                                  <option value="">Pa kategori</option>
-                                  <OpsionetKategorive categories={categories} lloji={r.lloji} />
-                                </Form.Select>
-                                {z.sugjeruar && z.kategoriaId && (
-                                  <div className="fcp-row-sub">
-                                    <Wand2 size={11} className="me-1" />
-                                    sugjeruar nga zgjedhjet e mëparshme
-                                  </div>
-                                )}
-                              </>
-                            )}
-                          </td>
-                          <td className={`text-end ${r.lloji === "hyrje" ? "fcp-pos" : "fcp-neg"}`}>
-                            {r.vlera === null ? "-" : money(r.vlera)}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </Table>
+                  <Col md={4} className="d-flex align-items-end">
+                    <Form.Check
+                      type="switch"
+                      id="dita-e-pare"
+                      label="Data është ditë/muaj/vit"
+                      checked={opsionet.ditaEPare}
+                      onChange={(e) => setOpsionet((p) => ({ ...p, ditaEPare: e.target.checked }))}
+                    />
+                  </Col>
+
+                  <Col md={4} className="d-flex align-items-end">
+                    <Form.Check
+                      type="switch"
+                      id="shenja-perkundert"
+                      label="Shenja është e kundërt"
+                      checked={opsionet.shenjaPerkundert}
+                      onChange={(e) => setOpsionet((p) => ({ ...p, shenjaPerkundert: e.target.checked }))}
+                    />
+                  </Col>
+
+                  {!njeLlogari && (
+                    <Form.Group as={Col} md={4} controlId="llogaria-csv">
+                      <Form.Label>
+                        Llogaria <span className="text-danger">*</span>
+                      </Form.Label>
+                      <Form.Select value={llogaria} onChange={(e) => setLlogaria(e.target.value)}>
+                        <option value="">Zgjidh llogarinë...</option>
+                        {aktive.map((a) => (
+                          <option key={a.id} value={a.id}>
+                            {a.emri}
+                          </option>
+                        ))}
+                      </Form.Select>
+                    </Form.Group>
+                  )}
+
+                  <Form.Group as={Col} md={4} controlId="kategoria-masive">
+                    <Form.Label>Plotëso kategorinë që mungon</Form.Label>
+                    <Form.Select value="" onChange={(e) => plotesoKategorine(e.target.value)}>
+                      <option value="">Zgjidh një kategori...</option>
+                      {categories.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.emri} ({c.lloji === "hyrje" ? "hyrje" : "shpenzim"})
+                        </option>
+                      ))}
+                    </Form.Select>
+                    <div className="fcp-row-sub mt-1">
+                      Vendoset vetëm te rreshtat e përfshirë që s&apos;kanë ende kategori dhe që janë të atij lloji.
+                    </div>
+                  </Form.Group>
+                </Row>
+
+                <div className="fcp-row-sub mt-3">
+                  {file?.name} · ndarësi &laquo;{parsed.delimiter === "\t" ? "tab" : parsed.delimiter}&raquo; ·{" "}
+                  {gjendja.gjithsej} rreshta: <strong>{gjendja.perfshira}</strong> për t&apos;u regjistruar,{" "}
+                  {gjendja.dublikate} dublikatë, {gjendja.gabime} të palexueshëm.
+                  {gjendja.paKategori > 0 && ` ${gjendja.paKategori} pa kategori.`}
+                </div>
+                <div className="fcp-row-sub">
+                  Gjithsej: <span className="fcp-pos">+{money(gjendja.hyrje)}</span>{" "}
+                  <span className="fcp-neg">-{money(gjendja.shpenzime)}</span>
+                </div>
+              </Card>
+
+              <div className="d-flex gap-2 flex-wrap mb-3">
+                <Button size="sm" variant="outline-light" onClick={() => zgjidhTeGjitha(true)}>
+                  Përfshi të gjitha
+                </Button>
+                <Button size="sm" variant="outline-light" onClick={() => zgjidhTeGjitha(false)}>
+                  Hiq të gjitha
+                </Button>
+                <Button className="btn-primary ms-auto" onClick={importo} disabled={duke || gjendja.perfshira === 0}>
+                  <Check size={16} className="me-1" />
+                  {duke ? "Duke regjistruar..." : `Regjistro ${gjendja.perfshira} transaksione`}
+                </Button>
               </div>
-            )}
 
-            <div className="d-flex justify-content-end mt-3">
-              <Button className="btn-primary" onClick={importo} disabled={duke || gjendja.perfshira === 0}>
-                {duke ? "Duke regjistruar..." : `Regjistro ${gjendja.perfshira} transaksione`}
-                <ArrowRight size={16} className="ms-1" />
-              </Button>
-            </div>
-          </>
-        )}
-      </Container>
+              {rreshtat.length === 0 ? (
+                <Empty>Asnjë rresht nuk u lexua nga ky skedar.</Empty>
+              ) : (
+                <div className="table-responsive">
+                  <Table className="fcp-csv-table align-middle">
+                    <thead>
+                      <tr>
+                        <th style={{ width: 40 }}>#</th>
+                        <th style={{ width: 44 }} />
+                        <th>Data</th>
+                        <th>Përshkrimi</th>
+                        <th>Kategoria</th>
+                        <th className="text-end">Vlera</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {rreshtat.map((r) => {
+                        const z = zgjedhja(r);
+                        return (
+                          <tr key={r.celesi} className={r.gabim ? "fcp-csv-gabim" : z.perfshij ? "" : "fcp-csv-jashte"}>
+                            <td className="fcp-row-sub">{r.rreshti}</td>
+                            <td>
+                              <Form.Check
+                                type="checkbox"
+                                aria-label={`Përfshi rreshtin ${r.rreshti}`}
+                                checked={z.perfshij}
+                                disabled={Boolean(r.gabim)}
+                                onChange={(e) => vendos(r.celesi, { perfshij: e.target.checked })}
+                              />
+                            </td>
+                            <td>{r.data ? formatDate(r.data) : <span className="fcp-neg">-</span>}</td>
+                            <td>
+                              <div className="fcp-row-title">{r.pershkrimi || "-"}</div>
+                              {r.gabim && (
+                                <div className="fcp-row-sub fcp-neg">
+                                  <CircleAlert size={12} className="me-1" />
+                                  {r.gabim}: {r.origjinali.join(" | ")}
+                                </div>
+                              )}
+                              {r.dublikat && (
+                                <div className="fcp-row-sub">Ekziston tashmë një lëvizje e njëjtë në këtë datë.</div>
+                              )}
+                            </td>
+                            <td style={{ minWidth: 190 }}>
+                              {r.gabim ? (
+                                <span className="fcp-row-sub">-</span>
+                              ) : (
+                                <>
+                                  <Form.Select
+                                    size="sm"
+                                    value={z.kategoriaId}
+                                    onChange={(e) => vendos(r.celesi, { kategoriaId: e.target.value })}
+                                  >
+                                    <option value="">Pa kategori</option>
+                                    <OpsionetKategorive categories={categories} lloji={r.lloji} />
+                                  </Form.Select>
+                                  {z.sugjeruar && z.kategoriaId && (
+                                    <div className="fcp-row-sub">
+                                      <Wand2 size={11} className="me-1" />
+                                      sugjeruar nga zgjedhjet e mëparshme
+                                    </div>
+                                  )}
+                                </>
+                              )}
+                            </td>
+                            <td className={`text-end ${r.lloji === "hyrje" ? "fcp-pos" : "fcp-neg"}`}>
+                              {r.vlera === null ? "-" : money(r.vlera)}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </Table>
+                </div>
+              )}
+
+              <div className="d-flex justify-content-end mt-3">
+                <Button className="btn-primary" onClick={importo} disabled={duke || gjendja.perfshira === 0}>
+                  {duke ? "Duke regjistruar..." : `Regjistro ${gjendja.perfshira} transaksione`}
+                  <ArrowRight size={16} className="ms-1" />
+                </Button>
+              </div>
+            </>
+          )}
+        </Container>
+      </main>
 
       <Footer />
     </div>

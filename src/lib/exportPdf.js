@@ -14,7 +14,7 @@
 import {
   accountBalance, filterByRange, sortByDateDesc, totalBalance, totalsByCategory, txSignForAccount,
 } from "./finance";
-import { currencySymbol, formatDate, plainAmount, toNumber } from "./format";
+import { cellText, currencySymbol, formatDate, plainAmount, toNumber } from "./format";
 import { accountTypeMeta, DEFAULT_CURRENCY, MONTHS_GENITIVE } from "./options";
 import { emriIPlote } from "./kategorite";
 
@@ -867,8 +867,8 @@ export async function exportStatementPdf({
    pair the statement uses - a second PDF engine for a plain table would be hard to justify - and
    the same rule as the Excel export for which columns get a total, so the two agree. */
 
-/** Cells may carry the table's coloured markup; print the text only. */
-const stripTags = (value) => String(value ?? "").replace(/<[^>]*>/g, "").trim();
+/** A `markup()` cell carries the plain text next to the screen's HTML; print that. */
+const stripTags = cellText;
 
 // Columns holding identifiers or dates: never summed, even though they parse as numbers.
 const PA_TOTAL = /^(id|data|dita|muaji|viti|numri|nr\.?|afati|frekuenca|përqindja|perqindja|%)/i;

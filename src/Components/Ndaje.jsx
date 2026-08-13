@@ -186,10 +186,10 @@ function Ndaje() {
 
   return (
     <Card className="profile-card border-0 p-4 mb-4">
-      <h5 className="fw-bold mb-2">
+      <h2 className="fcp-card-title fw-bold mb-2">
         <Share2 size={18} className="me-2 text-primary" />
         Ndaje
-      </h5>
+      </h2>
       <p className="text-muted small">
         Ndani aplikacionin me dikë, ose dërgoni pasqyrën tuaj. Skedarët krijohen këtu në shfletues dhe i kalojnë
         drejt aplikacionit që zgjidhni - asgjë nuk ngarkohet në ndonjë server.

@@ -17,13 +17,13 @@ import { STORES } from "../lib/db";
 import { cashflow, sortByDateDesc } from "../lib/finance";
 import { etiketatE, kaEtiketen, ngjyraEtiketes, perdorimiEtiketave } from "../lib/etiketat";
 import { emriIPlote, familjaSet } from "../lib/kategorite";
-import { escapeHtml, formatMoney, formatPercent, plainAmount, todayISO, toNumber } from "../lib/format";
+import { escapeHtml, formatMoney, formatPercent, markup, plainAmount, todayISO, toNumber } from "../lib/format";
 import { TRANSACTION_TYPE_LABELS } from "../lib/options";
 import "./Styles/PremiumTheme.css";
 import "./Styles/DizajniPergjithshem.css";
 import "./Styles/Personal.css";
 
-const TYPE_PILL_COLORS = { hyrje: "var(--sp-emerald)", shpenzim: "var(--sp-red)", transfer: "var(--sp-cyan)" };
+const TYPE_PILL_COLORS = { hyrje: "var(--sp-emerald)", shpenzim: "var(--sp-red-text)", transfer: "var(--sp-cyan)" };
 
 function Transaksionet() {
   const { accounts, categories, goals, transactions, faturat, destroy, simboli, money, loading, njeLlogari } =
@@ -100,12 +100,17 @@ function Transaksionet() {
       const klasa = shenja > 0 ? "fcp-pos" : shenja < 0 ? "fcp-neg" : "fcp-neutral";
       const qellimi = goalName(tx.qellimiId);
 
+      const llojiEtiketa = TRANSACTION_TYPE_LABELS[tx.lloji] || tx.lloji;
+      const etiketat = etiketatE(tx);
+      const vlera = plainAmount(shenja === 0 ? tx.vlera : shenja * tx.vlera);
+
       return {
         ID: tx.id,
         Data: tx.data,
-        Lloji: `<span class="fcp-pill" style="color:${TYPE_PILL_COLORS[tx.lloji]}">${
-          TRANSACTION_TYPE_LABELS[tx.lloji] || tx.lloji
-        }</span>`,
+        Lloji: markup(
+          `<span class="fcp-pill" style="color:${TYPE_PILL_COLORS[tx.lloji]}">${escapeHtml(llojiEtiketa)}</span>`,
+          llojiEtiketa
+        ),
         Kategoria: tx.lloji === "transfer" ? "-" : emriIPlote(categories, tx.kategoriaId, "Pa kategori"),
         // With one account for everything the column would repeat the same name on every row.
         ...(njeLlogari
@@ -125,24 +130,27 @@ function Transaksionet() {
           ]
             .filter(Boolean)
             .join(" ") || "-",
-        // Escaped, unlike the columns above it: a tag is free text the user typed, and this cell is
-        // rendered as markup. Separated by spaces rather than by commas because the export strips
-        // the chips back to their text content.
-        Etiketat:
-          etiketatE(tx)
-            .map(
-              (emri) =>
-                `<span class="fcp-etiketa-tag" style="--etiketa-color:${ngjyraEtiketes(emri)}">${escapeHtml(
-                  emri
-                )}</span>`
+        // A tag is free text the user typed and this cell is drawn as chips, so the name is escaped
+        // into the markup while the plain form travels beside it for the search and the export.
+        Etiketat: etiketat.length
+          ? markup(
+              etiketat
+                .map(
+                  (emri) =>
+                    `<span class="fcp-etiketa-tag" style="--etiketa-color:${ngjyraEtiketes(emri)}">${escapeHtml(
+                      emri
+                    )}</span>`
+                )
+                .join(" "),
+              etiketat.join(" ")
             )
-            .join(" ") || "-",
+          : "-",
         // Its own column rather than a marker glued to the description, so the count stays a plain
         // number in the Excel/PDF export.
         Fatura: numriFaturave[tx.id]
-          ? `<span class="fcp-fatura-nb">${numriFaturave[tx.id]}</span>`
+          ? markup(`<span class="fcp-fatura-nb">${numriFaturave[tx.id]}</span>`, String(numriFaturave[tx.id]))
           : "-",
-        [`Vlera (${simboli})`]: `<span class="${klasa}">${plainAmount(shenja === 0 ? tx.vlera : shenja * tx.vlera)}</span>`,
+        [`Vlera (${simboli})`]: markup(`<span class="${klasa}">${vlera}</span>`, vlera),
       };
     });
   }, [teFiltruara, accounts, categories, goals, numriFaturave, simboli, njeLlogari]);
@@ -185,153 +193,155 @@ function Transaksionet() {
       <PageTitle title="Transaksionet" />
       <NavBar />
 
-      <Container className="pt-4">
-        <div className="fcp-page-head">
-          <div>
-            <h2>Transaksionet</h2>
-            <p>Të gjitha hyrjet, shpenzimet dhe transferet tuaja në një vend.</p>
+      <main className="fcp-main">
+        <Container className="pt-4">
+          <div className="fcp-page-head">
+            <div>
+              <h1>Transaksionet</h1>
+              <p>Të gjitha hyrjet, shpenzimet dhe transferet tuaja në një vend.</p>
+            </div>
           </div>
-        </div>
 
-        <Row className="g-2 g-md-4">
-          <Kpi label="Hyrjet Gjithsej" value={money(flows.hyrjet)} icon={TrendingUp} color="emerald" />
-          <Kpi label="Shpenzimet Gjithsej" value={money(flows.shpenzimet)} icon={TrendingDown} color="danger" />
-          <Kpi
-            label="Bilanci i Periudhës"
-            value={money(flows.neto)}
-            icon={Percent}
-            color={flows.neto >= 0 ? "cyan" : "danger"}
-            sub={`Norma e kursimit: ${formatPercent(flows.normaKursimit, 1)}`}
-          />
-          <Kpi
-            label="Numri i Transaksioneve"
-            value={teFiltruara.length}
-            sub={kaFiltra ? `nga ${transactions.length} gjithsej` : undefined}
-            icon={Hash}
-            color="violet"
-          />
-        </Row>
-        <Row className="g-2 align-items-end mt-1 mb-1">
-          <Form.Group as={Col} xs={6} md={3} controlId="filtri-kategoria">
-            <Form.Label className="fcp-row-sub mb-1">
-              <Filter size={12} className="me-1" />
-              Kategoria
-            </Form.Label>
-            <Form.Select
-              value={filtri.kategoria}
-              onChange={(e) => setFiltri((f) => ({ ...f, kategoria: e.target.value }))}
-            >
-              <option value="">Të gjitha</option>
-              <OpsionetKategorive categories={categories} />
-            </Form.Select>
-          </Form.Group>
-
-          {/* Only worth a slot once something is tagged - until then it would be an empty picker
-              explaining nothing. */}
-          {etiketatEPerdorura.length > 0 && (
-            <Form.Group as={Col} xs={6} md={3} controlId="filtri-etiketa">
-              <Form.Label className="fcp-row-sub mb-1">Etiketa</Form.Label>
+          <Row className="g-2 g-md-4">
+            <Kpi label="Hyrjet Gjithsej" value={money(flows.hyrjet)} icon={TrendingUp} color="emerald" />
+            <Kpi label="Shpenzimet Gjithsej" value={money(flows.shpenzimet)} icon={TrendingDown} color="danger" />
+            <Kpi
+              label="Bilanci i Periudhës"
+              value={money(flows.neto)}
+              icon={Percent}
+              color={flows.neto >= 0 ? "cyan" : "danger"}
+              sub={`Norma e kursimit: ${formatPercent(flows.normaKursimit, 1)}`}
+            />
+            <Kpi
+              label="Numri i Transaksioneve"
+              value={teFiltruara.length}
+              sub={kaFiltra ? `nga ${transactions.length} gjithsej` : undefined}
+              icon={Hash}
+              color="violet"
+            />
+          </Row>
+          <Row className="g-2 align-items-end mt-1 mb-1">
+            <Form.Group as={Col} xs={6} md={3} controlId="filtri-kategoria">
+              <Form.Label className="fcp-row-sub mb-1">
+                <Filter size={12} className="me-1" />
+                Kategoria
+              </Form.Label>
               <Form.Select
-                value={filtri.etiketa}
-                onChange={(e) => setFiltri((f) => ({ ...f, etiketa: e.target.value }))}
+                value={filtri.kategoria}
+                onChange={(e) => setFiltri((f) => ({ ...f, kategoria: e.target.value }))}
               >
                 <option value="">Të gjitha</option>
-                {etiketatEPerdorura.map((et) => (
-                  <option key={et.celesi} value={et.celesi}>
-                    {et.emri} ({et.numri})
-                  </option>
-                ))}
+                <OpsionetKategorive categories={categories} />
               </Form.Select>
             </Form.Group>
-          )}
 
-          {!njeLlogari && accounts.length > 1 && (
-            <Form.Group as={Col} xs={6} md={3} controlId="filtri-llogaria">
-              <Form.Label className="fcp-row-sub mb-1">Llogaria</Form.Label>
-              <Form.Select
-                value={filtri.llogaria}
-                onChange={(e) => setFiltri((f) => ({ ...f, llogaria: e.target.value }))}
-              >
-                <option value="">Të gjitha</option>
-                {accounts.map((a) => (
-                  <option key={a.id} value={a.id}>
-                    {a.emri}
-                  </option>
-                ))}
-              </Form.Select>
+            {/* Only worth a slot once something is tagged - until then it would be an empty picker
+                explaining nothing. */}
+            {etiketatEPerdorura.length > 0 && (
+              <Form.Group as={Col} xs={6} md={3} controlId="filtri-etiketa">
+                <Form.Label className="fcp-row-sub mb-1">Etiketa</Form.Label>
+                <Form.Select
+                  value={filtri.etiketa}
+                  onChange={(e) => setFiltri((f) => ({ ...f, etiketa: e.target.value }))}
+                >
+                  <option value="">Të gjitha</option>
+                  {etiketatEPerdorura.map((et) => (
+                    <option key={et.celesi} value={et.celesi}>
+                      {et.emri} ({et.numri})
+                    </option>
+                  ))}
+                </Form.Select>
+              </Form.Group>
+            )}
+
+            {!njeLlogari && accounts.length > 1 && (
+              <Form.Group as={Col} xs={6} md={3} controlId="filtri-llogaria">
+                <Form.Label className="fcp-row-sub mb-1">Llogaria</Form.Label>
+                <Form.Select
+                  value={filtri.llogaria}
+                  onChange={(e) => setFiltri((f) => ({ ...f, llogaria: e.target.value }))}
+                >
+                  <option value="">Të gjitha</option>
+                  {accounts.map((a) => (
+                    <option key={a.id} value={a.id}>
+                      {a.emri}
+                    </option>
+                  ))}
+                </Form.Select>
+              </Form.Group>
+            )}
+
+            <Form.Group as={Col} xs={6} md={2} controlId="filtri-min">
+              <Form.Label className="fcp-row-sub mb-1">Nga ({simboli})</Form.Label>
+              <Form.Control
+                type="number"
+                step="0.01"
+                min="0"
+                placeholder="0"
+                value={filtri.min}
+                onChange={(e) => setFiltri((f) => ({ ...f, min: e.target.value }))}
+              />
             </Form.Group>
-          )}
 
-          <Form.Group as={Col} xs={6} md={2} controlId="filtri-min">
-            <Form.Label className="fcp-row-sub mb-1">Nga ({simboli})</Form.Label>
-            <Form.Control
-              type="number"
-              step="0.01"
-              min="0"
-              placeholder="0"
-              value={filtri.min}
-              onChange={(e) => setFiltri((f) => ({ ...f, min: e.target.value }))}
-            />
-          </Form.Group>
+            <Form.Group as={Col} xs={6} md={2} controlId="filtri-max">
+              <Form.Label className="fcp-row-sub mb-1">Deri ({simboli})</Form.Label>
+              <Form.Control
+                type="number"
+                step="0.01"
+                min="0"
+                placeholder="∞"
+                value={filtri.max}
+                onChange={(e) => setFiltri((f) => ({ ...f, max: e.target.value }))}
+              />
+            </Form.Group>
 
-          <Form.Group as={Col} xs={6} md={2} controlId="filtri-max">
-            <Form.Label className="fcp-row-sub mb-1">Deri ({simboli})</Form.Label>
-            <Form.Control
-              type="number"
-              step="0.01"
-              min="0"
-              placeholder="∞"
-              value={filtri.max}
-              onChange={(e) => setFiltri((f) => ({ ...f, max: e.target.value }))}
-            />
-          </Form.Group>
+            {kaFiltra && (
+              <Col xs={12} md={2}>
+                <Button
+                  variant="outline-light"
+                  className="w-100"
+                  onClick={() => setFiltri({ kategoria: "", llogaria: "", etiketa: "", min: "", max: "" })}
+                >
+                  <X size={14} className="me-1" /> Pastro
+                </Button>
+              </Col>
+            )}
+          </Row>
+        </Container>
 
-          {kaFiltra && (
-            <Col xs={12} md={2}>
-              <Button
-                variant="outline-light"
-                className="w-100"
-                onClick={() => setFiltri({ kategoria: "", llogaria: "", etiketa: "", min: "", max: "" })}
-              >
-                <X size={14} className="me-1" /> Pastro
-              </Button>
-            </Col>
-          )}
-        </Row>
-      </Container>
+        <Tabela
+          data={rows}
+          tableName="Transaksionet"
+          kaButona
+          etiketaButonitShto="Transaksion i Ri"
+          funksionButonShto={() => {
+            setEditing(null);
+            setShowModal(true);
+          }}
+          funksionButonEdit={onEdit}
+          funksionButonFshij={onDelete}
+          funksionButonExtra={onRepeat}
+          titulliButonitExtra="Përsërit këtë transaksion"
+          ikonaButonitExtra={<CopyPlus size={16} />}
+          funksionButonExtra2={(id) => setFaturaTx(transactions.find((t) => t.id === id) || null)}
+          ikonaButonitExtra2={<Paperclip size={16} />}
+          titulliButonitExtra2="Faturat (foto)"
+          dateField="Data"
+          filterField="Lloji"
+          mosShfaqID
+        />
 
-      <Tabela
-        data={rows}
-        tableName="Transaksionet"
-        kaButona
-        etiketaButonitShto="Transaksion i Ri"
-        funksionButonShto={() => {
-          setEditing(null);
-          setShowModal(true);
-        }}
-        funksionButonEdit={onEdit}
-        funksionButonFshij={onDelete}
-        funksionButonExtra={onRepeat}
-        titulliButonitExtra="Përsërit këtë transaksion"
-        ikonaButonitExtra={<CopyPlus size={16} />}
-        funksionButonExtra2={(id) => setFaturaTx(transactions.find((t) => t.id === id) || null)}
-        ikonaButonitExtra2={<Paperclip size={16} />}
-        titulliButonitExtra2="Faturat (foto)"
-        dateField="Data"
-        filterField="Lloji"
-        mosShfaqID
-      />
+        <ShtoTransaksionin
+          show={showModal}
+          onHide={() => {
+            setShowModal(false);
+            setEditing(null);
+          }}
+          initial={editing}
+        />
 
-      <ShtoTransaksionin
-        show={showModal}
-        onHide={() => {
-          setShowModal(false);
-          setEditing(null);
-        }}
-        initial={editing}
-      />
-
-      <FaturatModal show={Boolean(faturaTx)} transaksioni={faturaTx} onHide={() => setFaturaTx(null)} />
+        <FaturatModal show={Boolean(faturaTx)} transaksioni={faturaTx} onHide={() => setFaturaTx(null)} />
+      </main>
 
       <Footer />
     </div>

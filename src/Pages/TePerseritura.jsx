@@ -16,7 +16,7 @@ import { useData } from "../Context/DataContext";
 import { useDialog } from "../Context/DialogContext";
 import { STORES } from "../lib/db";
 import { annualOutlook, dueRecurring, frequencyLabel, generateDueTransactions, isRecurringDue } from "../lib/finance";
-import { formatDate, formatMoney, plainAmount, todayISO } from "../lib/format";
+import { formatDate, formatMoney, markup, plainAmount, todayISO } from "../lib/format";
 import { emriIPlote } from "../lib/kategorite";
 import { getIcon } from "../lib/icons";
 import "./Styles/PremiumTheme.css";
@@ -101,9 +101,12 @@ function TePerseritura() {
     Kategoria: emriIPlote(categories, r.kategoriaId, "-"),
     ...(njeLlogari ? {} : { Llogaria: nameOf(accounts, r.llogariaId) }),
     Statusi: !r.aktiv ? "Joaktive" : isRecurringDue(r, today) ? "Ka arritur" : "Aktive",
-    [`Vlera (${simboli})`]: `<span class="${r.lloji === "hyrje" ? "fcp-pos" : "fcp-neg"}">${plainAmount(
-      r.lloji === "hyrje" ? r.vlera : -r.vlera
-    )}</span>`,
+    [`Vlera (${simboli})`]: markup(
+      `<span class="${r.lloji === "hyrje" ? "fcp-pos" : "fcp-neg"}">${plainAmount(
+        r.lloji === "hyrje" ? r.vlera : -r.vlera
+      )}</span>`,
+      plainAmount(r.lloji === "hyrje" ? r.vlera : -r.vlera)
+    ),
   }));
 
   if (loading) return <PageLoading title="Pagesat e Përsëritura" />;
@@ -113,223 +116,225 @@ function TePerseritura() {
       <PageTitle title="Pagesat e Përsëritura" />
       <NavBar />
 
-      <Container className="pt-4">
-        <div className="fcp-page-head">
-          <div>
-            <h2>Pagesat e Përsëritura</h2>
-            <p>Qira, abonime, rroga - planifikoni çka përsëritet dhe konfirmojeni kur vjen data.</p>
-          </div>
-          <Button className="btn-primary" onClick={openNew}>
-            <Plus size={16} className="me-1" /> Shto Pagesë
-          </Button>
-        </div>
-
-        {stats.due.length > 0 && (
-          <Alert variant="warning" className="d-flex align-items-center justify-content-between flex-wrap gap-2">
-            <span>
-              <CalendarClock size={16} className="me-2" />
-              <strong>{stats.due.length}</strong>{" "}
-              {/* Verbs inflected with the count as well, not just the noun. */}
-              {stats.due.length === 1
-                ? "pagesë ka arritur datën dhe pret konfirmim."
-                : "pagesa kanë arritur datën dhe presin konfirmim."}
-            </span>
-            <Button size="sm" variant="warning" onClick={confirmAll}>
-              <CheckCircle2 size={14} className="me-1" /> Regjistro të gjitha
+      <main className="fcp-main">
+        <Container className="pt-4">
+          <div className="fcp-page-head">
+            <div>
+              <h1>Pagesat e Përsëritura</h1>
+              <p>Qira, abonime, rroga - planifikoni çka përsëritet dhe konfirmojeni kur vjen data.</p>
+            </div>
+            <Button className="btn-primary" onClick={openNew}>
+              <Plus size={16} className="me-1" /> Shto Pagesë
             </Button>
-          </Alert>
-        )}
+          </div>
 
-        <Row className="g-2 g-md-4">
-          <Kpi label="Pagesa Aktive" value={stats.aktive.length} icon={Repeat} color="violet" />
-          <Kpi
-            label="Shpenzime / Vit"
-            value={money(stats.viti.shpenzime.vjetore)}
-            sub={`${money(stats.viti.shpenzime.mujore)} mesatarisht në muaj`}
-            icon={TrendingDown}
-            color="danger"
-          />
-          <Kpi
-            label="Hyrje / Vit"
-            value={money(stats.viti.hyrje.vjetore)}
-            sub={`${money(stats.viti.hyrje.mujore)} mesatarisht në muaj`}
-            icon={TrendingUp}
-            color="emerald"
-          />
-          <Kpi
-            label="Kanë Arritur Datën"
-            value={stats.due.length}
-            icon={CalendarClock}
-            color={stats.due.length > 0 ? "amber" : "cyan"}
-          />
-        </Row>
-
-        <section className="mb-4">
-          <h4 className="fcp-section-title">
-            <Repeat size={20} className="text-primary" />
-            Lista e Pagesave
-          </h4>
-
-          {stats.renditur.length === 0 ? (
-            <Empty>Nuk ka pagesa të përsëritura. Shtoni qiranë, abonimet ose rrogën për t&apos;i planifikuar.</Empty>
-          ) : (
-            stats.renditur.map((r) => {
-              const kategoria = categories.find((c) => c.id === r.kategoriaId);
-              const Icon = getIcon(kategoria?.ikona);
-              const due = isRecurringDue(r, today);
-              return (
-                <div className={`fcp-tracked${due ? " over" : ""}`} key={r.id} style={{ opacity: r.aktiv ? 1 : 0.6 }}>
-                  <div className="fcp-tracked-head mb-0">
-                    <div className="fcp-row-icon" style={{ color: kategoria?.ngjyra || "#94a3b8" }}>
-                      <Icon size={16} />
-                    </div>
-                    <div className="fcp-row-main">
-                      <div className="fcp-row-title">{r.emri}</div>
-                      <div className="fcp-row-sub">
-                        {[
-                          frequencyLabel(r.frekuenca),
-                          r.monedhaOrigjinale ? formatMoney(r.vleraOrigjinale, r.monedhaOrigjinale) : null,
-                          r.nrKesteve ? `${r.nrKesteve} këste` : null,
-                          njeLlogari ? null : nameOf(accounts, r.llogariaId),
-                          kategoria?.emri || "Pa kategori",
-                          r.borxhiId
-                            ? `zbret "${nameOf(borxhet, r.borxhiId, "borxh i fshirë")}"`
-                            : null,
-                        ]
-                          .filter(Boolean)
-                          .join(" · ")}
-                      </div>
-                    </div>
-                    <div className={`fcp-row-value ${r.lloji === "hyrje" ? "fcp-pos" : "fcp-neg"} me-2`}>
-                      {money(r.vlera)}
-                    </div>
-                    <div className="fcp-tracked-actions">
-                      {due && (
-                        <button
-                          type="button"
-                          className="fcp-icon-action add"
-                          title="Regjistro tani"
-                          onClick={() => confirmOne(r)}
-                        >
-                          <CheckCircle2 size={14} />
-                        </button>
-                      )}
-                      <button
-                        type="button"
-                        className="fcp-icon-action"
-                        title={r.aktiv ? "Pauzo" : "Aktivizo"}
-                        onClick={() => toggleActive(r)}
-                      >
-                        {r.aktiv ? <Pause size={14} /> : <Play size={14} />}
-                      </button>
-                      <button type="button" className="fcp-icon-action edit" title="Ndrysho" onClick={() => openEdit(r)}>
-                        <Edit3 size={14} />
-                      </button>
-                      <button type="button" className="fcp-icon-action delete" title="Fshij" onClick={() => onDelete(r)}>
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="fcp-tracked-foot">
-                    <span className={due ? "fcp-neg" : ""}>
-                      <CalendarClock size={12} className="me-1" />
-                      {!r.aktiv
-                        ? "Joaktive"
-                        : due
-                          ? `Ka arritur më ${formatDate(r.dataETjetres)}`
-                          : `Radha më ${formatDate(r.dataETjetres)}`}
-                    </span>
-                    {r.dataFundit && <span>Përfundon më {formatDate(r.dataFundit)}</span>}
-                  </div>
-                </div>
-              );
-            })
+          {stats.due.length > 0 && (
+            <Alert variant="warning" className="d-flex align-items-center justify-content-between flex-wrap gap-2">
+              <span>
+                <CalendarClock size={16} className="me-2" />
+                <strong>{stats.due.length}</strong>{" "}
+                {/* Verbs inflected with the count as well, not just the noun. */}
+                {stats.due.length === 1
+                  ? "pagesë ka arritur datën dhe pret konfirmim."
+                  : "pagesa kanë arritur datën dhe presin konfirmim."}
+              </span>
+              <Button size="sm" variant="warning" onClick={confirmAll}>
+                <CheckCircle2 size={14} className="me-1" /> Regjistro të gjitha
+              </Button>
+            </Alert>
           )}
-        </section>
 
-        {stats.viti.rreshtat.length > 0 && (
+          <Row className="g-2 g-md-4">
+            <Kpi label="Pagesa Aktive" value={stats.aktive.length} icon={Repeat} color="violet" />
+            <Kpi
+              label="Shpenzime / Vit"
+              value={money(stats.viti.shpenzime.vjetore)}
+              sub={`${money(stats.viti.shpenzime.mujore)} mesatarisht në muaj`}
+              icon={TrendingDown}
+              color="danger"
+            />
+            <Kpi
+              label="Hyrje / Vit"
+              value={money(stats.viti.hyrje.vjetore)}
+              sub={`${money(stats.viti.hyrje.mujore)} mesatarisht në muaj`}
+              icon={TrendingUp}
+              color="emerald"
+            />
+            <Kpi
+              label="Kanë Arritur Datën"
+              value={stats.due.length}
+              icon={CalendarClock}
+              color={stats.due.length > 0 ? "amber" : "cyan"}
+            />
+          </Row>
+
           <section className="mb-4">
-            <Panel title={`Kostoja e 12 Muajve të Ardhshëm - deri më ${formatDate(stats.viti.end)}`} icon={CalendarRange}>
-              {stats.viti.rreshtat.map((r) => {
+            <h2 className="fcp-section-title">
+              <Repeat size={20} className="text-primary" />
+              Lista e Pagesave
+            </h2>
+
+            {stats.renditur.length === 0 ? (
+              <Empty>Nuk ka pagesa të përsëritura. Shtoni qiranë, abonimet ose rrogën për t&apos;i planifikuar.</Empty>
+            ) : (
+              stats.renditur.map((r) => {
                 const kategoria = categories.find((c) => c.id === r.kategoriaId);
                 const Icon = getIcon(kategoria?.ikona);
-                const hyrje = r.lloji === "hyrje";
+                const due = isRecurringDue(r, today);
                 return (
-                  <div className="fcp-row" key={r.id}>
-                    <div className="fcp-row-icon" style={{ color: kategoria?.ngjyra || "#94a3b8" }}>
-                      <Icon size={16} />
-                    </div>
-                    <div className="fcp-row-main">
-                      <div className="fcp-row-title">{r.emri}</div>
-                      <div className="fcp-row-sub">
-                        {[
-                          `${r.nrPagesave} × ${money(r.vlera)}`,
-                          frequencyLabel(r.frekuenca),
-                          `${money(r.mujore)}/muaj`,
-                          // Said out loud, because it is the reason this row costs less than its
-                          // frequency alone suggests.
-                          r.perfundon ? `përfundon më ${formatDate(r.perfundon)}` : null,
-                        ]
-                          .filter(Boolean)
-                          .join(" · ")}
+                  <div className={`fcp-tracked${due ? " over" : ""}`} key={r.id} style={{ opacity: r.aktiv ? 1 : 0.6 }}>
+                    <div className="fcp-tracked-head mb-0">
+                      <div className="fcp-row-icon" style={{ color: kategoria?.ngjyra || "#94a3b8" }}>
+                        <Icon size={16} />
+                      </div>
+                      <div className="fcp-row-main">
+                        <div className="fcp-row-title">{r.emri}</div>
+                        <div className="fcp-row-sub">
+                          {[
+                            frequencyLabel(r.frekuenca),
+                            r.monedhaOrigjinale ? formatMoney(r.vleraOrigjinale, r.monedhaOrigjinale) : null,
+                            r.nrKesteve ? `${r.nrKesteve} këste` : null,
+                            njeLlogari ? null : nameOf(accounts, r.llogariaId),
+                            kategoria?.emri || "Pa kategori",
+                            r.borxhiId
+                              ? `zbret "${nameOf(borxhet, r.borxhiId, "borxh i fshirë")}"`
+                              : null,
+                          ]
+                            .filter(Boolean)
+                            .join(" · ")}
+                        </div>
+                      </div>
+                      <div className={`fcp-row-value ${r.lloji === "hyrje" ? "fcp-pos" : "fcp-neg"} me-2`}>
+                        {money(r.vlera)}
+                      </div>
+                      <div className="fcp-tracked-actions">
+                        {due && (
+                          <button
+                            type="button"
+                            className="fcp-icon-action add"
+                            title="Regjistro tani"
+                            onClick={() => confirmOne(r)}
+                          >
+                            <CheckCircle2 size={14} />
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          className="fcp-icon-action"
+                          title={r.aktiv ? "Pauzo" : "Aktivizo"}
+                          onClick={() => toggleActive(r)}
+                        >
+                          {r.aktiv ? <Pause size={14} /> : <Play size={14} />}
+                        </button>
+                        <button type="button" className="fcp-icon-action edit" title="Ndrysho" onClick={() => openEdit(r)}>
+                          <Edit3 size={14} />
+                        </button>
+                        <button type="button" className="fcp-icon-action delete" title="Fshij" onClick={() => onDelete(r)}>
+                          <Trash2 size={14} />
+                        </button>
                       </div>
                     </div>
-                    <div className="fcp-row-bar">
-                      <ProgressBar
-                        value={r.perqindja}
-                        color={hyrje ? "var(--sp-emerald)" : kategoria?.ngjyra || "var(--sp-red)"}
-                        small
-                      />
+
+                    <div className="fcp-tracked-foot">
+                      <span className={due ? "fcp-neg" : ""}>
+                        <CalendarClock size={12} className="me-1" />
+                        {!r.aktiv
+                          ? "Joaktive"
+                          : due
+                            ? `Ka arritur më ${formatDate(r.dataETjetres)}`
+                            : `Radha më ${formatDate(r.dataETjetres)}`}
+                      </span>
+                      {r.dataFundit && <span>Përfundon më {formatDate(r.dataFundit)}</span>}
                     </div>
-                    <div className={`fcp-row-value ${hyrje ? "fcp-pos" : "fcp-neg"}`}>{money(r.vjetore)}</div>
                   </div>
                 );
-              })}
-
-              <div className="fcp-row-sub mt-2">
-                Gjithsej për vitin: <span className="fcp-neg">{money(stats.viti.shpenzime.vjetore)}</span> shpenzime
-                {stats.viti.hyrje.vjetore > 0 && (
-                  <>
-                    {" "}
-                    dhe <span className="fcp-pos">{money(stats.viti.hyrje.vjetore)}</span> hyrje, neto{" "}
-                    <strong className={stats.viti.neto.vjetore >= 0 ? "fcp-pos" : "fcp-neg"}>
-                      {signedMoney(stats.viti.neto.vjetore)}
-                    </strong>
-                  </>
-                )}
-                .
-              </div>
-            </Panel>
+              })
+            )}
           </section>
+
+          {stats.viti.rreshtat.length > 0 && (
+            <section className="mb-4">
+              <Panel title={`Kostoja e 12 Muajve të Ardhshëm - deri më ${formatDate(stats.viti.end)}`} icon={CalendarRange}>
+                {stats.viti.rreshtat.map((r) => {
+                  const kategoria = categories.find((c) => c.id === r.kategoriaId);
+                  const Icon = getIcon(kategoria?.ikona);
+                  const hyrje = r.lloji === "hyrje";
+                  return (
+                    <div className="fcp-row" key={r.id}>
+                      <div className="fcp-row-icon" style={{ color: kategoria?.ngjyra || "#94a3b8" }}>
+                        <Icon size={16} />
+                      </div>
+                      <div className="fcp-row-main">
+                        <div className="fcp-row-title">{r.emri}</div>
+                        <div className="fcp-row-sub">
+                          {[
+                            `${r.nrPagesave} × ${money(r.vlera)}`,
+                            frequencyLabel(r.frekuenca),
+                            `${money(r.mujore)}/muaj`,
+                            // Said out loud, because it is the reason this row costs less than its
+                            // frequency alone suggests.
+                            r.perfundon ? `përfundon më ${formatDate(r.perfundon)}` : null,
+                          ]
+                            .filter(Boolean)
+                            .join(" · ")}
+                        </div>
+                      </div>
+                      <div className="fcp-row-bar">
+                        <ProgressBar
+                          value={r.perqindja}
+                          color={hyrje ? "var(--sp-emerald)" : kategoria?.ngjyra || "var(--sp-red)"}
+                          small
+                        />
+                      </div>
+                      <div className={`fcp-row-value ${hyrje ? "fcp-pos" : "fcp-neg"}`}>{money(r.vjetore)}</div>
+                    </div>
+                  );
+                })}
+
+                <div className="fcp-row-sub mt-2">
+                  Gjithsej për vitin: <span className="fcp-neg">{money(stats.viti.shpenzime.vjetore)}</span> shpenzime
+                  {stats.viti.hyrje.vjetore > 0 && (
+                    <>
+                      {" "}
+                      dhe <span className="fcp-pos">{money(stats.viti.hyrje.vjetore)}</span> hyrje, neto{" "}
+                      <strong className={stats.viti.neto.vjetore >= 0 ? "fcp-pos" : "fcp-neg"}>
+                        {signedMoney(stats.viti.neto.vjetore)}
+                      </strong>
+                    </>
+                  )}
+                  .
+                </div>
+              </Panel>
+            </section>
+          )}
+
+          <p className="fcp-row-sub">
+            Shifra vjetore numëron pagesat që bien vërtet brenda 12 muajve të ardhshëm - jo frekuencën e shumëzuar. Prandaj
+            një plan me tri këste të mbetura kushton tri këste, një pagesë e pauzuar nuk kushton asgjë, dhe vlera{" "}
+            <em>për muaj</em> është mesatare e vitit, jo fatura e një muaji të vetëm.
+          </p>
+        </Container>
+
+        {rows.length > 0 && (
+          <Tabela data={rows} tableName="Pagesat e Përsëritura" dateField="Data e Radhës" filterField="Statusi" mosShfaqID />
         )}
 
-        <p className="fcp-row-sub">
-          Shifra vjetore numëron pagesat që bien vërtet brenda 12 muajve të ardhshëm - jo frekuencën e shumëzuar. Prandaj
-          një plan me tri këste të mbetura kushton tri këste, një pagesë e pauzuar nuk kushton asgjë, dhe vlera{" "}
-          <em>për muaj</em> është mesatare e vitit, jo fatura e një muaji të vetëm.
-        </p>
-      </Container>
+        <KonfirmoPagesen
+          show={Boolean(konfirmimi)}
+          rec={konfirmimi?.rec}
+          gjithcka={konfirmimi?.gjithcka}
+          onHide={() => setKonfirmimi(null)}
+        />
 
-      {rows.length > 0 && (
-        <Tabela data={rows} tableName="Pagesat e Përsëritura" dateField="Data e Radhës" filterField="Statusi" mosShfaqID />
-      )}
-
-      <KonfirmoPagesen
-        show={Boolean(konfirmimi)}
-        rec={konfirmimi?.rec}
-        gjithcka={konfirmimi?.gjithcka}
-        onHide={() => setKonfirmimi(null)}
-      />
-
-      <ShtoTePerseritur
-        show={showModal}
-        onHide={() => {
-          setShowModal(false);
-          setEditing(null);
-        }}
-        initial={editing}
-      />
+        <ShtoTePerseritur
+          show={showModal}
+          onHide={() => {
+            setShowModal(false);
+            setEditing(null);
+          }}
+          initial={editing}
+        />
+      </main>
 
       <Footer />
     </div>
