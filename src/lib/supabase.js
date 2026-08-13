@@ -21,24 +21,14 @@
  * localStorage into full access to the database.
  */
 
+import {
+  ID_SKEMES, MIGRIMET, SKEMA_VERSIONI, SQL_INSTALIMI, STORI_META, TABELA, VERSIONI_PARA_NUMERIMIT,
+  migrimetPezull,
+} from "./skema";
+
 const CELESI_RUAJTJES = "financarepersonal.sinkronizimi";
 
-/** One table holds every record, keyed by (user, store, id) - see the SQL on the sync page. A
- * table per store would mean a new migration in every user's own project each time the app gains
- * one, which is not a thing this app can ship. */
-export const TABELA = "financare_records";
-
-/**
- * The version of the setup script this release ships.
- *
- * It exists so the page can tell "your project was set up with an older script" from "your project
- * is fine", and it is bumped **only** when the SQL below actually changes - which is meant to be
- * almost never. Adding a field to a record (subcategories' `prindi`, say) is not one of those
- * times: the record travels whole inside the `data` jsonb column, so Postgres never has to be told
- * about it. That is the reason the schema is one table with a JSON payload in the first place - a
- * user should not have to run SQL in their own project because this app gained a feature.
- */
-export const SKEMA_VERSIONI = 1;
+export { TABELA, SKEMA_VERSIONI, SQL_INSTALIMI } from "./skema";
 
 const BOSH = {
   url: "",
@@ -389,7 +379,7 @@ export async function rest(shtegu, { method = "GET", body, headers = {}, kthePer
   // the single most likely first-run failure, so it gets its own code and its own instruction.
   if (data?.code === "PGRST205" || res.status === 404) {
     throw gabimi(
-      `Tabela "${TABELA}" nuk ekziston në projekt - hapni SQL Editor te Supabase dhe ekzekutoni skriptin e mëposhtëm.`,
+      `Projekti nuk është konfiguruar ende - tabela "${TABELA}" nuk ekziston. Te faqja Sinkronizimi, «Konfiguro projektin» e hap skriptin që e krijon.`,
       "tabela"
     );
   }
@@ -400,32 +390,31 @@ export async function rest(shtegu, { method = "GET", body, headers = {}, kthePer
 }
 
 /**
- * ---- Running the setup script from inside the app ----
+ * ---- Setting the project up ----
  *
- * The honest shape of this, because the limit is not a missing feature but the design of the API:
- * the key saved on this device reaches **PostgREST** only, and PostgREST serves rows. It cannot
- * create a table, a policy or a trigger, and no setting on the project makes it able to - which is
- * also what stops a stolen copy of this browser's localStorage from rewriting the database.
+ * The limit here is not a missing feature but the design of the API: the key saved on this device
+ * reaches **PostgREST** only, and PostgREST serves rows. It cannot create a table, a policy or a
+ * trigger, and no setting on the project makes it able to - which is also what stops a stolen copy
+ * of this browser's localStorage from rewriting the database.
  *
- * Supabase does expose a second, separate API - the Management API - which *can* run SQL. It does
- * not take the project's key at all: it takes a **personal access token** for the whole Supabase
- * account. So the setup can be run from here, but only by someone holding that token, and only if
- * they hand it over for the one call.
+ * Supabase does expose a second, separate API - the Management API - which *can* run SQL, and the
+ * app used to offer it as a one-tap setup in exchange for a personal access token. That is gone.
+ * `api.supabase.com` answers no cross-origin request from a page, so the call never left the
+ * browser: the button failed for every user on every device, and it failed *after* asking for a
+ * credential that covers the whole Supabase account rather than the one project being synced.
+ * Keeping it would have meant either shipping a server of this app's own to relay the token - the
+ * one thing this app promises it does not have - or leaving a button that cannot work.
  *
- * Which is exactly how it is treated below: the token is a parameter, it is used for a single
- * request, and it is never written to `localStorage`, never put in the sync configuration and
- * never logged. Nothing in this file remembers it after the call returns - closing the dialog is
- * the end of it. The manual path (copy the script, run it in the SQL editor) stays as it was and
- * remains the one that needs no account-wide credential at all.
+ * So the setup is the script, and `linkuSqlEditor` opens the user's own SQL editor with it already
+ * in the query box: one tap, then Run. `verifikoSkemen` is the way back - what ran is asked of the
+ * project, not of the person who pressed the button.
  */
-
-const API_MANAGEMENT = "https://api.supabase.com";
 
 /**
  * The project reference - the `abcdefghijklmnopqrst` in `https://abcdefghijklmnopqrst.supabase.co`,
- * which is how the Management API names a project. Empty for anything that is not a Supabase
+ * which is how the dashboard addresses a project. Empty for anything that is not a Supabase
  * project address (a custom domain, a self-hosted instance), because for those there is no ref to
- * guess and the caller has to say so rather than send a request that cannot work.
+ * guess and the caller has to say so rather than build a link that lands nowhere.
  */
 export function referencaProjektit(url) {
   try {
@@ -439,89 +428,123 @@ export function referencaProjektit(url) {
   }
 }
 
-/** That project's SQL editor, with a new empty query already open - the manual path, minus the
- * hunting through a dashboard for the right project. */
-export function linkuSqlEditor(url) {
+/**
+ * That project's SQL editor, opened on a new query with the script **already in it** - so the
+ * manual path is a tap and then Run, with nothing to copy and no project to find.
+ *
+ * The `content` parameter is the dashboard's own way of being linked to with a query prefilled. If
+ * a future dashboard ignores it the link still lands on an empty editor of the right project,
+ * which is exactly where the copy button was aiming anyway - so there is no worse case here than
+ * the one we already had.
+ */
+export function linkuSqlEditor(url, skripti = SQL_INSTALIMI) {
   const ref = referencaProjektit(url);
-  return ref ? `https://supabase.com/dashboard/project/${ref}/sql/new` : "https://supabase.com/dashboard";
-}
-
-/** Where the token is created, so the dialog can send people straight there. */
-export const LINKU_TOKENIT = "https://supabase.com/dashboard/account/tokens";
-
-/**
- * What may be sent to the Management API. A personal access token is `sbp_…`; everything else
- * people are likely to paste here is a project key, and a project key sent to the Management API
- * would simply be refused - so it is refused here instead, where the message can say which of the
- * several strings on the Supabase dashboard is the right one.
- */
-export function kontrolloTokenin(token) {
-  const tekst = String(token || "").trim();
-  if (!tekst) return { ok: false, gabim: "Ngjitni token-in personal (sbp_…) të llogarisë suaj Supabase." };
-  if (/^sb_(publishable|secret)_/i.test(tekst) || payloadJwt(tekst)) {
-    return {
-      ok: false,
-      gabim: "Ky është një çelës i projektit, jo token-i i llogarisë. Token-i krijohet te Account → Access Tokens dhe fillon me «sbp_».",
-    };
-  }
-  if (!/^sbp_[a-z0-9]{16,}$/i.test(tekst)) {
-    return { ok: false, gabim: "Token-i nuk duket i plotë - duhet të fillojë me «sbp_» dhe të kopjohet i gjithi." };
-  }
-  return { ok: true, token: tekst };
+  if (!ref) return "https://supabase.com/dashboard";
+  return `https://supabase.com/dashboard/project/${ref}/sql/new?content=${encodeURIComponent(skripti)}`;
 }
 
 /**
- * Runs the setup script against the user's project through the Management API.
- *
- * The script is the same one the dialog shows, and every statement in it is guarded (`if not
- * exists` / `or replace`), so running it on a project that is already set up changes nothing -
- * which is what makes this safe to offer as a button rather than as a one-time ritual.
- *
- * A browser is not the intended client of that API, so the request can also be stopped by the
- * browser itself before it ever leaves - a cross-origin call that the API does not invite back.
- * That failure is indistinguishable from being offline at this level, so it gets its own code
- * (`bllokuar`) and its own answer: use the script, it is right there.
+ * Failures that say nothing about the schema: the question was never put to the project, so the
+ * answer is "ask again", not "the script has not run".
  */
-export async function instaloSkemen(token, url) {
-  const kontrolli = kontrolloTokenin(token);
-  if (!kontrolli.ok) throw gabimi(kontrolli.gabim, "token");
+const PA_PERGJIGJE = new Set(["rrjeti", "sesioni", "pakonfiguruar"]);
 
-  const ref = referencaProjektit(url || lexoKonfigurimin().url);
-  if (!ref) {
+/**
+ * Checks how far the project actually got, and records it.
+ *
+ * The script runs in a SQL editor, in another tab, outside anything this app can watch - so the
+ * only trustworthy report is the database's own. Each pending migration carries a query that
+ * succeeds only once it has run (`verifikimi` in skema.js); they are tried in order and the first
+ * one that fails is where the project stands. A half-run script is therefore remembered as half
+ * run, not as done.
+ *
+ * Everything is checked against the *user's* session, so this needs a connected device - on a
+ * first setup that is Hapi 2, and until then there is nothing to check with and `sesioni` says so.
+ */
+export async function verifikoSkemen(nga = 0) {
+  const pezull = migrimetPezull(nga);
+  if (pezull.length === 0) return nga;
+
+  let arritur = 0;
+  for (const m of pezull) {
+    if (!m.verifikimi) break;
+    try {
+      await rest(m.verifikimi);
+    } catch (err) {
+      if (PA_PERGJIGJE.has(err?.kodi)) throw err;
+      break;
+    }
+    arritur = m.versioni;
+  }
+
+  if (arritur <= nga) {
     throw gabimi(
-      "Adresa e projektit nuk është një adresë Supabase (p.sh. https://abcdefgh.supabase.co), prandaj skripti duhet ekzekutuar vetë te SQL Editor.",
-      "projekti"
+      `Projekti ende nuk e ka atë që kërkon skripti - tabela "${TABELA}" nuk përgjigjet. Ekzekutojeni te SQL Editor (Run) dhe provoni sërish.`,
+      "pakryer"
     );
   }
 
-  let res;
+  // The project itself is told where it got to, so every other device reads the answer rather than
+  // guessing from what its own copy of the app happens to ship. Best effort: the migration has run,
+  // and failing to write a marker must not report a finished migration as unfinished.
+  await shenoVersioninSkemes(arritur).catch(() => undefined);
+  ruajKonfigurimin({ skemaVersioni: arritur });
+  return arritur;
+}
+
+/**
+ * Which migration the connected project has reached.
+ *
+ * Read from the project rather than from this device, because the project is the thing that was
+ * migrated - a laptop that has never run one would otherwise report the phone's work as missing.
+ * A project holding the table but no marker was set up before the app started counting, which is
+ * migration 1 and nothing else (`VERSIONI_PARA_NUMERIMIT`).
+ *
+ * Throws with `kodi: "tabela"` when there is no table at all - that is not "out of date", it is
+ * "never set up", and the app says something different about it.
+ */
+export async function lexoVersioninSkemes() {
+  const rreshtat = await rest(
+    `${TABELA}?store=eq.${STORI_META}&record_id=eq.${ID_SKEMES}&select=data&limit=1`
+  );
+  const versioni = Number(rreshtat?.[0]?.data?.versioni);
+  return Number.isFinite(versioni) && versioni > 0 ? versioni : VERSIONI_PARA_NUMERIMIT;
+}
+
+/** Records that reading in the project's own table. */
+export async function shenoVersioninSkemes(versioni) {
+  const k = await siguroSesionin();
+  await rest(`${TABELA}?on_conflict=user_id,store,record_id`, {
+    method: "POST",
+    headers: { Prefer: "resolution=merge-duplicates,return=minimal" },
+    body: [
+      {
+        user_id: k.userId,
+        store: STORI_META,
+        record_id: ID_SKEMES,
+        deleted: false,
+        data: { versioni, perditesuar: new Date().toISOString() },
+      },
+    ],
+  });
+  return versioni;
+}
+
+/** What the sync page needs to decide between "up to date", "needs an update" and "never set up". */
+export async function gjendjaSkemes() {
   try {
-    res = await fetch(`${API_MANAGEMENT}/v1/projects/${ref}/database/query`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${kontrolli.token}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ query: SQL_INSTALIMI }),
-    });
-  } catch {
-    throw gabimi(
-      "Shfletuesi nuk e lejoi thirrjen drejt api.supabase.com. Përdorni skriptin: kopjojeni dhe ekzekutojeni te SQL Editor - zgjat po aq.",
-      "bllokuar"
-    );
+    const versioni = await lexoVersioninSkemes();
+    return {
+      versioni,
+      iFundit: SKEMA_VERSIONI,
+      perditeso: versioni < SKEMA_VERSIONI,
+      pezull: migrimetPezull(versioni),
+      mungon: false,
+    };
+  } catch (err) {
+    if (err?.kodi !== "tabela") throw err;
+    return { versioni: 0, iFundit: SKEMA_VERSIONI, perditeso: true, pezull: MIGRIMET, mungon: true };
   }
-
-  if (res.status === 401 || res.status === 403) {
-    throw gabimi("Token-i nuk u pranua - kontrolloni se është kopjuar i plotë dhe nuk është revokuar.", "token");
-  }
-  if (res.status === 404) {
-    throw gabimi(`Projekti "${ref}" nuk u gjet me këtë token - a i takon kjo llogari atij projekti?`, "projekti");
-  }
-  if (!res.ok) {
-    const data = await trupi(res);
-    throw gabimi(data?.message || `Supabase u përgjigj me gabimin ${res.status}.`, "server");
-  }
-
-  // Only the fact that it ran is remembered. The token itself goes no further than this function.
-  ruajKonfigurimin({ skemaVersioni: SKEMA_VERSIONI });
-  return true;
 }
 
 /**
@@ -560,55 +583,4 @@ export async function ndryshoCelesin(celesiIRi) {
   return ruajKonfigurimin({ anonKey: kontrolli.celesi });
 }
 
-/** The setup script, shown on the sync page with a copy button and run once by the user in their
- * own project's SQL editor. One table, one policy, one index. */
-export const SQL_INSTALIMI = `-- FinanCarePersonal · sinkronizimi
--- Ekzekutojeni një herë te Supabase → SQL Editor → New query → Run.
 
-create table if not exists public.${TABELA} (
-  user_id    uuid        not null default auth.uid() references auth.users on delete cascade,
-  store      text        not null,
-  record_id  text        not null,
-  updated_at timestamptz not null default now(),
-  deleted    boolean     not null default false,
-  data       jsonb,
-  primary key (user_id, store, record_id)
-);
-
--- Pa këtë çdo përdorues i projektit do t'i shihte rreshtat e tjetrit.
-alter table public.${TABELA} enable row level security;
-
-drop policy if exists "vetem rreshtat e mi" on public.${TABELA};
-create policy "vetem rreshtat e mi" on public.${TABELA}
-  for all
-  using (auth.uid() = user_id)
-  with check (auth.uid() = user_id);
-
--- Ora e serverit, jo ajo e telefonit: pa këtë, dy pajisje me orë të pabarabarta
--- do të krahasoheshin me njësi të ndryshme dhe një telefon i mbetur pas do të
--- humbte ndryshime që duhej t'i fitonte. Vlera e dërguar nga pajisja shpërfillet.
-create or replace function public.${TABELA}_ora()
-returns trigger
-language plpgsql
-as $$
-begin
-  new.updated_at := now();
-  return new;
-end;
-$$;
-
-drop trigger if exists ${TABELA}_ora on public.${TABELA};
-create trigger ${TABELA}_ora
-  before insert or update on public.${TABELA}
-  for each row execute function public.${TABELA}_ora();
-
--- Nëse projekti nuk i ekspozon vetvetiu tabelat e reja te Data API
--- ("Automatically expose new tables" i çaktivizuar), pa këto tabela ekziston
--- por API-ja e kthen si të palejuar. Vetëm përdoruesi i identifikuar merr të
--- drejta; rreshtat i filtron gjithsesi rregulli RLS më sipër.
-grant usage on schema public to anon, authenticated;
-grant select, insert, update, delete on public.${TABELA} to authenticated;
-
--- Sinkronizimi merr vetëm çka ka ndryshuar që nga hera e fundit.
-create index if not exists ${TABELA}_updated_at_idx
-  on public.${TABELA} (user_id, updated_at);`;

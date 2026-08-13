@@ -1,5 +1,5 @@
 /**
- * Tests for the two checks that run on whatever the user pastes into the sync page.
+ * Tests for what the sync page checks: what the user pastes into it, and what the project answers.
  *
  * `kontrolloCelesin` is the one piece of security logic in the client: it stands between a
  * mistyped copy-paste and a browser holding a key that bypasses row-level security. Supabase
@@ -10,9 +10,9 @@
 
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
-  SQL_INSTALIMI, instaloSkemen, kontrolloCelesin, kontrolloTokenin, linkuSqlEditor, normalizoUrl,
-  referencaProjektit,
+  SQL_INSTALIMI, kontrolloCelesin, linkuSqlEditor, normalizoUrl, referencaProjektit, verifikoSkemen,
 } from "./supabase";
+import { SKEMA_VERSIONI, TABELA } from "./skema";
 
 const jwt = (payload) => `eyJhbGciOiJIUzI1NiJ9.${btoa(JSON.stringify(payload))}.firma`;
 
@@ -70,25 +70,6 @@ describe("normalizoUrl", () => {
   });
 });
 
-describe("kontrolloTokenin", () => {
-  it("accepts a personal access token", () => {
-    expect(kontrolloTokenin("sbp_0102030405060708090a0b0c0d0e0f1011121314").ok).toBe(true);
-    expect(kontrolloTokenin("  sbp_0102030405060708090a0b0c0d0e0f1011121314 ").token).toMatch(/^sbp_/);
-  });
-
-  it("refuses a project key pasted into the token field", () => {
-    // The likeliest mistake: three different strings on the Supabase dashboard, one field here.
-    expect(kontrolloTokenin("sb_publishable_abc123").gabim).toMatch(/token-i i llogarisë/i);
-    expect(kontrolloTokenin("sb_secret_abc123").gabim).toMatch(/token-i i llogarisë/i);
-    expect(kontrolloTokenin(jwt({ role: "anon" })).gabim).toMatch(/token-i i llogarisë/i);
-  });
-
-  it("refuses an empty or half-copied token", () => {
-    expect(kontrolloTokenin("").ok).toBe(false);
-    expect(kontrolloTokenin("sbp_short").ok).toBe(false);
-  });
-});
-
 describe("referencaProjektit", () => {
   it("reads the project ref out of the project address", () => {
     expect(referencaProjektit("https://abcdefghijklmnopqrst.supabase.co")).toBe("abcdefghijklmnopqrst");
@@ -103,68 +84,107 @@ describe("referencaProjektit", () => {
     expect(referencaProjektit("")).toBe("");
   });
 
-  it("links to that project's SQL editor, or to the dashboard when it cannot tell", () => {
-    expect(linkuSqlEditor("https://abcdefghijklmnopqrst.supabase.co")).toBe(
+  it("links to that project's SQL editor with the script already in it", () => {
+    const link = new URL(linkuSqlEditor("https://abcdefghijklmnopqrst.supabase.co"));
+    expect(link.origin + link.pathname).toBe(
       "https://supabase.com/dashboard/project/abcdefghijklmnopqrst/sql/new"
     );
+    expect(link.searchParams.get("content")).toBe(SQL_INSTALIMI);
+  });
+
+  it("falls back to the dashboard when the address names no project", () => {
     expect(linkuSqlEditor("https://baza.shtepia.dev")).toBe("https://supabase.com/dashboard");
   });
 });
 
-describe("instaloSkemen", () => {
-  const token = "sbp_0102030405060708090a0b0c0d0e0f1011121314";
+/**
+ * The setup script runs in a SQL editor, in a tab this app cannot see, so "it worked" is not
+ * something the app may assume from a button press - it has to be asked of the database. These are
+ * the cases where a wrong answer would be expensive: recording a version the project does not have
+ * would leave the app writing rows against a table that is not there, and refusing a project that
+ * *is* set up would send the user back to a script they have already run.
+ */
+describe("verifikoSkemen", () => {
   const url = "https://abcdefghijklmnopqrst.supabase.co";
+
+  /** A device that is connected, with a session that has not expired - what the check needs. */
+  const stubKonfigurimin = (patch = {}) => {
+    const ruajtur = new Map([
+      [
+        "financarepersonal.sinkronizimi",
+        JSON.stringify({
+          url,
+          anonKey: "sb_publishable_abc123",
+          accessToken: "access",
+          refreshToken: "refresh",
+          skadonMe: Date.now() + 3_600_000,
+          ...patch,
+        }),
+      ],
+    ]);
+    vi.stubGlobal("localStorage", {
+      getItem: (celesi) => ruajtur.get(celesi) ?? null,
+      setItem: (celesi, vlera) => ruajtur.set(celesi, vlera),
+      removeItem: (celesi) => ruajtur.delete(celesi),
+    });
+    return ruajtur;
+  };
+
+  const ruajtja = (ruajtur) => JSON.parse(ruajtur.get("financarepersonal.sinkronizimi"));
 
   afterEach(() => vi.unstubAllGlobals());
 
-  it("sends the setup script to that project, and nothing else anywhere", async () => {
-    const fetchMock = vi.fn(async () => new Response("[]", { status: 201 }));
+  it("asks the project for what the migration created, then records how far it got", async () => {
+    const ruajtur = stubKonfigurimin();
+    const fetchMock = vi.fn(async () => new Response("[]", { status: 200 }));
     vi.stubGlobal("fetch", fetchMock);
 
-    await expect(instaloSkemen(token, url)).resolves.toBe(true);
+    await expect(verifikoSkemen(0)).resolves.toBe(SKEMA_VERSIONI);
 
-    const [adresa, opsionet] = fetchMock.mock.calls[0];
-    expect(adresa).toBe("https://api.supabase.com/v1/projects/abcdefghijklmnopqrst/database/query");
-    expect(opsionet.headers.Authorization).toBe(`Bearer ${token}`);
-    expect(JSON.parse(opsionet.body).query).toBe(SQL_INSTALIMI);
-    expect(fetchMock).toHaveBeenCalledTimes(1);
+    // Asked of the user's own project through PostgREST - there is no other API in play any more.
+    expect(fetchMock.mock.calls[0][0]).toBe(`${url}/rest/v1/${TABELA}?select=record_id&limit=1`);
+    expect(fetchMock.mock.calls.every(([adresa]) => adresa.startsWith(url))).toBe(true);
+    // The project is told too, so a second device reads the answer instead of guessing.
+    expect(fetchMock.mock.calls[1][1].method).toBe("POST");
+    expect(ruajtja(ruajtur).skemaVersioni).toBe(SKEMA_VERSIONI);
   });
 
-  it("never lets the token reach storage", async () => {
-    vi.stubGlobal("fetch", vi.fn(async () => new Response("[]", { status: 201 })));
-    const shkruar = [];
-    vi.stubGlobal("localStorage", {
-      getItem: () => null,
-      setItem: (celesi, vlera) => shkruar.push(vlera),
-      removeItem: () => {},
-    });
+  it("records nothing when the script has not been run", async () => {
+    const ruajtur = stubKonfigurimin();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => new Response(JSON.stringify({ code: "PGRST205" }), { status: 404 }))
+    );
 
-    await instaloSkemen(token, url);
-    expect(shkruar.join(" ")).not.toContain(token);
-    expect(shkruar.join(" ")).not.toContain("sbp_");
+    await expect(verifikoSkemen(0)).rejects.toMatchObject({ kodi: "pakryer" });
+    expect(ruajtja(ruajtur).skemaVersioni).toBeUndefined();
   });
 
-  it("says which of the two is wrong when the token is refused", async () => {
-    vi.stubGlobal("fetch", vi.fn(async () => new Response("{}", { status: 401 })));
-    await expect(instaloSkemen(token, url)).rejects.toMatchObject({ kodi: "token" });
-
-    vi.stubGlobal("fetch", vi.fn(async () => new Response("{}", { status: 404 })));
-    await expect(instaloSkemen(token, url)).rejects.toMatchObject({ kodi: "projekti" });
-  });
-
-  it("treats a call the browser refused to make as its own case, not as a broken project", async () => {
-    // A cross-origin request the API does not invite back fails exactly like being offline, and the
-    // only useful answer to it is "run the script instead" - so it must not be reported as an error
-    // of the project or of the token.
+  it("does not read a broken connection as a project without the table", async () => {
+    // Offline and "the script was never run" must not give the same answer: one asks for a retry,
+    // the other sends the user to a SQL editor for work that may already be done.
+    stubKonfigurimin();
     vi.stubGlobal("fetch", vi.fn(async () => { throw new TypeError("Failed to fetch"); }));
-    await expect(instaloSkemen(token, url)).rejects.toMatchObject({ kodi: "bllokuar" });
+    await expect(verifikoSkemen(0)).rejects.toMatchObject({ kodi: "rrjeti" });
   });
 
-  it("refuses before sending when the field holds the wrong string, or the project is not Supabase", async () => {
+  it("says so when there is no session to check with", async () => {
+    // The check runs as the signed-in user, so on a device still at Hapi 2 there is nobody to ask
+    // as - which says nothing at all about the script.
+    stubKonfigurimin({ refreshToken: "", accessToken: "" });
     const fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);
-    await expect(instaloSkemen("sb_publishable_abc123", url)).rejects.toMatchObject({ kodi: "token" });
-    await expect(instaloSkemen(token, "https://baza.shtepia.dev")).rejects.toMatchObject({ kodi: "projekti" });
+
+    await expect(verifikoSkemen(0)).rejects.toMatchObject({ kodi: "sesioni" });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("has nothing to ask when the project is already current", async () => {
+    stubKonfigurimin();
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(verifikoSkemen(SKEMA_VERSIONI)).resolves.toBe(SKEMA_VERSIONI);
     expect(fetchMock).not.toHaveBeenCalled();
   });
 });

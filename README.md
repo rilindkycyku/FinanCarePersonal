@@ -66,7 +66,10 @@ sa shpenzohet, sa mbetet dhe sa po kursesh.
   dhe me numërimin e përdorimit real të secilës. Çdo kategori mund të ketë **nënkategori** - p.sh.
   *Ushqim & Pije › Market*, *› Furra*, *› Pije & Ujë*, ose *Kafe & Restorant › Kafe*, *› Drekë në
   Punë*, *› Fast Food* - që i përgjigjen pyetjes që lista e sheshtë nuk e mbulonte: ishte market,
-  drekë në punë apo restorant? Lista mbetet **një nivel e thellë** me qëllim; një nivel i tretë nuk
+  drekë në punë apo restorant? Lista e parazgjedhur vjen me nënkategori pothuajse për çdo kategori
+  kryesore - fatura sipas llojit, udhëtimi i ndarë në bileta, fjetje e transferë, sigurimet një nga
+  një - përveç atyre ku ndarja nuk do të shtonte asgjë (*Karburant*, *Këste të Kartelës*,
+  *Shpenzime të Tjera*). Lista mbetet **një nivel e thellë** me qëllim; një nivel i tretë nuk
   shton përgjigje të re, vetëm punë arkivimi. Në formularë nënkategoritë shfaqen të grupuara nën
   kategorinë e vet (te telefoni, lista e vetë shfletuesit i tregon si tituj), dhe kategoria kryesore
   mbetet e zgjedhshme si më parë - *«diku te ushqimi, nuk po e ndaj»* është përgjigje e vërtetë.
@@ -248,24 +251,24 @@ përmes bazës suaj.
    skeda *Legacy*; aplikacioni i pranon të dyja, por i riu është ai që Supabase rekomandon dhe ai
    që mund të zëvendësohet i vetëm, pa i prishur çelësat e tjerë. Çelësat *secret* /
    *service_role* mos i kopjoni - aplikacioni i refuzon vetë nëse ngjiten gabimisht.
-3. Te faqja **Sinkronizimi** vendosni adresën e çelësin, pastaj shtypni **Konfiguro projektin**.
-   Aty ka dy rrugë për të njëjtin përfundim - një tabelë e vetme, rregulli RLS, ora e serverit dhe
-   një indeks:
-   - **Automatikisht**: ngjitni një *personal access token* të llogarisë suaj Supabase
-     ([Account → Access Tokens](https://supabase.com/dashboard/account/tokens), fillon me `sbp_`)
-     dhe aplikacioni e ekzekuton vetë skriptin. Token-i përdoret **vetëm për atë thirrje dhe nuk
-     ruhet askund** - as në këtë pajisje; mund ta revokoni menjëherë pas tij.
-   - **Vetë**: kopjoni skriptin dhe ekzekutojeni te **SQL Editor → New query → Run** (butoni *Hap
-     SQL Editor* e hap direkt te projekti juaj).
+3. Te faqja **Sinkronizimi**, butoni **Konfiguro projektin** e krijon tabelën: shtypni *Hap SQL
+   Editor* - hapet redaktori i projektit **tuaj** me skriptin tashmë brenda - dhe shtypni **Run**.
+   Skripti krijon një tabelë të vetme, rregullin RLS, orën e serverit dhe një indeks; përsëritja
+   nuk prish gjë, sepse çdo hap i tij kontrollon vetë nëse ekziston. Pastaj kthehuni te aplikacioni
+   dhe shtypni **Kontrollo projektin**: përgjigjen e jep vetë baza juaj, jo ekrani.
 
-   Pse duhet një token i veçantë dhe nuk mjafton çelësi që tashmë keni ngjitur? Sepse çelësi i
-   projektit flet vetëm me **PostgREST**, dhe PostgREST-i shërben rreshta - tabela nuk krijohet dot
-   me të. Kjo është mbrojtje, jo mangësi: po të mundej, një kopje e vjedhur e `localStorage`-it të
-   shfletuesit do të mund ta rishkruante bazën. Krijimi i tabelës kalon nga një API krejt tjetër
-   (Management API), e cila pranon vetëm token-in e llogarisë.
+   Pse nuk e bën vetë aplikacioni, me çelësin që tashmë ngjitët? Sepse çelësi i projektit flet
+   vetëm me **PostgREST**, dhe PostgREST-i shërben rreshta - tabela nuk krijohet dot me të. Kjo
+   është mbrojtje, jo mangësi: po të mundej, një kopje e vjedhur e `localStorage`-it të shfletuesit
+   do të mund ta rishkruante bazën.
 
-   Disa shfletues mund ta bllokojnë atë thirrje si kërkesë ndër-origjinë; në atë rast aplikacioni
-   e thotë hapur dhe ju kthen te skripti, që zgjat po aq.
+   Supabase e ka edhe një API tjetër që *do* ta ekzekutonte skriptin (Management API), dhe
+   aplikacioni dikur e ofronte këtë rrugë në këmbim të një *personal access token* të llogarisë.
+   Ajo rrugë hiqet: `api.supabase.com` nuk i pranon thirrjet ndër-origjinë nga një faqe, pra
+   butoni dështonte te çdo përdorues e çdo pajisje - dhe dështonte pasi kishte kërkuar një
+   kredencial që mbulon gjithë llogarinë Supabase, jo vetëm projektin që sinkronizohet. Për ta
+   mbajtur, do të duhej një server i vetë aplikacionit që t&apos;ia përcillte token-in Supabase-it;
+   pikërisht ajo që ky aplikacion premton se nuk e ka.
 4. Në të njëjtën faqe krijoni llogarinë me email e fjalëkalim. Llogaria krijohet **brenda projektit
    tuaj**; në pajisjet e tjera përdorni po ato kredenciale me butonin *Hyr*.
 
@@ -293,7 +296,7 @@ store:
 | --- | --- | --- | --- | --- | --- |
 | `a1b2…` | `transactions` | `tx_m4f2k9x` | `2026-08-11 18:02:18+00` | `false` | `{"id":"tx_m4f2k9x","data":"2026-08-11","lloji":"shpenzim","vlera":12.34,…}` |
 
-Një libër me 800 transaksione, 6 llogari e 55 kategori (me nënkategoritë) bëhet rreth 860 rreshta,
+Një libër me 800 transaksione, 6 llogari e 120 kategori (me nënkategoritë) bëhet rreth 930 rreshta,
 plus një rresht për profilin. Fushat e vetë rekordit rrinë brenda kolonës `data` (jsonb) sepse tabela ndodhet te
 projekti **juaj**: po të kishte kolona të shtypura, çdo version i ri që shton një fushë do të
 kërkonte një `ALTER TABLE` te secili projekt përpara se aplikacioni të vazhdonte të punonte, dhe
@@ -309,6 +312,25 @@ from financare_records
 where store = 'transactions' and not deleted
 order by dita desc;
 ```
+
+### Kur skema ndryshon
+
+Bazën e administroni ju, pra nuk ka deploy që ta prekë dhe nuk ka mënyrë t&apos;ju gjejë dikush po
+t&apos;i duhet një ndryshim atje. Prandaj **aplikacioni është ai që di**: mban vetë listën e
+migrimeve (`src/lib/skema.js`), lexon te cili prej tyre ka arritur projekti juaj dhe i ekzekuton
+ato që mungojnë.
+
+- Versioni i projektit ruhet si një rresht i zakonshëm i tabelës që tashmë keni
+  (`store = 'meta'`) - jo si tabelë e vetën, e cila do të ishte një migrim për të krijuar gjënë që
+  mban shënim migrimet.
+- Faqja **Sinkronizimi** e krahason atë me versionin që sjell ky release. Kur projekti ka mbetur
+  pas, del një njoftim që thotë **cilat hapa** i mungojnë, me fjalë e jo me numra, dhe butoni
+  *Përditëso projektin* ekzekuton **vetëm ato** - jo gjithë skriptin nga e para.
+- Një projekt i konfiguruar para se të fillonte ky numërim lexohet si versioni 1, pra askush nuk
+  njoftohet kot.
+- Migrimet janë **vetëm-shtesë** dhe të përsëritshme pa dëm: një pajisje ende me versionin e vjetër
+  duhet të vazhdojë të sinkronizohet kundër një projekti që një pajisje e re sapo e përditësoi.
+  Prandaj një kolonë nuk hiqet në të njëjtin release që ndalon së shkruari në të.
 
 **Nënkategoritë nuk kërkojnë asnjë ndryshim te projekti juaj.** Prindi i një kategorie ruhet si një
 fushë e zakonshme brenda `data` (`{"id":"cat_…","emri":"Market","prindi":"cat_default_ushqim"}`),
@@ -345,9 +367,11 @@ përditësohet. Kjo ishte arsyeja pse kolona është `jsonb` që në fillim.
   shenjë e verdhë kur ka ndryshime që presin, dhe një e kuqe kur përpjekja e fundit dështoi ose kur
   sesioni ka mbaruar. Kjo e fundit është arsyeja që ekziston: një pajisje që ka pushuar së
   sinkronizuari duket krejt normale, dhe askush nuk hap një faqe për diçka që e beson në rregull.
-  <br />Kur sesioni ka mbaruar - fjalëkalimi u ndryshua, projekti u ndal - kjo nuk rregullohet duke
-  pritur: dikush duhet ta shkruajë fjalëkalimin sërish. Prandaj vetëm ai rast e ndalon një herë
-  përdoruesin te Paneli, me një dritare që e thotë hapur dhe e çon te faqja; shtyrja mbahet mend sa
+  <br />Dy gjëra nuk rregullohen duke pritur: **sesioni i mbaruar** (fjalëkalimi u ndryshua,
+  projekti u ndal) dhe **projekti i pakonfiguruar** (tabela nuk është krijuar ende, pra çdo
+  sinkronizim dështon sapo niset). Prandaj vetëm këto dy raste e ndalojnë një herë përdoruesin te
+  **Paneli**, me një dritare që e thotë hapur dhe e çon me një buton te vendi ku zgjidhet - te
+  fjalëkalimi, ose direkt te dritarja e konfigurimit, e cila hapet vetë me të mbërritur; shtyrja mbahet mend sa
   kohë aplikacioni rri i hapur, dhe kthehet herën tjetër sepse mbetet e vërtetë.
 - **Fotot e faturave nuk sinkronizohen**: janë binare dhe pjesa më e madhe e hapësirës, pra do të
   kërkonin Supabase Storage. Për t&apos;i çuar diku tjetër mbetet arkivi ZIP.
@@ -364,6 +388,7 @@ src/
               ThemeContext, DialogContext
   lib/        db.js (IndexedDB), finance.js (çdo kalkulim), csv.js (leximi i ekstraktit),
               kategorite.js (nënkategoritë: prindi, familja, pema e pickerave),
+              skema.js (migrimet e projektit tuaj Supabase, të numëruara),
               rregullat.js (kujtesa e kategorive), images.js (përpunimi i fotove të faturave),
               zip.js (arkivi i kopjes së plotë), calc.js (llogaritësi i fushave të vlerës),
               supabase.js (klienti i vogël i projektit tuaj), sinkronizimi.js (rregullat e bashkimit),
