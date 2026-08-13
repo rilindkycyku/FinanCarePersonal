@@ -9,6 +9,21 @@ e fundit kur rregullohet diçka, dhe e para vetëm kur ndryshon vetë forma e pr
 herë, te `2.0.0`, kur të dhënat mësuan të dalin nga shfletuesi. Datat janë ato të commit-it që e
 ngriti versionin.
 
+## [2.1.1] - 2026-08-13
+
+### Rregulluar
+- **Sinkronizimi tani e pyet vetë projektin se çfarë ka, në vend që t&apos;i besojë asaj që mban
+  mend pajisja.** Deri tani një rekord dërgohej vetëm nëse pajisja e mbante shënim si të padërguar,
+  dhe ajo shënjë hiqej sapo projekti e pranonte rreshtin — pra nëse rreshti zhdukej më vonë nga
+  projekti (tabela e zbrazur ose e rikrijuar te SQL Editor, një kopje e humbur), asgjë në
+  aplikacion nuk mund ta vinte re: rekordi thoshte «i dërguar» dhe nuk shihej më kurrë. Një ledger
+  i vërtetë mbeti kështu për ditë — 77 transaksione, 121 kategori e 5 borxhe në telefon, 60 rreshta
+  te projekti, dhe *u dërguan 0* pas çdo sinkronizimi.
+  <br />Një herë në ditë numërohen të dy anët; kur projekti ka më pak, merret lista e çelësave prej
+  tij dhe çdo rekord që mungon shënohet sërish si i padërguar — pra ngjitet vetë në sinkronizimin e
+  radhës. Data e rekordit nuk preket, pra rregullat e bashkimit mbeten po ato. Në ditën e
+  zakonshme kjo kushton një kërkesë të vetme; lista e plotë merret vetëm kur numri del i shkurtër.
+
 ## [2.1.0] - 2026-08-13
 
 ### Shtuar

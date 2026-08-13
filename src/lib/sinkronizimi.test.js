@@ -10,8 +10,8 @@
 
 import { describe, expect, it } from "vitest";
 import {
-  KOHA_PARA_SINKRONIZIMIT, STORI_PROFILIT, celesiRreshtit, gjendjaLokale, ndryshimetLokale,
-  pastampuarat, planiIAplikimit, rreshtiNgaServeri, rreshtiPerServer,
+  KOHA_PARA_SINKRONIZIMIT, STORI_PROFILIT, celesiRreshtit, gjendjaLokale, mungojneNeCloud,
+  ndryshimetLokale, numriLokal, pastampuarat, planiIAplikimit, rreshtiNgaServeri, rreshtiPerServer,
 } from "./sinkronizimi";
 import { emriIPlote, pemaKategorive } from "./kategorite";
 
@@ -344,6 +344,63 @@ describe("një kategori me nënkategori mes dy pajisjeve", () => {
     // …and once the parent lands too, it files itself under it with nothing to repair.
     const plote = [...mbritur, { ...prindi, sinkPezull: undefined }];
     expect(emriIPlote(plote, "cat_market")).toBe("Ushqim & Pije › Market");
+  });
+});
+
+/**
+ * The check that asks the cloud what it has, instead of asking this device what it thinks it sent.
+ *
+ * Every other rule here trusts the flag, and the flag was wrong on a real ledger: seventy-seven
+ * transactions, one account and a hundred and twenty-one categories sat in a phone while the
+ * project held sixty rows, and every sync reported `u dërguan 0` because each record believed it
+ * had already gone. Nothing in the app could notice, since a record marked sent is never revisited.
+ */
+describe("mungojneNeCloud", () => {
+  it("owes whatever the cloud has never heard of, whatever the record believes", () => {
+    const munguara = mungojneNeCloud(
+      {
+        // Settled records, dated by the server, flag cleared - "sent", as far as this device knows.
+        storet: { transactions: [tx("t1", 100), tx("t2", 200)], accounts: [tx("a1", 300)] },
+        profili: { valuta: "EUR", perditesuar: 400 },
+        fshirjet: [varr("goals", "g1", 500)],
+      },
+      new Set(["transactions:t1"])
+    );
+    expect(munguara.map((m) => celesiRreshtit(m.store, m.id)).sort()).toEqual([
+      "accounts:a1",
+      "goals:g1",
+      "profile:main",
+      "transactions:t2",
+    ]);
+  });
+
+  it("leaves alone what is already waiting to be sent", () => {
+    const munguara = mungojneNeCloud({ storet: { transactions: [pezull("t1", 100)] } }, new Set());
+    expect(munguara).toEqual([]);
+  });
+
+  it("says nothing is owed when the cloud holds every key", () => {
+    const gjendja = { storet: { transactions: [tx("t1", 100)] }, fshirjet: [varr("goals", "g1", 200)] };
+    expect(mungojneNeCloud(gjendja, new Set(["transactions:t1", "goals:g1"]))).toEqual([]);
+  });
+});
+
+describe("numriLokal", () => {
+  it("counts what the cloud would have to hold to be complete", () => {
+    // Tombstones included: a deletion is a row up there too, which is how it reaches the other
+    // device. Counting only live records would call a cloud copy short when it is not.
+    expect(
+      numriLokal({
+        storet: { transactions: [tx("t1", 1), tx("t2", 2)], accounts: [tx("a1", 3)] },
+        profili: { valuta: "EUR" },
+        fshirjet: [varr("goals", "g1", 4)],
+      })
+    ).toBe(5);
+  });
+
+  it("does not count an untouched profile, which is nobody's record", () => {
+    expect(numriLokal({ storet: {}, profili: {} })).toBe(0);
+    expect(numriLokal()).toBe(0);
   });
 });
 

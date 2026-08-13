@@ -386,6 +386,94 @@ async function shkarkoRreshtat(nga) {
 }
 
 /**
+ * Every key the cloud copy holds, `${store}:${record_id}`, tombstones included.
+ *
+ * Only the two columns that make the key: for a ledger of a few thousand records that is a list of
+ * short strings, not the ledger itself, which is what makes the check below affordable.
+ */
+export async function celesatCloud() {
+  const celesat = new Set();
+  for (let offset = 0; ; offset += KUFIRI_SHKARKIMIT) {
+    const pjesa = await rest(
+      `${TABELA}?store=neq.${STORI_META}&select=store,record_id&order=store.asc,record_id.asc&limit=${KUFIRI_SHKARKIMIT}&offset=${offset}`
+    );
+    const lista = Array.isArray(pjesa) ? pjesa : [];
+    lista.forEach((rr) => {
+      if (rr?.store && rr?.record_id) celesat.add(celesiRreshtit(rr.store, rr.record_id));
+    });
+    if (lista.length < KUFIRI_SHKARKIMIT) return celesat;
+  }
+}
+
+/** How many records this device holds, in the same terms the cloud counts its rows. */
+export function numriLokal({ storet = {}, profili = null, fshirjet = [] } = {}) {
+  const rekordet = Object.values(storet).reduce((sa, lista) => sa + (lista?.length ?? 0), 0);
+  const profil = profili && Object.keys(profili).length > 0 ? 1 : 0;
+  return rekordet + profil + (fshirjet?.length ?? 0);
+}
+
+/**
+ * The records the cloud has never heard of, whatever this device believes about them.
+ *
+ * Every other rule in this file asks the *device* what it still owes: a flag it sets when it
+ * changes something and clears when the cloud accepts it. That is enough right up until the two
+ * disagree - a cloud copy emptied or rebuilt from elsewhere, a row lost, an upsert that reported
+ * more than it stored - and then the disagreement is permanent, because a record whose flag says
+ * "sent" is never looked at again. It cost a real ledger: seventy-odd transactions sat in a phone
+ * for days, `u dërguan 0` every time, while the project held three.
+ *
+ * So this asks the other side instead. The keys are the cloud's own answer to "what do you have",
+ * and anything local that is missing from it is owed - no matter what the flag says.
+ */
+export function mungojneNeCloud({ storet = {}, profili = null, fshirjet = [] } = {}, celesat = new Set()) {
+  const munguara = [];
+  const shto = (store, id, rekordi) => {
+    if (celesat.has(celesiRreshtit(store, id))) return;
+    if (rekordi?.sinkPezull) return; // already owed, already on its way out
+    munguara.push({ store, id, rekordi });
+  };
+
+  for (const [store, rekordet] of Object.entries(storet)) {
+    for (const rekordi of rekordet ?? []) {
+      if (rekordi?.id) shto(store, rekordi.id, rekordi);
+    }
+  }
+  if (profili && Object.keys(profili).length > 0) shto(STORI_PROFILIT, SINK_PROFILE_ID, profili);
+  for (const f of fshirjet ?? []) {
+    if (f?.store && f?.id) shto(f.store, f.id, f);
+  }
+  return munguara;
+}
+
+/**
+ * Marks those records unsent again, so the push at the end of this same sync carries them up.
+ *
+ * The timestamp is left exactly as it is: what the record says about *when* it was last changed is
+ * still true, and the merge goes on being decided the way it always was. Only the "the cloud has
+ * this" belief is corrected, because that is the part that was wrong.
+ */
+export async function riparoKopjen(gjendja) {
+  const munguara = mungojneNeCloud(gjendja, await celesatCloud());
+  if (munguara.length === 0) return 0;
+
+  const perStore = new Map();
+  for (const { store, id, rekordi } of munguara) {
+    rekordi.sinkPezull = true;
+    if (store === STORI_PROFILIT) continue;
+    // A tombstone lives in its own store and is written through its own call.
+    if (rekordi.celesi) {
+      await shenoFshirjen(store, id, rekordi.perditesuar, true);
+      continue;
+    }
+    if (!perStore.has(store)) perStore.set(store, []);
+    perStore.get(store).push(rekordi);
+  }
+  for (const [store, rekordet] of perStore) await putRawShume(store, rekordet);
+  if (munguara.some(({ store }) => store === STORI_PROFILIT)) await putProfileRaw(gjendja.profili);
+  return munguara.length;
+}
+
+/**
  * Sends the rows and reads back the timestamp the server gave each one.
  *
  * The read-back is what keeps every device's timestamps in a single clock: a row written here and
@@ -564,6 +652,40 @@ export function dukeSinkronizuar() {
   return nePritje !== null;
 }
 
+/** How often the two sides are counted against each other. */
+const NDERMJET_KONTROLLEVE = 24 * 60 * 60 * 1000;
+
+/**
+ * Once a day, checks that the cloud holds at least as much as this device does, and repairs it when
+ * it does not.
+ *
+ * Two requests stand between a ledger and sitting unnoticed in a browser for days, so the cost is
+ * worth naming: the first is a count, one row and a header, and it is the only one that runs on the
+ * ordinary day. The list of keys is fetched **only** when that count comes out short, which is the
+ * one case where something is definitely missing - the cloud can legitimately hold *more* than this
+ * device (tombstones it has already swept, rows another device deleted), never less.
+ *
+ * Skipped when the sync is already a full one: `ngaFillimi` re-sends everything regardless of
+ * flags, so there is nothing here to add.
+ */
+async function riparoNeseMungon(gjendja, k, ngaFillimi) {
+  if (ngaFillimi) return 0;
+  if (Date.now() - (Number(k.kontrolluarMe) || 0) < NDERMJET_KONTROLLEVE) return 0;
+
+  try {
+    const neCloud = await numeroCloud();
+    // Written before the work rather than after: a check that keeps failing half way through must
+    // not run on every single sync from then on.
+    ruajKonfigurimin({ kontrolluarMe: Date.now() });
+    if (neCloud === null || neCloud >= numriLokal(gjendja)) return 0;
+    return await riparoKopjen(gjendja);
+  } catch {
+    // A check is not the sync. Whatever went wrong here, the changes this device is holding still
+    // deserve their push, and the next run will try the check again.
+    return 0;
+  }
+}
+
 async function ekzekuto({ ngaFillimi: kerkuar = false } = {}) {
   const nisi = Date.now();
   try {
@@ -579,6 +701,8 @@ async function ekzekuto({ ngaFillimi: kerkuar = false } = {}) {
     const rreshtat = await shkarkoRreshtat(ngaFillimi ? "" : k.pulledAt);
     const plani = planiIAplikimit(rreshtat, gjendjaLokale(gjendja));
     await apliko(plani);
+
+    const riparuar = await riparoNeseMungon(gjendja, k, ngaFillimi);
 
     const perDergim = ndryshimetLokale({
       ...gjendja,
@@ -612,7 +736,7 @@ async function ekzekuto({ ngaFillimi: kerkuar = false } = {}) {
       ...(oraServerit === null ? {} : { oraServerit }),
       fundit: permbledhja,
     });
-    return { ...permbledhja, stampuar, anashkaluar: plani.anashkaluar, ndryshoi: permbledhja.marre > 0 };
+    return { ...permbledhja, stampuar, riparuar, anashkaluar: plani.anashkaluar, ndryshoi: permbledhja.marre > 0 };
   } catch (err) {
     ruajKonfigurimin({
       fundit: { kur: new Date().toISOString(), gabim: err?.message || "Sinkronizimi dështoi.", marre: 0, derguar: 0 },
