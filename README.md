@@ -66,7 +66,10 @@ sa shpenzohet, sa mbetet dhe sa po kursesh.
   dhe me numërimin e përdorimit real të secilës. Çdo kategori mund të ketë **nënkategori** - p.sh.
   *Ushqim & Pije › Market*, *› Furra*, *› Pije & Ujë*, ose *Kafe & Restorant › Kafe*, *› Drekë në
   Punë*, *› Fast Food* - që i përgjigjen pyetjes që lista e sheshtë nuk e mbulonte: ishte market,
-  drekë në punë apo restorant? Lista mbetet **një nivel e thellë** me qëllim; një nivel i tretë nuk
+  drekë në punë apo restorant? Lista e parazgjedhur vjen me nënkategori pothuajse për çdo kategori
+  kryesore - fatura sipas llojit, udhëtimi i ndarë në bileta, fjetje e transferë, sigurimet një nga
+  një - përveç atyre ku ndarja nuk do të shtonte asgjë (*Karburant*, *Këste të Kartelës*,
+  *Shpenzime të Tjera*). Lista mbetet **një nivel e thellë** me qëllim; një nivel i tretë nuk
   shton përgjigje të re, vetëm punë arkivimi. Në formularë nënkategoritë shfaqen të grupuara nën
   kategorinë e vet (te telefoni, lista e vetë shfletuesit i tregon si tituj), dhe kategoria kryesore
   mbetet e zgjedhshme si më parë - *«diku te ushqimi, nuk po e ndaj»* është përgjigje e vërtetë.
@@ -293,7 +296,7 @@ store:
 | --- | --- | --- | --- | --- | --- |
 | `a1b2…` | `transactions` | `tx_m4f2k9x` | `2026-08-11 18:02:18+00` | `false` | `{"id":"tx_m4f2k9x","data":"2026-08-11","lloji":"shpenzim","vlera":12.34,…}` |
 
-Një libër me 800 transaksione, 6 llogari e 55 kategori (me nënkategoritë) bëhet rreth 860 rreshta,
+Një libër me 800 transaksione, 6 llogari e 120 kategori (me nënkategoritë) bëhet rreth 930 rreshta,
 plus një rresht për profilin. Fushat e vetë rekordit rrinë brenda kolonës `data` (jsonb) sepse tabela ndodhet te
 projekti **juaj**: po të kishte kolona të shtypura, çdo version i ri që shton një fushë do të
 kërkonte një `ALTER TABLE` te secili projekt përpara se aplikacioni të vazhdonte të punonte, dhe
