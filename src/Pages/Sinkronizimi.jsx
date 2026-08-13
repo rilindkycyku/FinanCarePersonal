@@ -18,7 +18,7 @@ import {
   dil, gjendjaSkemes, hyr, kontrolloCelesin, ndryshoCelesin, normalizoUrl, pastroKonfigurimin,
   regjistrohu, ruajKonfigurimin,
 } from "../lib/supabase";
-import { fshiCloud, numeroCloud, rivendosKufijte } from "../lib/sinkronizimi";
+import { fshiCloud, numeroCloud, numeroLokal, riparoTani, rivendosKufijte } from "../lib/sinkronizimi";
 import "./Styles/PremiumTheme.css";
 import "./Styles/DizajniPergjithshem.css";
 import "./Styles/Dashboard.css";
@@ -41,7 +41,7 @@ function emriProjektit(url) {
 }
 
 function Sinkronizimi() {
-  const { transactions, loading } = useData();
+  const { loading } = useData();
   const dialog = useDialog();
   const { konfigurimi, lidhur, automatik, duke, gabim, sinkronizoTani, pastroGabimin } = useSync();
 
@@ -57,6 +57,10 @@ function Sinkronizimi() {
   const [pune, setPune] = useState(null);
   const [searchParams, setSearchParams] = useSearchParams();
   const [nCloud, setNCloud] = useState(null);
+  // What this device holds, counted the same way the cloud counts its rows. The two used to be a
+  // row count next to a *transaction* count, which is how a cloud copy missing three quarters of a
+  // ledger managed to look merely odd rather than wrong.
+  const [nLokal, setNLokal] = useState(null);
   // Which migration the connected project has reached, and what it still owes - read from the
   // project itself rather than from this device, since the project is the thing being migrated.
   const [skema, setSkema] = useState(null);
@@ -133,12 +137,19 @@ function Sinkronizimi() {
   useEffect(() => {
     if (!lidhur) {
       setNCloud(null);
+      setNLokal(null);
       return;
     }
     let anuluar = false;
-    numeroCloud()
-      .then((n) => !anuluar && setNCloud(n))
-      .catch(() => !anuluar && setNCloud(null));
+    Promise.all([numeroCloud(), numeroLokal()])
+      .then(([neCloud, lokal]) => {
+        if (anuluar) return;
+        setNCloud(neCloud);
+        setNLokal(lokal);
+      })
+      .catch(() => {
+        if (!anuluar) setNCloud(null);
+      });
     return () => {
       anuluar = true;
     };
@@ -164,6 +175,65 @@ function Sinkronizimi() {
       anuluar = true;
     };
   }, [lidhur, konfigurimi.fundit]);
+
+  /**
+   * The warnings this page can raise, said in the app's own dialog rather than only in a banner.
+   *
+   * A banner sits wherever the layout puts it, which on a phone is usually below the fold: the
+   * cloud copy went on missing three quarters of a ledger in plain sight because the two numbers
+   * that disagreed were a paragraph nobody had a reason to read. So each of these announces itself
+   * once, with the button that fixes it inside the dialog; the banner stays behind as the standing
+   * reminder for anyone who answers «Më vonë».
+   *
+   * Once per distinct state, never on every render or every sync - and never while the setup
+   * dialog is already open, which would put a window over the field the user came to fill in.
+   */
+  const paralajmerimiTreguar = useRef(null);
+  useEffect(() => {
+    if (!lidhur || sqlHapur || Boolean(pune)) return;
+
+    const mungojne = nCloud !== null && nLokal !== null && nCloud < nLokal ? nLokal - nCloud : 0;
+    const njoftimi = mungojne
+      ? {
+          celesi: `mungojne:${mungojne}`,
+          lloji: "warning",
+          teksti: `Projektit i mungojnë ${mungojne} rekorde që ndodhen në këtë pajisje. Ndodh kur tabela zbrazet ose rikrijohet jashtë aplikacionit: pajisja i mban ato si të dërguara dhe nuk i çon më lart.`,
+          etiketa: "Riparo tani",
+          veprimi: handleRiparo,
+        }
+      : skema?.perditeso && !skema.mungon
+        ? {
+            celesi: `skema:${skema.versioni}`,
+            lloji: "warning",
+            teksti: `Projekti juaj është në versionin ${skema.versioni} të skemës, kurse ky aplikacion pret versionin ${skema.iFundit}. Deri sa të përditësohet, gjërat e reja mund të mos ruhen si duhet.`,
+            etiketa: "Përditëso projektin",
+            veprimi: () => setSqlHapur(true),
+          }
+        : konfigurimi.oraServerit === false
+          ? {
+              celesi: "ora",
+              lloji: "warning",
+              teksti:
+                "Projekti juaj nuk po e vendos vetë orën e rreshtave - ka gjasa ta keni konfiguruar para se skripti ta shtonte atë hap. Pa të, një pajisje me orë të pasaktë mund t'i mbajë ndryshimet e veta pa u parë nga të tjerat.",
+              etiketa: "Konfiguro projektin",
+              veprimi: () => setSqlHapur(true),
+            }
+          : null;
+
+    if (!njoftimi || paralajmerimiTreguar.current === njoftimi.celesi) return;
+    paralajmerimiTreguar.current = njoftimi.celesi;
+
+    dialog
+      .confirm(njoftimi.teksti, {
+        title: "Kujdes",
+        variant: njoftimi.lloji,
+        confirmLabel: njoftimi.etiketa,
+        cancelLabel: "Më vonë",
+      })
+      .then((po) => po && njoftimi.veprimi());
+    // Rebuilt every render, so depending on them would reopen the dialog for ever.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lidhur, sqlHapur, nCloud, nLokal, skema, konfigurimi.oraServerit]);
 
   const lidhu = async (mode) => {
     const url = normalizoUrl(form.url);
@@ -209,6 +279,35 @@ function Sinkronizimi() {
       }
     } catch (err) {
       njofto("danger", err?.message || "Lidhja dështoi.", err?.kodi === "tabela");
+    } finally {
+      setPune(null);
+    }
+  };
+
+  /**
+   * Marks everything the project turns out not to have, and sends it.
+   *
+   * The same thing a sync does by itself once a day, on the button - because somebody reading two
+   * numbers that disagree should not have to wait a day for the app to notice what they can
+   * already see.
+   */
+  const handleRiparo = async () => {
+    setPune("riparo");
+    try {
+      const sa = await riparoTani();
+      // Sent afterwards either way. Finding nothing to re-mark does not mean there is nothing to
+      // send: the records may already be waiting, and stopping here would answer a page that says
+      // «the project is missing 211 records» with «there was nothing to repair».
+      const permbledhja = await sinkronizoTani();
+      const derguar = permbledhja?.derguar ?? 0;
+      njofto(
+        "success",
+        sa > 0
+          ? `U gjetën ${sa} rekorde që mungonin te projekti; u dërguan ${derguar}.`
+          : `Rekordet ishin tashmë në radhë për dërgim; u dërguan ${derguar}.`
+      );
+    } catch (err) {
+      njofto("danger", err?.message || "Riparimi dështoi.");
     } finally {
       setPune(null);
     }
@@ -530,10 +629,32 @@ function Sinkronizimi() {
                     <p className="text-muted small mb-3">
                       Herën e fundit u morën <strong>{fundit.marre}</strong> ndryshime dhe u dërguan{" "}
                       <strong>{fundit.derguar}</strong>. Në cloud ndodhen{" "}
-                      <strong>{nCloud === null ? "…" : nCloud}</strong> rreshta; në këtë shfletues{" "}
-                      <strong>{transactions.length}</strong> transaksione.
+                      <strong>{nCloud === null ? "…" : nCloud}</strong> rreshta nga{" "}
+                      <strong>{nLokal === null ? "…" : nLokal}</strong> rekorde që mban kjo pajisje.
                     </p>
                   )
+                )}
+
+                {/* The cloud may hold more than this device (tombstones swept here, rows another
+                    device deleted), never less - so this way round it is always something to act
+                    on, and never a false alarm. */}
+                {nCloud !== null && nLokal !== null && nCloud < nLokal && (
+                  <Alert variant="warning" className="py-2 px-3 small">
+                    Projektit i mungojnë <strong>{nLokal - nCloud}</strong> rekorde që ndodhen këtu.
+                    Ndodh kur tabela zbrazet ose rikrijohet jashtë aplikacionit: pajisja i mban ato
+                    si të dërguara dhe nuk i çon më lart. Sinkronizimi e kontrollon vetë një herë në
+                    ditë - ose shtypeni tani.
+                    <div className="mt-2">
+                      <Button variant="outline-light" size="sm" onClick={handleRiparo} disabled={Boolean(pune) || duke}>
+                        {pune === "riparo" ? (
+                          <Spinner animation="border" size="sm" className="me-2" />
+                        ) : (
+                          <ShieldCheck size={15} className="me-1" />
+                        )}
+                        Riparo kopjen në cloud
+                      </Button>
+                    </div>
+                  </Alert>
                 )}
 
                 <Form.Check
