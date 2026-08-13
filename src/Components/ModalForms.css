@@ -135,6 +135,237 @@
   margin-top: 0.35rem;
 }
 
+/* ── Category picker ──────────────────────────────────────────
+   The field itself is a button dressed as the select it replaced, so a form that has one next to a
+   real `<Form.Select>` still reads as one row of identical inputs. Everything below it lives in the
+   dialog the button opens. */
+.fcp-cat-trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-align: left;
+  /* Padding, radius, colour and type are the theme's own `.form-select` values rather than
+     something close to them: this button stands in a row of real selects on nearly every form it
+     appears in, and a field a pixel off reads as a mistake. */
+  padding: 0.5rem 0.85rem;
+  min-height: 38px;
+  border-radius: 10px;
+  border: 1px solid var(--sp-border);
+  background: var(--sp-surface-3);
+  color: var(--sp-text);
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+body.light-mode .fcp-cat-trigger {
+  background: #ffffff;
+  border-color: rgba(0, 0, 0, 0.12);
+}
+
+.fcp-cat-trigger:hover:not(:disabled) {
+  border-color: var(--sp-text-muted);
+}
+
+.fcp-cat-trigger:focus-visible {
+  outline: none;
+  border-color: var(--sp-emerald);
+  box-shadow: 0 0 0 3px var(--sp-emerald-glow);
+}
+
+.fcp-cat-trigger:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.fcp-cat-trigger.bosh {
+  color: var(--sp-text-muted);
+  font-weight: 500;
+}
+
+/* The row-by-row picker on the CSV import, where a table cell has to hold one per line. */
+.fcp-cat-trigger.sm {
+  min-height: 31px;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  gap: 0.4rem;
+}
+
+/* The name is the one part allowed to run out of room: it truncates instead of pushing the chevron
+   off the field or wrapping a table cell to two lines. */
+.fcp-cat-trigger-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fcp-cat-chevron {
+  flex-shrink: 0;
+  color: var(--sp-text-muted);
+}
+
+/* Tinted square holding the category's own icon in its own colour - the same pairing the lists on
+   the Kategoritë page use, so a category is recognised here by sight before it is read. */
+.fcp-cat-chip {
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  color: var(--sp-text-muted);
+}
+
+.fcp-cat-trigger.sm .fcp-cat-chip {
+  width: 22px;
+  height: 22px;
+  border-radius: 7px;
+}
+
+.fcp-cat-chip-empty {
+  background: var(--sp-surface-3);
+  color: var(--sp-text-muted);
+}
+
+.fcp-cat-modal .modal-body {
+  padding-top: 0.6rem;
+}
+
+/* Sticky, so the way out of a long list is always one tap away no matter how far it is scrolled. */
+.fcp-cat-search {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.1rem 0 0.6rem;
+  background: var(--sp-surface-2);
+  color: var(--sp-text-muted);
+}
+
+.fcp-cat-search .form-control {
+  flex: 1;
+  min-width: 0;
+}
+
+.fcp-cat-search-clear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: none;
+  border-radius: 50%;
+  background: var(--sp-surface-3);
+  color: var(--sp-text-muted);
+}
+
+.fcp-cat-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.fcp-cat-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  text-align: left;
+  padding: 0.55rem 0.7rem;
+  border-radius: var(--sp-radius-md);
+  border: 1px solid var(--sp-border);
+  background: var(--sp-surface);
+  color: var(--sp-text);
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.fcp-cat-row:hover {
+  border-color: var(--sp-emerald);
+  background: var(--sp-surface-3);
+}
+
+.fcp-cat-row:focus-visible {
+  outline: none;
+  border-color: var(--sp-emerald);
+  box-shadow: 0 0 0 3px var(--sp-emerald-glow);
+}
+
+.fcp-cat-row.active {
+  border-color: var(--sp-emerald);
+  background: var(--sp-emerald-glow);
+}
+
+.fcp-cat-row-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.fcp-cat-row-name {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fcp-cat-row-sub {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 500;
+  color: var(--sp-text-muted);
+}
+
+.fcp-cat-check {
+  flex-shrink: 0;
+  color: var(--sp-emerald);
+}
+
+.fcp-cat-back {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  align-self: flex-start;
+  padding: 0.2rem 0.5rem 0.2rem 0.25rem;
+  border: none;
+  border-radius: var(--sp-radius-sm);
+  background: transparent;
+  color: var(--sp-text-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.fcp-cat-back:hover {
+  color: var(--sp-emerald);
+}
+
+/* Which group is open, kept in view above its rows - the answer to "what am I inside?" that the
+   long flat list could never give. */
+.fcp-cat-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-bottom: 0.15rem;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sp-text-muted);
+}
+
+.fcp-cat-empty {
+  padding: 1.25rem 0.5rem;
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--sp-text-muted);
+}
+
 /* ── Confirming a due recurring payment ───────────────────────
    The month's running cost and the plan's paid/left standing are shown before the amount fields,
    so the adjustment is made with the whole picture in view. */
@@ -640,5 +871,19 @@
 
   .fcp-modal-table .fcp-row-sub {
     font-size: 0.6rem;
+  }
+
+  /* The picker is the dialog a phone opens most often, and its rows are tap targets before they are
+     text: they keep their height here while the type around them shrinks. */
+  .fcp-cat-modal .modal-dialog:not([class*="modal-fullscreen"]) {
+    margin: 0.5rem;
+  }
+
+  .fcp-cat-row {
+    padding: 0.6rem;
+  }
+
+  .fcp-cat-row-name {
+    font-size: 0.82rem;
   }
 }

@@ -3,7 +3,7 @@ import { Modal, Button, Form, Row, Col, Alert } from "react-bootstrap";
 import { TrendingDown, PlusCircle } from "lucide-react";
 import { useData } from "../Context/DataContext";
 import VleraInput from "./VleraInput";
-import OpsionetKategorive from "./OpsionetKategorive";
+import ZgjedhesiKategorive from "./ZgjedhesiKategorive";
 import { makeId, STORES } from "../lib/db";
 import { toNumber, todayISO } from "../lib/format";
 import { debtTypeMeta } from "../lib/options";
@@ -279,13 +279,14 @@ function ShtoPagesenBorxhit({ show, onHide, borxhi, initial }) {
                   <Form.Label>
                     Kategoria <span className="text-danger">*</span>
                   </Form.Label>
-                  <Form.Select
+                  <ZgjedhesiKategorive
+                    id="dpay-kategoriaid"
+                    categories={categories}
+                    lloji={txLloji}
                     value={entry.kategoriaId}
-                    onChange={(e) => setField("kategoriaId", e.target.value)}
-                  >
-                    <option value="">Zgjidh kategorinë...</option>
-                    <OpsionetKategorive categories={categories} lloji={txLloji} />
-                  </Form.Select>
+                    onChange={(kategoriaId) => setField("kategoriaId", kategoriaId)}
+                    required
+                  />
                   {kategoriteERelevante.length === 0 && (
                     <div className="fcp-modal-hint">
                       Nuk ka kategori për këtë lloj - shtoni një te faqja Kategoritë.

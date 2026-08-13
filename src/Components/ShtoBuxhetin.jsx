@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Modal, Button, Form, Row, Col, Alert } from "react-bootstrap";
 import { useData } from "../Context/DataContext";
 import VleraInput from "./VleraInput";
-import OpsionetKategorive from "./OpsionetKategorive";
+import ZgjedhesiKategorive from "./ZgjedhesiKategorive";
 import { nenkategorite } from "../lib/kategorite";
 import { makeId, STORES } from "../lib/db";
 import { monthLabel, toNumber } from "../lib/format";
@@ -91,14 +91,14 @@ function ShtoBuxhetin({ show, onHide, initial, muajiAktual, kategoriaFillestare 
               <Form.Label>
                 Kategoria <span className="text-danger">*</span>
               </Form.Label>
-              <Form.Select
+              <ZgjedhesiKategorive
+                id="budget-kategoriaid"
+                categories={categories}
+                lloji="shpenzim"
                 value={budget.kategoriaId}
-                onChange={(e) => setField("kategoriaId", e.target.value)}
+                onChange={(kategoriaId) => setField("kategoriaId", kategoriaId)}
                 required
-              >
-                <option value="">Zgjidh kategorinë...</option>
-                <OpsionetKategorive categories={categories} lloji="shpenzim" />
-              </Form.Select>
+              />
               {nenkategoriTeZgjedhura > 0 && (
                 <div className="fcp-modal-hint">
                   Ky buxhet numëron edhe {nenkategoriTeZgjedhura} nënkategori të kësaj kategorie.
