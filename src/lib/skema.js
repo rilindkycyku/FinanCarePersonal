@@ -97,9 +97,21 @@ create index if not exists ${TABELA}_updated_at_idx
 /**
  * The migrations, in order. `emri` is what the user is told is about to happen to their database -
  * "run migration 4" means nothing to anybody, so each one says what it does in a few words.
+ *
+ * `verifikimi` is a PostgREST query that only succeeds once that migration has run, and it is what
+ * lets the app check the project instead of believing a button. The script is executed outside the
+ * app - in a SQL editor, in another tab - so "did it work?" has no answer to come back with, and
+ * the honest one is asked of the database itself (`verifikoSkemen` in lib/supabase.js). A migration
+ * that adds a column verifies by selecting it; one that only adds an index has nothing to select
+ * and can leave the field out, in which case the migration before it is as far as checking goes.
  */
 export const MIGRIMET = [
-  { versioni: 1, emri: "Tabela e të dhënave, rregulli i sigurisë, ora e serverit dhe indeksi", sql: sql1 },
+  {
+    versioni: 1,
+    emri: "Tabela e të dhënave, rregulli i sigurisë, ora e serverit dhe indeksi",
+    sql: sql1,
+    verifikimi: `${TABELA}?select=record_id&limit=1`,
+  },
 ];
 
 /** The newest migration this release carries. A project on this number is up to date. */

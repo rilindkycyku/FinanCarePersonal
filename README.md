@@ -244,28 +244,24 @@ përmes bazës suaj.
    skeda *Legacy*; aplikacioni i pranon të dyja, por i riu është ai që Supabase rekomandon dhe ai
    që mund të zëvendësohet i vetëm, pa i prishur çelësat e tjerë. Çelësat *secret* /
    *service_role* mos i kopjoni - aplikacioni i refuzon vetë nëse ngjiten gabimisht.
-3. Te faqja **Sinkronizimi**, te *Hapi 2*, vendosni adresën, çelësin, email-in e fjalëkalimin -
-   dhe, po deshët, edhe **token-in e llogarisë** (`sbp_…`). Me të, tabela krijohet **gjatë vetë
-   lidhjes**: një formular, një buton, dhe pajisja del e lidhur me projektin gati. Pa të, lidhja
-   bëhet njësoj dhe tabelën e krijoni kur t&apos;ju duhet.
+3. Te faqja **Sinkronizimi**, butoni **Konfiguro projektin** e krijon tabelën: shtypni *Hap SQL
+   Editor* - hapet redaktori i projektit **tuaj** me skriptin tashmë brenda - dhe shtypni **Run**.
+   Skripti krijon një tabelë të vetme, rregullin RLS, orën e serverit dhe një indeks; përsëritja
+   nuk prish gjë, sepse çdo hap i tij kontrollon vetë nëse ekziston. Pastaj kthehuni te aplikacioni
+   dhe shtypni **Kontrollo projektin**: përgjigjen e jep vetë baza juaj, jo ekrani.
 
-   Po deshët ta bëni veçmas, butoni **Konfiguro projektin** jep të dyja rrugët për të njëjtin
-   përfundim - një tabelë e vetme, rregulli RLS, ora e serverit dhe një indeks:
-   - **Automatikisht**: ngjitni një *personal access token* të llogarisë suaj Supabase
-     ([Account → Access Tokens](https://supabase.com/dashboard/account/tokens), fillon me `sbp_`)
-     dhe aplikacioni e ekzekuton vetë skriptin. Token-i përdoret **vetëm për atë thirrje dhe nuk
-     ruhet askund** - as në këtë pajisje; mund ta revokoni menjëherë pas tij.
-   - **Vetë**: kopjoni skriptin dhe ekzekutojeni te **SQL Editor → New query → Run** (butoni *Hap
-     SQL Editor* e hap direkt te projekti juaj).
+   Pse nuk e bën vetë aplikacioni, me çelësin që tashmë ngjitët? Sepse çelësi i projektit flet
+   vetëm me **PostgREST**, dhe PostgREST-i shërben rreshta - tabela nuk krijohet dot me të. Kjo
+   është mbrojtje, jo mangësi: po të mundej, një kopje e vjedhur e `localStorage`-it të shfletuesit
+   do të mund ta rishkruante bazën.
 
-   Pse duhet një token i veçantë dhe nuk mjafton çelësi që tashmë keni ngjitur? Sepse çelësi i
-   projektit flet vetëm me **PostgREST**, dhe PostgREST-i shërben rreshta - tabela nuk krijohet dot
-   me të. Kjo është mbrojtje, jo mangësi: po të mundej, një kopje e vjedhur e `localStorage`-it të
-   shfletuesit do të mund ta rishkruante bazën. Krijimi i tabelës kalon nga një API krejt tjetër
-   (Management API), e cila pranon vetëm token-in e llogarisë.
-
-   Disa shfletues mund ta bllokojnë atë thirrje si kërkesë ndër-origjinë; në atë rast aplikacioni
-   e thotë hapur dhe ju kthen te skripti, që zgjat po aq.
+   Supabase e ka edhe një API tjetër që *do* ta ekzekutonte skriptin (Management API), dhe
+   aplikacioni dikur e ofronte këtë rrugë në këmbim të një *personal access token* të llogarisë.
+   Ajo rrugë hiqet: `api.supabase.com` nuk i pranon thirrjet ndër-origjinë nga një faqe, pra
+   butoni dështonte te çdo përdorues e çdo pajisje - dhe dështonte pasi kishte kërkuar një
+   kredencial që mbulon gjithë llogarinë Supabase, jo vetëm projektin që sinkronizohet. Për ta
+   mbajtur, do të duhej një server i vetë aplikacionit që t&apos;ia përcillte token-in Supabase-it;
+   pikërisht ajo që ky aplikacion premton se nuk e ka.
 4. Në të njëjtën faqe krijoni llogarinë me email e fjalëkalim. Llogaria krijohet **brenda projektit
    tuaj**; në pajisjet e tjera përdorni po ato kredenciale me butonin *Hyr*.
 
