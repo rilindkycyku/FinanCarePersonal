@@ -187,68 +187,70 @@ function Kategorite() {
       <PageTitle title="Kategoritë" />
       <NavBar />
 
-      <Container className="pt-4">
-        <div className="fcp-page-head">
-          <div>
-            <h2>Kategoritë</h2>
-            <p>
-              Kategoritë klasifikojnë transaksionet dhe janë baza e buxheteve e statistikave. Një kategori mund të
-              ketë nënkategori - shpenzimi i tyre numërohet edhe te kategoria kryesore.
-            </p>
+      <main className="fcp-main">
+        <Container className="pt-4">
+          <div className="fcp-page-head">
+            <div>
+              <h1>Kategoritë</h1>
+              <p>
+                Kategoritë klasifikojnë transaksionet dhe janë baza e buxheteve e statistikave. Një kategori mund të
+                ketë nënkategori - shpenzimi i tyre numërohet edhe te kategoria kryesore.
+              </p>
+            </div>
+            <div className="d-flex gap-2">
+              <Button className="btn-primary" onClick={() => openNew("shpenzim")}>
+                <Plus size={16} className="me-1" /> Kategori Shpenzimi
+              </Button>
+              <Button variant="outline-light" onClick={() => openNew("hyrje")}>
+                <Plus size={16} className="me-1" /> Kategori Hyrjeje
+              </Button>
+            </div>
           </div>
-          <div className="d-flex gap-2">
-            <Button className="btn-primary" onClick={() => openNew("shpenzim")}>
-              <Plus size={16} className="me-1" /> Kategori Shpenzimi
-            </Button>
-            <Button variant="outline-light" onClick={() => openNew("hyrje")}>
-              <Plus size={16} className="me-1" /> Kategori Hyrjeje
-            </Button>
-          </div>
-        </div>
 
-        <Row className="g-2 g-md-4">
-          <Kpi label="Kategori Gjithsej" value={categories.length} icon={Tags} color="violet" md={4} lg={4} />
-          <Kpi label="Nënkategori" value={nenkategoriGjithsej} icon={CornerDownRight} color="cyan" md={4} lg={4} />
-          <Kpi
-            label="Kryesore (shpenzim / hyrje)"
-            value={`${shpenzimet.length} / ${hyrjet.length}`}
-            icon={TrendingDown}
-            color="emerald"
-            md={4}
-            lg={4}
-          />
-        </Row>
+          <Row className="g-2 g-md-4">
+            <Kpi label="Kategori Gjithsej" value={categories.length} icon={Tags} color="violet" md={4} lg={4} />
+            <Kpi label="Nënkategori" value={nenkategoriGjithsej} icon={CornerDownRight} color="cyan" md={4} lg={4} />
+            <Kpi
+              label="Kryesore (shpenzim / hyrje)"
+              value={`${shpenzimet.length} / ${hyrjet.length}`}
+              icon={TrendingDown}
+              color="emerald"
+              md={4}
+              lg={4}
+            />
+          </Row>
 
-        <section className="mb-4">
-          <h4 className="fcp-section-title">
-            <TrendingDown size={20} className="text-primary" />
-            Shpenzimet
-          </h4>
-          {renderGrid(shpenzimet)}
-        </section>
+          <section className="mb-4">
+            <h2 className="fcp-section-title">
+              <TrendingDown size={20} className="text-primary" />
+              Shpenzimet
+            </h2>
+            {renderGrid(shpenzimet)}
+          </section>
 
-        <section className="mb-4">
-          <h4 className="fcp-section-title">
-            <TrendingUp size={20} className="text-primary" />
-            Hyrjet
-          </h4>
-          {renderGrid(hyrjet)}
-        </section>
-      </Container>
+          <section className="mb-4">
+            <h2 className="fcp-section-title">
+              <TrendingUp size={20} className="text-primary" />
+              Hyrjet
+            </h2>
+            {renderGrid(hyrjet)}
+          </section>
+        </Container>
 
-      {rows.length > 0 && <Tabela data={rows} tableName="Kategoritë" filterField="Lloji" mosShfaqID />}
+        {rows.length > 0 && <Tabela data={rows} tableName="Kategoritë" filterField="Lloji" mosShfaqID />}
 
-      <ShtoKategorine
-        show={showModal}
-        onHide={() => {
-          setShowModal(false);
-          setEditing(null);
-          setPrindiFillestar("");
-        }}
-        initial={editing}
-        llojiFillestar={llojiFillestar}
-        prindiFillestar={prindiFillestar}
-      />
+        <ShtoKategorine
+          show={showModal}
+          onHide={() => {
+            setShowModal(false);
+            setEditing(null);
+            setPrindiFillestar("");
+          }}
+          initial={editing}
+          llojiFillestar={llojiFillestar}
+          prindiFillestar={prindiFillestar}
+        />
+      </main>
 
       <Footer />
     </div>

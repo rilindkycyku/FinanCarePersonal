@@ -191,340 +191,342 @@ function Statistika() {
       <PageTitle title="Statistikat" />
       <NavBar />
 
-      <Container className="py-4">
-        <div className="fcp-page-head">
-          <div>
-            <h2>Statistikat</h2>
-            <p>Përmbledhje e financave tuaja - {periodLabel(period)}.</p>
+      <main className="fcp-main">
+        <Container className="py-4">
+          <div className="fcp-page-head">
+            <div>
+              <h1>Statistikat</h1>
+              <p>Përmbledhje e financave tuaja - {periodLabel(period)}.</p>
+            </div>
+            <Form.Select
+              value={period}
+              onChange={(e) => setPeriod(e.target.value)}
+              style={{ maxWidth: 220 }}
+              aria-label="Zgjidh periudhën"
+            >
+              {PERIODS.map((p) => (
+                <option key={p.value} value={p.value}>
+                  {p.label}
+                </option>
+              ))}
+            </Form.Select>
           </div>
-          <Form.Select
-            value={period}
-            onChange={(e) => setPeriod(e.target.value)}
-            style={{ maxWidth: 220 }}
-            aria-label="Zgjidh periudhën"
-          >
-            {PERIODS.map((p) => (
-              <option key={p.value} value={p.value}>
-                {p.label}
-              </option>
-            ))}
-          </Form.Select>
-        </div>
 
-        <Row className="g-2 g-md-4">
-          <Kpi label="Hyrjet" value={money(stats.flows.hyrjet)} icon={TrendingUp} color="emerald" />
-          <Kpi label="Shpenzimet" value={money(stats.flows.shpenzimet)} icon={TrendingDown} color="danger" />
-          <Kpi
-            label="Bilanci Neto"
-            value={signedMoney(stats.flows.neto)}
-            sub={`Norma e kursimit: ${formatPercent(stats.flows.normaKursimit, 1)}`}
-            icon={Percent}
-            color={stats.flows.neto >= 0 ? "cyan" : "danger"}
-          />
-          <Kpi
-            label="Mesatarja Ditore e Shpenzimeve"
-            value={money(mesatarjaDitore)}
-            icon={CalendarRange}
-            color="amber"
-          />
-          <Kpi label="Transaksione" value={stats.periudha.length} icon={Hash} color="violet" />
-          <Kpi
-            label="Kategoria më e Shpenzuar"
-            value={stats.shpenzimet[0]?.emri || "-"}
-            sub={stats.shpenzimet[0] ? money(stats.shpenzimet[0].vlera) : undefined}
-            icon={Tags}
-            color="danger"
-          />
-          {/* Transfers only exist between two accounts, so the tile is dropped in single-account mode. */}
-          {!njeLlogari && <Kpi label="Transfere" value={stats.transferet.length} icon={ArrowRightLeft} color="cyan" />}
-          <Kpi
-            label="Bilanci Aktual"
-            value={money(
-              accounts.filter((a) => !a.arkivuar).reduce((sum, a) => sum + accountBalance(a, transactions), 0)
-            )}
-            icon={Wallet}
-            color="emerald"
-          />
-        </Row>
+          <Row className="g-2 g-md-4">
+            <Kpi label="Hyrjet" value={money(stats.flows.hyrjet)} icon={TrendingUp} color="emerald" />
+            <Kpi label="Shpenzimet" value={money(stats.flows.shpenzimet)} icon={TrendingDown} color="danger" />
+            <Kpi
+              label="Bilanci Neto"
+              value={signedMoney(stats.flows.neto)}
+              sub={`Norma e kursimit: ${formatPercent(stats.flows.normaKursimit, 1)}`}
+              icon={Percent}
+              color={stats.flows.neto >= 0 ? "cyan" : "danger"}
+            />
+            <Kpi
+              label="Mesatarja Ditore e Shpenzimeve"
+              value={money(mesatarjaDitore)}
+              icon={CalendarRange}
+              color="amber"
+            />
+            <Kpi label="Transaksione" value={stats.periudha.length} icon={Hash} color="violet" />
+            <Kpi
+              label="Kategoria më e Shpenzuar"
+              value={stats.shpenzimet[0]?.emri || "-"}
+              sub={stats.shpenzimet[0] ? money(stats.shpenzimet[0].vlera) : undefined}
+              icon={Tags}
+              color="danger"
+            />
+            {/* Transfers only exist between two accounts, so the tile is dropped in single-account mode. */}
+            {!njeLlogari && <Kpi label="Transfere" value={stats.transferet.length} icon={ArrowRightLeft} color="cyan" />}
+            <Kpi
+              label="Bilanci Aktual"
+              value={money(
+                accounts.filter((a) => !a.arkivuar).reduce((sum, a) => sum + accountBalance(a, transactions), 0)
+              )}
+              icon={Wallet}
+              color="emerald"
+            />
+          </Row>
 
-        <Row className="g-3 g-md-4 mt-1">
-          <Col xs={12}>
-            <Panel title="Bilanci Ndër Muaj dhe Parashikimi" icon={LineChart}>
-              <GrafikuBilancit pikat={ecuria.pikat} money={money} />
+          <Row className="g-3 g-md-4 mt-1">
+            <Col xs={12}>
+              <Panel title="Bilanci Ndër Muaj dhe Parashikimi" icon={LineChart}>
+                <GrafikuBilancit pikat={ecuria.pikat} money={money} />
 
-              <div className="fcp-row">
-                <div className="fcp-row-main">
-                  <div className="fcp-row-title">Sot</div>
-                  <div className="fcp-row-sub">
-                    Bilanci i llogarive aktive deri sot
-                    {/* Said out loud only when it matters: an entry made for a date that has not
-                        arrived is counted on its own day, so this figure is smaller than "Bilanci
-                        Total" until then. */}
-                    {ecuria.parashikimi.regjistruar !== ecuria.parashikimi.fillimi &&
-                      ` · ${money(ecuria.parashikimi.regjistruar)} bashkë me transaksionet e regjistruara me datë të ardhshme`}
-                  </div>
-                </div>
-                <div className="fcp-row-value">{money(ecuria.parashikimi.fillimi)}</div>
-              </div>
-
-              <div className="fcp-row">
-                <div className="fcp-row-main">
-                  <div className="fcp-row-title">Fundi i {monthLabel(ecuria.parashikimi.muajt[0].key)}</div>
-                  <div className="fcp-row-sub">
-                    {ecuria.parashikimi.muajt[0].hyrje > 0 || ecuria.parashikimi.muajt[0].shpenzime > 0
-                      ? `Mbeten ${money(ecuria.parashikimi.muajt[0].hyrje)} hyrje dhe ${money(
-                          ecuria.parashikimi.muajt[0].shpenzime
-                        )} pagesa të planifikuara`
-                      : "Asgjë e planifikuar për pjesën e mbetur të muajit"}
-                  </div>
-                </div>
-                <div className="fcp-row-value">{money(ecuria.parashikimi.muajt[0].mbyllja)}</div>
-              </div>
-
-              <div className="fcp-row">
-                <div className="fcp-row-main">
-                  <div className="fcp-row-title">Pas {ecuria.parashikimi.muajt.length} muajsh</div>
-                  <div className="fcp-row-sub">
-                    {monthLabel(ecuria.parashikimi.muajt.at(-1).key)} · ndryshimi{" "}
-                    {signedMoney(ecuria.parashikimi.ndryshimi)}
-                  </div>
-                </div>
-                <div className={`fcp-row-value ${ecuria.parashikimi.ndryshimi >= 0 ? "fcp-pos" : "fcp-neg"}`}>
-                  {money(ecuria.parashikimi.perfundimi)}
-                </div>
-              </div>
-
-              {/* The month's closing figure can look healthy while the middle of it does not - the
-                  low point is the number that decides whether a payment bounces. */}
-              {ecuria.parashikimi.meUleta.data !== ecuria.parashikimi.start && (
                 <div className="fcp-row">
-                  <div className="fcp-row-icon" style={{ color: ecuria.parashikimi.nenZeros ? "var(--sp-red)" : "var(--sp-cyan)" }}>
-                    <TriangleAlert size={16} />
-                  </div>
                   <div className="fcp-row-main">
-                    <div className="fcp-row-title">Pika më e ulët</div>
+                    <div className="fcp-row-title">Sot</div>
                     <div className="fcp-row-sub">
-                      {formatDate(ecuria.parashikimi.meUleta.data)}
-                      {ecuria.parashikimi.nenZeros
-                        ? ` · bilanci bie nën zero më ${formatDate(ecuria.parashikimi.nenZeros)}`
-                        : ""}
+                      Bilanci i llogarive aktive deri sot
+                      {/* Said out loud only when it matters: an entry made for a date that has not
+                          arrived is counted on its own day, so this figure is smaller than "Bilanci
+                          Total" until then. */}
+                      {ecuria.parashikimi.regjistruar !== ecuria.parashikimi.fillimi &&
+                        ` · ${money(ecuria.parashikimi.regjistruar)} bashkë me transaksionet e regjistruara me datë të ardhshme`}
                     </div>
                   </div>
-                  <div className={`fcp-row-value ${ecuria.parashikimi.meUleta.bilanci < 0 ? "fcp-neg" : ""}`}>
-                    {money(ecuria.parashikimi.meUleta.bilanci)}
+                  <div className="fcp-row-value">{money(ecuria.parashikimi.fillimi)}</div>
+                </div>
+
+                <div className="fcp-row">
+                  <div className="fcp-row-main">
+                    <div className="fcp-row-title">Fundi i {monthLabel(ecuria.parashikimi.muajt[0].key)}</div>
+                    <div className="fcp-row-sub">
+                      {ecuria.parashikimi.muajt[0].hyrje > 0 || ecuria.parashikimi.muajt[0].shpenzime > 0
+                        ? `Mbeten ${money(ecuria.parashikimi.muajt[0].hyrje)} hyrje dhe ${money(
+                            ecuria.parashikimi.muajt[0].shpenzime
+                          )} pagesa të planifikuara`
+                        : "Asgjë e planifikuar për pjesën e mbetur të muajit"}
+                    </div>
+                  </div>
+                  <div className="fcp-row-value">{money(ecuria.parashikimi.muajt[0].mbyllja)}</div>
+                </div>
+
+                <div className="fcp-row">
+                  <div className="fcp-row-main">
+                    <div className="fcp-row-title">Pas {ecuria.parashikimi.muajt.length} muajsh</div>
+                    <div className="fcp-row-sub">
+                      {monthLabel(ecuria.parashikimi.muajt.at(-1).key)} · ndryshimi{" "}
+                      {signedMoney(ecuria.parashikimi.ndryshimi)}
+                    </div>
+                  </div>
+                  <div className={`fcp-row-value ${ecuria.parashikimi.ndryshimi >= 0 ? "fcp-pos" : "fcp-neg"}`}>
+                    {money(ecuria.parashikimi.perfundimi)}
                   </div>
                 </div>
-              )}
 
-              <div className="fcp-row-sub mt-2">
-                {ecuria.parashikimi.bosh
-                  ? "Nuk ka asgjë të planifikuar përpara, prandaj vija e ndërprerë qëndron aty ku është bilanci sot. Shtoni pagesat e përsëritura dhe shpenzimet e planifikuara që parashikimi të ketë çka të llogarisë."
-                  : "Vija e ndërprerë llogarit vetëm çka dihet tashmë: transaksionet me datë të ardhshme, këstet e pagesat e përsëritura që nuk janë konfirmuar ende, dhe shpenzimet e planifikuara që nuk janë blerë. Asgjë nuk supozohet nga mesatarja e muajve të kaluar."}
-              </div>
-            </Panel>
-          </Col>
-
-          <Col xl={6}>
-            <Panel title="Hyrje kundrejt Shpenzimeve - 6 Muajt e Fundit" icon={BarChart3}>
-              {stats.trendi.every((m) => m.hyrjet === 0 && m.shpenzimet === 0) ? (
-                <Empty>Nuk ka të dhëna ende.</Empty>
-              ) : (
-                <>
-                  <div className="fcp-chart">
-                    {stats.trendi.map((m) => (
-                      <div className="fcp-chart-col" key={m.key} title={`${m.label} ${m.viti}`}>
-                        <div className="fcp-chart-bars">
-                          <div
-                            className="fcp-chart-bar hyrje"
-                            style={{ height: `${(m.hyrjet / maxTrend) * 100}%` }}
-                            title={`Hyrjet: ${money(m.hyrjet)}`}
-                          />
-                          <div
-                            className="fcp-chart-bar shpenzim"
-                            style={{ height: `${(m.shpenzimet / maxTrend) * 100}%` }}
-                            title={`Shpenzimet: ${money(m.shpenzimet)}`}
-                          />
-                        </div>
-                        <span className="fcp-chart-label">{m.label}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="fcp-legend mt-3">
-                    <span className="fcp-legend-item">
-                      <span className="fcp-legend-swatch" style={{ background: "var(--sp-emerald)" }} /> Hyrjet
-                    </span>
-                    <span className="fcp-legend-item">
-                      <span className="fcp-legend-swatch" style={{ background: "var(--sp-red)" }} /> Shpenzimet
-                    </span>
-                  </div>
-                </>
-              )}
-            </Panel>
-          </Col>
-
-          <Col xl={6}>
-            <Panel title="Bilanci Mujor" icon={Percent}>
-              {stats.trendi.every((m) => m.neto === 0) ? (
-                <Empty>Nuk ka të dhëna ende.</Empty>
-              ) : (
-                stats.trendi
-                  .slice()
-                  .reverse()
-                  .map((m) => (
-                    <div className="fcp-row" key={m.key}>
-                      <div className="fcp-row-main">
-                        <div className="fcp-row-title">
-                          {m.label} {m.viti}
-                        </div>
-                        <div className="fcp-row-sub">
-                          {money(m.hyrjet)} hyrje · {money(m.shpenzimet)} shpenzime
-                        </div>
-                      </div>
-                      <div className={`fcp-row-value ${m.neto >= 0 ? "fcp-pos" : "fcp-neg"}`}>
-                        {signedMoney(m.neto)}
-                      </div>
-                    </div>
-                  ))
-              )}
-            </Panel>
-          </Col>
-
-          <Col xl={6}>
-            <Panel title="Shpenzimet sipas Kategorisë" icon={TrendingDown}>
-              {rankedRows(stats.shpenzimet, maxShpenzim, "fcp-neg")}
-            </Panel>
-          </Col>
-
-          <Col xl={6}>
-            <Panel title="Hyrjet sipas Kategorisë" icon={TrendingUp}>
-              {rankedRows(stats.hyrjet, maxHyrje, "fcp-pos")}
-            </Panel>
-          </Col>
-
-          {/* The panel appears once something is tagged: a transaction can carry several tags, so
-              this is the one breakdown here that is deliberately not a share-out of the period -
-              each tag counts its transactions in full, and the percentages need not come to 100. */}
-          {stats.etiketat.length > 0 && (
-            <Col xl={6}>
-              <Panel title="Shpenzimet sipas Etiketave" icon={Tag}>
-                {stats.etiketat.map((et) => (
-                  <div className="fcp-row" key={et.celesi}>
-                    <div className="fcp-row-icon" style={{ color: et.ngjyra }}>
-                      <Tag size={16} />
+                {/* The month's closing figure can look healthy while the middle of it does not - the
+                    low point is the number that decides whether a payment bounces. */}
+                {ecuria.parashikimi.meUleta.data !== ecuria.parashikimi.start && (
+                  <div className="fcp-row">
+                    <div className="fcp-row-icon" style={{ color: ecuria.parashikimi.nenZeros ? "var(--sp-red)" : "var(--sp-cyan)" }}>
+                      <TriangleAlert size={16} />
                     </div>
                     <div className="fcp-row-main">
-                      <div className="fcp-row-title">{et.emri}</div>
+                      <div className="fcp-row-title">Pika më e ulët</div>
                       <div className="fcp-row-sub">
-                        {et.numri} × · {formatPercent(et.perqindja, 1)} e shpenzimeve
+                        {formatDate(ecuria.parashikimi.meUleta.data)}
+                        {ecuria.parashikimi.nenZeros
+                          ? ` · bilanci bie nën zero më ${formatDate(ecuria.parashikimi.nenZeros)}`
+                          : ""}
                       </div>
                     </div>
-                    <div className="fcp-row-bar">
-                      <ProgressBar value={(et.vlera / maxEtiketa) * 100} color={et.ngjyra} small />
+                    <div className={`fcp-row-value ${ecuria.parashikimi.meUleta.bilanci < 0 ? "fcp-neg" : ""}`}>
+                      {money(ecuria.parashikimi.meUleta.bilanci)}
                     </div>
-                    <div className="fcp-row-value fcp-neg">{money(et.vlera)}</div>
                   </div>
-                ))}
+                )}
+
+                <div className="fcp-row-sub mt-2">
+                  {ecuria.parashikimi.bosh
+                    ? "Nuk ka asgjë të planifikuar përpara, prandaj vija e ndërprerë qëndron aty ku është bilanci sot. Shtoni pagesat e përsëritura dhe shpenzimet e planifikuara që parashikimi të ketë çka të llogarisë."
+                    : "Vija e ndërprerë llogarit vetëm çka dihet tashmë: transaksionet me datë të ardhshme, këstet e pagesat e përsëritura që nuk janë konfirmuar ende, dhe shpenzimet e planifikuara që nuk janë blerë. Asgjë nuk supozohet nga mesatarja e muajve të kaluar."}
+                </div>
               </Panel>
             </Col>
-          )}
 
-          {!(njeLlogari && stats.llogarite.length <= 1) && (
-          <Col xl={6}>
-            <Panel title="Aktiviteti sipas Llogarive" icon={Wallet}>
-              {stats.llogarite.length === 0 ? (
-                <Empty>Nuk ka llogari aktive.</Empty>
-              ) : (
-                stats.llogarite.map((a) => {
-                  const Icon = getIcon(accountTypeMeta(a.lloji).icon);
-                  return (
-                    <div className="fcp-row" key={a.id}>
-                      <div className="fcp-row-icon" style={{ color: a.ngjyra }}>
-                        <Icon size={16} />
+            <Col xl={6}>
+              <Panel title="Hyrje kundrejt Shpenzimeve - 6 Muajt e Fundit" icon={BarChart3}>
+                {stats.trendi.every((m) => m.hyrjet === 0 && m.shpenzimet === 0) ? (
+                  <Empty>Nuk ka të dhëna ende.</Empty>
+                ) : (
+                  <>
+                    <div className="fcp-chart">
+                      {stats.trendi.map((m) => (
+                        <div className="fcp-chart-col" key={m.key} title={`${m.label} ${m.viti}`}>
+                          <div className="fcp-chart-bars">
+                            <div
+                              className="fcp-chart-bar hyrje"
+                              style={{ height: `${(m.hyrjet / maxTrend) * 100}%` }}
+                              title={`Hyrjet: ${money(m.hyrjet)}`}
+                            />
+                            <div
+                              className="fcp-chart-bar shpenzim"
+                              style={{ height: `${(m.shpenzimet / maxTrend) * 100}%` }}
+                              title={`Shpenzimet: ${money(m.shpenzimet)}`}
+                            />
+                          </div>
+                          <span className="fcp-chart-label">{m.label}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="fcp-legend mt-3">
+                      <span className="fcp-legend-item">
+                        <span className="fcp-legend-swatch" style={{ background: "var(--sp-emerald)" }} /> Hyrjet
+                      </span>
+                      <span className="fcp-legend-item">
+                        <span className="fcp-legend-swatch" style={{ background: "var(--sp-red)" }} /> Shpenzimet
+                      </span>
+                    </div>
+                  </>
+                )}
+              </Panel>
+            </Col>
+
+            <Col xl={6}>
+              <Panel title="Bilanci Mujor" icon={Percent}>
+                {stats.trendi.every((m) => m.neto === 0) ? (
+                  <Empty>Nuk ka të dhëna ende.</Empty>
+                ) : (
+                  stats.trendi
+                    .slice()
+                    .reverse()
+                    .map((m) => (
+                      <div className="fcp-row" key={m.key}>
+                        <div className="fcp-row-main">
+                          <div className="fcp-row-title">
+                            {m.label} {m.viti}
+                          </div>
+                          <div className="fcp-row-sub">
+                            {money(m.hyrjet)} hyrje · {money(m.shpenzimet)} shpenzime
+                          </div>
+                        </div>
+                        <div className={`fcp-row-value ${m.neto >= 0 ? "fcp-pos" : "fcp-neg"}`}>
+                          {signedMoney(m.neto)}
+                        </div>
+                      </div>
+                    ))
+                )}
+              </Panel>
+            </Col>
+
+            <Col xl={6}>
+              <Panel title="Shpenzimet sipas Kategorisë" icon={TrendingDown}>
+                {rankedRows(stats.shpenzimet, maxShpenzim, "fcp-neg")}
+              </Panel>
+            </Col>
+
+            <Col xl={6}>
+              <Panel title="Hyrjet sipas Kategorisë" icon={TrendingUp}>
+                {rankedRows(stats.hyrjet, maxHyrje, "fcp-pos")}
+              </Panel>
+            </Col>
+
+            {/* The panel appears once something is tagged: a transaction can carry several tags, so
+                this is the one breakdown here that is deliberately not a share-out of the period -
+                each tag counts its transactions in full, and the percentages need not come to 100. */}
+            {stats.etiketat.length > 0 && (
+              <Col xl={6}>
+                <Panel title="Shpenzimet sipas Etiketave" icon={Tag}>
+                  {stats.etiketat.map((et) => (
+                    <div className="fcp-row" key={et.celesi}>
+                      <div className="fcp-row-icon" style={{ color: et.ngjyra }}>
+                        <Tag size={16} />
                       </div>
                       <div className="fcp-row-main">
-                        <div className="fcp-row-title">{a.emri}</div>
+                        <div className="fcp-row-title">{et.emri}</div>
                         <div className="fcp-row-sub">
-                          {a.numri} × · <span className="fcp-pos">+{money(a.hyrjet)}</span>{" "}
-                          <span className="fcp-neg">-{money(a.daljet)}</span>
+                          {et.numri} × · {formatPercent(et.perqindja, 1)} e shpenzimeve
                         </div>
                       </div>
-                      <div className="fcp-row-value">{money(accountBalance(a, transactions))}</div>
+                      <div className="fcp-row-bar">
+                        <ProgressBar value={(et.vlera / maxEtiketa) * 100} color={et.ngjyra} small />
+                      </div>
+                      <div className="fcp-row-value fcp-neg">{money(et.vlera)}</div>
                     </div>
-                  );
-                })
-              )}
-            </Panel>
-          </Col>
-          )}
+                  ))}
+                </Panel>
+              </Col>
+            )}
 
-          {krahasimiKey && (
-          <Col xl={6}>
-            <Panel title={`Ndryshimi ndaj ${monthLabel(previousMonthKey(krahasimiKey))}`} icon={GitCompareArrows}>
-              {krahasimi.length === 0 ? (
-                <Empty>Nuk ka shpenzime në asnjërin nga të dy muajt.</Empty>
-              ) : (
-                krahasimi.map((k) => {
-                  const Icon = getIcon(k.ikona);
-                  const rritje = k.ndryshimi > 0;
-                  return (
-                    <div className="fcp-row" key={k.id}>
-                      <div className="fcp-row-icon" style={{ color: k.ngjyra }}>
-                        <Icon size={16} />
-                      </div>
-                      <div className="fcp-row-main">
-                        <div className="fcp-row-title">{k.emri}</div>
-                        <div className="fcp-row-sub">
-                          {money(k.vleraKaluar)} → {money(k.vlera)}
-                          {k.perqindja === null
-                            ? k.vlera > 0
-                              ? " · e re këtë muaj"
-                              : " · ndaloi"
-                            : ` · ${formatPercent(Math.abs(k.perqindja))}`}
+            {!(njeLlogari && stats.llogarite.length <= 1) && (
+            <Col xl={6}>
+              <Panel title="Aktiviteti sipas Llogarive" icon={Wallet}>
+                {stats.llogarite.length === 0 ? (
+                  <Empty>Nuk ka llogari aktive.</Empty>
+                ) : (
+                  stats.llogarite.map((a) => {
+                    const Icon = getIcon(accountTypeMeta(a.lloji).icon);
+                    return (
+                      <div className="fcp-row" key={a.id}>
+                        <div className="fcp-row-icon" style={{ color: a.ngjyra }}>
+                          <Icon size={16} />
                         </div>
+                        <div className="fcp-row-main">
+                          <div className="fcp-row-title">{a.emri}</div>
+                          <div className="fcp-row-sub">
+                            {a.numri} × · <span className="fcp-pos">+{money(a.hyrjet)}</span>{" "}
+                            <span className="fcp-neg">-{money(a.daljet)}</span>
+                          </div>
+                        </div>
+                        <div className="fcp-row-value">{money(accountBalance(a, transactions))}</div>
                       </div>
-                      <div className={`fcp-row-value ${rritje ? "fcp-neg" : "fcp-pos"}`}>
-                        {rritje ? "+" : "-"}
-                        {money(Math.abs(k.ndryshimi))}
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </Panel>
-          </Col>
-          )}
+                    );
+                  })
+                )}
+              </Panel>
+            </Col>
+            )}
 
-          <Col xl={6}>
-            <Panel title="5 Shpenzimet më të Mëdha" icon={TrendingDown}>
-              {stats.meTeMadhat.length === 0 ? (
-                <Empty>Nuk ka shpenzime për këtë periudhë.</Empty>
-              ) : (
-                stats.meTeMadhat.map((tx) => {
-                  const kategoria = categories.find((c) => c.id === tx.kategoriaId);
-                  const Icon = getIcon(kategoria?.ikona);
-                  return (
-                    <div className="fcp-row" key={tx.id}>
-                      <div className="fcp-row-icon" style={{ color: kategoria?.ngjyra || "#94a3b8" }}>
-                        <Icon size={16} />
-                      </div>
-                      <div className="fcp-row-main">
-                        <div className="fcp-row-title">
-                          {tx.pershkrimi || emriIPlote(categories, tx.kategoriaId) || "Shpenzim"}
+            {krahasimiKey && (
+            <Col xl={6}>
+              <Panel title={`Ndryshimi ndaj ${monthLabel(previousMonthKey(krahasimiKey))}`} icon={GitCompareArrows}>
+                {krahasimi.length === 0 ? (
+                  <Empty>Nuk ka shpenzime në asnjërin nga të dy muajt.</Empty>
+                ) : (
+                  krahasimi.map((k) => {
+                    const Icon = getIcon(k.ikona);
+                    const rritje = k.ndryshimi > 0;
+                    return (
+                      <div className="fcp-row" key={k.id}>
+                        <div className="fcp-row-icon" style={{ color: k.ngjyra }}>
+                          <Icon size={16} />
                         </div>
-                        <div className="fcp-row-sub">
-                          {formatDate(tx.data)}
-                          {!njeLlogari && ` · ${nameOf(accounts, tx.llogariaId)}`}
+                        <div className="fcp-row-main">
+                          <div className="fcp-row-title">{k.emri}</div>
+                          <div className="fcp-row-sub">
+                            {money(k.vleraKaluar)} → {money(k.vlera)}
+                            {k.perqindja === null
+                              ? k.vlera > 0
+                                ? " · e re këtë muaj"
+                                : " · ndaloi"
+                              : ` · ${formatPercent(Math.abs(k.perqindja))}`}
+                          </div>
+                        </div>
+                        <div className={`fcp-row-value ${rritje ? "fcp-neg" : "fcp-pos"}`}>
+                          {rritje ? "+" : "-"}
+                          {money(Math.abs(k.ndryshimi))}
                         </div>
                       </div>
-                      <div className="fcp-row-value fcp-neg">{money(tx.vlera)}</div>
-                    </div>
-                  );
-                })
-              )}
-            </Panel>
-          </Col>
-        </Row>
-      </Container>
+                    );
+                  })
+                )}
+              </Panel>
+            </Col>
+            )}
+
+            <Col xl={6}>
+              <Panel title="5 Shpenzimet më të Mëdha" icon={TrendingDown}>
+                {stats.meTeMadhat.length === 0 ? (
+                  <Empty>Nuk ka shpenzime për këtë periudhë.</Empty>
+                ) : (
+                  stats.meTeMadhat.map((tx) => {
+                    const kategoria = categories.find((c) => c.id === tx.kategoriaId);
+                    const Icon = getIcon(kategoria?.ikona);
+                    return (
+                      <div className="fcp-row" key={tx.id}>
+                        <div className="fcp-row-icon" style={{ color: kategoria?.ngjyra || "#94a3b8" }}>
+                          <Icon size={16} />
+                        </div>
+                        <div className="fcp-row-main">
+                          <div className="fcp-row-title">
+                            {tx.pershkrimi || emriIPlote(categories, tx.kategoriaId) || "Shpenzim"}
+                          </div>
+                          <div className="fcp-row-sub">
+                            {formatDate(tx.data)}
+                            {!njeLlogari && ` · ${nameOf(accounts, tx.llogariaId)}`}
+                          </div>
+                        </div>
+                        <div className="fcp-row-value fcp-neg">{money(tx.vlera)}</div>
+                      </div>
+                    );
+                  })
+                )}
+              </Panel>
+            </Col>
+          </Row>
+        </Container>
+      </main>
 
       <Footer />
     </div>

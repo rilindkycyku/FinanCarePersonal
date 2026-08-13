@@ -92,133 +92,135 @@ function Qellimet() {
       <PageTitle title="Qëllimet e Kursimit" />
       <NavBar />
 
-      <Container className="pt-4">
-        <div className="fcp-page-head">
-          <div>
-            <h2>Qëllimet e Kursimit</h2>
-            <p>Caktoni sa doni të kursesh, shtoni kontribute dhe shikoni sa afër jeni.</p>
+      <main className="fcp-main">
+        <Container className="pt-4">
+          <div className="fcp-page-head">
+            <div>
+              <h1>Qëllimet e Kursimit</h1>
+              <p>Caktoni sa doni të kursesh, shtoni kontribute dhe shikoni sa afër jeni.</p>
+            </div>
+            <Button className="btn-primary" onClick={openNew}>
+              <Plus size={16} className="me-1" /> Shto Qëllim
+            </Button>
           </div>
-          <Button className="btn-primary" onClick={openNew}>
-            <Plus size={16} className="me-1" /> Shto Qëllim
-          </Button>
-        </div>
 
-        <Row className="g-2 g-md-4">
-          <Kpi label="Synimi Total" value={money(totals.synimi)} icon={Target} color="cyan" md={4} lg={4} />
-          <Kpi
-            label="Kursyer Gjithsej"
-            value={money(totals.kursyer)}
-            sub={
-              totals.synimi > 0
-                ? `${formatPercent((totals.kursyer / totals.synimi) * 100, 1)} e synimit total`
-                : undefined
-            }
-            icon={PiggyBank}
-            color="emerald"
-            md={4}
-            lg={4}
-          />
-          <Kpi
-            label="Qëllime të Arritura"
-            value={`${totals.perfunduara} / ${progress.length}`}
-            icon={CheckCircle2}
-            color="violet"
-            md={4}
-            lg={4}
-          />
-        </Row>
+          <Row className="g-2 g-md-4">
+            <Kpi label="Synimi Total" value={money(totals.synimi)} icon={Target} color="cyan" md={4} lg={4} />
+            <Kpi
+              label="Kursyer Gjithsej"
+              value={money(totals.kursyer)}
+              sub={
+                totals.synimi > 0
+                  ? `${formatPercent((totals.kursyer / totals.synimi) * 100, 1)} e synimit total`
+                  : undefined
+              }
+              icon={PiggyBank}
+              color="emerald"
+              md={4}
+              lg={4}
+            />
+            <Kpi
+              label="Qëllime të Arritura"
+              value={`${totals.perfunduara} / ${progress.length}`}
+              icon={CheckCircle2}
+              color="violet"
+              md={4}
+              lg={4}
+            />
+          </Row>
 
-        <section className="mb-4">
-          <h4 className="fcp-section-title">
-            <Target size={20} className="text-primary" />
-            Qëllimet
-          </h4>
+          <section className="mb-4">
+            <h2 className="fcp-section-title">
+              <Target size={20} className="text-primary" />
+              Qëllimet
+            </h2>
 
-          {progress.length === 0 ? (
-            <Empty>Nuk ka qëllime kursimi ende. Shtoni një qëllim dhe ndiqni ecurinë e tij.</Empty>
-          ) : (
-            progress.map((g) => {
-              const ditet = daysLeft(g.dataSynim);
-              return (
-                <div className="fcp-tracked" key={g.id}>
-                  <div className="fcp-tracked-head">
-                    <div className="fcp-row-icon" style={{ color: g.ngjyra }}>
-                      {g.perfunduar ? <CheckCircle2 size={16} /> : <Target size={16} />}
-                    </div>
-                    <div className="fcp-row-main">
-                      <div className="fcp-row-title">{g.emri}</div>
-                      <div className="fcp-row-sub">
-                        {money(g.kursyer)} nga {money(g.synimi)} · {formatPercent(g.perqindja)}
-                        {g.nrKontributeve > 0 && ` · ${g.nrKontributeve} kontribute`}
+            {progress.length === 0 ? (
+              <Empty>Nuk ka qëllime kursimi ende. Shtoni një qëllim dhe ndiqni ecurinë e tij.</Empty>
+            ) : (
+              progress.map((g) => {
+                const ditet = daysLeft(g.dataSynim);
+                return (
+                  <div className="fcp-tracked" key={g.id}>
+                    <div className="fcp-tracked-head">
+                      <div className="fcp-row-icon" style={{ color: g.ngjyra }}>
+                        {g.perfunduar ? <CheckCircle2 size={16} /> : <Target size={16} />}
+                      </div>
+                      <div className="fcp-row-main">
+                        <div className="fcp-row-title">{g.emri}</div>
+                        <div className="fcp-row-sub">
+                          {money(g.kursyer)} nga {money(g.synimi)} · {formatPercent(g.perqindja)}
+                          {g.nrKontributeve > 0 && ` · ${g.nrKontributeve} kontribute`}
+                        </div>
+                      </div>
+                      <div className="fcp-tracked-actions">
+                        {!g.perfunduar && (
+                          <button
+                            type="button"
+                            className="fcp-icon-action add"
+                            title="Shto kontribut"
+                            onClick={() => setContributingTo(g)}
+                          >
+                            <Plus size={14} />
+                          </button>
+                        )}
+                        <button type="button" className="fcp-icon-action edit" title="Ndrysho" onClick={() => openEdit(g)}>
+                          <Edit3 size={14} />
+                        </button>
+                        <button type="button" className="fcp-icon-action delete" title="Fshij" onClick={() => onDelete(g)}>
+                          <Trash2 size={14} />
+                        </button>
                       </div>
                     </div>
-                    <div className="fcp-tracked-actions">
-                      {!g.perfunduar && (
-                        <button
-                          type="button"
-                          className="fcp-icon-action add"
-                          title="Shto kontribut"
-                          onClick={() => setContributingTo(g)}
-                        >
-                          <Plus size={14} />
-                        </button>
-                      )}
-                      <button type="button" className="fcp-icon-action edit" title="Ndrysho" onClick={() => openEdit(g)}>
-                        <Edit3 size={14} />
-                      </button>
-                      <button type="button" className="fcp-icon-action delete" title="Fshij" onClick={() => onDelete(g)}>
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
-                  </div>
 
-                  <ProgressBar value={g.perqindja} color={g.ngjyra} />
+                    <ProgressBar value={g.perqindja} color={g.ngjyra} />
 
-                  <div className="fcp-tracked-foot">
-                    <span className={g.perfunduar ? "fcp-pos" : ""}>
-                      {g.perfunduar ? "Qëllimi u arrit 🎉" : `Mbeten ${money(g.mbetur)}`}
-                    </span>
-                    {g.dataSynim && (
-                      <span className={ditet !== null && ditet < 0 && !g.perfunduar ? "fcp-neg" : ""}>
-                        <CalendarClock size={12} className="me-1" />
-                        {ditet === null
-                          ? formatDate(g.dataSynim)
-                          : ditet < 0
-                            ? `Afati kaloi më ${formatDate(g.dataSynim)}`
-                            : `${ditet} ditë deri më ${formatDate(g.dataSynim)}`}
+                    <div className="fcp-tracked-foot">
+                      <span className={g.perfunduar ? "fcp-pos" : ""}>
+                        {g.perfunduar ? "Qëllimi u arrit 🎉" : `Mbeten ${money(g.mbetur)}`}
                       </span>
-                    )}
+                      {g.dataSynim && (
+                        <span className={ditet !== null && ditet < 0 && !g.perfunduar ? "fcp-neg" : ""}>
+                          <CalendarClock size={12} className="me-1" />
+                          {ditet === null
+                            ? formatDate(g.dataSynim)
+                            : ditet < 0
+                              ? `Afati kaloi më ${formatDate(g.dataSynim)}`
+                              : `${ditet} ditë deri më ${formatDate(g.dataSynim)}`}
+                        </span>
+                      )}
+                    </div>
+
+                    {g.pershkrimi && <div className="fcp-row-sub mt-2">{g.pershkrimi}</div>}
                   </div>
+                );
+              })
+            )}
+          </section>
+        </Container>
 
-                  {g.pershkrimi && <div className="fcp-row-sub mt-2">{g.pershkrimi}</div>}
-                </div>
-              );
-            })
-          )}
-        </section>
-      </Container>
+        {rows.length > 0 && <Tabela data={rows} tableName="Qëllimet e Kursimit" filterField="Statusi" mosShfaqID />}
 
-      {rows.length > 0 && <Tabela data={rows} tableName="Qëllimet e Kursimit" filterField="Statusi" mosShfaqID />}
+        <ShtoQellimin
+          show={showGoal}
+          onHide={() => {
+            setShowGoal(false);
+            setEditing(null);
+          }}
+          initial={editing}
+        />
 
-      <ShtoQellimin
-        show={showGoal}
-        onHide={() => {
-          setShowGoal(false);
-          setEditing(null);
-        }}
-        initial={editing}
-      />
-
-      {/* Contributing is a transfer into the goal's account, tagged with the goal, so the money
-          movement and the goal's progress stay one and the same record. */}
-      <ShtoTransaksionin
-        show={Boolean(contributingTo)}
-        onHide={() => setContributingTo(null)}
-        llojiFillestar="transfer"
-        fikseLloji
-        qellimiFiksuar={contributingTo?.id}
-        destinacioniFillestar={contributingTo?.llogariaId || undefined}
-      />
+        {/* Contributing is a transfer into the goal's account, tagged with the goal, so the money
+            movement and the goal's progress stay one and the same record. */}
+        <ShtoTransaksionin
+          show={Boolean(contributingTo)}
+          onHide={() => setContributingTo(null)}
+          llojiFillestar="transfer"
+          fikseLloji
+          qellimiFiksuar={contributingTo?.id}
+          destinacioniFillestar={contributingTo?.llogariaId || undefined}
+        />
+      </main>
 
       <Footer />
     </div>

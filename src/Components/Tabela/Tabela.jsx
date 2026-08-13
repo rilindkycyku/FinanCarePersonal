@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { Button, Col, Form, InputGroup, Pagination, Row, Card } from "react-bootstrap";
 import { Plus, Search, Filter, Eraser, Edit3, Trash2, Eye, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
 import { format, parseISO } from "date-fns";
@@ -54,6 +54,9 @@ function Tabela({
   mosShfaqPaginimin,
   shfaqEksporto,
 }) {
+  // Unique per instance, so the filter labels point at their own controls even if a page ever grows
+  // a second table.
+  const idBaza = useId();
   const [searchQuery, setSearchQuery] = useState("");
   const [itemsPerPage, setItemsPerPage] = useState(mosShfaqPaginimin ? Math.max(data.length, 20) : 20);
   const [startDate, setStartDate] = useState("");
@@ -125,7 +128,7 @@ function Tabela({
           <div className="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
             {!mosShfaqTitullin && (
               <div>
-                <h4 className="premium-table-title mb-1">{tableName}</h4>
+                <h2 className="premium-table-title mb-1">{tableName}</h2>
                 <p className="text-muted small mb-0">Menaxhoni të dhënat tuaja financiare me saktësi dhe shpejtësi.</p>
               </div>
             )}
@@ -146,30 +149,35 @@ function Tabela({
             <div className="premium-filter-bar mb-3">
               <Row className="g-2 align-items-end">
                 <Col md={3} lg={3}>
-                  <Form.Label className="premium-filter-label">
+                  <Form.Label htmlFor={`${idBaza}-kerko`} className="premium-filter-label">
                     <Search size={14} className="me-1" /> Kërko
                   </Form.Label>
                   <InputGroup className="premium-input-group">
-                    <Form.Control type="text" placeholder="Filtroni të dhënat..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+                    <Form.Control id={`${idBaza}-kerko`} type="text" placeholder="Filtroni të dhënat..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
                   </InputGroup>
                 </Col>
 
                 {dateField && (
                   <Col md={4} lg={4}>
-                    <Form.Label className="premium-filter-label">
+                    {/* One heading over two inputs, so the heading cannot be the label for either of
+                        them - each says which end of the range it is on its own. */}
+                    <Form.Label as="div" className="premium-filter-label">
                       <Filter size={14} className="me-1" /> Filtrimi sipas Datës
                     </Form.Label>
                     <div className="d-flex gap-2">
-                      <Form.Control className="premium-select" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
-                      <Form.Control className="premium-select" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+                      <Form.Control aria-label="Data nga" className="premium-select" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+                      <Form.Control aria-label="Data deri" className="premium-select" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
                     </div>
                   </Col>
                 )}
 
                 {!mosShfaqPaginimin && (
                   <Col md={2} lg={2}>
-                    <Form.Label className="premium-filter-label">Rreshta</Form.Label>
+                    <Form.Label htmlFor={`${idBaza}-rreshta`} className="premium-filter-label">
+                      Rreshta
+                    </Form.Label>
                     <Form.Select
+                      id={`${idBaza}-rreshta`}
                       value={itemsPerPage}
                       onChange={(e) => {
                         setItemsPerPage(parseInt(e.target.value));
@@ -354,7 +362,7 @@ function Tabela({
               <div className="empty-icon-wrapper">
                 <Search size={48} />
               </div>
-              <h5>Nuk u gjet asnjë të dhënë</h5>
+              <h3 className="fcp-card-title">Nuk u gjet asnjë të dhënë</h3>
               <p>Provoni të ndryshoni filtrat ose të shtoni të dhëna të reja.</p>
             </div>
           )}

@@ -40,20 +40,22 @@ export function Panel({ title, icon, action, actionTo, children }) {
   );
 }
 
+/**
+ * `label` is what the bar is measuring. Without one the bar is treated as decoration and hidden
+ * from screen readers, which is the honest answer nearly everywhere it is used: it sits between a
+ * title and a line reading "Mbeten 180 € · 40%", so announcing it again as an unnamed "40%" adds a
+ * reading and no information. Pass a label where the bar is the only place a figure appears.
+ */
 export function ProgressBar({ value, color, over, small, label }) {
   // A budget of zero, or a goal with no target, divides by zero somewhere upstream and arrives here
   // as NaN or Infinity. `Math.max(NaN, 0)` is NaN, which the browser drops as an invalid width and
   // leaves the bar drawn at whatever the previous render put there.
   const perqindja = Number.isFinite(value) ? Math.min(Math.max(value, 0), 100) : 0;
+  const aria = label
+    ? { role: "progressbar", "aria-label": label, "aria-valuenow": Math.round(perqindja), "aria-valuemin": 0, "aria-valuemax": 100 }
+    : { "aria-hidden": true };
   return (
-    <div
-      className={`fcp-progress${small ? " fcp-progress-sm" : ""}`}
-      role="progressbar"
-      aria-valuenow={Math.round(perqindja)}
-      aria-valuemin={0}
-      aria-valuemax={100}
-      aria-label={label}
-    >
+    <div className={`fcp-progress${small ? " fcp-progress-sm" : ""}`} {...aria}>
       <div
         className={`fcp-progress-fill${over ? " over" : ""}`}
         style={{ width: `${perqindja}%`, background: over ? undefined : color }}

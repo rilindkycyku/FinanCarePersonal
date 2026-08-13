@@ -111,10 +111,10 @@ function CilesimiNjeLlogari({ onMessage }) {
 
   return (
     <Card className="profile-card fcp-settings-card border-0 p-4 mb-4">
-      <h5 className="fw-bold mb-3">
+      <h2 className="fcp-card-title fw-bold mb-3">
         <Wallet size={18} className="me-2 text-primary" />
         Llogaritë
-      </h5>
+      </h2>
 
       <Form.Check
         type="switch"
