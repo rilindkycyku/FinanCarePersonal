@@ -473,6 +473,22 @@ export async function riparoKopjen(gjendja) {
   return munguara.length;
 }
 
+/** What this device holds, for a page that wants to compare it against the cloud's own count. */
+export async function numeroLokal() {
+  return numriLokal(await lexoGjendjen());
+}
+
+/**
+ * The repair on demand, for the page that has just shown the user two numbers that disagree.
+ *
+ * The daily check finds this by itself, but "by itself" is up to a day away, and somebody looking
+ * at a cloud copy that is visibly short should not have to wait for it - or learn that «Shkarko
+ * gjithçka nga cloud» is, despite its name, the button that fixes it.
+ */
+export async function riparoTani() {
+  return riparoKopjen(await lexoGjendjen());
+}
+
 /**
  * Sends the rows and reads back the timestamp the server gave each one.
  *

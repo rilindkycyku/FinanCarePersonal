@@ -9,6 +9,22 @@ e fundit kur rregullohet diçka, dhe e para vetëm kur ndryshon vetë forma e pr
 herë, te `2.0.0`, kur të dhënat mësuan të dalin nga shfletuesi. Datat janë ato të commit-it që e
 ngriti versionin.
 
+## [2.2.0] - 2026-08-13
+
+### Shtuar
+- **Faqja e sinkronizimit e thotë kur projektit i mungon diçka**, dhe e riparon me një buton.
+  Kontrolli i përditshëm e gjen vetë, por një ditë është shumë kur numrat në ekran tashmë nuk
+  përputhen.
+
+### Ndryshuar
+- **Numrat te sinkronizimi krahasohen më në fund me njëri-tjetrin.** Deri tani rreshtat te projekti
+  qëndronin pranë numrit të *transaksioneve* të pajisjes - dy gjëra të ndryshme - kështu që një
+  kopje e cunguar dukej thjesht e çuditshme, jo e gabuar. Tani: sa rreshta ka projekti nga sa
+  rekorde mban pajisja.
+- **Paralajmërimet e faqes njoftohen në dritare**, jo vetëm në një shirit që në telefon bie poshtë
+  ekranit: rekordet që mungojnë, skema e vjetruar dhe ora e serverit e panisur. Secili shfaqet një
+  herë, me butonin që e rregullon brenda vetë dritares; shiriti mbetet për atë që zgjedh «Më vonë».
+
 ## [2.1.1] - 2026-08-13
 
 ### Rregulluar
