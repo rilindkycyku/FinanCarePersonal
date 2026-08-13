@@ -10,6 +10,9 @@ jo përmes ndonjë serveri të këtij aplikacioni.
 Ndërsa `financarelite` mbulon faturat për biznesin, FinanCarePersonal mbulon paranë tuaja: sa hyn,
 sa shpenzohet, sa mbetet dhe sa po kursesh.
 
+Çka ka ndryshuar në secilin version: [CHANGELOG.md](CHANGELOG.md). Numri që shihet te fundi i faqes
+është ai i versionit që po mban kjo pajisje.
+
 ## Funksionet
 
 - **Paneli** - bilanci total, hyrjet/shpenzimet e muajit, norma e kursimit ndaj objektivit tuaj,
