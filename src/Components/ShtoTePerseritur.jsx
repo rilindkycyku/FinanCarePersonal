@@ -7,7 +7,9 @@ import VleraInput from "./VleraInput";
 import ZgjedhesiKategorive from "./ZgjedhesiKategorive";
 import { makeId, STORES } from "../lib/db";
 import { currencySymbol, formatMoney, toNumber, todayISO } from "../lib/format";
-import { convertedAmount, currencyFields, debtProgress, lastInstallmentDate } from "../lib/finance";
+import {
+  ZHVENDOSJET_E_PERIUDHES, convertedAmount, currencyFields, debtProgress, lastInstallmentDate,
+} from "../lib/finance";
 import { FREQUENCIES } from "../lib/options";
 import { formatDate } from "../lib/format";
 import "./ModalForms.css";
@@ -21,6 +23,7 @@ const BLANK = {
   kategoriaId: "",
   llogariaId: "",
   frekuenca: "mujore",
+  periudhaZhvendosje: "",
   dataETjetres: todayISO(),
   dataFundit: "",
   nrKesteve: "",
@@ -141,6 +144,9 @@ function ShtoTePerseritur({ show, onHide, initial }) {
       kategoriaId: rec.kategoriaId,
       llogariaId: rec.llogariaId,
       frekuenca: rec.frekuenca,
+      // Kept as a string in the form and stored as a number, or null when the schedule is not
+      // labelled at all - see `periudhaEMbuluar` in finance.js.
+      periudhaZhvendosje: rec.periudhaZhvendosje === "" ? null : Number(rec.periudhaZhvendosje),
       dataETjetres: rec.dataETjetres,
       dataFundit: rec.dataFundit || null,
       nrKesteve: Math.floor(toNumber(rec.nrKesteve)) || null,
@@ -227,6 +233,23 @@ function ShtoTePerseritur({ show, onHide, initial }) {
                 opsionet={opsionetEThjeshta(FREQUENCIES)}
                 titulli="Sa shpesh"
               />
+            </Form.Group>
+
+            <Form.Group as={Col} md={6} controlId="rec-periudha">
+              <Form.Label>Për cilin muaj është</Form.Label>
+              <Zgjedhesi
+                id="rec-periudha"
+                value={rec.periudhaZhvendosje ?? ""}
+                onChange={(v) => setField("periudhaZhvendosje", v)}
+                opsionet={opsionetEThjeshta(ZHVENDOSJET_E_PERIUDHES)}
+                titulli="Për cilin muaj është pagesa"
+              />
+              <div className="fcp-modal-hint">
+                Paratë rrallë lëvizin në muajin që u takojnë: qiraja merret një muaj përpara, rroga
+                vjen në fillim të muajit pasardhës për punën e muajit që shkoi. Kur e caktoni këtu,
+                çdo transaksion i krijuar nga kjo pagesë e mban muajin te përshkrimi - p.sh.
+                <em> Qera Obejkti - Mergimi · Shtator 2026</em>.
+              </div>
             </Form.Group>
 
             <MonedhaTjeter

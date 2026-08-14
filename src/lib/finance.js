@@ -16,7 +16,7 @@
 
 import { addDays, addMonths, addWeeks, addYears, format, parseISO } from "date-fns";
 import { debtTypeMeta, planPriorityMeta, FREQUENCIES, MONTHS_SHORT } from "./options";
-import { toNumber } from "./format";
+import { monthKey, monthLabel, toNumber } from "./format";
 import { emriIPlote, familjaSet, rrenjaE } from "./kategorite";
 
 // ── Accounts ────────────────────────────────────────────────────────────────
@@ -1045,6 +1045,40 @@ export function idIPerseritjes(recId, data) {
   return `tx_rec_${recId}_${data}`;
 }
 
+/**
+ * Which month a payment is *for*, as opposed to the day it moves.
+ *
+ * Money rarely changes hands in the month it belongs to. Rent is collected a month ahead - what is
+ * paid on 1 August is September's - and a salary arrives at the start of the month after the one it
+ * was earned in, so the transfer dated 1 September is August's pay. The ledger stored only the
+ * date, so two rows that read "Qera Obejkti - Mergimi" told you nothing about which month either of
+ * them settled, and the answer had to be carried in the user's head.
+ *
+ * `zhvendosje` is that gap in months, set once per schedule: `+1` for rent in advance, `-1` for pay
+ * in arrears, `0` for a bill that belongs to the month it is paid in. `null`/undefined means the
+ * schedule was never given one, and nothing is labelled - which is every schedule that existed
+ * before this, and the reason nothing changes for them.
+ *
+ * Deliberately month arithmetic and not "add 30 days": the answer for the 31st of a short month has
+ * to be the month, not a date that slid into the next one.
+ */
+export const ZHVENDOSJET_E_PERIUDHES = [
+  { value: "", label: "Pa shënim muaji" },
+  { value: "-1", label: "Muaji i kaluar (p.sh. rroga e gushtit, paguar në shtator)" },
+  { value: "0", label: "Muaji i pagesës" },
+  { value: "1", label: "Muaji i ardhshëm (p.sh. qiraja e shtatorit, marrë në gusht)" },
+];
+
+export function periudhaEMbuluar(dataStr, zhvendosje) {
+  if (zhvendosje === null || zhvendosje === undefined || zhvendosje === "") return null;
+  const hapi = Number(zhvendosje);
+  if (!Number.isFinite(hapi)) return null;
+  const data = parseISO(dataStr);
+  if (Number.isNaN(data.getTime())) return null;
+  const celesi = monthKey(addMonths(data, hapi));
+  return { celesi, etiketa: monthLabel(celesi) };
+}
+
 export function generateDueTransactions(rec, todayStr, maxCatchUp = 60) {
   const transactions = [];
   let updated = { ...rec };
@@ -1053,6 +1087,9 @@ export function generateDueTransactions(rec, todayStr, maxCatchUp = 60) {
   const krijuar = new Date().toISOString();
 
   while (isRecurringDue(updated, todayStr) && guard < maxCatchUp) {
+    // Which month this one covers - see `periudhaEMbuluar`. Null for every schedule that has not
+    // been given an offset, which is why nothing about existing schedules changes.
+    const periudha = periudhaEMbuluar(updated.dataETjetres, updated.periudhaZhvendosje);
     transactions.push({
       id: idIPerseritjes(updated.id, updated.dataETjetres),
       data: updated.dataETjetres,
@@ -1062,7 +1099,12 @@ export function generateDueTransactions(rec, todayStr, maxCatchUp = 60) {
       llogariaId: updated.llogariaId,
       llogariaDestinacionId: null,
       kategoriaId: updated.kategoriaId,
-      pershkrimi: updated.emri,
+      // The covered month rides in the description because that is the one field every list, the
+      // PDF statement and the CSV export already show - a field of its own would be invisible
+      // exactly where the question gets asked.
+      pershkrimi: periudha ? `${updated.emri} · ${periudha.etiketa}` : updated.emri,
+      // …and as a plain key too, so a later release can group or filter by it without parsing text.
+      periudha: periudha?.celesi ?? null,
       shenim: `Krijuar automatikisht nga pagesa e përsëritur "${updated.emri}".`,
       qellimiId: null,
       perseritjaId: updated.id,
