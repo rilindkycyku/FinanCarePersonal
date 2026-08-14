@@ -17,10 +17,20 @@ const EMRAT = {
   profile: ["profil", "profili"],
 };
 
-/** One record of that store, named as the user knows it - for a list that says what changed. */
-export function emriStorit(store) {
-  return EMRAT[store]?.[0] ?? store;
+/** One record of that store, named as the user knows it - for a list that says what changed.
+ * `shume` gives the plural instead, for a column heading over a count. */
+export function emriStorit(store, shume = false) {
+  const emri = EMRAT[store]?.[shume ? 1 : 0];
+  if (!emri) return store;
+  return shume ? emri.charAt(0).toUpperCase() + emri.slice(1) : emri;
 }
+
+/** The stores a comparison lists, in the order a person thinks about them - transactions first,
+ * because that is the ledger; the rest in descending order of how often anybody looks. */
+export const RENDI_STOREVE = [
+  "transactions", "categories", "accounts", "borxhet", "planet", "budgets", "goals", "recurring",
+  "profile",
+];
 
 /**
  * "81 transaksione, 121 kategori dhe 1 llogari" - the biggest few, so the sentence stays a

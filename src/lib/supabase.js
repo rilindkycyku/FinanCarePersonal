@@ -58,6 +58,11 @@ const BOSH = {
   // Whether the project has the columns that record which device wrote a row (migration 2). Null
   // until a push finds out. Kept so a project still on migration 1 is asked once, not once per push.
   pajisjeKolona: null,
+  // "Take the whole table on the next pull, not just what changed." Set by the writes that create
+  // records with **fixed ids** - the starter lists - because those collide with rows the cloud has
+  // been holding for months, and an incremental pull would not bring the cloud's version down to
+  // beat them. See `seedDefaults` in db.js. Unlike `ngaFillimiTjeter` it only affects the download.
+  shkarkimIPloteTjeter: false,
   fundit: null,
 };
 

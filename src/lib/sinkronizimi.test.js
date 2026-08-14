@@ -536,3 +536,45 @@ describe("gjurma e pajisjes në rreshtin që dërgohet", () => {
     expect("device_name" in rreshti).toBe(false);
   });
 });
+
+/**
+ * Restoring the starter lists on a device that has been syncing for months.
+ *
+ * The date on a seeded record is what makes the cloud's version win - but only if the cloud's
+ * version is among the rows that came down, and an incremental pull returns only what changed
+ * since this device's watermark. A category the cloud has held unchanged since March is not in
+ * that batch, so nothing arrives to beat the seed, and the push - an upsert, which always wins -
+ * carries the factory name over the renamed one everywhere.
+ *
+ * Hence `kerkoShkarkimTePlote` in db.js: seeding asks the next sync for the whole table. These two
+ * tests are the before and after of exactly that.
+ */
+describe("kthimi i listave të parazgjedhura në një pajisje që sinkronizohet prej muajsh", () => {
+  const seed = { id: "cat_ushqim", emri: "Ushqim", perditesuar: KOHA_PARA_SINKRONIZIMIT, sinkPezull: true };
+  const neCloud = {
+    store: "categories",
+    id: "cat_ushqim",
+    perditesuar: 1_700_000_000_000,
+    fshire: false,
+    data: { id: "cat_ushqim", emri: "Ushqime & Pije" },
+  };
+
+  it("me shkarkim të plotë, versioni i cloud-it fiton dhe fara nuk ngjitet", () => {
+    const gjendja = { storet: { categories: [{ ...seed }] } };
+    const plani = planiIAplikimit([neCloud], gjendjaLokale(gjendja));
+    expect(plani.shkruaj.map((r) => r.data.emri)).toEqual(["Ushqime & Pije"]);
+    expect(ndryshimetLokale({ ...gjendja, perjashto: plani.celesat })).toEqual([]);
+  });
+
+  it("pa të, s'vjen asgjë për ta mundur - dhe fara do të nisej lart", () => {
+    // The same sync with an incremental pull: the cloud row has not changed, so it is simply not
+    // in the batch. Nothing is applied, and the seed is still owed - which is why the download has
+    // to be a full one after seeding, not because of anything in the merge rules.
+    const gjendja = { storet: { categories: [{ ...seed }] } };
+    const plani = planiIAplikimit([], gjendjaLokale(gjendja));
+    expect(plani.shkruaj).toEqual([]);
+    expect(ndryshimetLokale({ ...gjendja, perjashto: plani.celesat }).map((r) => r.id)).toEqual([
+      "cat_ushqim",
+    ]);
+  });
+});

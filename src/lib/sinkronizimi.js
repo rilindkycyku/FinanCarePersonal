@@ -1035,7 +1035,11 @@ async function ekzekuto({ ngaFillimi: kerkuar = false, menyra = null } = {}) {
     const stampuar = await stampoPastampuarat(gjendja);
     await migroPezullimet(gjendja, k);
 
-    const rreshtat = await shkarkoRreshtat(ngaFillimi || paVendim ? "" : k.pulledAt);
+    // The whole table rather than the changes since last time. Asked for by the modes, by a device
+    // that has not decided yet - and by the starter lists (`kerkoShkarkimTePlote` in db.js), whose
+    // fixed ids need the cloud's own version to come down and beat them.
+    const shkarkimIPlote = ngaFillimi || paVendim || Boolean(k.shkarkimIPloteTjeter);
+    const rreshtat = await shkarkoRreshtat(shkarkimIPlote ? "" : k.pulledAt);
 
     // Cleared only now, with the whole cloud copy already in hand: a download that failed half way
     // must leave the device exactly as it was, not empty.
@@ -1095,6 +1099,7 @@ async function ekzekuto({ ngaFillimi: kerkuar = false, menyra = null } = {}) {
       // the cloud is now the flag on each record, not anything derived from this.
       pushedAt: nisi,
       ngaFillimiTjeter: false,
+      shkarkimIPloteTjeter: false,
       // Answering the question is what settles it, and it stays settled from then on.
       ...(menyra ? { lidhjaVerifikuar: true } : {}),
       // Left alone when this run pushed nothing, so a quiet sync does not erase what the last

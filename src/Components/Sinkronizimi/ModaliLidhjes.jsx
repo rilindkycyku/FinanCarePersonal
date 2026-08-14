@@ -2,8 +2,30 @@ import { useEffect, useState } from "react";
 import { Alert, Button, Modal, Spinner } from "react-bootstrap";
 import { AlertTriangle, ArrowDownToLine, ArrowUpFromLine, Merge } from "lucide-react";
 import { MENYRAT, permbledhjaLidhjes } from "../../lib/sinkronizimi";
-import { pershkrimiStoreve } from "./emratStoreve";
+import { RENDI_STOREVE, emriStorit } from "./emratStoreve";
 import "../ModalForms.css";
+
+/**
+ * One row per store, both sides side by side - and only for stores one of the two sides actually
+ * has. A table listing four kinds of nothing buries the two lines that matter.
+ *
+ * Tombstones are counted under their own store, which is why a number here can exceed what the app
+ * shows on its pages: a deleted transaction is still a row the cloud holds.
+ */
+function rreshtatKrahasimit({ cloudSipasStorit = {}, lokalSipasStorit = {} }) {
+  const storet = new Set([...Object.keys(cloudSipasStorit), ...Object.keys(lokalSipasStorit)]);
+  return [...storet]
+    .sort((a, b) => {
+      const ia = RENDI_STOREVE.indexOf(a);
+      const ib = RENDI_STOREVE.indexOf(b);
+      return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+    })
+    .map((store) => ({
+      store,
+      cloud: cloudSipasStorit[store] ?? 0,
+      lokal: lokalSipasStorit[store] ?? 0,
+    }));
+}
 
 function Zgjedhja({ vlera, zgjedhur, onZgjidh, ikona, titulli, ndihma, variant = "light" }) {
   const aktive = vlera === zgjedhur;
@@ -91,21 +113,37 @@ function ModaliLidhjes({ show, onHide, onZgjidh, duke }) {
               nuk i mbishkruan dot të dhënat e vërteta.
             </p>
 
-            <div className="row g-2 mb-3">
-              <div className="col-6">
-                <div className="p-3 border border-secondary rounded-3 h-100">
-                  <div className="fcp-row-sub">Te projekti (cloud)</div>
-                  <div className="h4 mb-1">{permbledhja.cloud}</div>
-                  <div className="fcp-row-sub">{pershkrimiStoreve(permbledhja.cloudSipasStorit)}</div>
-                </div>
-              </div>
-              <div className="col-6">
-                <div className="p-3 border border-secondary rounded-3 h-100">
-                  <div className="fcp-row-sub">Në këtë pajisje</div>
-                  <div className="h4 mb-1">{permbledhja.lokal}</div>
-                  <div className="fcp-row-sub">{pershkrimiStoreve(permbledhja.lokalSipasStorit)}</div>
-                </div>
-              </div>
+            {/* Store by store rather than one total each. The decision below applies to
+                everything at once, so the honest thing is to show what "everything" is: a total
+                of 209 against 124 says nothing about *which* side has the transactions. */}
+            <div className="table-responsive mb-3">
+              <table className="table table-sm align-middle mb-0">
+                <thead>
+                  <tr className="fcp-row-sub">
+                    <th className="fw-normal"> </th>
+                    <th className="fw-normal text-end">Te projekti</th>
+                    <th className="fw-normal text-end">Këtu</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rreshtatKrahasimit(permbledhja).map((rr) => (
+                    <tr key={rr.store}>
+                      <td>{emriStorit(rr.store, true)}</td>
+                      <td className="text-end">{rr.cloud || "—"}</td>
+                      <td className={`text-end${rr.cloud === 0 && rr.lokal > 0 ? " fw-bold" : ""}`}>
+                        {rr.lokal || "—"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot>
+                  <tr className="fw-bold border-top">
+                    <td>Gjithsej</td>
+                    <td className="text-end">{permbledhja.cloud}</td>
+                    <td className="text-end">{permbledhja.lokal}</td>
+                  </tr>
+                </tfoot>
+              </table>
             </div>
 
             <p className="fcp-row-sub mb-3">

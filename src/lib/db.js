@@ -9,7 +9,7 @@ import { generateDueTransactions } from "./finance";
 import { todayISO } from "./format";
 import { blobNeDataUrl, dataUrlNeBlob, emriSkedarit, ringjeshFaturen, thumbNeDataUrl } from "./images";
 import { krijoZip, lexoZip } from "./zip";
-import { pastroKonfigurimin } from "./supabase";
+import { pastroKonfigurimin, ruajKonfigurimin } from "./supabase";
 
 const DB_NAME = "financarepersonal";
 const DB_VERSION = 5;
@@ -320,6 +320,30 @@ export function putSeed(store, record) {
 }
 
 /**
+ * Tells the next sync to download the **whole** cloud table rather than only what changed.
+ *
+ * The date on a seeded record is what makes the cloud's version of that id win - but only if the
+ * cloud's version is in the batch that came down, and an incremental pull returns only rows newer
+ * than this device's watermark. A category the cloud has held unchanged since March is not in that
+ * batch. So on a device that has been syncing for months, restoring the starter lists wrote a
+ * factory "Ushqim & Pije" that nothing came down to beat - and the push, an upsert, which always
+ * wins, carried it over the renamed one on every other device.
+ *
+ * One full download closes it: the cloud's row arrives, beats the seed locally (`gjendjaLokale`
+ * keeps a seed out of "unsent wins"), and lands among the keys the push then skips.
+ *
+ * Called once per seeding run, not once per record: it writes to `localStorage` and wakes every
+ * listener of the sync configuration, and a restore of the starter lists writes 121 rows.
+ */
+export function kerkoShkarkimTePlote() {
+  try {
+    ruajKonfigurimin({ shkarkimIPloteTjeter: true });
+  } catch {
+    // No sync configured, or storage refused: nothing to schedule, and the seeding still stands.
+  }
+}
+
+/**
  * The same, for many records of one store in a single transaction.
  *
  * A first sync applies every record the cloud holds; done one transaction at a time that is one
@@ -440,6 +464,7 @@ export async function ensureDefaultCategories() {
   // `putSeed`, not `put`: these carry the same fixed ids the user's other devices have been
   // renaming for months, and an untouched default must never win against one of those.
   await Promise.all(munguara.map((c) => putSeed(STORES.categories, c)));
+  kerkoShkarkimTePlote();
   return true;
 }
 
@@ -898,6 +923,9 @@ export async function seedDefaults({ perfshiLlogarite = true } = {}) {
     ...(perfshiLlogarite ? DEFAULT_ACCOUNTS.map((a) => putSeed(STORES.accounts, a)) : []),
     ...DEFAULT_CATEGORIES.map((c) => putSeed(STORES.categories, c)),
   ]);
+  // Written with fixed ids the cloud may already hold under the user's own names, so the next sync
+  // is told to fetch the whole table and let those win - see `kerkoShkarkimTePlote`.
+  kerkoShkarkimTePlote();
   // The starter lists have fixed ids, so these rows may be re-creating exactly what a tombstone
   // says was deleted - see `hiqFshirjet`.
   await hiqFshirjet([

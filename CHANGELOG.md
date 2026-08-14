@@ -23,11 +23,19 @@ ngriti versionin.
   `db.js`), pikërisht si rekordet që i paraprijnë sinkronizimit: ngjiten lart kur cloud-i nuk i ka
   parë kurrë, dhe humbasin gjithmonë ndaj asaj që cloud-i ka për të njëjtin id. Vlen njësoj te
   hapja e parë e bazës, te «Kthe listat e parazgjedhura» dhe pas çdo pastrimi.
+- **…dhe humbasin edhe kur cloud-i nuk ka ndryshuar prej muajsh.** Data e vjetër e bën farën të
+  humbasë vetëm nëse rreshti i cloud-it *vjen* poshtë - kurse një sinkronizim i zakonshëm merr
+  vetëm çka ka ndryshuar që nga hera e fundit. Një kategori që cloud-i e mban të pandryshuar prej
+  marsit nuk është në atë tufë, pra asgjë nuk vinte për ta mundur farën, dhe ngarkimi - një upsert,
+  që fiton gjithmonë - e çonte emrin e fabrikës mbi atë të riemëruarin te çdo pajisje. Prandaj
+  mbjellja e listave tani i kërkon sinkronizimit të radhës **tabelën e plotë**, jo vetëm ndryshimet.
 
 ### Shtuar
 - **Pajisja e sapolidhur pyet para se të dërgojë asgjë.** Sapo lidhet, ajo vetëm *lexon* nga
   projekti - asnjë transaksion, kategori apo llogari nuk shkon lart - dhe shfaq të dyja anët të
-  numëruara: sa rreshta ka projekti, sa rekorde ka pajisja, sa përputhen dhe sa i ka vetëm njëra.
+  numëruara **store për store** - sa transaksione, sa kategori, sa llogari ka secila anë - plus sa
+  përputhen dhe sa i ka vetëm njëra. Një total 209 kundër 124 nuk thotë se cila anë i ka
+  transaksionet; tabela e thotë me një shikim.
   Pastaj zgjidhni: **Bashko** (projekti fiton çdo përplasje, ngarkohet vetëm ajo që projekti nuk e
   ka), **Merr nga projekti** (pajisja bëhet kopje e tij) ose **Dërgo këtë pajisje** (kjo pajisje
   mbishkruan projektin). Dy të fundit kërkojnë të shkruhet fjala - njësoj si fshirja te Cilësimet,
