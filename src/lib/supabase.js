@@ -49,6 +49,20 @@ const BOSH = {
   // that ran it. A hint for the page, never a substitute for the live checks - another device may
   // have set the project up, and the trigger check below is what actually knows.
   skemaVersioni: 0,
+  // Whether the user has looked at what is in the cloud and said what should happen to it. Until
+  // they have, this device pulls and never pushes - see `ekzekuto` in sinkronizimi.js. False rather
+  // than absent is what a *newly connected* device carries; a device that connected before this
+  // release has neither and is treated as long since decided, because it has been syncing for
+  // months and asking it now would be theatre.
+  lidhjaVerifikuar: null,
+  // Whether the project has the columns that record which device wrote a row (migration 2). Null
+  // until a push finds out. Kept so a project still on migration 1 is asked once, not once per push.
+  pajisjeKolona: null,
+  // "Take the whole table on the next pull, not just what changed." Set by the writes that create
+  // records with **fixed ids** - the starter lists - because those collide with rows the cloud has
+  // been holding for months, and an incremental pull would not bring the cloud's version down to
+  // beat them. See `seedDefaults` in db.js. Unlike `ngaFillimiTjeter` it only affects the download.
+  shkarkimIPloteTjeter: false,
   fundit: null,
 };
 
@@ -251,13 +265,33 @@ function ruajSesionin(data, shtese = {}) {
   });
 }
 
+/**
+ * Whether the device still owes the user a decision about what to do with the cloud copy.
+ *
+ * A *new* connection does: this browser is about to meet a table it has never seen, and until
+ * somebody says which side is the real one, pushing would be a guess with somebody's ledger. A
+ * re-login on the same project that this device has already synced with does not - the two sides
+ * are known to each other, and asking again every time a session expires would teach the user to
+ * tap through the one dialog that matters.
+ *
+ * `null` (a device connected before this existed) is left as it is: it has been syncing for months.
+ */
+function vendimiILidhjes(k, url) {
+  if (k.url === url && k.fundit) return k.lidhjaVerifikuar;
+  return false;
+}
+
 /** Signs in against the user's own project. `url`/`anonKey` are passed in the first time (nothing
  * is saved until the project has actually answered), and read from storage afterwards. */
 export async function hyr({ email, password, url, anonKey }) {
   const k = { ...lexoKonfigurimin(), ...(url ? { url } : {}), ...(anonKey ? { anonKey } : {}) };
   const data = await fetchAuth(k, "token?grant_type=password", { email: email.trim(), password });
   if (!data.access_token) throw gabimi("Projekti nuk ktheu një sesion - provoni sërish.", "auth");
-  return ruajSesionin(data, { url: k.url, anonKey: k.anonKey });
+  return ruajSesionin(data, {
+    url: k.url,
+    anonKey: k.anonKey,
+    lidhjaVerifikuar: vendimiILidhjes(lexoKonfigurimin(), k.url),
+  });
 }
 
 /**
@@ -269,7 +303,14 @@ export async function regjistrohu({ email, password, url, anonKey }) {
   const k = { ...lexoKonfigurimin(), ...(url ? { url } : {}), ...(anonKey ? { anonKey } : {}) };
   const data = await fetchAuth(k, "signup", { email: email.trim(), password });
   if (!data.access_token) return { konfirmim: true, konfigurimi: null };
-  return { konfirmim: false, konfigurimi: ruajSesionin(data, { url: k.url, anonKey: k.anonKey }) };
+  return {
+    konfirmim: false,
+    konfigurimi: ruajSesionin(data, {
+      url: k.url,
+      anonKey: k.anonKey,
+      lidhjaVerifikuar: vendimiILidhjes(lexoKonfigurimin(), k.url),
+    }),
+  };
 }
 
 /**
@@ -331,6 +372,9 @@ export function adoptoSesioninNgaLinku(hash = typeof window === "undefined" ? ""
     skadonMe: Date.now() + (Number(params.get("expires_in")) || 3600) * 1000,
     userId: payload?.sub || k.userId,
     email: payload?.email || k.email,
+    // Arriving here from the confirmation link is a connection like any other, and it is very often
+    // the *first* one - so the same question is owed before anything is pushed.
+    lidhjaVerifikuar: vendimiILidhjes(k, k.url),
   });
 }
 
@@ -386,7 +430,11 @@ export async function rest(shtegu, { method = "GET", body, headers = {}, kthePer
   if (res.status === 401 || res.status === 403) {
     throw gabimi("Projekti nuk e lejoi këtë veprim - kontrolloni që rregullat RLS të skriptit janë krijuar.", "leje");
   }
-  throw gabimi(data?.message || `Projekti u përgjigj me gabimin ${res.status}.`, "server");
+  // PostgREST's own code travels with the error: the caller that can act on one of them (a column
+  // a migration has not added yet) should not have to read English prose to recognise it.
+  throw Object.assign(gabimi(data?.message || `Projekti u përgjigj me gabimin ${res.status}.`, "server"), {
+    kodiPg: data?.code || "",
+  });
 }
 
 /**
@@ -488,7 +536,7 @@ export async function verifikoSkemen(nga = 0) {
   // guessing from what its own copy of the app happens to ship. Best effort: the migration has run,
   // and failing to write a marker must not report a finished migration as unfinished.
   await shenoVersioninSkemes(arritur).catch(() => undefined);
-  ruajKonfigurimin({ skemaVersioni: arritur });
+  ruajKonfigurimin({ skemaVersioni: arritur, pajisjeKolona: arritur >= VERSIONI_I_PAJISJES });
   return arritur;
 }
 
@@ -531,9 +579,15 @@ export async function shenoVersioninSkemes(versioni) {
 }
 
 /** What the sync page needs to decide between "up to date", "needs an update" and "never set up". */
+/** The migration that added `device_id` / `device_name`. Below it, a push must leave them out. */
+export const VERSIONI_I_PAJISJES = 2;
+
 export async function gjendjaSkemes() {
   try {
     const versioni = await lexoVersioninSkemes();
+    // Read from the project, so a device whose own guess was wrong (it pushed before another
+    // device ran the migration) is corrected the next time this page is opened.
+    ruajKonfigurimin({ pajisjeKolona: versioni >= VERSIONI_I_PAJISJES });
     return {
       versioni,
       iFundit: SKEMA_VERSIONI,

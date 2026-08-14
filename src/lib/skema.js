@@ -25,8 +25,9 @@
  *
  * The records themselves live inside a `jsonb` column, so a release that adds a field to a
  * transaction, an account or a category needs nothing here at all. That is the whole reason the
- * table is shaped the way it is. Migration 1 is the schema as it has always been; number 2 does not
- * exist yet, and if the design keeps its promise it will be a long time before it does.
+ * table is shaped the way it is. Migration 1 is the schema as it has always been; migration 2 adds
+ * the two columns that say which device wrote a row - the one question the records themselves
+ * cannot answer, since the same account is signed in on every device.
  */
 
 /** One table holds every record, keyed by (user, store, id) - see `MIGRIMET` below. A table per
@@ -43,6 +44,11 @@ export const TABELA = "financare_records";
  */
 export const STORI_META = "meta";
 export const ID_SKEMES = "skema";
+
+/** The devices that have connected to this project, one row each under the same `meta` store:
+ * `pajisja:<id>`. Kept in the cloud rather than on each device for the obvious reason - the point
+ * is for the phone to be able to say what the tablet did. */
+export const PREFIKSI_PAJISJES = "pajisja:";
 
 const sql1 = `-- FinanCarePersonal · sinkronizimi (migrimi 1)
 
@@ -94,6 +100,15 @@ grant select, insert, update, delete on public.${TABELA} to authenticated;
 create index if not exists ${TABELA}_updated_at_idx
   on public.${TABELA} (user_id, updated_at);`;
 
+const sql2 = `-- FinanCarePersonal · sinkronizimi (migrimi 2)
+
+-- Kush e shkroi rreshtin. I njëjti email hyn në të gjitha pajisjet, prandaj llogaria
+-- nuk e thotë dot këtë; pa të, "kush e mbishkroi kategorinë time" nuk ka përgjigje.
+-- Të dyja janë shtesa: një pajisje me version të vjetër të aplikacionit vazhdon të
+-- shkruajë njësoj, thjesht i lë bosh.
+alter table public.${TABELA} add column if not exists device_id   text;
+alter table public.${TABELA} add column if not exists device_name text;`;
+
 /**
  * The migrations, in order. `emri` is what the user is told is about to happen to their database -
  * "run migration 4" means nothing to anybody, so each one says what it does in a few words.
@@ -111,6 +126,12 @@ export const MIGRIMET = [
     emri: "Tabela e të dhënave, rregulli i sigurisë, ora e serverit dhe indeksi",
     sql: sql1,
     verifikimi: `${TABELA}?select=record_id&limit=1`,
+  },
+  {
+    versioni: 2,
+    emri: "Gjurma e pajisjes që e dërgoi çdo rresht",
+    sql: sql2,
+    verifikimi: `${TABELA}?select=device_id&limit=1`,
   },
 ];
 

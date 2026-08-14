@@ -9,6 +9,104 @@ e fundit kur rregullohet diçka, dhe e para vetëm kur ndryshon vetë forma e pr
 herë, te `2.0.0`, kur të dhënat mësuan të dalin nga shfletuesi. Datat janë ato të commit-it që e
 ngriti versionin.
 
+## [2.3.0] - 2026-08-14
+
+### Rregulluar
+- **Një pajisje e pastruar nuk i mbishkruan më të dhënat e vërteta te cloud-i.** Kjo është arsyeja
+  e gjithë release-it. Një tablet u pastrua me «Pastro të gjitha të dhënat», u rilidh te i njëjti
+  projekt dhe dërgoi lart **127 rreshta** - llogaritë dhe 121 kategoritë e parazgjedhura që
+  krijohen vetë pas një pastrimi. Ato mbajnë **të njëjtat id** në çdo pajisje që ka ekzistuar
+  ndonjëherë, pra nuk u shtuan pranë kategorive të vërteta: zunë vendin e tyre, kudo. Dhe asgjë në
+  aplikacion nuk kundërshtoi, sepse sipas rregullave të veta tableti mbante «ndryshime të
+  padërguara», dhe ndryshimi i padërguar fiton.
+  <br />Tani listat e parazgjedhura shkruhen me datën më të vjetër që ekziston (`putSeed` te
+  `db.js`), pikërisht si rekordet që i paraprijnë sinkronizimit: ngjiten lart kur cloud-i nuk i ka
+  parë kurrë, dhe humbasin gjithmonë ndaj asaj që cloud-i ka për të njëjtin id. Vlen njësoj te
+  hapja e parë e bazës, te «Kthe listat e parazgjedhura» dhe pas çdo pastrimi.
+- **…dhe humbasin edhe kur cloud-i nuk ka ndryshuar prej muajsh.** Data e vjetër e bën farën të
+  humbasë vetëm nëse rreshti i cloud-it *vjen* poshtë - kurse një sinkronizim i zakonshëm merr
+  vetëm çka ka ndryshuar që nga hera e fundit. Një kategori që cloud-i e mban të pandryshuar prej
+  marsit nuk është në atë tufë, pra asgjë nuk vinte për ta mundur farën, dhe ngarkimi - një upsert,
+  që fiton gjithmonë - e çonte emrin e fabrikës mbi atë të riemëruarin te çdo pajisje. Prandaj
+  mbjellja e listave tani i kërkon sinkronizimit të radhës **tabelën e plotë**, jo vetëm ndryshimet.
+- **Faqja Kategoritë ishte e prishur nga një emër klase i përplasur.** `.fcp-cat-group` ishte
+  përcaktuar në dy skedarë: te ModalForms.css si titulli i grupit brenda zgjedhësit të kategorive -
+  flex, i vogël, VERSALE, me hapësirë mes shkronjash - dhe te Personal.css si «një prind bashkë me
+  nënkategoritë e tij». CSS-ja nuk ka shtrirje, pra faqja i merrte të dyja: nënkategoritë dilnin
+  *përkrah* prindit e jo poshtë tij, dhe çdo emër shkurtohej në «USHQI...» me shkronja të mëdha.
+  Personal.css nuk e mbulonte dot, sepse cakton vetëm `min-width` - `display: flex` mbetej në fuqi
+  pavarësisht renditjes. Klasa e faqes u riemërua; i gjithë projekti u kontrollua për përplasje të
+  tjera të këtij lloji.
+
+### Shtuar
+- **Pajisja e sapolidhur pyet para se të dërgojë asgjë.** Sapo lidhet, ajo vetëm *lexon* nga
+  projekti - asnjë transaksion, kategori apo llogari nuk shkon lart - dhe shfaq të dyja anët të
+  numëruara **store për store** - sa transaksione, sa kategori, sa llogari ka secila anë - plus sa
+  përputhen dhe sa i ka vetëm njëra. Një total 209 kundër 124 nuk thotë se cila anë i ka
+  transaksionet; tabela e thotë me një shikim.
+  Pastaj zgjidhni: **Bashko** (projekti fiton çdo përplasje, ngarkohet vetëm ajo që projekti nuk e
+  ka), **Merr nga projekti** (pajisja bëhet kopje e tij) ose **Dërgo këtë pajisje** (kjo pajisje
+  mbishkruan projektin). Dy të fundit kërkojnë të shkruhet fjala - njësoj si fshirja te Cilësimet,
+  sepse një prekje e rastit e mbyll një dritare, por nuk shkruan dot «DËRGO».
+  <br />Derisa të përgjigjeni, shenja te shiriti i sipërm rri e verdhë dhe e thotë. Pajisjet e
+  lidhura më parë nuk pyeten: ato kanë muaj që sinkronizohen dhe s'ka çfarë të vendoset.
+- **Çdo rresht mban tani emrin e pajisjes që e dërgoi** (migrimi 2 i projektit tuaj: `device_id` dhe
+  `device_name`). Me një email të vetëm në të gjitha pajisjet, kjo ishte e vetmja pyetje pa
+  përgjigje: *cila prej tyre e bëri këtë?* Te faqja **Sinkronizimi** ndodhet lista e pajisjeve që
+  kanë sinkronizuar ndonjëherë - emri, kur sinkronizoi së fundi, sa rekorde mban, sa dërgoi - dhe
+  gjurma e rreshtave të fundit të shkruar, secili me pajisjen përballë. Emrin e merr vetë nga
+  shfletuesi («Chrome në Android») dhe e ndryshoni kur të doni; ai ruhet vetëm në atë pajisje,
+  sepse përshkruan pajisjen e jo paratë. Një projekt që ende nuk e ka ekzekutuar migrimin vazhdon
+  të sinkronizohet normalisht - rreshtat thjesht shkojnë pa vulë, dhe faqja e thotë.
+- **Çdo pagesë e përsëritur thotë për cilin muaj është.** Paratë rrallë lëvizin në muajin që u
+  takojnë: qiraja merret një muaj përpara - ajo e paguar më 1 gusht është e shtatorit - kurse rroga
+  vjen në fillim të muajit pasardhës për punën e muajit që shkoi. Ledgeri mbante vetëm datën, pra dy
+  rreshta «Qera Obejkti - Mergimi» nuk të thoshin cilin muaj mbulonte secili. Tani secila pagesë ka
+  një zhvendosje - muaji i kaluar, muaji i pagesës, muaji i ardhshëm ose asnjë - dhe transaksionet e
+  krijuara prej saj e mbajnë muajin te përshkrimi: *Qera Obejkti - Mergimi · Shtator 2026*.
+- **Faqja e sinkronizimit tregon çka ruhet aktualisht**, të dyja anët të numëruara store për store,
+  me sa përputhen dhe sa i ka vetëm njëra. Deri tani thoshte «222 rreshta nga 221 rekorde», që i
+  përgjigjet pyetjes «a po punon?» dhe asgjë tjetër - kur një store *është* i mangët, ai numër nuk
+  të thotë cili.
+- **`sql/kontrollo-dhe-pastro.sql`** - një skript për SQL Editor-in e projektit tuaj që i përgjigjet
+  katër pyetjeve që tabela nuk i thotë vetë: sa mban secili store, cili sinkronizim i shkroi cilat
+  rreshta dhe kur, a ka dublikata, dhe a tregon ndonjë rekord nga diçka e fshirë. Fshirja aty bëhet
+  gjithmonë me `deleted = true`: një `delete` i vërtetë e zhduk rreshtin pa lënë gjurmë dhe pajisja
+  që ende e mban rekordin e ngarkon sërish.
+
+### Ndryshuar
+- **«Shkarko gjithçka nga cloud» u nda në dy butona që e thonë çfarë bëjnë.** Ai buton, pavarësisht
+  emrit, *edhe* ringarkonte gjithçka që mbante pajisja - pra butoni që dukej i sigurti ishte ai që
+  mund të mbishkruante pajisjet e tjera. Tani janë **Merr gjithçka nga projekti** dhe **Dërgo
+  gjithçka nga kjo pajisje**, secili me konfirmimin e vet, plus **Bashko me projektin** për rastin
+  ku nuk humbet asgjë.
+- **Asnjë `<select>` nativ nuk ka mbetur.** Kontrolli i shfletuesit është e vetmja pjesë e një
+  formulari që nuk stilizohet dot: në Android hapet një listë sa gjithë ekrani me ngjyrat e
+  sistemit, në iOS një rrotë poshtë, dhe një listë me 25 monedha vinte pa kërkim. Fusha e kategorisë
+  e kishte hequr me kohë; tani të njëjtin kontroll e kanë edhe 26 fushat e tjera, me kërkim kur
+  opsionet janë 8 a më shumë. Llogaritë vijnë me ngjyrën dhe ikonën e llojit të tyre, dhe me llojin
+  si nënshkrim - dy rreshta «Raiffeisen» ku njëri është kartelë e tjetri llogari rrjedhëse janë
+  pikërisht aty ku zgjedhja e gabuar të jep bilanc të gabuar.
+- **Faqet marrin 96% të gjerësisë.** Bootstrap-i e ndalte `.container` te një gjerësi fikse për çdo
+  breakpoint, pra kartat KPI kalonin në rresht të dytë me gjysmën e të parit bosh, kurse tabelat
+  rrëshqitnin anash në një kolonë që kishte vend për të kursyer nga të dyja anët. Një rregull i
+  vetëm tani, për të 14 faqet - më parë paneli e kishte të vetin te 90% e çdo faqe tjetër ishte sa
+  thoshte Bootstrap-i.
+- **Pasqyra PDF i përsërit totalet në fund**, kur ka më shumë se një faqe. Kush lexon deri në fund
+  të faqes 3 ka para vetes rreshtin e fundit të një tabele dhe shifrat tri faqe më pas - kurse një
+  pasqyrë lexohet për totalin e saj.
+- **Rezultatet e butonave janë dritare, jo shirita** - te Cilësimet, te Eksporto / Importo dhe te
+  Importo nga CSV. Faqja e parë kishte nevojë për `scrollIntoView` që ta tërhiqte përdoruesin lart
+  te një fjali që nuk kish shkuar ta kërkonte, dëshmia më e mirë se ishte në vendin e gabuar. Pas
+  një pastrimi të plotë në një pajisje të lidhur, dritarja thotë edhe çfarë të zgjidhni kur ta
+  rilidhni - dhe çfarë të mos zgjidhni. Nuk preken dy raste ku shiriti është i sakti: mesazhi te
+  Ndaje rri ngjitur me butonat e vet, dhe gabimet e fotove janë brenda një dritareje tashmë të
+  hapur.
+- **Njoftimi i kopjes te Paneli nuk thotë më se të dhënat ndodhen «vetëm në këtë shfletues»** kur
+  pajisja sinkronizohet, sepse nuk është e vërtetë dhe një paralajmërim i pasaktë pushon së
+  besuari. Thotë atë që mbetet e vërtetë: fotot e faturave nuk sinkronizohen fare, dhe një gabim i
+  vetëm te sinkronizimi prek të dyja anët njëherësh.
+
 ## [2.2.0] - 2026-08-13
 
 ### Shtuar
@@ -28,7 +126,7 @@ ngriti versionin.
 ## [2.1.1] - 2026-08-13
 
 ### Rregulluar
-- **Sinkronizimi tani e pyet vetë projektin se çfarë ka, në vend që t&apos;i besojë asaj që mban
+- **Sinkronizimi tani e pyet vetë projektin se çfarë ka, në vend që t'i besojë asaj që mban
   mend pajisja.** Deri tani një rekord dërgohej vetëm nëse pajisja e mbante shënim si të padërguar,
   dhe ajo shënjë hiqej sapo projekti e pranonte rreshtin — pra nëse rreshti zhdukej më vonë nga
   projekti (tabela e zbrazur ose e rikrijuar te SQL Editor, një kopje e humbur), asgjë në

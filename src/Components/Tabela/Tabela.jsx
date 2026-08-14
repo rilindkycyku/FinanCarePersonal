@@ -7,6 +7,7 @@ import SortIcon from "./SortIcon";
 import useSortableData from "../../Context/useSortableData";
 import { cellText, isMarkup } from "../../lib/format";
 import "./Tabela.css";
+import Zgjedhesi from "../Zgjedhesi";
 
 // Cycled across whatever distinct values `filterField` finds, so each one gets a stable,
 // visually distinct color - mirrors the colored "Lloji" chip row on FinanCare's own Lista e
@@ -176,19 +177,16 @@ function Tabela({
                     <Form.Label htmlFor={`${idBaza}-rreshta`} className="premium-filter-label">
                       Rreshta
                     </Form.Label>
-                    <Form.Select
+                    <Zgjedhesi
                       id={`${idBaza}-rreshta`}
                       value={itemsPerPage}
-                      onChange={(e) => {
-                        setItemsPerPage(parseInt(e.target.value));
+                      onChange={(v) => {
+                        setItemsPerPage(parseInt(v, 10));
                         goToPage(0);
                       }}
-                      className="premium-select"
-                    >
-                      <option value={20}>20 Rreshta</option>
-                      <option value={50}>50 Rreshta</option>
-                      <option value={100}>100 Rreshta</option>
-                    </Form.Select>
+                      opsionet={[20, 50, 100].map((n) => ({ value: n, label: `${n} Rreshta` }))}
+                      titulli="Sa rreshta për faqe"
+                    />
                   </Col>
                 )}
 

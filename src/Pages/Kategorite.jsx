@@ -160,7 +160,7 @@ function Kategorite() {
     ) : (
       <div className="fcp-cat-grid">
         {list.map((c) => (
-          <div className="fcp-cat-group" key={c.id}>
+          <div className="fcp-cat-familje" key={c.id}>
             {renderCard(c)}
             {c.femijet.length > 0 && (
               <div className="fcp-cat-nen">{c.femijet.map((f) => renderCard(f, { nen: true }))}</div>

@@ -15,7 +15,7 @@ import {
   idIPerseritjes,
   forecast, goalProgress, isRecurringDue, lastInstallmentDate, monthBounds, monthKeyBounds, monthlyTrend,
   monthlyRecurringBreakdown, nextOccurrence, overduePlans, periodBounds, planProgress,
-  plansForMonth, planTotals, previousMonthKey, recurringProgress, rolloverAmount,
+  periudhaEMbuluar, plansForMonth, planTotals, previousMonthKey, recurringProgress, rolloverAmount,
   scheduledOccurrences, sortByDateDesc, spendableBalance, totalBalance, totalsByAccount,
   totalsByCategory, txSignForAccount, upcomingRecurring, yearBounds,
 } from "./finance";
@@ -900,5 +900,75 @@ describe("dailyLimit", () => {
     });
     expect(limit.disponueshme).toBe(-400);
     expect(limit.caktuar).toBe(false);
+  });
+});
+
+/**
+ * Which month a recurring payment is *for*.
+ *
+ * Money rarely moves in the month it belongs to: rent is collected a month ahead, a salary arrives
+ * at the start of the month after the one it was earned in. Before this, two rows both reading
+ * "Qera Obejkti - Mergimi" said nothing about which month either had settled.
+ */
+describe("periudhaEMbuluar", () => {
+  it("reads a rent collected a month in advance as next month's", () => {
+    expect(periudhaEMbuluar("2026-08-01", 1)).toEqual({ celesi: "2026-09", etiketa: "Shtator 2026" });
+  });
+
+  it("reads a salary paid at the start of the month as the previous month's", () => {
+    expect(periudhaEMbuluar("2026-09-01", -1)).toEqual({ celesi: "2026-08", etiketa: "Gusht 2026" });
+  });
+
+  it("crosses the year end in both directions", () => {
+    expect(periudhaEMbuluar("2026-12-01", 1).celesi).toBe("2027-01");
+    expect(periudhaEMbuluar("2026-01-05", -1).celesi).toBe("2025-12");
+  });
+
+  it("stays in the month for a payment that belongs to the month it is paid in", () => {
+    expect(periudhaEMbuluar("2026-08-14", 0).celesi).toBe("2026-08");
+  });
+
+  it("does not slide off the end of a short month", () => {
+    // The whole reason this is month arithmetic and not "add 30 days": 31 January + one month has
+    // to be February, not the 2nd of March.
+    expect(periudhaEMbuluar("2026-01-31", 1).celesi).toBe("2026-02");
+  });
+
+  it("labels nothing when the schedule was never given an offset", () => {
+    // Every schedule that existed before this feature, which is why none of them changed.
+    expect(periudhaEMbuluar("2026-08-01", null)).toBeNull();
+    expect(periudhaEMbuluar("2026-08-01", undefined)).toBeNull();
+    expect(periudhaEMbuluar("2026-08-01", "")).toBeNull();
+  });
+});
+
+describe("generateDueTransactions me muajin e mbuluar", () => {
+  const qira = {
+    id: "rec_qira",
+    emri: "Qera Obejkti - Mergimi",
+    lloji: "hyrje",
+    vlera: 600,
+    frekuenca: "mujore",
+    dataETjetres: "2026-08-01",
+    periudhaZhvendosje: 1,
+    aktiv: true,
+  };
+
+  it("puts the covered month in the description and keeps it as a key", () => {
+    const { transactions } = generateDueTransactions(qira, "2026-08-05");
+    expect(transactions).toHaveLength(1);
+    expect(transactions[0].pershkrimi).toBe("Qera Obejkti - Mergimi · Shtator 2026");
+    expect(transactions[0].periudha).toBe("2026-09");
+  });
+
+  it("advances the month with each catch-up, so a gap does not label them all the same", () => {
+    const { transactions } = generateDueTransactions(qira, "2026-10-05");
+    expect(transactions.map((t) => t.periudha)).toEqual(["2026-09", "2026-10", "2026-11"]);
+  });
+
+  it("leaves a schedule without an offset exactly as it was", () => {
+    const { transactions } = generateDueTransactions({ ...qira, periudhaZhvendosje: null }, "2026-08-05");
+    expect(transactions[0].pershkrimi).toBe("Qera Obejkti - Mergimi");
+    expect(transactions[0].periudha).toBeNull();
   });
 });

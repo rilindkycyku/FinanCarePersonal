@@ -91,7 +91,10 @@ sa shpenzohet, sa mbetet dhe sa po kursesh.
   e dhënë.
 - **Pagesat e Përsëritura** - qira, abonime, rroga dhe blerjet me këste. Skedulimi nuk regjistron
   vetë asgjë: kur vjen data, ju e konfirmoni dhe krijohet transaksioni (duke kapërcyer edhe rastet e
-  mbetura pas). Për një blerje me këste mjafton numri i kësteve - data e përfundimit llogaritet vetë
+  mbetura pas). Secila mund të thotë edhe **për cilin muaj është**, sepse paratë rrallë lëvizin në
+  muajin që u takojnë: qiraja merret një muaj përpara, rroga vjen në fillim të muajit pasardhës për
+  punën e muajit që shkoi. Kur e caktoni, transaksioni e mban muajin te përshkrimi - *Qera Obejkti -
+  Mergimi · Shtator 2026* - pra dy rreshta me të njëjtin emër nuk ngatërrohen më. Për një blerje me këste mjafton numri i kësteve - data e përfundimit llogaritet vetë
   dhe pagesa ndalet pas kësti të fundit. Një kartelë paguhet një herë në muaj, jo këst për këst:
   konfirmimi hap një dritare që mbledh të gjitha këstet e asaj kartele që kanë arritur datën, i
   regjistron të gjitha me një datë të vetme pagese (zgjeroni datën për të përfshirë edhe këstet që
@@ -298,9 +301,9 @@ jo të vetes.
 Një rresht për çdo rekord - jo e gjithë baza në një rresht të vetëm, dhe jo një tabelë për çdo
 store:
 
-| user_id | store | record_id | updated_at | deleted | data |
-| --- | --- | --- | --- | --- | --- |
-| `a1b2…` | `transactions` | `tx_m4f2k9x` | `2026-08-11 18:02:18+00` | `false` | `{"id":"tx_m4f2k9x","data":"2026-08-11","lloji":"shpenzim","vlera":12.34,…}` |
+| user_id | store | record_id | updated_at | deleted | device_name | data |
+| --- | --- | --- | --- | --- | --- | --- |
+| `a1b2…` | `transactions` | `tx_m4f2k9x` | `2026-08-11 18:02:18+00` | `false` | `Chrome në Android` | `{"id":"tx_m4f2k9x","data":"2026-08-11","lloji":"shpenzim","vlera":12.34,…}` |
 
 Një libër me 800 transaksione, 6 llogari e 120 kategori (me nënkategoritë) bëhet rreth 930 rreshta,
 plus një rresht për profilin. Fushat e vetë rekordit rrinë brenda kolonës `data` (jsonb) sepse tabela ndodhet te
@@ -318,6 +321,19 @@ from financare_records
 where store = 'transactions' and not deleted
 order by dita desc;
 ```
+
+### Kontrolli i kopjes në cloud
+
+`sql/kontrollo-dhe-pastro.sql` ekzekutohet te SQL Editor i projektit tuaj dhe përgjigjet katër
+pyetjeve që tabela nuk i thotë vetë: sa mban secili store, **cili sinkronizim i shkroi cilat
+rreshta dhe kur** (ngarkimet vijnë në tufa, pra historiku lexohet si listë ngjarjesh), a ka
+kategori a transaksione të dyfishta, dhe a ka rekorde që tregojnë nga diçka e fshirë. Pjesët e
+para vetëm lexojnë.
+
+Një gjë vlen të mbahet mend para se të fshini ndonjë rresht atje: **`delete` nuk funksionon si
+fshirje.** Sinkronizimi e njeh fshirjen vetëm si rresht me `deleted = true` - një varr, që udhëton
+te pajisjet. Një rresht i zhdukur pa gjurmë e ka pajisjen ende duke e mbajtur rekordin, dhe
+kontrolli i përditshëm do ta ngarkojë sërish. Skripti e bën si duhet.
 
 ### Kur skema ndryshon
 
@@ -365,7 +381,25 @@ përditësohet. Kjo ishte arsyeja pse kolona është `jsonb` që në fillim.
   ta ekzekutoni skriptin sërish.
 - Rekordet e krijuara para se të ekzistonte sinkronizimi datohen te epoka, jo te «tani»: kështu një
   pajisje e re, që sapo ka mbjellë kategoritë e parazgjedhura me të njëjtat id, nuk i mbishkruan
-  riemërtimet e pajisjes së vjetër.
+  riemërtimet e pajisjes së vjetër. **Të njëjtën datë marrin edhe listat e parazgjedhura** kudo që
+  krijohen - te hapja e parë e bazës, te «Kthe listat e parazgjedhura» dhe pas një pastrimi të plotë
+  (`putSeed` te `db.js`). Pa këtë, një tablet i pastruar dhe i rilidhur i çonte 127 rreshta të
+  sapokrijuar mbi një vit kategorish të vërteta, sepse për rregullat e zakonshme ato ishin
+  «ndryshime të padërguara» dhe ndryshimi i padërguar fiton.
+- **Një pajisje e sapolidhur nuk dërgon asgjë derisa ta pyesë përdoruesin.** Sapo lidhet, ajo vetëm
+  lexon; faqja i tregon të dyja anët të numëruara (sa rreshta ka projekti, sa rekorde ka pajisja, sa
+  përputhen) dhe kërkon një nga tri përgjigjet: **Bashko** (projekti fiton çdo përplasje, ngarkohet
+  vetëm ajo që projekti nuk e ka), **Merr nga projekti** (pajisja bëhet kopje e tij) ose **Dërgo**
+  (kjo pajisje mbishkruan projektin). Të dyja të fundit kërkojnë të shkruhet fjala përkatëse, si
+  fshirja te Cilësimet. Pajisjet e lidhura para këtij release nuk pyeten - ato kanë vite që
+  sinkronizohen.
+- **Çdo rresht mban emrin e pajisjes që e dërgoi** (`device_id` / `device_name`, migrimi 2). Me një
+  llogari të vetme në të gjitha pajisjet, kjo është e vetmja mënyrë t&apos;i përgjigjesh pyetjes
+  «cila pajisje e bëri këtë?». Emri jepet vetë nga shfletuesi ("Chrome në Android") dhe ndryshohet
+  te faqja **Sinkronizimi**, ku qëndron edhe lista e pajisjeve që kanë sinkronizuar ndonjëherë me
+  projektin - me kohën e fundit, sa rekorde mban secila dhe sa dërgoi herën e fundit - dhe gjurma e
+  rreshtave të fundit të shkruar. Emri ruhet vetëm te ai shfletues: ai përshkruan pajisjen, jo
+  paratë, pra nuk sinkronizohet.
 - Sinkronizimi bëhet vetë - kur hapet aplikacioni, pak sekonda pas çdo ndryshimi, kur ktheheni te
   skeda, kur pajisja kthehet online dhe çdo dhjetë minuta sa kohë faqja rri e hapur - ose vetëm me
   buton, sipas çelësit te faqja.
@@ -395,6 +429,8 @@ src/
   lib/        db.js (IndexedDB), finance.js (çdo kalkulim), csv.js (leximi i ekstraktit),
               kategorite.js (nënkategoritë: prindi, familja, pema e kërkimi i zgjedhësit),
               skema.js (migrimet e projektit tuaj Supabase, të numëruara),
+              pajisja.js (emri dhe id-ja e kësaj pajisjeje, vula e çdo rreshti të dërguar),
+              opsionet.js (rekordet e aplikacionit si rreshta për zgjedhësin),
               rregullat.js (kujtesa e kategorive), images.js (përpunimi i fotove të faturave),
               zip.js (arkivi i kopjes së plotë), calc.js (llogaritësi i fushave të vlerës),
               supabase.js (klienti i vogël i projektit tuaj), sinkronizimi.js (rregullat e bashkimit),

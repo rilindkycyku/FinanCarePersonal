@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Container, Row, Col, Card, Form, Button, Alert, Table } from "react-bootstrap";
+import { Container, Row, Col, Card, Form, Button, Table } from "react-bootstrap";
 import { FileSpreadsheet, Upload, Check, CircleAlert, Wand2, ArrowRight } from "lucide-react";
 import NavBar from "../Components/NavBar";
 import Footer from "../Components/Footer";
@@ -10,6 +10,8 @@ import PunaNeVazhdim from "../Components/PunaNeVazhdim";
 import ZgjedhesiKategorive from "../Components/ZgjedhesiKategorive";
 import { Empty } from "../Components/Ui";
 import { useData } from "../Context/DataContext";
+import Zgjedhesi from "../Components/Zgjedhesi";
+import { opsionetLlogarive } from "../lib/opsionet";
 import { useDialog } from "../Context/DialogContext";
 import { makeId, STORES } from "../lib/db";
 import { guessMapping, markDuplicates, parseDelimited, rowsToTransactions } from "../lib/csv";
@@ -52,7 +54,14 @@ function ImportoCsv() {
   const [opsionet, setOpsionet] = useState({ ditaEPare: true, shenjaPerkundert: false });
   const [llogaria, setLlogaria] = useState("");
   const [zgjedhjet, setZgjedhjet] = useState({}); // celesi -> { perfshij, kategoriaId }
-  const [mesazhi, setMesazhi] = useState(null);
+
+  /** The result of a button, in a dialog rather than a banner - same reason as everywhere else in
+   * the app: the answer belongs where the eye already is, not at the top of the page. */
+  const njofto = (lloji, teksti) =>
+    dialog.alert(teksti, {
+      title: { success: "U krye", danger: "Gabim", warning: "Kujdes", info: "Njoftim" }[lloji],
+      variant: lloji,
+    });
   const [duke, setDuke] = useState(false);
 
   const aktive = useMemo(() => accounts.filter((a) => !a.arkivuar), [accounts]);
@@ -98,7 +107,6 @@ function ImportoCsv() {
     const f = e.target.files?.[0];
     e.target.value = "";
     if (!f) return;
-    setMesazhi(null);
     try {
       const text = await f.text();
       const lexuar = parseDelimited(text);
@@ -109,7 +117,7 @@ function ImportoCsv() {
       setZgjedhjet({});
       setLlogaria(njeLlogari ? llogariaKryesore?.id || "" : aktive[0]?.id || "");
     } catch (err) {
-      setMesazhi({ type: "danger", text: `Skedari nuk u lexua: ${err.message}` });
+      njofto("danger", `Skedari nuk u lexua: ${err.message}`);
     }
   };
 
@@ -141,7 +149,7 @@ function ImportoCsv() {
     const perfshira = rreshtat.filter((r) => zgjedhja(r).perfshij);
     if (perfshira.length === 0) return;
     if (!llogaria) {
-      setMesazhi({ type: "danger", text: "Zgjidhni llogarinë ku hyjnë këto lëvizje." });
+      njofto("danger", "Zgjidhni llogarinë ku hyjnë këto lëvizje.");
       return;
     }
 
@@ -202,7 +210,7 @@ function ImportoCsv() {
       await reload();
       navigate("/transaksionet");
     } catch (err) {
-      setMesazhi({ type: "danger", text: `Importimi dështoi: ${err.message}` });
+      njofto("danger", `Importimi dështoi: ${err.message}`);
       setDuke(false);
     }
   };
@@ -237,12 +245,6 @@ function ImportoCsv() {
             <input ref={fileRef} type="file" accept=".csv,.txt,text/csv,text/plain" hidden onChange={handleFile} />
           </div>
 
-          {mesazhi && (
-            <Alert variant={mesazhi.type} onClose={() => setMesazhi(null)} dismissible>
-              {mesazhi.text}
-            </Alert>
-          )}
-
           {!parsed ? (
             <Card className="profile-card border-0 p-4">
               <h2 className="fcp-card-title fw-bold mb-2">
@@ -274,17 +276,15 @@ function ImportoCsv() {
                   ).map((k) => (
                     <Form.Group as={Col} md={4} key={k.celesi} controlId={`kolona-${k.celesi}`}>
                       <Form.Label>{k.label}</Form.Label>
-                      <Form.Select
+                      <Zgjedhesi
                         value={mapping[k.celesi]}
-                        onChange={(e) => setMapping((prev) => ({ ...prev, [k.celesi]: Number(e.target.value) }))}
-                      >
-                        <option value={-1}>- asnjë -</option>
-                        {parsed.headers.map((h, i) => (
-                          <option key={h + i} value={i}>
-                            {h}
-                          </option>
-                        ))}
-                      </Form.Select>
+                        onChange={(v) => setMapping((prev) => ({ ...prev, [k.celesi]: Number(v) }))}
+                        opsionet={[
+                          { value: -1, label: "- asnjë -" },
+                          ...parsed.headers.map((h, i) => ({ value: i, label: h })),
+                        ]}
+                        titulli={`Kolona për "${k.emri}"`}
+                      />
                     </Form.Group>
                   ))}
 
@@ -323,14 +323,13 @@ function ImportoCsv() {
                       <Form.Label>
                         Llogaria <span className="text-danger">*</span>
                       </Form.Label>
-                      <Form.Select value={llogaria} onChange={(e) => setLlogaria(e.target.value)}>
-                        <option value="">Zgjidh llogarinë...</option>
-                        {aktive.map((a) => (
-                          <option key={a.id} value={a.id}>
-                            {a.emri}
-                          </option>
-                        ))}
-                      </Form.Select>
+                      <Zgjedhesi
+                        value={llogaria}
+                        onChange={setLlogaria}
+                        opsionet={opsionetLlogarive(aktive)}
+                        placeholder="Zgjidh llogarinë..."
+                        titulli="Zgjidh llogarinë"
+                      />
                     </Form.Group>
                   )}
 

@@ -10,6 +10,8 @@ import PageLoading from "../Components/PageLoading";
 import PunaNeVazhdim from "../Components/PunaNeVazhdim";
 import Ndaje from "../Components/Ndaje";
 import { useData } from "../Context/DataContext";
+import Zgjedhesi from "../Components/Zgjedhesi";
+import { opsionetEThjeshta, opsionetLlogarive } from "../lib/opsionet";
 import { useDialog } from "../Context/DialogContext";
 import { exportAllData, exportZipData, hapesiraRuajtjes, importAllData, importZipData,
   kerkoRuajtjeQendrueshme, ringjeshFaturat, ruajtjaEshteQendrueshme, shenoKopjen } from "../lib/db";
@@ -54,7 +56,21 @@ function TeDhena() {
   const { profile, accounts, categories, transactions, budgets, goals, recurring, borxhet, planet, faturat, reload,
     simboli, loading, njeLlogari } = useData();
   const dialog = useDialog();
-  const [message, setMessage] = useState(null);
+
+  /**
+   * The result of a button, said in a dialog rather than in a banner at the top of the page.
+   *
+   * This page is long and every button that reports anything sits well below the fold, so the
+   * banner used to need `scrollIntoView` to drag the user back up to a sentence they had not asked
+   * to go looking for. A dialog arrives where the eye already is, and it is what the rest of the
+   * app uses for the same job.
+   */
+  const njofto = (lloji, teksti) =>
+    dialog.alert(teksti, {
+      title: { success: "U krye", danger: "Gabim", warning: "Kujdes", info: "Njoftim" }[lloji],
+      variant: lloji,
+    });
+
   const [hapesira, setHapesira] = useState(null);
   const [periudha, setPeriudha] = useState("muaji");
   const [llogariaPdf, setLlogariaPdf] = useState("");
@@ -68,17 +84,10 @@ function TeDhena() {
   const [duke, setDuke] = useState(null);
   const fileInputRef = useRef(null);
   const importModeRef = useRef("zevendeso");
-  const messageRef = useRef(null);
 
   // How exposed the ledger is: everything lives in this browser, so a copy kept elsewhere is the
   // only thing that survives clearing site data (finance.js).
   const kopja = useMemo(() => backupStatus({ profile, transactions }), [profile, transactions]);
-
-  // The message renders at the top of a long page; the buttons that produce it are far below, so
-  // without this a failure is reported entirely off-screen and the export just looks dead.
-  useEffect(() => {
-    if (message) messageRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-  }, [message]);
 
   // Nothing here is stored on a server, so the browser's own quota is the only ceiling there is -
   // and invoice photos are the first thing that gets anywhere near it.
@@ -122,7 +131,7 @@ function TeDhena() {
       await shenoKopjen(data.exportedAt);
       await reload();
     } catch (err) {
-      setMessage({ type: "danger", text: `Kopja nuk u krijua: ${err.message}` });
+      njofto("danger", `Kopja nuk u krijua: ${err.message}`);
     } finally {
       setDuke(null);
     }
@@ -140,9 +149,9 @@ function TeDhena() {
       // A ZIP is the fuller copy of the two, so it counts as *the* backup just as much.
       await shenoKopjen();
       await reload();
-      setMessage({ type: "success", text: `Arkivi u krijua - ${formatBytes(blob.size)} me ${faturat.length} foto.` });
+      njofto("success", `Arkivi u krijua - ${formatBytes(blob.size)} me ${faturat.length} foto.`);
     } catch (err) {
-      setMessage({ type: "danger", text: `Arkivi nuk u krijua: ${err.message}` });
+      njofto("danger", `Arkivi nuk u krijua: ${err.message}`);
     } finally {
       setZipi(null);
       setDuke(null);
@@ -152,13 +161,11 @@ function TeDhena() {
   const handleQendrueshme = async () => {
     const dhene = await kerkoRuajtjeQendrueshme();
     setQendrueshme(dhene);
-    setMessage(
+    njofto(
+      dhene ? "success" : "info",
       dhene
-        ? { type: "success", text: "Shfletuesi e shënoi ruajtjen si të qëndrueshme - të dhënat nuk fshihen automatikisht." }
-        : {
-            type: "info",
-            text: "Shfletuesi nuk e dha (ende) ruajtjen e qëndrueshme. Përdorimi i rregullt i aplikacionit, shtimi te faqeshënuesit ose te ekrani bazë e bën më të mundshme.",
-          }
+        ? "Shfletuesi e shënoi ruajtjen si të qëndrueshme - të dhënat nuk fshihen automatikisht."
+        : "Shfletuesi nuk e dha (ende) ruajtjen e qëndrueshme. Përdorimi i rregullt i aplikacionit, shtimi te faqeshënuesit ose te ekrani bazë e bën më të mundshme."
     );
   };
 
@@ -167,7 +174,7 @@ function TeDhena() {
   const handleExportExcel = async () => {
     if (duke) return;
     if (transactions.length === 0) {
-      setMessage({ type: "info", text: "Nuk ka transaksione për t'u eksportuar." });
+      njofto("info", "Nuk ka transaksione për t'u eksportuar.");
       return;
     }
     setDuke("txExcel");
@@ -195,7 +202,7 @@ function TeDhena() {
         `financarepersonal-transaksionet-${new Date().toISOString().slice(0, 10)}.xlsx`
       );
     } catch (err) {
-      setMessage({ type: "danger", text: `Excel-i nuk u krijua: ${err.message}` });
+      njofto("danger", `Excel-i nuk u krijua: ${err.message}`);
     } finally {
       setDuke(null);
     }
@@ -222,7 +229,7 @@ function TeDhena() {
       });
       setPdf(pasqyra);
     } catch (err) {
-      setMessage({ type: "danger", text: `PDF-ja nuk u krijua: ${err.message}` });
+      njofto("danger", `PDF-ja nuk u krijua: ${err.message}`);
     } finally {
       setDuke(null);
     }
@@ -244,9 +251,9 @@ function TeDhena() {
         end,
         llogariaId: llogariaPdf || null,
       });
-      setMessage({ type: "success", text: `Pasqyra u shkarkua: ${emri}` });
+      njofto("success", `Pasqyra u shkarkua: ${emri}`);
     } catch (err) {
-      setMessage({ type: "danger", text: `Excel-i nuk u krijua: ${err.message}` });
+      njofto("danger", `Excel-i nuk u krijua: ${err.message}`);
     } finally {
       setDuke(null);
     }
@@ -269,20 +276,18 @@ function TeDhena() {
       { title: "Ngjesh Fotot Ekzistuese", confirmLabel: "Ngjesh fotot" }
     );
     if (!ok) return;
-    setMessage(null);
     setNgjeshja({ bere: 0, gjithsej: faturat.length });
     const { ngjeshur, uKursye } = await ringjeshFaturat(faturat, profile.cilesiaFaturave, (bere, gjithsej) =>
       setNgjeshja({ bere, gjithsej })
     );
     setNgjeshja(null);
     await reload();
-    setMessage({
-      type: ngjeshur > 0 ? "success" : "info",
-      text:
-        ngjeshur > 0
-          ? `U ngjeshën ${ngjeshur} foto dhe u liruan ${formatBytes(uKursye)}.`
-          : "Asnjë foto nuk u ngjesh - të gjitha janë tashmë brenda cilësisë së zgjedhur.",
-    });
+    njofto(
+      ngjeshur > 0 ? "success" : "info",
+      ngjeshur > 0
+        ? `U ngjeshën ${ngjeshur} foto dhe u liruan ${formatBytes(uKursye)}.`
+        : "Asnjë foto nuk u ngjesh - të gjitha janë tashmë brenda cilësisë së zgjedhur."
+    );
   };
 
   const handleImportFile = async (e) => {
@@ -316,14 +321,14 @@ function TeDhena() {
         permbledhja = await importAllData(data, { mode: importModeRef.current });
       }
       await reload();
-      setMessage({
-        type: "success",
-        text: bashko
+      njofto(
+        "success",
+        bashko
           ? `U shtuan ${permbledhja.shtuar} rreshta të rinj; ${permbledhja.ekzistuese} ishin tashmë këtu dhe mbetën si ishin.`
-          : `Të dhënat u zëvendësuan me kopjen e skedarit - ${permbledhja.shtuar} rreshta.`,
-      });
+          : `Të dhënat u zëvendësuan me kopjen e skedarit - ${permbledhja.shtuar} rreshta.`
+      );
     } catch (err) {
-      setMessage({ type: "danger", text: `Importimi dështoi: ${err.message}` });
+      njofto("danger", `Importimi dështoi: ${err.message}`);
     } finally {
       setDuke(null);
     }
@@ -370,14 +375,6 @@ function TeDhena() {
             Të gjitha të dhënat ruhen vetëm në këtë shfletues. Mbani një arkiv ZIP kur keni foto faturash, një JSON kur
             doni vetëm librin e llogarive, dhe një skedar Excel kur doni t&apos;i analizoni jashtë aplikacionit.
           </p>
-
-          <div ref={messageRef}>
-            {message && (
-              <Alert variant={message.type} onClose={() => setMessage(null)} dismissible>
-                {message.text}
-              </Alert>
-            )}
-          </div>
 
           {afroPlot && (
             <Alert variant="warning" className="d-flex align-items-start gap-2">
@@ -521,26 +518,27 @@ function TeDhena() {
             <Row className="g-3 align-items-end">
               <Form.Group as={Col} md={4} controlId="pdf-periudha">
                 <Form.Label>Periudha</Form.Label>
-                <Form.Select value={periudha} onChange={(e) => setPeriudha(e.target.value)}>
-                  {STATEMENT_PERIODS.map((p) => (
-                    <option key={p.value} value={p.value}>
-                      {p.label}
-                    </option>
-                  ))}
-                </Form.Select>
+                <Zgjedhesi
+                  id="pdf-periudha"
+                  value={periudha}
+                  onChange={setPeriudha}
+                  opsionet={opsionetEThjeshta(STATEMENT_PERIODS)}
+                  titulli="Periudha e pasqyrës"
+                />
               </Form.Group>
 
               {!njeLlogari && accounts.length > 1 && (
                 <Form.Group as={Col} md={4} controlId="pdf-llogaria">
                   <Form.Label>Llogaria</Form.Label>
-                  <Form.Select value={llogariaPdf} onChange={(e) => setLlogariaPdf(e.target.value)}>
-                    <option value="">Të gjitha llogaritë</option>
-                    {accounts.map((a) => (
-                      <option key={a.id} value={a.id}>
-                        {a.emri}
-                      </option>
-                    ))}
-                  </Form.Select>
+                  <Zgjedhesi
+                    id="pdf-llogaria"
+                    value={llogariaPdf}
+                    onChange={setLlogariaPdf}
+                    opsionet={opsionetLlogarive(accounts)}
+                    emptyLabel="Të gjitha llogaritë"
+                    placeholder="Të gjitha llogaritë"
+                    titulli="Llogaria e pasqyrës"
+                  />
                   <div className="fcp-row-sub mt-1">
                     Për një llogari të vetme, transferet brenda llogarive numërohen si hyrje ose dalje e saj.
                   </div>

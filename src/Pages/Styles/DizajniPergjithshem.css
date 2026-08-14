@@ -8,7 +8,10 @@ body {
 
 /* Modernized Theme-Aware Containers */
 .containerDashboardP {
-  width: 95%;
+  /* 96%, same as `.fcp-page .container` in Personal.css - the two wrappers sit on different pages
+     and used to disagree by a percent, which read as the settings page being slightly narrower
+     than everything else. */
+  width: 96%;
   margin: 1.5rem auto;
   background: var(--sp-surface) !important;
   padding: 2rem;

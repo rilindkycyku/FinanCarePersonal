@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Card, Form, Button, Alert } from "react-bootstrap";
 import { Wallet, Merge } from "lucide-react";
 import { useData } from "../Context/DataContext";
+import Zgjedhesi from "./Zgjedhesi";
+import { opsionetLlogarive } from "../lib/opsionet";
 import { useDialog } from "../Context/DialogContext";
 import { makeId, STORES } from "../lib/db";
 import { consolidateAccounts } from "../lib/finance";
@@ -132,18 +134,15 @@ function CilesimiNjeLlogari({ onMessage }) {
       {accounts.length > 1 && (
         <Form.Group controlId="cilesimi-llogaria-kryesore" className="mb-3">
           <Form.Label>Llogaria kryesore</Form.Label>
-          <Form.Select
+          <Zgjedhesi
+            id="cilesimi-llogaria-kryesore"
             value={llogariaKryesore?.id || ""}
             disabled={busy}
-            onChange={(e) => changeMain(e.target.value)}
-            style={{ maxWidth: 320 }}
-          >
-            {accounts.map((a) => (
-              <option key={a.id} value={a.id}>
-                {a.emri}
-              </option>
-            ))}
-          </Form.Select>
+            onChange={changeMain}
+            opsionet={opsionetLlogarive(accounts)}
+            titulli="Llogaria kryesore"
+            className="fcp-zgj-i-ngushte"
+          />
         </Form.Group>
       )}
 

@@ -7,10 +7,14 @@ import VleraInput from "./VleraInput";
 import ZgjedhesiKategorive from "./ZgjedhesiKategorive";
 import { makeId, STORES } from "../lib/db";
 import { currencySymbol, formatMoney, toNumber, todayISO } from "../lib/format";
-import { convertedAmount, currencyFields, debtProgress, lastInstallmentDate } from "../lib/finance";
+import {
+  ZHVENDOSJET_E_PERIUDHES, convertedAmount, currencyFields, debtProgress, lastInstallmentDate,
+} from "../lib/finance";
 import { FREQUENCIES } from "../lib/options";
 import { formatDate } from "../lib/format";
 import "./ModalForms.css";
+import Zgjedhesi from "./Zgjedhesi";
+import { opsionetEThjeshta, opsionetLlogarive } from "../lib/opsionet";
 
 const BLANK = {
   emri: "",
@@ -19,6 +23,7 @@ const BLANK = {
   kategoriaId: "",
   llogariaId: "",
   frekuenca: "mujore",
+  periudhaZhvendosje: "",
   dataETjetres: todayISO(),
   dataFundit: "",
   nrKesteve: "",
@@ -139,6 +144,9 @@ function ShtoTePerseritur({ show, onHide, initial }) {
       kategoriaId: rec.kategoriaId,
       llogariaId: rec.llogariaId,
       frekuenca: rec.frekuenca,
+      // Kept as a string in the form and stored as a number, or null when the schedule is not
+      // labelled at all - see `periudhaEMbuluar` in finance.js.
+      periudhaZhvendosje: rec.periudhaZhvendosje === "" ? null : Number(rec.periudhaZhvendosje),
       dataETjetres: rec.dataETjetres,
       dataFundit: rec.dataFundit || null,
       nrKesteve: Math.floor(toNumber(rec.nrKesteve)) || null,
@@ -218,13 +226,30 @@ function ShtoTePerseritur({ show, onHide, initial }) {
 
             <Form.Group as={Col} md={6} controlId="rec-frekuenca">
               <Form.Label>Frekuenca</Form.Label>
-              <Form.Select value={rec.frekuenca} onChange={(e) => setField("frekuenca", e.target.value)}>
-                {FREQUENCIES.map((f) => (
-                  <option key={f.value} value={f.value}>
-                    {f.label}
-                  </option>
-                ))}
-              </Form.Select>
+              <Zgjedhesi
+                id="rec-frekuenca"
+                value={rec.frekuenca}
+                onChange={(v) => setField("frekuenca", v)}
+                opsionet={opsionetEThjeshta(FREQUENCIES)}
+                titulli="Sa shpesh"
+              />
+            </Form.Group>
+
+            <Form.Group as={Col} md={6} controlId="rec-periudha">
+              <Form.Label>Për cilin muaj është</Form.Label>
+              <Zgjedhesi
+                id="rec-periudha"
+                value={rec.periudhaZhvendosje ?? ""}
+                onChange={(v) => setField("periudhaZhvendosje", v)}
+                opsionet={opsionetEThjeshta(ZHVENDOSJET_E_PERIUDHES)}
+                titulli="Për cilin muaj është pagesa"
+              />
+              <div className="fcp-modal-hint">
+                Paratë rrallë lëvizin në muajin që u takojnë: qiraja merret një muaj përpara, rroga
+                vjen në fillim të muajit pasardhës për punën e muajit që shkoi. Kur e caktoni këtu,
+                çdo transaksion i krijuar nga kjo pagesë e mban muajin te përshkrimi - p.sh.
+                <em> Qera Obejkti - Mergimi · Shtator 2026</em>.
+              </div>
             </Form.Group>
 
             <MonedhaTjeter
@@ -239,16 +264,15 @@ function ShtoTePerseritur({ show, onHide, initial }) {
                 <Form.Label>
                   Llogaria <span className="text-danger">*</span>
                 </Form.Label>
-                <Form.Select value={rec.llogariaId} onChange={(e) => setField("llogariaId", e.target.value)} required>
-                  <option value="">Zgjidh llogarinë...</option>
-                  {accounts
-                    .filter((a) => !a.arkivuar)
-                    .map((a) => (
-                      <option key={a.id} value={a.id}>
-                        {a.emri}
-                      </option>
-                    ))}
-                </Form.Select>
+                <Zgjedhesi
+                  id="rec-llogariaid"
+                  value={rec.llogariaId}
+                  onChange={(v) => setField("llogariaId", v)}
+                  opsionet={opsionetLlogarive(accounts.filter((a) => !a.arkivuar))}
+                  placeholder="Zgjidh llogarinë..."
+                  titulli="Zgjidh llogarinë"
+                  required
+                />
               </Form.Group>
             )}
 
@@ -311,14 +335,19 @@ function ShtoTePerseritur({ show, onHide, initial }) {
               <Form.Label>
                 {rec.lloji === "hyrje" ? "Kthim borxhi (opsional)" : "Zbrit nga një borxh (opsional)"}
               </Form.Label>
-              <Form.Select value={rec.borxhiId} onChange={(e) => setField("borxhiId", e.target.value)}>
-                <option value="">Pa lidhje me borxh</option>
-                {borxhetERelevante.map((d) => (
-                  <option key={d.id} value={d.id}>
-                    {d.emri} - mbeten {formatMoney(d.mbetur, monedha)}
-                  </option>
-                ))}
-              </Form.Select>
+              <Zgjedhesi
+                id="rec-borxhiid"
+                value={rec.borxhiId}
+                onChange={(v) => setField("borxhiId", v)}
+                opsionet={borxhetERelevante.map((d) => ({
+                  value: d.id,
+                  label: d.emri,
+                  nen: `mbeten ${formatMoney(d.mbetur, monedha)}`,
+                }))}
+                emptyLabel="Pa lidhje me borxh"
+                placeholder="Pa lidhje me borxh"
+                titulli="Lidhe me një borxh"
+              />
               <div className="fcp-modal-hint">
                 {borxhetERelevante.length === 0
                   ? rec.lloji === "hyrje"

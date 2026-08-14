@@ -771,6 +771,59 @@ export async function exportStatementPdf({
       });
   }
 
+  // ── The totals again, at the end of a statement that ran past one page ───────────────────────
+  //
+  // Page 1 carries "Përmbledhja e periudhës" at the top, which is the right place for it when the
+  // whole statement is one sheet. It is the wrong place when it is not: whoever reads to the bottom
+  // of page 3 has the last row of a table in front of them and the figures three pages back, and a
+  // statement is read for its total. The running strip in the page header helps, but it is a header
+  // - it says the same thing above the first row as above the last, and it is not where an eye
+  // looks for a conclusion.
+  //
+  // So the summary is repeated once, under the final table, and only when there is more than one
+  // page - on a single sheet it would sit a few centimetres below the panel it copies.
+  if (doc.internal.getNumberOfPages() > 1) {
+    const rreshtat = [
+      ["Bilanci paraprak", t.fillestar, CLR.text],
+      ["Hyrjet", t.hyrjet, CLR.emerald],
+      ["Shpenzimet", -t.daljet, CLR.red],
+      ["Rezultati i periudhës", t.neto, t.neto < 0 ? CLR.red : CLR.emerald],
+    ];
+    const H_MBYLLJES = 30 + rreshtat.length * 16 + 34;
+    let y = (doc.lastAutoTable?.finalY ?? MARGIN + 42) + 26;
+    // Never split across the fold: a summary broken in half is worse than one on its own page.
+    if (y + H_MBYLLJES > FUNDI) {
+      doc.addPage();
+      y = MARGIN + 42;
+    }
+
+    const w = Math.min(CW, 300);
+    const x = MARGIN + CW - w;
+    doc.setFillColor(...CLR.panel);
+    doc.setDrawColor(...CLR.line);
+    doc.setLineWidth(0.5);
+    doc.roundedRect(x, y, w, H_MBYLLJES, 8, 8, "FD");
+
+    setText(8, "bold", CLR.navy);
+    doc.text("Përmbledhja e periudhës", x + 12, y + 18);
+
+    let ry = y + 36;
+    rreshtat.forEach(([label, value, ngjyra]) => {
+      setText(7.5, "normal", CLR.muted);
+      doc.text(label, x + 12, ry);
+      setText(8.5, "bold", ngjyra);
+      doc.text(money(value), x + w - 12, ry, { align: "right" });
+      ry += 16;
+    });
+
+    doc.setFillColor(...(t.perfundimtar < 0 ? CLR.red : CLR.navy));
+    doc.roundedRect(x + 12, ry - 6, w - 24, 26, 6, 6, "F");
+    setText(6.5, "bold", [203, 213, 225]);
+    doc.text("BILANCI I GJENDJES PËRFUNDIMTARE", x + 20, ry + 5);
+    setText(10, "bold", CLR.white);
+    doc.text(money(t.perfundimtar), x + w - 20, ry + 15, { align: "right" });
+  }
+
   // ── Header and footer on every page ───────────────────────
   // Statement pages get handed around one at a time, so each one has to say what it is: the mark,
   // whose account it covers and for which period, and where it sits in the run.

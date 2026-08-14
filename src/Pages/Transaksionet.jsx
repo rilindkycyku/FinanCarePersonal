@@ -12,6 +12,8 @@ import FaturatModal from "../Components/Faturat/FaturatModal";
 import ZgjedhesiKategorive from "../Components/ZgjedhesiKategorive";
 import { Kpi } from "../Components/Ui";
 import { useData } from "../Context/DataContext";
+import Zgjedhesi from "../Components/Zgjedhesi";
+import { opsionetLlogarive } from "../lib/opsionet";
 import { useDialog } from "../Context/DialogContext";
 import { STORES } from "../lib/db";
 import { cashflow, sortByDateDesc } from "../lib/finance";
@@ -242,34 +244,32 @@ function Transaksionet() {
             {etiketatEPerdorura.length > 0 && (
               <Form.Group as={Col} xs={6} md={3} controlId="filtri-etiketa">
                 <Form.Label className="fcp-row-sub mb-1">Etiketa</Form.Label>
-                <Form.Select
+                <Zgjedhesi
                   value={filtri.etiketa}
-                  onChange={(e) => setFiltri((f) => ({ ...f, etiketa: e.target.value }))}
-                >
-                  <option value="">Të gjitha</option>
-                  {etiketatEPerdorura.map((et) => (
-                    <option key={et.celesi} value={et.celesi}>
-                      {et.emri} ({et.numri})
-                    </option>
-                  ))}
-                </Form.Select>
+                  onChange={(v) => setFiltri((f) => ({ ...f, etiketa: v }))}
+                  opsionet={etiketatEPerdorura.map((et) => ({
+                    value: et.celesi,
+                    label: et.emri,
+                    nen: `${et.numri} transaksione`,
+                  }))}
+                  emptyLabel="Të gjitha"
+                  placeholder="Të gjitha"
+                  titulli="Filtro sipas etiketës"
+                />
               </Form.Group>
             )}
 
             {!njeLlogari && accounts.length > 1 && (
               <Form.Group as={Col} xs={6} md={3} controlId="filtri-llogaria">
                 <Form.Label className="fcp-row-sub mb-1">Llogaria</Form.Label>
-                <Form.Select
+                <Zgjedhesi
                   value={filtri.llogaria}
-                  onChange={(e) => setFiltri((f) => ({ ...f, llogaria: e.target.value }))}
-                >
-                  <option value="">Të gjitha</option>
-                  {accounts.map((a) => (
-                    <option key={a.id} value={a.id}>
-                      {a.emri}
-                    </option>
-                  ))}
-                </Form.Select>
+                  onChange={(v) => setFiltri((f) => ({ ...f, llogaria: v }))}
+                  opsionet={opsionetLlogarive(accounts)}
+                  emptyLabel="Të gjitha"
+                  placeholder="Të gjitha"
+                  titulli="Filtro sipas llogarisë"
+                />
               </Form.Group>
             )}
 

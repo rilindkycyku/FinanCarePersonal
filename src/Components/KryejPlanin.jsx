@@ -6,6 +6,8 @@ import ZgjedhesiKategorive from "./ZgjedhesiKategorive";
 import { makeId, STORES } from "../lib/db";
 import { toNumber, todayISO } from "../lib/format";
 import "./ModalForms.css";
+import Zgjedhesi from "./Zgjedhesi";
+import { opsionetLlogarive } from "../lib/opsionet";
 
 /**
  * Buying a plan: the one moment a planned purchase becomes real money. It books an ordinary expense
@@ -162,14 +164,14 @@ function KryejPlanin({ show, onHide, plani }) {
                 <Form.Label>
                   Llogaria <span className="text-danger">*</span>
                 </Form.Label>
-                <Form.Select value={form.llogariaId} onChange={(e) => setField("llogariaId", e.target.value)}>
-                  <option value="">Zgjidh llogarinë...</option>
-                  {aktive.map((a) => (
-                    <option key={a.id} value={a.id}>
-                      {a.emri}
-                    </option>
-                  ))}
-                </Form.Select>
+                <Zgjedhesi
+                  id="plankryer-llogariaid"
+                  value={form.llogariaId}
+                  onChange={(v) => setField("llogariaId", v)}
+                  opsionet={opsionetLlogarive(aktive)}
+                  placeholder="Zgjidh llogarinë..."
+                  titulli="Zgjidh llogarinë"
+                />
               </Form.Group>
             )}
 

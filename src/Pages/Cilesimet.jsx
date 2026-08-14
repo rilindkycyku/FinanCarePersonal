@@ -8,11 +8,13 @@ import PageTitle from "../Components/PageTitle";
 import PageLoading from "../Components/PageLoading";
 import CilesimiNjeLlogari from "../Components/CilesimiNjeLlogari";
 import { useData } from "../Context/DataContext";
+import Zgjedhesi from "../Components/Zgjedhesi";
+import { opsionetMonedhave } from "../lib/opsionet";
 import { useDialog } from "../Context/DialogContext";
 import { useTheme } from "../Context/ThemeContext";
 import { useSync } from "../Context/SyncContext";
 import { seedDefaults, wipeAllData } from "../lib/db";
-import { CURRENCIES, DEFAULT_CURRENCY } from "../lib/options";
+import { DEFAULT_CURRENCY } from "../lib/options";
 import { pastroRregullat } from "../lib/rregullat";
 import { currencySymbol, toNumber } from "../lib/format";
 import VleraInput from "../Components/VleraInput";
@@ -37,7 +39,6 @@ function Cilesimet() {
   // Read once on mount and refreshed after asking: the browser answer can only change through the
   // button below or through the site settings, which reload the page anyway.
   const [leja, setLeja] = useState(lejaAktuale());
-  const [message, setMessage] = useState(null);
 
   useEffect(() => {
     setForm({
@@ -77,7 +78,7 @@ function Cilesimet() {
       njoftimeLimiti: form.njoftimeLimiti,
       cilesiaFaturave: form.cilesiaFaturave,
     });
-    setMessage({ type: "success", text: "Cilësimet u ruajtën." });
+    await dialog.alert("Cilësimet u ruajtën.", { title: "U krye", variant: "success" });
   };
 
   /**
@@ -139,10 +140,28 @@ function Cilesimet() {
     // (kesh + bankë) are the right thing to restore.
     await seedDefaults();
     await reload();
-    setMessage({
-      type: "success",
-      text: "Të gjitha të dhënat u fshinë dhe listat e parazgjedhura u kthyen - gati për të filluar nga e para.",
-    });
+    // Said in the dialog rather than in a banner at the top of a long page, because on a device
+    // that was synced the sentence after the first one is the one that matters - and it was
+    // scrolled off screen. A wiped device reconnecting to a project that still holds the real
+    // ledger is exactly the situation that cost somebody their categories.
+    await dialog.alert(
+      lidhur ? (
+        <>
+          Të gjitha të dhënat u fshinë dhe listat e parazgjedhura u kthyen.
+          <ul className="text-start mt-2 mb-2 ps-4">
+            <li>Kopja te projekti juaj Supabase nuk u prek.</li>
+            <li>Kjo pajisje u shkëput nga sinkronizimi.</li>
+          </ul>
+          Kur ta rilidhni, do t&apos;ju pyesë çfarë të bëjë me kopjen në cloud. Zgjidhni{" "}
+          <strong>Merr nga projekti</strong> ose <strong>Bashko</strong> - jo{" "}
+          <strong>Dërgo</strong>, sepse ajo do t&apos;i çonte këto lista bosh mbi të dhënat tuaja të
+          vërteta.
+        </>
+      ) : (
+        "Të gjitha të dhënat u fshinë dhe listat e parazgjedhura u kthyen - gati për të filluar nga e para."
+      ),
+      { title: "U krye", variant: "success" }
+    );
   };
 
   /** Rules whose category still exists - the only ones that can ever fire (rregullat.js). */
@@ -155,7 +174,7 @@ function Cilesimet() {
     );
     if (!ok) return;
     await saveProfile({ ...profile, rregullatKategorive: [] });
-    setMessage({ type: "success", text: "Kujtesa e kategorive u fshi." });
+    await dialog.alert("Kujtesa e kategorive u fshi.", { title: "U krye", variant: "success" });
   };
 
   const handleReseed = async () => {
@@ -168,7 +187,15 @@ function Cilesimet() {
     if (!ok) return;
     await seedDefaults({ perfshiLlogarite: !njeLlogari });
     await reload();
-    setMessage({ type: "success", text: "Listat e parazgjedhura u kthyen." });
+    // Restored at the oldest timestamp there is (`putSeed` in db.js), so on a synced device these
+    // untouched defaults lose to whatever the other devices have named them - which is worth
+    // saying, because "kthe listat" used to be a way to undo every rename everywhere.
+    await dialog.alert(
+      lidhur
+        ? "Listat e parazgjedhura u kthyen në këtë pajisje. Emrat që keni ndryshuar në pajisjet e tjera nuk preken - sinkronizimi i radhës i mban ato."
+        : "Listat e parazgjedhura u kthyen.",
+      { title: "U krye", variant: "success" }
+    );
   };
 
   if (loading) return <PageLoading title="Cilësimet" />;
@@ -188,12 +215,6 @@ function Cilesimet() {
             Emri, monedha dhe objektivat tuaja. Monedha përdoret në çdo faqe, në eksportet Excel dhe në kopjet JSON.
           </p>
 
-          {message && (
-            <Alert variant={message.type} onClose={() => setMessage(null)} dismissible>
-              {message.text}
-            </Alert>
-          )}
-
           <Card className="profile-card border-0 p-4 mb-4">
             <Form onSubmit={handleSave}>
               <Row className="g-3">
@@ -209,13 +230,13 @@ function Cilesimet() {
 
                 <Form.Group as={Col} md={6} controlId="form-monedha">
                   <Form.Label>Monedha</Form.Label>
-                  <Form.Select value={form.monedha} onChange={(e) => setField("monedha", e.target.value)}>
-                    {CURRENCIES.map((c) => (
-                      <option key={c.code} value={c.code}>
-                        {c.label} - {c.symbol}
-                      </option>
-                    ))}
-                  </Form.Select>
+                  <Zgjedhesi
+                    id="form-monedha"
+                    value={form.monedha}
+                    onChange={(v) => setField("monedha", v)}
+                    opsionet={opsionetMonedhave()}
+                    titulli="Monedha"
+                  />
                   <div className="fcp-row-sub mt-1">
                     Ndryshimi i monedhës ndryshon vetëm simbolin e shfaqur - vlerat e ruajtura nuk konvertohen.
                   </div>
@@ -292,16 +313,17 @@ function Cilesimet() {
 
                 <Form.Group as={Col} md={6} controlId="form-cilesiafaturave">
                   <Form.Label>Cilësia e Fotove të Faturave</Form.Label>
-                  <Form.Select
+                  <Zgjedhesi
+                    id="form-cilesiafaturave"
                     value={form.cilesiaFaturave}
-                    onChange={(e) => setField("cilesiaFaturave", e.target.value)}
-                  >
-                    {Object.entries(CILESITE_FATURAVE).map(([celes, c]) => (
-                      <option key={celes} value={celes}>
-                        {c.etiketa} - {c.maxAne}px
-                      </option>
-                    ))}
-                  </Form.Select>
+                    onChange={(v) => setField("cilesiaFaturave", v)}
+                    opsionet={Object.entries(CILESITE_FATURAVE).map(([celes, c]) => ({
+                      value: celes,
+                      label: c.etiketa,
+                      nen: `${c.maxAne}px`,
+                    }))}
+                    titulli="Cilësia e fotove"
+                  />
                   <div className="fcp-row-sub mt-1">
                     {CILESITE_FATURAVE[form.cilesiaFaturave]?.ndihma} Vlen për fotot e reja; ato ekzistuese
                     ngjishen me butonin te faqja Eksporto / Importo.
@@ -317,7 +339,7 @@ function Cilesimet() {
             </Form>
           </Card>
 
-          <CilesimiNjeLlogari onMessage={(text) => setMessage({ type: "success", text })} />
+          <CilesimiNjeLlogari onMessage={(text) => dialog.alert(text, { title: "U krye", variant: "success" })} />
 
           {/* The memory is built from the user's own choices, so they get to see what it learned and
               throw it away - a suggestion nobody can inspect or undo is just the app being odd. */}

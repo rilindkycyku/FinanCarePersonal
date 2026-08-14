@@ -9,6 +9,31 @@
   min-height: 100vh;
 }
 
+/* How wide a page is allowed to be.
+   Bootstrap's `.container` steps through a fixed max-width per breakpoint - 960px on a large
+   screen, 1140px on an extra-large one - which is the right shape for an article and the wrong one
+   for this. Every page here is a dashboard: KPI tiles that wrap to a second row with half the
+   first one empty, and tables scrolling sideways inside a column that had room to spare on both
+   sides. So the container takes the width instead, matching `.containerDashboardP`, which the
+   settings and sync pages have always used.
+   The cap is not a hedge against the 96% - it is where a *table* stops being readable, since a row
+   three metres wide forces the eye to travel back across the whole monitor to find the next line.
+   Below it, the page is as wide as the screen minus a hair.
+
+   Hung off `.fcp-main` rather than `.fcp-page`, because `.fcp-page` is not universal - the
+   dashboard wraps itself in `.dashboard-wrapper` - while every one of the 14 pages has a
+   `<main className="fcp-main">`. Direct children only, so a container nested inside a widget keeps
+   whatever width that widget wants.
+
+   `!important` because Bootstrap sets `.container`'s max-width inside a media query at every
+   breakpoint, and the cascade compares those against this rule per property: without it the 1320px
+   of the xxl breakpoint simply wins the `max-width` and the width below is capped back down. */
+.fcp-main > .container,
+.fcp-main > .container-fluid {
+  width: 96%;
+  max-width: 1800px !important;
+}
+
 .fcp-page-head {
   display: flex;
   align-items: flex-end;
@@ -613,8 +638,13 @@ button.hero-cta {
   align-items: start;
 }
 
-/* One parent and everything filed under it, kept together as a block. */
-.fcp-cat-group {
+/* One parent and everything filed under it, kept together as a block.
+   Deliberately NOT `.fcp-cat-group`: that name is taken by the group heading inside the category
+   picker (Components/ModalForms.css), and CSS has no scoping to keep the two apart. The picker's
+   rule made this a `display: flex`, uppercase, letter-spaced row - which is how the page came to
+   show its subcategories beside the parent instead of beneath it, with every name truncated to
+   "USHQI...". Nothing here overrode it, because nothing here set those properties at all. */
+.fcp-cat-familje {
   min-width: 0;
 }
 

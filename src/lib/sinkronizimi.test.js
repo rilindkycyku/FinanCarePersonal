@@ -11,7 +11,8 @@
 import { describe, expect, it } from "vitest";
 import {
   KOHA_PARA_SINKRONIZIMIT, STORI_PROFILIT, celesiRreshtit, gjendjaLokale, mungojneNeCloud,
-  ndryshimetLokale, numriLokal, pastampuarat, planiIAplikimit, rreshtiNgaServeri, rreshtiPerServer,
+  ndryshimetLokale, numriLokal, pajisjaPaTeDhena, pastampuarat, planiIAplikimit, rreshtiNgaServeri,
+  rreshtiPerServer, sipasStorit,
 } from "./sinkronizimi";
 import { emriIPlote, pemaKategorive } from "./kategorite";
 
@@ -427,5 +428,153 @@ describe("gjendjaLokale", () => {
   it("counts a record with no timestamp as the oldest there is, not as missing", () => {
     const { kohet } = gjendjaLokale({ storet: { transactions: [{ id: "t1" }] } });
     expect(kohet.get("transactions:t1")).toBe(0);
+  });
+});
+
+/**
+ * The failure this whole handshake exists for.
+ *
+ * A tablet was wiped ("Pastro të gjitha të dhënat"), reconnected to the same Supabase project, and
+ * pushed 127 rows - its freshly seeded default accounts and categories, which carry the *same fixed
+ * ids* every install creates - straight over a year of renamed ones on every other device. Nothing
+ * in the app objected, because by its own rules the tablet was holding unsent changes and unsent
+ * changes win.
+ *
+ * Two things stop it now, and both are tested here: seeded rows are written at the oldest timestamp
+ * there is (`putSeed` in db.js), and a device joining a copy applies the cloud over its own unsent
+ * work (`cloudFiton`) instead of the other way round.
+ */
+describe("një tablet i pastruar që rilidhet te kopja e vjetër", () => {
+  /** What `seedDefaults` writes after a wipe: the starter list, at the placeholder date. */
+  const parazgjedhur = (id, emri) => ({
+    id,
+    emri,
+    perditesuar: KOHA_PARA_SINKRONIZIMIT,
+    sinkPezull: true,
+  });
+  const iRiemeruar = {
+    store: "categories",
+    id: "kat_ushqim",
+    perditesuar: 1_700_000_000_000,
+    fshire: false,
+    data: { id: "kat_ushqim", emri: "Ushqime & Pije" },
+  };
+
+  it("nuk i çon listat e sapokrijuara mbi ato të vërteta", () => {
+    const gjendja = {
+      storet: {
+        categories: [parazgjedhur("kat_ushqim", "Ushqim"), parazgjedhur("kat_transport", "Transport")],
+      },
+    };
+    const plani = planiIAplikimit([iRiemeruar], gjendjaLokale(gjendja), { cloudFiton: true });
+    expect(plani.shkruaj.map((r) => r.data.emri)).toEqual(["Ushqime & Pije"]);
+
+    // What goes up is only what the cloud has never heard of - the merge's own rule, built from
+    // the download that has just finished rather than from a second request.
+    const celesatECloud = new Set([iRiemeruar].map((rr) => celesiRreshtit(rr.store, rr.id)));
+    const perDergim = ndryshimetLokale({
+      ...gjendja,
+      gjithcka: true,
+      perjashto: new Set([...plani.celesat, ...celesatECloud]),
+    });
+    expect(perDergim.map((r) => r.id)).toEqual(["kat_transport"]);
+  });
+
+  it("e lë kopjen të fitojë edhe mbi një ndryshim që kjo pajisje s'e ka dërguar ende", () => {
+    // The seeded rows are dated so they lose anyway. This is the harder case and the one that
+    // matters when someone types on a device before connecting it: on a *join*, "unsent" means
+    // "written before this browser had anywhere to send it", not "newer".
+    const gjendja = { storet: { categories: [pezull("kat_ushqim", 9_000_000)] } };
+
+    expect(planiIAplikimit([iRiemeruar], gjendjaLokale(gjendja)).shkruaj).toEqual([]);
+    expect(
+      planiIAplikimit([iRiemeruar], gjendjaLokale(gjendja), { cloudFiton: true }).shkruaj
+    ).toHaveLength(1);
+  });
+
+  it("njeh një pajisje që nuk mban ende asgjë të sajën", () => {
+    const listat = {
+      categories: [parazgjedhur("kat_ushqim", "Ushqim")],
+      accounts: [parazgjedhur("acc_kesh", "Kesh")],
+    };
+    expect(pajisjaPaTeDhena({ storet: listat })).toBe(true);
+    // One real transaction, and it is somebody's ledger - whatever else is on it.
+    expect(pajisjaPaTeDhena({ storet: { ...listat, transactions: [tx("t1", 900)] } })).toBe(false);
+    // A deletion made here is work too, even though it leaves nothing behind to count.
+    expect(pajisjaPaTeDhena({ storet: listat, fshirjet: [varr("goals", "g1", 800)] })).toBe(false);
+  });
+});
+
+describe("sipasStorit", () => {
+  it("counts a set of keys per store, for a summary a person can read", () => {
+    expect(sipasStorit(["transactions:t1", "transactions:t2", "categories:c1"])).toEqual({
+      transactions: 2,
+      categories: 1,
+    });
+  });
+
+  it("ignores anything that is not a key", () => {
+    expect(sipasStorit(["", "pa-dy-pika"])).toEqual({});
+  });
+});
+
+describe("gjurma e pajisjes në rreshtin që dërgohet", () => {
+  const rr = { store: "transactions", id: "t1", perditesuar: 1000, fshire: false, data: { id: "t1" } };
+
+  it("carries which device wrote the row", () => {
+    expect(rreshtiPerServer(rr, "u1", { id: "paj_1", emri: "Tableti" })).toMatchObject({
+      device_id: "paj_1",
+      device_name: "Tableti",
+    });
+  });
+
+  it("leaves the columns out entirely for a project that has not run migration 2", () => {
+    // Named but empty would be just as fatal: PostgREST refuses the whole batch for a column the
+    // table does not have, and one un-migrated project must not stop a phone syncing.
+    const rreshti = rreshtiPerServer(rr, "u1", null);
+    expect("device_id" in rreshti).toBe(false);
+    expect("device_name" in rreshti).toBe(false);
+  });
+});
+
+/**
+ * Restoring the starter lists on a device that has been syncing for months.
+ *
+ * The date on a seeded record is what makes the cloud's version win - but only if the cloud's
+ * version is among the rows that came down, and an incremental pull returns only what changed
+ * since this device's watermark. A category the cloud has held unchanged since March is not in
+ * that batch, so nothing arrives to beat the seed, and the push - an upsert, which always wins -
+ * carries the factory name over the renamed one everywhere.
+ *
+ * Hence `kerkoShkarkimTePlote` in db.js: seeding asks the next sync for the whole table. These two
+ * tests are the before and after of exactly that.
+ */
+describe("kthimi i listave të parazgjedhura në një pajisje që sinkronizohet prej muajsh", () => {
+  const seed = { id: "cat_ushqim", emri: "Ushqim", perditesuar: KOHA_PARA_SINKRONIZIMIT, sinkPezull: true };
+  const neCloud = {
+    store: "categories",
+    id: "cat_ushqim",
+    perditesuar: 1_700_000_000_000,
+    fshire: false,
+    data: { id: "cat_ushqim", emri: "Ushqime & Pije" },
+  };
+
+  it("me shkarkim të plotë, versioni i cloud-it fiton dhe fara nuk ngjitet", () => {
+    const gjendja = { storet: { categories: [{ ...seed }] } };
+    const plani = planiIAplikimit([neCloud], gjendjaLokale(gjendja));
+    expect(plani.shkruaj.map((r) => r.data.emri)).toEqual(["Ushqime & Pije"]);
+    expect(ndryshimetLokale({ ...gjendja, perjashto: plani.celesat })).toEqual([]);
+  });
+
+  it("pa të, s'vjen asgjë për ta mundur - dhe fara do të nisej lart", () => {
+    // The same sync with an incremental pull: the cloud row has not changed, so it is simply not
+    // in the batch. Nothing is applied, and the seed is still owed - which is why the download has
+    // to be a full one after seeding, not because of anything in the merge rules.
+    const gjendja = { storet: { categories: [{ ...seed }] } };
+    const plani = planiIAplikimit([], gjendjaLokale(gjendja));
+    expect(plani.shkruaj).toEqual([]);
+    expect(ndryshimetLokale({ ...gjendja, perjashto: plani.celesat }).map((r) => r.id)).toEqual([
+      "cat_ushqim",
+    ]);
   });
 });

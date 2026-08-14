@@ -5,6 +5,8 @@ import { makeId, STORES } from "../lib/db";
 import { toNumber } from "../lib/format";
 import VleraInput from "./VleraInput";
 import { ColorPicker } from "./Pickers";
+import Zgjedhesi from "./Zgjedhesi";
+import { opsionetLlogarive } from "../lib/opsionet";
 import "./ModalForms.css";
 
 const BLANK = {
@@ -129,16 +131,15 @@ function ShtoQellimin({ show, onHide, initial }) {
             {!njeLlogari && (
               <Form.Group as={Col} md={6} controlId="goal-llogariaid">
                 <Form.Label>Llogaria e Kursimit (opsional)</Form.Label>
-                <Form.Select value={goal.llogariaId} onChange={(e) => setField("llogariaId", e.target.value)}>
-                  <option value="">Pa llogari të caktuar</option>
-                  {accounts
-                    .filter((a) => !a.arkivuar)
-                    .map((a) => (
-                      <option key={a.id} value={a.id}>
-                        {a.emri}
-                      </option>
-                    ))}
-                </Form.Select>
+                <Zgjedhesi
+                  id="goal-llogariaid"
+                  value={goal.llogariaId}
+                  onChange={(v) => setField("llogariaId", v)}
+                  opsionet={opsionetLlogarive(accounts.filter((a) => !a.arkivuar))}
+                  emptyLabel="Pa llogari të caktuar"
+                  placeholder="Pa llogari të caktuar"
+                  titulli="Llogaria e qëllimit"
+                />
                 <div className="fcp-modal-hint">Përdoret si destinacion i parazgjedhur kur shtoni kontribut.</div>
               </Form.Group>
             )}
