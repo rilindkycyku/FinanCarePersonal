@@ -341,12 +341,10 @@
   display: inline-block;
 }
 
-/* Expand Dashboard Container on Desktop Viewports to 90% width */
-@media (min-width: 1200px) {
-  .dashboard-wrapper .container {
-    max-width: 90% !important;
-  }
-}
+/* The dashboard used to widen its own container to 90% here, with `!important`, for viewports over
+   1200px. That now lives in one place for all 14 pages - `.fcp-main > .container` in Personal.css -
+   because two rules for the same thing meant the dashboard was 90% while every other page was
+   whatever Bootstrap's breakpoint said, and the `!important` quietly won against the shared rule. */
 
 /* ══════════════════════════════════════════════════════════════
    DASHBOARD - LIGHT MODE OVERRIDES
