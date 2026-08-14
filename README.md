@@ -319,6 +319,19 @@ where store = 'transactions' and not deleted
 order by dita desc;
 ```
 
+### Kontrolli i kopjes në cloud
+
+`sql/kontrollo-dhe-pastro.sql` ekzekutohet te SQL Editor i projektit tuaj dhe përgjigjet katër
+pyetjeve që tabela nuk i thotë vetë: sa mban secili store, **cili sinkronizim i shkroi cilat
+rreshta dhe kur** (ngarkimet vijnë në tufa, pra historiku lexohet si listë ngjarjesh), a ka
+kategori a transaksione të dyfishta, dhe a ka rekorde që tregojnë nga diçka e fshirë. Pjesët e
+para vetëm lexojnë.
+
+Një gjë vlen të mbahet mend para se të fshini ndonjë rresht atje: **`delete` nuk funksionon si
+fshirje.** Sinkronizimi e njeh fshirjen vetëm si rresht me `deleted = true` - një varr, që udhëton
+te pajisjet. Një rresht i zhdukur pa gjurmë e ka pajisjen ende duke e mbajtur rekordin, dhe
+kontrolli i përditshëm do ta ngarkojë sërish. Skripti e bën si duhet.
+
 ### Kur skema ndryshon
 
 Bazën e administroni ju, pra nuk ka deploy që ta prekë dhe nuk ka mënyrë t&apos;ju gjejë dikush po
