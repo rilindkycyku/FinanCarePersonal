@@ -2,50 +2,8 @@ import { useEffect, useState } from "react";
 import { Alert, Button, Modal, Spinner } from "react-bootstrap";
 import { AlertTriangle, ArrowDownToLine, ArrowUpFromLine, Merge } from "lucide-react";
 import { MENYRAT, permbledhjaLidhjes } from "../../lib/sinkronizimi";
-import { RENDI_STOREVE, emriStorit } from "./emratStoreve";
+import { emriStorit, rreshtatKrahasimit } from "./emratStoreve";
 import "../ModalForms.css";
-
-/**
- * One row per store, both sides side by side - and only for stores one of the two sides actually
- * has. A table listing four kinds of nothing buries the two lines that matter.
- *
- * Tombstones are counted under their own store, which is why a number here can exceed what the app
- * shows on its pages: a deleted transaction is still a row the cloud holds.
- */
-function rreshtatKrahasimit({ cloudSipasStorit = {}, lokalSipasStorit = {} }) {
-  const storet = new Set([...Object.keys(cloudSipasStorit), ...Object.keys(lokalSipasStorit)]);
-  return [...storet]
-    .sort((a, b) => {
-      const ia = RENDI_STOREVE.indexOf(a);
-      const ib = RENDI_STOREVE.indexOf(b);
-      return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
-    })
-    .map((store) => ({
-      store,
-      cloud: cloudSipasStorit[store] ?? 0,
-      lokal: lokalSipasStorit[store] ?? 0,
-    }));
-}
-
-function Zgjedhja({ vlera, zgjedhur, onZgjidh, ikona, titulli, ndihma, variant = "light" }) {
-  const aktive = vlera === zgjedhur;
-  return (
-    <button
-      type="button"
-      onClick={() => onZgjidh(vlera)}
-      className={`fcp-zgjedhje w-100 text-start p-3 mb-2 border rounded-3 bg-transparent ${
-        aktive ? `border-${variant === "danger" ? "danger" : "primary"}` : "border-secondary"
-      }`}
-      aria-pressed={aktive}
-    >
-      <div className="d-flex align-items-center gap-2 fw-bold mb-1">
-        {ikona}
-        {titulli}
-      </div>
-      <div className="fcp-row-sub">{ndihma}</div>
-    </button>
-  );
-}
 
 /**
  * The question a device is asked the first time it meets a cloud copy, before it is allowed to

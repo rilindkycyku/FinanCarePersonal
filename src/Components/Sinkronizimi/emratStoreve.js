@@ -50,3 +50,25 @@ export function pershkrimiStoreve(numrat = {}) {
   if (pjeset.length === 1) return pjeset[0];
   return `${pjeset.slice(0, -1).join(", ")} dhe ${pjeset[pjeset.length - 1]}`;
 }
+
+/**
+ * One row per store, both sides side by side - and only for stores one of the two sides actually
+ * has. A table listing four kinds of nothing buries the two lines that matter.
+ *
+ * Tombstones are counted under their own store, which is why a number here can exceed what the app
+ * shows on its pages: a deleted transaction is still a row the cloud holds.
+ */
+export function rreshtatKrahasimit({ cloudSipasStorit = {}, lokalSipasStorit = {} } = {}) {
+  const storet = new Set([...Object.keys(cloudSipasStorit), ...Object.keys(lokalSipasStorit)]);
+  return [...storet]
+    .sort((a, b) => {
+      const ia = RENDI_STOREVE.indexOf(a);
+      const ib = RENDI_STOREVE.indexOf(b);
+      return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+    })
+    .map((store) => ({
+      store,
+      cloud: cloudSipasStorit[store] ?? 0,
+      lokal: lokalSipasStorit[store] ?? 0,
+    }));
+}

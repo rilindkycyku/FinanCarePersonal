@@ -9,7 +9,7 @@ import {
 import NavBar from "../Components/NavBar";
 import ModaliKonfigurimit from "../Components/Sinkronizimi/ModaliKonfigurimit";
 import ModaliLidhjes from "../Components/Sinkronizimi/ModaliLidhjes";
-import { emriStorit } from "../Components/Sinkronizimi/emratStoreve";
+import { emriStorit, rreshtatKrahasimit } from "../Components/Sinkronizimi/emratStoreve";
 import FushaSekrete from "../Components/Sinkronizimi/FushaSekrete";
 import Footer from "../Components/Footer";
 import PageTitle from "../Components/PageTitle";
@@ -23,7 +23,7 @@ import {
 } from "../lib/supabase";
 import {
   MENYRAT, fshiCloud, harroPajisjen, lexoPajisjet, ndryshimetEFundit, numeroCloud, numeroLokal,
-  riparoTani, rivendosKufijte,
+  permbledhjaLidhjes, riparoTani, rivendosKufijte,
 } from "../lib/sinkronizimi";
 import { pajisjaKjo, riemertoPajisjen } from "../lib/pajisja";
 import "./Styles/PremiumTheme.css";
@@ -99,6 +99,10 @@ function Sinkronizimi() {
   const [emriRi, setEmriRi] = useState(null);
   const [pajisjet, setPajisjet] = useState(null);
   const [ndryshimet, setNdryshimet] = useState(null);
+  // The two sides counted store by store - the same reading the connect dialog shows, kept on the
+  // page because "222 rreshta nga 221 rekorde" answers "is it working" and nothing else. Which
+  // store is short is the question anybody actually has.
+  const [ndarja, setNdarja] = useState(null);
   const [gjurmaHapur, setGjurmaHapur] = useState(false);
   // Whether this device has been told what to do with the cloud copy. `false` and nothing else:
   // a device connected before this release carries `null` and has long since decided by using it.
@@ -193,9 +197,13 @@ function Sinkronizimi() {
     if (!lidhur) {
       setPajisjet(null);
       setNdryshimet(null);
+      setNdarja(null);
       return undefined;
     }
     let anuluar = false;
+    permbledhjaLidhjes()
+      .then((p) => !anuluar && setNdarja(p))
+      .catch(() => !anuluar && setNdarja(null));
     lexoPajisjet()
       .then((lista) => !anuluar && setPajisjet(lista))
       .catch(() => !anuluar && setPajisjet([]));
@@ -971,6 +979,56 @@ function Sinkronizimi() {
                       </Col>
                     </Row>
                   </Form>
+                )}
+              </Card>
+
+              {/* What is actually stored, on each side, store by store - the same table the connect
+                  dialog shows. The page used to say only "222 rreshta nga 221 rekorde", which
+                  answers whether sync is working and nothing else; when a store *is* short, this is
+                  the only view that says which one. */}
+              <Card className="profile-card border-0 p-4 mb-4">
+                <h2 className="fcp-card-title fw-bold mb-3">
+                  <Database size={18} className="me-2 text-primary" />
+                  Çka ruhet aktualisht
+                </h2>
+                {ndarja === null ? (
+                  <div className="fcp-row-sub">Po numërohen të dyja anët...</div>
+                ) : (
+                  <>
+                    <div className="table-responsive">
+                      <table className="table table-sm align-middle mb-0">
+                        <thead>
+                          <tr className="fcp-row-sub">
+                            <th className="fw-normal"> </th>
+                            <th className="fw-normal text-end">Te projekti</th>
+                            <th className="fw-normal text-end">Në këtë pajisje</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {rreshtatKrahasimit(ndarja).map((rr) => (
+                            <tr key={rr.store}>
+                              <td>{emriStorit(rr.store, true)}</td>
+                              <td className="text-end">{rr.cloud || "—"}</td>
+                              <td className="text-end">{rr.lokal || "—"}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                        <tfoot>
+                          <tr className="fw-bold border-top">
+                            <td>Gjithsej</td>
+                            <td className="text-end">{ndarja.cloud}</td>
+                            <td className="text-end">{ndarja.lokal}</td>
+                          </tr>
+                        </tfoot>
+                      </table>
+                    </div>
+                    <div className="fcp-row-sub mt-2">
+                      {ndarja.teNjejta} rekorde ndodhen në të dyja anët, {ndarja.vetemLokale} vetëm
+                      këtu dhe {ndarja.vetemCloud} vetëm te projekti. Numërohen edhe shënimet e
+                      fshirjeve, prandaj një shifër këtu mund të jetë më e madhe se ajo që shfaqin
+                      faqet. Fotot e faturave nuk sinkronizohen dhe nuk numërohen fare.
+                    </div>
+                  </>
                 )}
               </Card>
 
