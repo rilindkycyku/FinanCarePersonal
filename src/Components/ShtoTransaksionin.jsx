@@ -6,6 +6,8 @@ import MonedhaTjeter from "./MonedhaTjeter";
 import VleraInput from "./VleraInput";
 import EtiketaFusha from "./EtiketaFusha";
 import ZgjedhesiKategorive from "./ZgjedhesiKategorive";
+import Zgjedhesi from "./Zgjedhesi";
+import { opsionetLlogarive } from "../lib/opsionet";
 import FaturaFusha from "./Faturat/FaturaFusha";
 import { makeId, sinkronizoFaturat, STORES } from "../lib/db";
 import { currencySymbol, formatMoney, toNumber, todayISO } from "../lib/format";
@@ -390,14 +392,15 @@ function ShtoTransaksionin({
                 <Form.Label>
                   {isTransfer ? "Nga llogaria" : "Llogaria"} <span className="text-danger">*</span>
                 </Form.Label>
-                <Form.Select value={tx.llogariaId} onChange={(e) => setField("llogariaId", e.target.value)} required>
-                  <option value="">Zgjidh llogarinë...</option>
-                  {aktive.map((a) => (
-                    <option key={a.id} value={a.id}>
-                      {a.emri}
-                    </option>
-                  ))}
-                </Form.Select>
+                <Zgjedhesi
+                  id="tx-llogariaid"
+                  value={tx.llogariaId}
+                  onChange={(v) => setField("llogariaId", v)}
+                  opsionet={opsionetLlogarive(aktive)}
+                  placeholder="Zgjidh llogarinë..."
+                  titulli={isTransfer ? "Nga llogaria" : "Zgjidh llogarinë"}
+                  required
+                />
               </Form.Group>
             )}
 
@@ -407,20 +410,15 @@ function ShtoTransaksionin({
                   <Form.Label>
                     Në llogarinë <span className="text-danger">*</span>
                   </Form.Label>
-                  <Form.Select
+                  <Zgjedhesi
+                    id="tx-llogariadestinacionid"
                     value={tx.llogariaDestinacionId}
-                    onChange={(e) => setField("llogariaDestinacionId", e.target.value)}
+                    onChange={(v) => setField("llogariaDestinacionId", v)}
+                    opsionet={opsionetLlogarive(aktive.filter((a) => a.id !== tx.llogariaId))}
+                    placeholder="Zgjidh llogarinë..."
+                    titulli="Në llogarinë"
                     required
-                  >
-                    <option value="">Zgjidh llogarinë...</option>
-                    {aktive
-                      .filter((a) => a.id !== tx.llogariaId)
-                      .map((a) => (
-                        <option key={a.id} value={a.id}>
-                          {a.emri}
-                        </option>
-                      ))}
-                  </Form.Select>
+                  />
                 </Form.Group>
               )
             ) : (
@@ -471,18 +469,16 @@ function ShtoTransaksionin({
             {tx.lloji !== "hyrje" && qellimetAktive.length > 0 && (
               <Form.Group as={Col} md={12} controlId="tx-qellimiid">
                 <Form.Label>Qëllimi i Kursimit (opsional)</Form.Label>
-                <Form.Select
+                <Zgjedhesi
+                  id="tx-qellimiid"
                   value={tx.qellimiId}
-                  onChange={(e) => setField("qellimiId", e.target.value)}
+                  onChange={(v) => setField("qellimiId", v)}
+                  opsionet={qellimetAktive.map((g) => ({ value: g.id, label: g.emri }))}
+                  emptyLabel="Pa qëllim"
+                  placeholder="Pa qëllim"
+                  titulli="Qëllimi i kursimit"
                   disabled={Boolean(qellimiFiksuar)}
-                >
-                  <option value="">Pa qëllim</option>
-                  {qellimetAktive.map((g) => (
-                    <option key={g.id} value={g.id}>
-                      {g.emri}
-                    </option>
-                  ))}
-                </Form.Select>
+                />
                 <div className="fcp-modal-hint">
                   Kur zgjidhet, vlera e këtij transaksioni llogaritet si kontribut në ecurinë e qëllimit.
                 </div>

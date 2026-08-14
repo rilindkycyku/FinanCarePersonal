@@ -12,6 +12,8 @@ import PageLoading from "../Components/PageLoading";
 import { Kpi, Panel, ProgressBar, Empty } from "../Components/Ui";
 import GrafikuBilancit from "../Components/GrafikuBilancit";
 import { useData } from "../Context/DataContext";
+import Zgjedhesi from "../Components/Zgjedhesi";
+import { opsionetEThjeshta } from "../lib/opsionet";
 import {
   accountBalance, balanceHistory, cashflow, categoryComparison, filterByRange, forecast, monthBounds,
   monthlyTrend, previousMonthKey, totalsByAccount, totalsByCategory, yearBounds,
@@ -219,18 +221,14 @@ function Statistika() {
               <h1>Statistikat</h1>
               <p>Përmbledhje e financave tuaja - {periodLabel(period)}.</p>
             </div>
-            <Form.Select
+            <Zgjedhesi
               value={period}
-              onChange={(e) => setPeriod(e.target.value)}
-              style={{ maxWidth: 220 }}
+              onChange={setPeriod}
+              opsionet={opsionetEThjeshta(PERIODS)}
+              titulli="Zgjidh periudhën"
               aria-label="Zgjidh periudhën"
-            >
-              {PERIODS.map((p) => (
-                <option key={p.value} value={p.value}>
-                  {p.label}
-                </option>
-              ))}
-            </Form.Select>
+              className="fcp-zgj-i-ngushte"
+            />
           </div>
 
           <Row className="g-2 g-md-4">

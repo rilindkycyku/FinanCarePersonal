@@ -8,11 +8,13 @@ import PageTitle from "../Components/PageTitle";
 import PageLoading from "../Components/PageLoading";
 import CilesimiNjeLlogari from "../Components/CilesimiNjeLlogari";
 import { useData } from "../Context/DataContext";
+import Zgjedhesi from "../Components/Zgjedhesi";
+import { opsionetMonedhave } from "../lib/opsionet";
 import { useDialog } from "../Context/DialogContext";
 import { useTheme } from "../Context/ThemeContext";
 import { useSync } from "../Context/SyncContext";
 import { seedDefaults, wipeAllData } from "../lib/db";
-import { CURRENCIES, DEFAULT_CURRENCY } from "../lib/options";
+import { DEFAULT_CURRENCY } from "../lib/options";
 import { pastroRregullat } from "../lib/rregullat";
 import { currencySymbol, toNumber } from "../lib/format";
 import VleraInput from "../Components/VleraInput";
@@ -235,13 +237,13 @@ function Cilesimet() {
 
                 <Form.Group as={Col} md={6} controlId="form-monedha">
                   <Form.Label>Monedha</Form.Label>
-                  <Form.Select value={form.monedha} onChange={(e) => setField("monedha", e.target.value)}>
-                    {CURRENCIES.map((c) => (
-                      <option key={c.code} value={c.code}>
-                        {c.label} - {c.symbol}
-                      </option>
-                    ))}
-                  </Form.Select>
+                  <Zgjedhesi
+                    id="form-monedha"
+                    value={form.monedha}
+                    onChange={(v) => setField("monedha", v)}
+                    opsionet={opsionetMonedhave()}
+                    titulli="Monedha"
+                  />
                   <div className="fcp-row-sub mt-1">
                     Ndryshimi i monedhës ndryshon vetëm simbolin e shfaqur - vlerat e ruajtura nuk konvertohen.
                   </div>
@@ -318,16 +320,17 @@ function Cilesimet() {
 
                 <Form.Group as={Col} md={6} controlId="form-cilesiafaturave">
                   <Form.Label>Cilësia e Fotove të Faturave</Form.Label>
-                  <Form.Select
+                  <Zgjedhesi
+                    id="form-cilesiafaturave"
                     value={form.cilesiaFaturave}
-                    onChange={(e) => setField("cilesiaFaturave", e.target.value)}
-                  >
-                    {Object.entries(CILESITE_FATURAVE).map(([celes, c]) => (
-                      <option key={celes} value={celes}>
-                        {c.etiketa} - {c.maxAne}px
-                      </option>
-                    ))}
-                  </Form.Select>
+                    onChange={(v) => setField("cilesiaFaturave", v)}
+                    opsionet={Object.entries(CILESITE_FATURAVE).map(([celes, c]) => ({
+                      value: celes,
+                      label: c.etiketa,
+                      nen: `${c.maxAne}px`,
+                    }))}
+                    titulli="Cilësia e fotove"
+                  />
                   <div className="fcp-row-sub mt-1">
                     {CILESITE_FATURAVE[form.cilesiaFaturave]?.ndihma} Vlen për fotot e reja; ato ekzistuese
                     ngjishen me butonin te faqja Eksporto / Importo.

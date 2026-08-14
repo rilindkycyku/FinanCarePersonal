@@ -10,6 +10,8 @@ import PageLoading from "../Components/PageLoading";
 import PunaNeVazhdim from "../Components/PunaNeVazhdim";
 import Ndaje from "../Components/Ndaje";
 import { useData } from "../Context/DataContext";
+import Zgjedhesi from "../Components/Zgjedhesi";
+import { opsionetEThjeshta, opsionetLlogarive } from "../lib/opsionet";
 import { useDialog } from "../Context/DialogContext";
 import { exportAllData, exportZipData, hapesiraRuajtjes, importAllData, importZipData,
   kerkoRuajtjeQendrueshme, ringjeshFaturat, ruajtjaEshteQendrueshme, shenoKopjen } from "../lib/db";
@@ -521,26 +523,27 @@ function TeDhena() {
             <Row className="g-3 align-items-end">
               <Form.Group as={Col} md={4} controlId="pdf-periudha">
                 <Form.Label>Periudha</Form.Label>
-                <Form.Select value={periudha} onChange={(e) => setPeriudha(e.target.value)}>
-                  {STATEMENT_PERIODS.map((p) => (
-                    <option key={p.value} value={p.value}>
-                      {p.label}
-                    </option>
-                  ))}
-                </Form.Select>
+                <Zgjedhesi
+                  id="pdf-periudha"
+                  value={periudha}
+                  onChange={setPeriudha}
+                  opsionet={opsionetEThjeshta(STATEMENT_PERIODS)}
+                  titulli="Periudha e pasqyrës"
+                />
               </Form.Group>
 
               {!njeLlogari && accounts.length > 1 && (
                 <Form.Group as={Col} md={4} controlId="pdf-llogaria">
                   <Form.Label>Llogaria</Form.Label>
-                  <Form.Select value={llogariaPdf} onChange={(e) => setLlogariaPdf(e.target.value)}>
-                    <option value="">Të gjitha llogaritë</option>
-                    {accounts.map((a) => (
-                      <option key={a.id} value={a.id}>
-                        {a.emri}
-                      </option>
-                    ))}
-                  </Form.Select>
+                  <Zgjedhesi
+                    id="pdf-llogaria"
+                    value={llogariaPdf}
+                    onChange={setLlogariaPdf}
+                    opsionet={opsionetLlogarive(accounts)}
+                    emptyLabel="Të gjitha llogaritë"
+                    placeholder="Të gjitha llogaritë"
+                    titulli="Llogaria e pasqyrës"
+                  />
                   <div className="fcp-row-sub mt-1">
                     Për një llogari të vetme, transferet brenda llogarive numërohen si hyrje ose dalje e saj.
                   </div>

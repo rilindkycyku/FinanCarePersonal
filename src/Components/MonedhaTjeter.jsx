@@ -4,6 +4,8 @@ import { convertedAmount } from "../lib/finance";
 import { currencySymbol, formatMoney, toNumber } from "../lib/format";
 import { CURRENCIES } from "../lib/options";
 import "./ModalForms.css";
+import Zgjedhesi from "./Zgjedhesi";
+import { opsionetMonedhave } from "../lib/opsionet";
 
 /**
  * Optional "this amount is in another currency" block for the transaction and recurring-payment
@@ -48,13 +50,13 @@ function MonedhaTjeter({ monedhaOrigjinale, kursi, vlera, onChange }) {
         <Row className="g-3 mt-0">
           <Form.Group as={Col} md={6} controlId="fusha-monedha">
             <Form.Label>Monedha e faturës</Form.Label>
-            <Form.Select value={monedhaOrigjinale} onChange={(e) => changeCurrency(e.target.value)}>
-              {CURRENCIES.filter((c) => c.code !== monedha).map((c) => (
-                <option key={c.code} value={c.code}>
-                  {c.label} - {c.symbol}
-                </option>
-              ))}
-            </Form.Select>
+            <Zgjedhesi
+              id="fusha-monedha"
+              value={monedhaOrigjinale}
+              onChange={changeCurrency}
+              opsionet={opsionetMonedhave().filter((o) => o.value !== monedha)}
+              titulli="Monedha e faturimit"
+            />
           </Form.Group>
 
           <Form.Group as={Col} md={6} controlId="fusha-kursi">

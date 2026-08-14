@@ -11,6 +11,8 @@ import { convertedAmount, currencyFields, debtProgress, lastInstallmentDate } fr
 import { FREQUENCIES } from "../lib/options";
 import { formatDate } from "../lib/format";
 import "./ModalForms.css";
+import Zgjedhesi from "./Zgjedhesi";
+import { opsionetEThjeshta, opsionetLlogarive } from "../lib/opsionet";
 
 const BLANK = {
   emri: "",
@@ -218,13 +220,13 @@ function ShtoTePerseritur({ show, onHide, initial }) {
 
             <Form.Group as={Col} md={6} controlId="rec-frekuenca">
               <Form.Label>Frekuenca</Form.Label>
-              <Form.Select value={rec.frekuenca} onChange={(e) => setField("frekuenca", e.target.value)}>
-                {FREQUENCIES.map((f) => (
-                  <option key={f.value} value={f.value}>
-                    {f.label}
-                  </option>
-                ))}
-              </Form.Select>
+              <Zgjedhesi
+                id="rec-frekuenca"
+                value={rec.frekuenca}
+                onChange={(v) => setField("frekuenca", v)}
+                opsionet={opsionetEThjeshta(FREQUENCIES)}
+                titulli="Sa shpesh"
+              />
             </Form.Group>
 
             <MonedhaTjeter
@@ -239,16 +241,15 @@ function ShtoTePerseritur({ show, onHide, initial }) {
                 <Form.Label>
                   Llogaria <span className="text-danger">*</span>
                 </Form.Label>
-                <Form.Select value={rec.llogariaId} onChange={(e) => setField("llogariaId", e.target.value)} required>
-                  <option value="">Zgjidh llogarinë...</option>
-                  {accounts
-                    .filter((a) => !a.arkivuar)
-                    .map((a) => (
-                      <option key={a.id} value={a.id}>
-                        {a.emri}
-                      </option>
-                    ))}
-                </Form.Select>
+                <Zgjedhesi
+                  id="rec-llogariaid"
+                  value={rec.llogariaId}
+                  onChange={(v) => setField("llogariaId", v)}
+                  opsionet={opsionetLlogarive(accounts.filter((a) => !a.arkivuar))}
+                  placeholder="Zgjidh llogarinë..."
+                  titulli="Zgjidh llogarinë"
+                  required
+                />
               </Form.Group>
             )}
 
@@ -311,14 +312,19 @@ function ShtoTePerseritur({ show, onHide, initial }) {
               <Form.Label>
                 {rec.lloji === "hyrje" ? "Kthim borxhi (opsional)" : "Zbrit nga një borxh (opsional)"}
               </Form.Label>
-              <Form.Select value={rec.borxhiId} onChange={(e) => setField("borxhiId", e.target.value)}>
-                <option value="">Pa lidhje me borxh</option>
-                {borxhetERelevante.map((d) => (
-                  <option key={d.id} value={d.id}>
-                    {d.emri} - mbeten {formatMoney(d.mbetur, monedha)}
-                  </option>
-                ))}
-              </Form.Select>
+              <Zgjedhesi
+                id="rec-borxhiid"
+                value={rec.borxhiId}
+                onChange={(v) => setField("borxhiId", v)}
+                opsionet={borxhetERelevante.map((d) => ({
+                  value: d.id,
+                  label: d.emri,
+                  nen: `mbeten ${formatMoney(d.mbetur, monedha)}`,
+                }))}
+                emptyLabel="Pa lidhje me borxh"
+                placeholder="Pa lidhje me borxh"
+                titulli="Lidhe me një borxh"
+              />
               <div className="fcp-modal-hint">
                 {borxhetERelevante.length === 0
                   ? rec.lloji === "hyrje"

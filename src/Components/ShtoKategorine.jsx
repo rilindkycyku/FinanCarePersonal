@@ -5,6 +5,8 @@ import { useData } from "../Context/DataContext";
 import { makeId, STORES } from "../lib/db";
 import { mundTeKeteNjePrind, nenkategorite, prinderitEMundshem, prindiPerRuajtje } from "../lib/kategorite";
 import { ColorPicker, IconPicker } from "./Pickers";
+import Zgjedhesi from "./Zgjedhesi";
+import { opsionetEEmertuara } from "../lib/opsionet";
 import "./ModalForms.css";
 
 const blank = (lloji = "shpenzim", prindi = "") => ({
@@ -130,18 +132,16 @@ function ShtoKategorine({ show, onHide, initial, llojiFillestar = "shpenzim", pr
 
             <Form.Group as={Col} md={12} controlId="category-prindi">
               <Form.Label>Nënkategori e (opsionale)</Form.Label>
-              <Form.Select
+              <Zgjedhesi
+                id="category-prindi"
                 value={category.prindi || ""}
-                onChange={(e) => setField("prindi", e.target.value)}
+                onChange={(v) => setField("prindi", v)}
+                opsionet={opsionetEEmertuara(prinderit)}
+                emptyLabel="Kategori kryesore"
+                placeholder="Kategori kryesore"
+                titulli="Nën cilën kategori"
                 disabled={!mundEmbi}
-              >
-                <option value="">Kategori kryesore</option>
-                {prinderit.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.emri}
-                  </option>
-                ))}
-              </Form.Select>
+              />
               <div className="fcp-modal-hint">
                 {mundEmbi
                   ? "Nënkategoria ndan shpenzimin brenda një kategorie - p.sh. Ushqim & Pije › Market. Statistikat dhe buxhetet e kategorisë kryesore e numërojnë edhe atë."

@@ -904,3 +904,18 @@ body.light-mode .fcp-cat-trigger {
   background-color: rgba(255, 255, 255, 0.06) !important;
   border-width: 2px !important;
 }
+
+/* A colour with no icon behind it - a currency, an account whose type has no mark of its own.
+   Sits inside the same chip as an icon would, so rows line up whichever they carry. */
+.fcp-zgj-pike {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+/* Where a picker sits in a page rather than in a form column and would otherwise run the full
+   width of the card - the main-account setting, the statistics period. */
+.fcp-zgj-i-ngushte {
+  max-width: 320px;
+}

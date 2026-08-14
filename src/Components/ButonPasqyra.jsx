@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Button, Form, Modal, Spinner } from "react-bootstrap";
 import { FileText, Loader2 } from "lucide-react";
 import { useData } from "../Context/DataContext";
+import Zgjedhesi from "./Zgjedhesi";
+import { opsionetEThjeshta, opsionetLlogarive } from "../lib/opsionet";
 import { useDialog } from "../Context/DialogContext";
 import { exportStatementPdf, statementFilename } from "../lib/exportPdf";
 import { periodBounds } from "../lib/finance";
@@ -63,26 +65,29 @@ function ButonPasqyra({ variant = "buton", className = "" }) {
       <Modal.Body>
         <Form.Group controlId="pasqyra-periudha" className="mb-3">
           <Form.Label>Periudha</Form.Label>
-          <Form.Select value={periudha} onChange={(e) => setPeriudha(e.target.value)} disabled={duke}>
-            {STATEMENT_PERIODS.map((p) => (
-              <option key={p.value} value={p.value}>
-                {p.label}
-              </option>
-            ))}
-          </Form.Select>
+          <Zgjedhesi
+            id="pasqyra-periudha"
+            value={periudha}
+            onChange={setPeriudha}
+            opsionet={opsionetEThjeshta(STATEMENT_PERIODS)}
+            titulli="Periudha e pasqyrës"
+            disabled={duke}
+          />
         </Form.Group>
 
         {!njeLlogari && accounts.length > 1 && (
           <Form.Group controlId="pasqyra-llogaria">
             <Form.Label>Llogaria</Form.Label>
-            <Form.Select value={llogaria} onChange={(e) => setLlogaria(e.target.value)} disabled={duke}>
-              <option value="">Të gjitha llogaritë</option>
-              {accounts.map((a) => (
-                <option key={a.id} value={a.id}>
-                  {a.emri}
-                </option>
-              ))}
-            </Form.Select>
+            <Zgjedhesi
+              id="pasqyra-llogaria"
+              value={llogaria}
+              onChange={setLlogaria}
+              opsionet={opsionetLlogarive(accounts)}
+              emptyLabel="Të gjitha llogaritë"
+              placeholder="Të gjitha llogaritë"
+              titulli="Llogaria e pasqyrës"
+              disabled={duke}
+            />
             <div className="fcp-row-sub mt-1">
               Për një llogari të vetme, transferet brenda llogarive numërohen si hyrje ose dalje e saj.
             </div>

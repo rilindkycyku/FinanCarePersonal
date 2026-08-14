@@ -8,6 +8,8 @@ import VleraInput from "./VleraInput";
 import ZgjedhesiKategorive from "./ZgjedhesiKategorive";
 import { ColorPicker } from "./Pickers";
 import "./ModalForms.css";
+import Zgjedhesi from "./Zgjedhesi";
+import { opsionetEThjeshta } from "../lib/opsionet";
 
 const BLANK = {
   emri: "",
@@ -121,13 +123,13 @@ function ShtoBorxhin({ show, onHide, initial, llojiFillestar }) {
 
             <Form.Group as={Col} md={6} controlId="debt-lloji">
               <Form.Label>Lloji</Form.Label>
-              <Form.Select value={debt.lloji} onChange={(e) => setField("lloji", e.target.value)}>
-                {DEBT_TYPES.map((t) => (
-                  <option key={t.value} value={t.value}>
-                    {t.label}
-                  </option>
-                ))}
-              </Form.Select>
+              <Zgjedhesi
+                id="debt-lloji"
+                value={debt.lloji}
+                onChange={(v) => setField("lloji", v)}
+                opsionet={opsionetEThjeshta(DEBT_TYPES)}
+                titulli="Lloji i borxhit"
+              />
             </Form.Group>
 
             <Form.Group as={Col} md={6} controlId="debt-vleratotale">

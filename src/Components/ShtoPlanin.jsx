@@ -7,6 +7,8 @@ import { makeId, STORES } from "../lib/db";
 import { monthLabel, toNumber } from "../lib/format";
 import { PLAN_PRIORITIES } from "../lib/options";
 import "./ModalForms.css";
+import Zgjedhesi from "./Zgjedhesi";
+import { opsionetEThjeshta } from "../lib/opsionet";
 
 const BLANK = {
   emri: "",
@@ -149,13 +151,13 @@ function ShtoPlanin({ show, onHide, initial, muajiAktual }) {
 
             <Form.Group as={Col} md={6} controlId="plan-prioriteti">
               <Form.Label>Prioriteti</Form.Label>
-              <Form.Select value={plan.prioriteti} onChange={(e) => setField("prioriteti", e.target.value)}>
-                {PLAN_PRIORITIES.map((p) => (
-                  <option key={p.value} value={p.value}>
-                    {p.label}
-                  </option>
-                ))}
-              </Form.Select>
+              <Zgjedhesi
+                id="plan-prioriteti"
+                value={plan.prioriteti}
+                onChange={(v) => setField("prioriteti", v)}
+                opsionet={opsionetEThjeshta(PLAN_PRIORITIES)}
+                titulli="Prioriteti"
+              />
               <div className="fcp-modal-hint">
                 Vetëm renditje - çdo plan i pablerë zbritet njësoj nga shpenzimi ditor.
               </div>

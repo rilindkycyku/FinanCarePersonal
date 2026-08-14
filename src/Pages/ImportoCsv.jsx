@@ -10,6 +10,8 @@ import PunaNeVazhdim from "../Components/PunaNeVazhdim";
 import ZgjedhesiKategorive from "../Components/ZgjedhesiKategorive";
 import { Empty } from "../Components/Ui";
 import { useData } from "../Context/DataContext";
+import Zgjedhesi from "../Components/Zgjedhesi";
+import { opsionetLlogarive } from "../lib/opsionet";
 import { useDialog } from "../Context/DialogContext";
 import { makeId, STORES } from "../lib/db";
 import { guessMapping, markDuplicates, parseDelimited, rowsToTransactions } from "../lib/csv";
@@ -274,17 +276,15 @@ function ImportoCsv() {
                   ).map((k) => (
                     <Form.Group as={Col} md={4} key={k.celesi} controlId={`kolona-${k.celesi}`}>
                       <Form.Label>{k.label}</Form.Label>
-                      <Form.Select
+                      <Zgjedhesi
                         value={mapping[k.celesi]}
-                        onChange={(e) => setMapping((prev) => ({ ...prev, [k.celesi]: Number(e.target.value) }))}
-                      >
-                        <option value={-1}>- asnjë -</option>
-                        {parsed.headers.map((h, i) => (
-                          <option key={h + i} value={i}>
-                            {h}
-                          </option>
-                        ))}
-                      </Form.Select>
+                        onChange={(v) => setMapping((prev) => ({ ...prev, [k.celesi]: Number(v) }))}
+                        opsionet={[
+                          { value: -1, label: "- asnjë -" },
+                          ...parsed.headers.map((h, i) => ({ value: i, label: h })),
+                        ]}
+                        titulli={`Kolona për "${k.emri}"`}
+                      />
                     </Form.Group>
                   ))}
 
@@ -323,14 +323,13 @@ function ImportoCsv() {
                       <Form.Label>
                         Llogaria <span className="text-danger">*</span>
                       </Form.Label>
-                      <Form.Select value={llogaria} onChange={(e) => setLlogaria(e.target.value)}>
-                        <option value="">Zgjidh llogarinë...</option>
-                        {aktive.map((a) => (
-                          <option key={a.id} value={a.id}>
-                            {a.emri}
-                          </option>
-                        ))}
-                      </Form.Select>
+                      <Zgjedhesi
+                        value={llogaria}
+                        onChange={setLlogaria}
+                        opsionet={opsionetLlogarive(aktive)}
+                        placeholder="Zgjidh llogarinë..."
+                        titulli="Zgjidh llogarinë"
+                      />
                     </Form.Group>
                   )}
 

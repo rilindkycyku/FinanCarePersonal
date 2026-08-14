@@ -3,8 +3,10 @@ import { Modal, Button, Form, Row, Col, Alert } from "react-bootstrap";
 import { useData } from "../Context/DataContext";
 import { makeId, STORES } from "../lib/db";
 import { toNumber } from "../lib/format";
-import { ACCOUNT_TYPES } from "../lib/options";
+
 import VleraInput from "./VleraInput";
+import Zgjedhesi from "./Zgjedhesi";
+import { opsionetLlojitLlogarise } from "../lib/opsionet";
 import { ColorPicker } from "./Pickers";
 
 const BLANK = {
@@ -86,13 +88,13 @@ function ShtoLlogarine({ show, onHide, initial }) {
 
             <Form.Group as={Col} md={6} controlId="account-lloji">
               <Form.Label>Lloji</Form.Label>
-              <Form.Select value={account.lloji} onChange={(e) => setField("lloji", e.target.value)}>
-                {ACCOUNT_TYPES.map((t) => (
-                  <option key={t.value} value={t.value}>
-                    {t.label}
-                  </option>
-                ))}
-              </Form.Select>
+              <Zgjedhesi
+                id="account-lloji"
+                value={account.lloji}
+                onChange={(v) => setField("lloji", v)}
+                opsionet={opsionetLlojitLlogarise()}
+                titulli="Lloji i llogarisë"
+              />
             </Form.Group>
 
             <Form.Group as={Col} md={6} controlId="account-bilancifillestar">

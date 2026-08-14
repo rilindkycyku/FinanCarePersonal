@@ -8,6 +8,8 @@ import { makeId, STORES } from "../lib/db";
 import { toNumber, todayISO } from "../lib/format";
 import { debtTypeMeta } from "../lib/options";
 import "./ModalForms.css";
+import Zgjedhesi from "./Zgjedhesi";
+import { opsionetLlogarive } from "../lib/opsionet";
 
 const blank = (lloji = "pagese") => ({
   lloji,
@@ -261,17 +263,14 @@ function ShtoPagesenBorxhit({ show, onHide, borxhi, initial }) {
                     <Form.Label>
                       Llogaria <span className="text-danger">*</span>
                     </Form.Label>
-                    <Form.Select
+                    <Zgjedhesi
+                      id="dpay-llogariaid"
                       value={entry.llogariaId}
-                      onChange={(e) => setField("llogariaId", e.target.value)}
-                    >
-                      <option value="">Zgjidh llogarinë...</option>
-                      {aktive.map((a) => (
-                        <option key={a.id} value={a.id}>
-                          {a.emri}
-                        </option>
-                      ))}
-                    </Form.Select>
+                      onChange={(v) => setField("llogariaId", v)}
+                      opsionet={opsionetLlogarive(aktive)}
+                      placeholder="Zgjidh llogarinë..."
+                      titulli="Zgjidh llogarinë"
+                    />
                   </Form.Group>
                 )}
 
