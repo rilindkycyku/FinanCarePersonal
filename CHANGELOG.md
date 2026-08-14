@@ -9,6 +9,54 @@ e fundit kur rregullohet diçka, dhe e para vetëm kur ndryshon vetë forma e pr
 herë, te `2.0.0`, kur të dhënat mësuan të dalin nga shfletuesi. Datat janë ato të commit-it që e
 ngriti versionin.
 
+## [2.3.0] - 2026-08-14
+
+### Rregulluar
+- **Një pajisje e pastruar nuk i mbishkruan më të dhënat e vërteta te cloud-i.** Kjo është arsyeja
+  e gjithë release-it. Një tablet u pastrua me «Pastro të gjitha të dhënat», u rilidh te i njëjti
+  projekt dhe dërgoi lart **127 rreshta** - llogaritë dhe 121 kategoritë e parazgjedhura që
+  krijohen vetë pas një pastrimi. Ato mbajnë **të njëjtat id** në çdo pajisje që ka ekzistuar
+  ndonjëherë, pra nuk u shtuan pranë kategorive të vërteta: zunë vendin e tyre, kudo. Dhe asgjë në
+  aplikacion nuk kundërshtoi, sepse sipas rregullave të veta tableti mbante «ndryshime të
+  padërguara», dhe ndryshimi i padërguar fiton.
+  <br />Tani listat e parazgjedhura shkruhen me datën më të vjetër që ekziston (`putSeed` te
+  `db.js`), pikërisht si rekordet që i paraprijnë sinkronizimit: ngjiten lart kur cloud-i nuk i ka
+  parë kurrë, dhe humbasin gjithmonë ndaj asaj që cloud-i ka për të njëjtin id. Vlen njësoj te
+  hapja e parë e bazës, te «Kthe listat e parazgjedhura» dhe pas çdo pastrimi.
+
+### Shtuar
+- **Pajisja e sapolidhur pyet para se të dërgojë asgjë.** Sapo lidhet, ajo vetëm *lexon* nga
+  projekti - asnjë transaksion, kategori apo llogari nuk shkon lart - dhe shfaq të dyja anët të
+  numëruara: sa rreshta ka projekti, sa rekorde ka pajisja, sa përputhen dhe sa i ka vetëm njëra.
+  Pastaj zgjidhni: **Bashko** (projekti fiton çdo përplasje, ngarkohet vetëm ajo që projekti nuk e
+  ka), **Merr nga projekti** (pajisja bëhet kopje e tij) ose **Dërgo këtë pajisje** (kjo pajisje
+  mbishkruan projektin). Dy të fundit kërkojnë të shkruhet fjala - njësoj si fshirja te Cilësimet,
+  sepse një prekje e rastit e mbyll një dritare, por nuk shkruan dot «DËRGO».
+  <br />Derisa të përgjigjeni, shenja te shiriti i sipërm rri e verdhë dhe e thotë. Pajisjet e
+  lidhura më parë nuk pyeten: ato kanë muaj që sinkronizohen dhe s&apos;ka çfarë të vendoset.
+- **Çdo rresht mban tani emrin e pajisjes që e dërgoi** (migrimi 2 i projektit tuaj: `device_id` dhe
+  `device_name`). Me një email të vetëm në të gjitha pajisjet, kjo ishte e vetmja pyetje pa
+  përgjigje: *cila prej tyre e bëri këtë?* Te faqja **Sinkronizimi** ndodhet lista e pajisjeve që
+  kanë sinkronizuar ndonjëherë - emri, kur sinkronizoi së fundi, sa rekorde mban, sa dërgoi - dhe
+  gjurma e rreshtave të fundit të shkruar, secili me pajisjen përballë. Emrin e merr vetë nga
+  shfletuesi («Chrome në Android») dhe e ndryshoni kur të doni; ai ruhet vetëm në atë pajisje,
+  sepse përshkruan pajisjen e jo paratë. Një projekt që ende nuk e ka ekzekutuar migrimin vazhdon
+  të sinkronizohet normalisht - rreshtat thjesht shkojnë pa vulë, dhe faqja e thotë.
+
+### Ndryshuar
+- **«Shkarko gjithçka nga cloud» u nda në dy butona që e thonë çfarë bëjnë.** Ai buton, pavarësisht
+  emrit, *edhe* ringarkonte gjithçka që mbante pajisja - pra butoni që dukej i sigurti ishte ai që
+  mund të mbishkruante pajisjet e tjera. Tani janë **Merr gjithçka nga projekti** dhe **Dërgo
+  gjithçka nga kjo pajisje**, secili me konfirmimin e vet, plus **Bashko me projektin** për rastin
+  ku nuk humbet asgjë.
+- **Rezultatet e veprimeve te Cilësimet janë dritare, jo shirita.** Pas një pastrimi të plotë në një
+  pajisje të lidhur, dritarja thotë edhe çfarë të zgjidhni kur ta rilidhni - dhe çfarë të mos
+  zgjidhni.
+- **Njoftimi i kopjes te Paneli nuk thotë më se të dhënat ndodhen «vetëm në këtë shfletues»** kur
+  pajisja sinkronizohet, sepse nuk është e vërtetë dhe një paralajmërim i pasaktë pushon së
+  besuari. Thotë atë që mbetet e vërtetë: fotot e faturave nuk sinkronizohen fare, dhe një gabim i
+  vetëm te sinkronizimi prek të dyja anët njëherësh.
+
 ## [2.2.0] - 2026-08-13
 
 ### Shtuar

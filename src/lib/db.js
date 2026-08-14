@@ -289,6 +289,37 @@ export function putRaw(store, record) {
 }
 
 /**
+ * The timestamp given to records that predate sync, and to the starter lists: the oldest one there
+ * is, rather than "now". Sync reads it (see `pastampuarat` in sinkronizimi.js); it lives here
+ * because the writes that need it are here and `db.js` cannot import the file that imports it.
+ *
+ * A record dated this way is still *offered* to the cloud, and still loses to anything the cloud
+ * already holds under the same id. That combination is the whole point - see `putSeed`.
+ */
+export const KOHA_PARA_SINKRONIZIMIT = 1;
+
+/**
+ * Writes one of the app's own starter records - a default account, a default category.
+ *
+ * Not `put`, and the difference has cost somebody their categories. The starter lists have **fixed
+ * ids**: `kat_ushqim` is the same row on every device that ever existed. So a device that seeds
+ * them writes rows that already exist in the cloud, renamed and recolored over months - and with
+ * `put`, those seeded rows are dated *now* and flagged as this device's unsent change, which means
+ * they beat the cloud copy and the rename is overwritten everywhere. Wipe a tablet, reconnect it,
+ * and a hundred-odd untouched defaults go up over the real ones.
+ *
+ * Dated `KOHA_PARA_SINKRONIZIMIT` instead, a seeded row behaves exactly as it should: it is
+ * uploaded when the cloud has never heard of it, and it loses every time the cloud has anything of
+ * its own to say about that id.
+ */
+export function putSeed(store, record) {
+  const stamped = { ...record, perditesuar: KOHA_PARA_SINKRONIZIMIT, sinkPezull: true };
+  return withStore(store, "readwrite", (s) => s.put(stamped))
+    .then(() => njoftoNdryshim())
+    .then(() => stamped);
+}
+
+/**
  * The same, for many records of one store in a single transaction.
  *
  * A first sync applies every record the cloud holds; done one transaction at a time that is one
@@ -373,6 +404,20 @@ export function clearStore(store) {
 }
 
 /**
+ * Empties every store that takes part in sync, plus the tombstones - for "take the cloud copy and
+ * forget what is here", the one honest way to make a device match the cloud exactly.
+ *
+ * The profile is deliberately left alone (the cloud's copy overwrites it a moment later if there
+ * is one, and if there is not, the device keeps its own currency and targets rather than losing
+ * them), and so are the invoice photos, which do not sync and would be destroyed for nothing. The
+ * tombstones have to go with the records: a tombstone kept here would travel straight back out and
+ * delete the very row that has just been downloaded.
+ */
+export async function pastroStoretSink() {
+  await Promise.all([...SINK_STORES.map((store) => clearStore(store)), clearStore(STORES.fshirjet)]);
+}
+
+/**
  * Adds default categories the database has never seen. The store is seeded once at creation, so a
  * browser that opened the app before a release would otherwise never get the categories added by
  * that release (this is how "Këste të Kartelës" reached existing installs).
@@ -392,7 +437,9 @@ export async function ensureDefaultCategories() {
     (c) => !ekzistuese.has(c.id) && !hequra.has(c.id) && (!c.prindi || ekzistuese.has(c.prindi))
   );
   if (munguara.length === 0) return false;
-  await Promise.all(munguara.map((c) => put(STORES.categories, c)));
+  // `putSeed`, not `put`: these carry the same fixed ids the user's other devices have been
+  // renaming for months, and an untouched default must never win against one of those.
+  await Promise.all(munguara.map((c) => putSeed(STORES.categories, c)));
   return true;
 }
 
@@ -845,9 +892,11 @@ export async function wipeAllData() {
 /** `perfshiLlogarite: false` restores only the categories - single-account mode has one account on
  * purpose, and re-adding "Kesh" / "Llogaria Bankare" would split the ledger again. */
 export async function seedDefaults({ perfshiLlogarite = true } = {}) {
+  // `putSeed` rather than `put`, which is the difference between restoring the starter lists on
+  // this device and pushing them over every other device's edits - see `putSeed`.
   await Promise.all([
-    ...(perfshiLlogarite ? DEFAULT_ACCOUNTS.map((a) => put(STORES.accounts, a)) : []),
-    ...DEFAULT_CATEGORIES.map((c) => put(STORES.categories, c)),
+    ...(perfshiLlogarite ? DEFAULT_ACCOUNTS.map((a) => putSeed(STORES.accounts, a)) : []),
+    ...DEFAULT_CATEGORIES.map((c) => putSeed(STORES.categories, c)),
   ]);
   // The starter lists have fixed ids, so these rows may be re-creating exactly what a tombstone
   // says was deleted - see `hiqFshirjet`.

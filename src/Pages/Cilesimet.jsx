@@ -139,10 +139,28 @@ function Cilesimet() {
     // (kesh + bankë) are the right thing to restore.
     await seedDefaults();
     await reload();
-    setMessage({
-      type: "success",
-      text: "Të gjitha të dhënat u fshinë dhe listat e parazgjedhura u kthyen - gati për të filluar nga e para.",
-    });
+    // Said in the dialog rather than in a banner at the top of a long page, because on a device
+    // that was synced the sentence after the first one is the one that matters - and it was
+    // scrolled off screen. A wiped device reconnecting to a project that still holds the real
+    // ledger is exactly the situation that cost somebody their categories.
+    await dialog.alert(
+      lidhur ? (
+        <>
+          Të gjitha të dhënat u fshinë dhe listat e parazgjedhura u kthyen.
+          <ul className="text-start mt-2 mb-2 ps-4">
+            <li>Kopja te projekti juaj Supabase nuk u prek.</li>
+            <li>Kjo pajisje u shkëput nga sinkronizimi.</li>
+          </ul>
+          Kur ta rilidhni, do t&apos;ju pyesë çfarë të bëjë me kopjen në cloud. Zgjidhni{" "}
+          <strong>Merr nga projekti</strong> ose <strong>Bashko</strong> - jo{" "}
+          <strong>Dërgo</strong>, sepse ajo do t&apos;i çonte këto lista bosh mbi të dhënat tuaja të
+          vërteta.
+        </>
+      ) : (
+        "Të gjitha të dhënat u fshinë dhe listat e parazgjedhura u kthyen - gati për të filluar nga e para."
+      ),
+      { title: "U krye", variant: "success" }
+    );
   };
 
   /** Rules whose category still exists - the only ones that can ever fire (rregullat.js). */
@@ -155,7 +173,7 @@ function Cilesimet() {
     );
     if (!ok) return;
     await saveProfile({ ...profile, rregullatKategorive: [] });
-    setMessage({ type: "success", text: "Kujtesa e kategorive u fshi." });
+    await dialog.alert("Kujtesa e kategorive u fshi.", { title: "U krye", variant: "success" });
   };
 
   const handleReseed = async () => {
@@ -168,7 +186,15 @@ function Cilesimet() {
     if (!ok) return;
     await seedDefaults({ perfshiLlogarite: !njeLlogari });
     await reload();
-    setMessage({ type: "success", text: "Listat e parazgjedhura u kthyen." });
+    // Restored at the oldest timestamp there is (`putSeed` in db.js), so on a synced device these
+    // untouched defaults lose to whatever the other devices have named them - which is worth
+    // saying, because "kthe listat" used to be a way to undo every rename everywhere.
+    await dialog.alert(
+      lidhur
+        ? "Listat e parazgjedhura u kthyen në këtë pajisje. Emrat që keni ndryshuar në pajisjet e tjera nuk preken - sinkronizimi i radhës i mban ato."
+        : "Listat e parazgjedhura u kthyen.",
+      { title: "U krye", variant: "success" }
+    );
   };
 
   if (loading) return <PageLoading title="Cilësimet" />;

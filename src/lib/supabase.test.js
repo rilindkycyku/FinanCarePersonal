@@ -12,7 +12,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   SQL_INSTALIMI, kontrolloCelesin, linkuSqlEditor, normalizoUrl, referencaProjektit, verifikoSkemen,
 } from "./supabase";
-import { SKEMA_VERSIONI, TABELA } from "./skema";
+import { MIGRIMET, SKEMA_VERSIONI, TABELA } from "./skema";
 
 const jwt = (payload) => `eyJhbGciOiJIUzI1NiJ9.${btoa(JSON.stringify(payload))}.firma`;
 
@@ -144,8 +144,13 @@ describe("verifikoSkemen", () => {
     // Asked of the user's own project through PostgREST - there is no other API in play any more.
     expect(fetchMock.mock.calls[0][0]).toBe(`${url}/rest/v1/${TABELA}?select=record_id&limit=1`);
     expect(fetchMock.mock.calls.every(([adresa]) => adresa.startsWith(url))).toBe(true);
+    // One check per migration, in order, and then the answer written back - so this holds however
+    // many migrations the app has grown since.
+    expect(fetchMock.mock.calls.filter(([, opsionet]) => opsionet?.method === "GET")).toHaveLength(
+      MIGRIMET.length
+    );
     // The project is told too, so a second device reads the answer instead of guessing.
-    expect(fetchMock.mock.calls[1][1].method).toBe("POST");
+    expect(fetchMock.mock.calls.at(-1)[1].method).toBe("POST");
     expect(ruajtja(ruajtur).skemaVersioni).toBe(SKEMA_VERSIONI);
   });
 

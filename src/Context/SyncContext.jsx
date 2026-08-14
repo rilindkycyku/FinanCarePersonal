@@ -79,7 +79,10 @@ export function SyncProvider({ children }) {
         setPaDerguar(false);
         // Only when something actually came down: a reload re-reads the whole database and
         // re-renders every page, which is not free on a phone with a few thousand transactions.
-        if (permbledhja?.ndryshoi) await reload();
+        // A sync run in one of the join modes always reloads, whatever it downloaded - «Merr nga
+        // projekti» against an empty project takes rows *away*, and a screen still showing them
+        // would be the one moment the app lies about what it holds.
+        if (permbledhja?.ndryshoi || permbledhja?.menyra) await reload();
         return permbledhja;
       } catch (err) {
         // The code travels with the message so the page can answer the one failure that has a

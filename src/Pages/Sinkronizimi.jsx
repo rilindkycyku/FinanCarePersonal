@@ -1,12 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Alert, Button, Card, Col, Form, InputGroup, Modal, Row, Spinner } from "react-bootstrap";
+import { Alert, Button, Card, Col, Form, InputGroup, Row, Spinner } from "react-bootstrap";
 import {
-  AlertTriangle, Check, Cloud, CloudOff, Code2, Copy, Database, Download, Eye, EyeOff, ExternalLink,
-  KeyRound, LogIn, RefreshCw, Save, ShieldCheck, Trash2, UserPlus, Wand2,
+  AlertTriangle, ArrowDownToLine, ArrowUpFromLine, Cloud, CloudOff, Code2, Database, ExternalLink,
+  KeyRound, Laptop, LogIn, RefreshCw, Save, ScrollText, ShieldCheck, Smartphone, Trash2, UserPlus,
+  Wand2, X,
 } from "lucide-react";
 import NavBar from "../Components/NavBar";
 import ModaliKonfigurimit from "../Components/Sinkronizimi/ModaliKonfigurimit";
+import ModaliLidhjes from "../Components/Sinkronizimi/ModaliLidhjes";
+import { emriStorit } from "../Components/Sinkronizimi/emratStoreve";
 import FushaSekrete from "../Components/Sinkronizimi/FushaSekrete";
 import Footer from "../Components/Footer";
 import PageTitle from "../Components/PageTitle";
@@ -18,7 +21,11 @@ import {
   dil, gjendjaSkemes, hyr, kontrolloCelesin, ndryshoCelesin, normalizoUrl, pastroKonfigurimin,
   regjistrohu, ruajKonfigurimin,
 } from "../lib/supabase";
-import { fshiCloud, numeroCloud, numeroLokal, riparoTani, rivendosKufijte } from "../lib/sinkronizimi";
+import {
+  MENYRAT, fshiCloud, harroPajisjen, lexoPajisjet, ndryshimetEFundit, numeroCloud, numeroLokal,
+  riparoTani, rivendosKufijte,
+} from "../lib/sinkronizimi";
+import { pajisjaKjo, riemertoPajisjen } from "../lib/pajisja";
 import "./Styles/PremiumTheme.css";
 import "./Styles/DizajniPergjithshem.css";
 import "./Styles/Dashboard.css";
@@ -38,6 +45,18 @@ function emriProjektit(url) {
   } catch {
     return url;
   }
+}
+
+/** "sot 21:14", "dje 08:02", "10.08.2026" - a device list is read for how recently, not for when. */
+function saMePare(vlera) {
+  const data = new Date(vlera);
+  if (Number.isNaN(data.getTime())) return "-";
+  const ditet = Math.floor((Date.now() - data.getTime()) / 86400000);
+  const ora = data.toLocaleTimeString("sq-AL", { hour: "2-digit", minute: "2-digit" });
+  if (ditet <= 0) return `sot ${ora}`;
+  if (ditet === 1) return `dje ${ora}`;
+  if (ditet < 7) return `${ditet} ditë më parë`;
+  return data.toLocaleDateString("sq-AL");
 }
 
 function Sinkronizimi() {
@@ -73,6 +92,18 @@ function Sinkronizimi() {
   // The key-rotation field, closed until asked for: it is a once-a-year action sitting next to
   // buttons pressed every day.
   const [celesiIRi, setCelesiIRi] = useState(null);
+  // This browser's own name, and the devices the project has seen. The name is local (it describes
+  // this browser, not the ledger); the list is read from the project, which is the whole point -
+  // the answer to "which device did that?" has to come from somewhere both devices can see.
+  const [pajisja, setPajisja] = useState(() => pajisjaKjo());
+  const [emriRi, setEmriRi] = useState(null);
+  const [pajisjet, setPajisjet] = useState(null);
+  const [ndryshimet, setNdryshimet] = useState(null);
+  const [gjurmaHapur, setGjurmaHapur] = useState(false);
+  // Whether this device has been told what to do with the cloud copy. `false` and nothing else:
+  // a device connected before this release carries `null` and has long since decided by using it.
+  const duhetVendim = lidhur && konfigurimi.lidhjaVerifikuar === false;
+  const [lidhjaHapur, setLidhjaHapur] = useState(false);
 
   /**
    * `?konfiguro=1` opens the setup dialog straight away - the home screen sends people here with
@@ -155,6 +186,40 @@ function Sinkronizimi() {
     };
   }, [lidhur, konfigurimi.fundit]);
 
+  // The devices this project has seen, and the last rows written to it. Both are read only on a
+  // connected device and refreshed after every sync, since a sync is the only thing that changes
+  // either of them.
+  useEffect(() => {
+    if (!lidhur) {
+      setPajisjet(null);
+      setNdryshimet(null);
+      return undefined;
+    }
+    let anuluar = false;
+    lexoPajisjet()
+      .then((lista) => !anuluar && setPajisjet(lista))
+      .catch(() => !anuluar && setPajisjet([]));
+    ndryshimetEFundit(12)
+      .then((lista) => !anuluar && setNdryshimet(lista))
+      .catch(() => !anuluar && setNdryshimet([]));
+    return () => {
+      anuluar = true;
+    };
+  }, [lidhur, konfigurimi.fundit]);
+
+  /**
+   * The decision dialog opens by itself the first time a connected device lands here without
+   * having made one - which is exactly the moment somebody has just typed their password and is
+   * looking at the screen. Not reopened afterwards if it is dismissed with «Më vonë»: the card
+   * behind it stays, and nothing is pushed either way until it is answered.
+   */
+  const lidhjaTreguar = useRef(false);
+  useEffect(() => {
+    if (!duhetVendim || lidhjaTreguar.current || sqlHapur || Boolean(pune)) return;
+    lidhjaTreguar.current = true;
+    setLidhjaHapur(true);
+  }, [duhetVendim, sqlHapur, pune]);
+
   /**
    * Whether the project is still on an older migration than this release ships.
    *
@@ -191,6 +256,10 @@ function Sinkronizimi() {
   const paralajmerimiTreguar = useRef(null);
   useEffect(() => {
     if (!lidhur || sqlHapur || Boolean(pune)) return;
+    // A device that has not yet said what to do with the cloud copy is *expected* to disagree with
+    // it - that is the whole question it is being asked. Warning about the gap on top of the
+    // dialog that exists to close it would be two windows saying the same thing.
+    if (duhetVendim) return;
 
     const mungojne = nCloud !== null && nLokal !== null && nCloud < nLokal ? nLokal - nCloud : 0;
     const njoftimi = mungojne
@@ -233,7 +302,7 @@ function Sinkronizimi() {
       .then((po) => po && njoftimi.veprimi());
     // Rebuilt every render, so depending on them would reopen the dialog for ever.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lidhur, sqlHapur, nCloud, nLokal, skema, konfigurimi.oraServerit]);
+  }, [lidhur, sqlHapur, duhetVendim, nCloud, nLokal, skema, konfigurimi.oraServerit]);
 
   const lidhu = async (mode) => {
     const url = normalizoUrl(form.url);
@@ -266,12 +335,20 @@ function Sinkronizimi() {
       } else {
         await hyr({ email: form.email, password: form.password, url, anonKey: celesi.celesi });
       }
-      // A device that has just connected knows nothing about what is up there and has never sent
-      // anything, so the first run is a full one in both directions.
+      // A device that has just connected knows nothing about what is up there, so the first run
+      // takes the whole cloud copy - and, until the dialog below is answered, sends nothing at
+      // all. The watermarks are reset so that first run really does see everything.
       rivendosKufijte();
-      const permbledhja = await sinkronizoTani({ ngaFillimi: true });
+      const permbledhja = await sinkronizoTani();
       setForm((prev) => ({ ...prev, password: "" }));
-      if (permbledhja) {
+      if (permbledhja?.kerkohetVendim) {
+        // The dialog opens by itself a moment later; this says why, so the numbers on the page do
+        // not look like a sync that half worked.
+        njofto(
+          "info",
+          `U lidh me projektin dhe u morën ${permbledhja.marre} ndryshime. Kjo pajisje nuk ka dërguar ende asgjë - zgjidhni më poshtë çfarë duhet të ndodhë me kopjen në cloud.`
+        );
+      } else if (permbledhja) {
         njofto(
           "success",
           `U lidh me projektin. U morën ${permbledhja.marre} ndryshime dhe u dërguan ${permbledhja.derguar}.`
@@ -308,6 +385,107 @@ function Sinkronizimi() {
       );
     } catch (err) {
       njofto("danger", err?.message || "Riparimi dështoi.");
+    } finally {
+      setPune(null);
+    }
+  };
+
+  /**
+   * The three directions, each behind the confirmation its consequences deserve.
+   *
+   * «Bashko» loses nothing, so it runs on the press. The other two destroy one side or the other,
+   * and both ask for the word to be typed - the same gate the wipe on the settings page uses, and
+   * for the same reason: a stray tap can dismiss a dialog, it cannot type «MERR».
+   */
+  const handleMenyra = async (menyra) => {
+    if (menyra === MENYRAT.MERR) {
+      const ok = await dialog.confirm(
+        <>
+          Kjo pajisje bëhet kopje e projektit tuaj. Çdo transaksion, kategori apo llogari që ndodhet{" "}
+          <strong>vetëm këtu</strong> fshihet dhe nuk kthehet dot.
+          <ul className="text-start mt-2 mb-2 ps-4">
+            <li>Fotot e faturave nuk preken - ato nuk sinkronizohen fare.</li>
+            <li>Të dhënat te projekti nuk preken.</li>
+          </ul>
+          Nëse nuk jeni i sigurt, mbyllni këtë dhe zgjidhni <strong>Bashko</strong>.
+        </>,
+        {
+          title: "Merr gjithçka nga projekti",
+          confirmLabel: "Zëvendëso këtë pajisje",
+          cancelLabel: "Hiq dorë",
+          variant: "danger",
+          requireText: "MERR",
+        }
+      );
+      if (!ok) return;
+    }
+    if (menyra === MENYRAT.DERGO && nCloud !== 0) {
+      const ok = await dialog.confirm(
+        <>
+          Gjithçka që ndodhet në këtë pajisje shkon te projekti dhe{" "}
+          <strong>mbishkruan</strong> çfarë ka aty - aktualisht{" "}
+          <strong>{nCloud === null ? "…" : nCloud}</strong> rreshta. Pajisjet e tjera do ta marrin
+          këtë version në sinkronizimin e tyre të radhës.
+          <ul className="text-start mt-2 mb-2 ps-4">
+            <li>Përdoreni vetëm nëse kjo pajisje është ajo me të dhënat e sakta.</li>
+            <li>
+              Nëse kjo pajisje sapo është pastruar ose është e re, ky është veprimi që fshin punën e
+              pajisjeve të tjera.
+            </li>
+          </ul>
+        </>,
+        {
+          title: "Dërgo këtë pajisje mbi cloud",
+          confirmLabel: "E kuptoj, dërgo",
+          cancelLabel: "Hiq dorë",
+          variant: "danger",
+          requireText: "DËRGO",
+        }
+      );
+      if (!ok) return;
+    }
+
+    setPune(menyra);
+    try {
+      const permbledhja = await sinkronizoTani({ menyra });
+      setLidhjaHapur(false);
+      if (permbledhja) {
+        njofto(
+          "success",
+          `U morën ${permbledhja.marre} ndryshime dhe u dërguan ${permbledhja.derguar}. Kjo pajisje tani sinkronizohet normalisht.`
+        );
+      }
+    } catch (err) {
+      njofto("danger", err?.message || "Veprimi dështoi.");
+    } finally {
+      setPune(null);
+    }
+  };
+
+  const handleEmri = async (e) => {
+    e.preventDefault();
+    setPajisja(riemertoPajisjen(emriRi));
+    setEmriRi(null);
+    // Written into the project on the next sync, which is also what refreshes the list below.
+    await sinkronizoTani();
+  };
+
+  const handleHarroPajisjen = async (p) => {
+    const ok = await dialog.confirm(
+      <>
+        Hiqet nga lista pajisja <strong>{p.emri}</strong>. Të dhënat e saj te projekti nuk preken -
+        kjo fshin vetëm shënimin se ajo pajisje ka sinkronizuar ndonjëherë. Nëse ajo pajisje
+        sinkronizon sërish, rishfaqet.
+      </>,
+      { title: "Hiq pajisjen nga lista", confirmLabel: "Hiq" }
+    );
+    if (!ok) return;
+    setPune("pajisja");
+    try {
+      await harroPajisjen(p.id);
+      setPajisjet((lista) => (lista ?? []).filter((x) => x.id !== p.id));
+    } catch (err) {
+      njofto("danger", err?.message || "Pajisja nuk u hoq.");
     } finally {
       setPune(null);
     }
@@ -431,6 +609,30 @@ function Sinkronizimi() {
               gjendjaSkemes().then(setSkema).catch(() => undefined);
               sinkronizoTani();
             }} />
+
+          <ModaliLidhjes
+            show={lidhjaHapur}
+            onHide={() => setLidhjaHapur(false)}
+            duke={Boolean(pune) || duke}
+            onZgjidh={handleMenyra}
+          />
+
+          {/* Connected, and holding everything back until somebody says which side is right. The
+              card stays for as long as that is true - the dialog can be dismissed, the question
+              cannot, and a device in this state is syncing in one direction only. */}
+          {duhetVendim && (
+            <Alert variant="info">
+              <strong>Kjo pajisje po vetëm lexon nga projekti.</strong> Derisa të vendosni çfarë të
+              ndodhë me kopjen në cloud, asnjë transaksion, kategori apo llogari nga kjo pajisje nuk
+              dërgohet lart - kështu një pajisje e sapo pastruar nuk i mbishkruan dot të dhënat e
+              vërteta.
+              <div className="mt-3">
+                <Button variant="outline-light" size="sm" onClick={() => setLidhjaHapur(true)} disabled={Boolean(pune)}>
+                  <ShieldCheck size={15} className="me-1" /> Shiko dhe vendos
+                </Button>
+              </div>
+            </Alert>
+          )}
 
           {/* A release can change what the project's table has to look like, and there is no deploy
               that could do it - so the app compares what it ships with what the project reports and
@@ -638,7 +840,7 @@ function Sinkronizimi() {
                 {/* The cloud may hold more than this device (tombstones swept here, rows another
                     device deleted), never less - so this way round it is always something to act
                     on, and never a false alarm. */}
-                {nCloud !== null && nLokal !== null && nCloud < nLokal && (
+                {!duhetVendim && nCloud !== null && nLokal !== null && nCloud < nLokal && (
                   <Alert variant="warning" className="py-2 px-3 small">
                     Projektit i mungojnë <strong>{nLokal - nCloud}</strong> rekorde që ndodhen këtu.
                     Ndodh kur tabela zbrazet ose rikrijohet jashtë aplikacionit: pajisja i mban ato
@@ -672,16 +874,61 @@ function Sinkronizimi() {
                 </div>
 
                 <div className="d-flex flex-wrap gap-2">
-                  <Button className="btn-primary" onClick={() => handleSinkronizo(false)} disabled={duke}>
+                  <Button className="btn-primary" onClick={() => handleSinkronizo(false)} disabled={duke || Boolean(pune)}>
                     {duke ? <Spinner animation="border" size="sm" className="me-2" /> : <RefreshCw size={16} className="me-1" />}
                     Sinkronizo tani
-                  </Button>
-                  <Button variant="outline-light" onClick={() => handleSinkronizo(true)} disabled={duke}>
-                    <Download size={16} className="me-1" /> Shkarko gjithçka nga cloud
                   </Button>
                   <Button variant="outline-light" onClick={handleShkeputu} disabled={duke || Boolean(pune)}>
                     <CloudOff size={16} className="me-1" /> Shkëput këtë pajisje
                   </Button>
+                </div>
+
+                {/* The two directions that overwrite one side with the other. They used to be one
+                    button called «Shkarko gjithçka nga cloud», which also silently re-uploaded
+                    everything this device held - so the button that sounded like the safe one was
+                    the one that could overwrite the other devices. Now they are two, they say what
+                    they do, and each asks for its word to be typed. */}
+                <div className="mt-3">
+                  <div className="fcp-row-sub mb-2">
+                    Kur dy pajisje nuk përputhen dhe doni ta zgjidhni ju vetë se cila ka të drejtë:
+                  </div>
+                  <div className="d-flex flex-wrap gap-2">
+                    <Button
+                      variant="outline-light"
+                      size="sm"
+                      onClick={() => handleMenyra(MENYRAT.BASHKO)}
+                      disabled={duke || Boolean(pune)}
+                    >
+                      {pune === MENYRAT.BASHKO && <Spinner animation="border" size="sm" className="me-2" />}
+                      Bashko me projektin
+                    </Button>
+                    <Button
+                      variant="outline-warning"
+                      size="sm"
+                      onClick={() => handleMenyra(MENYRAT.MERR)}
+                      disabled={duke || Boolean(pune)}
+                    >
+                      {pune === MENYRAT.MERR ? (
+                        <Spinner animation="border" size="sm" className="me-2" />
+                      ) : (
+                        <ArrowDownToLine size={15} className="me-1" />
+                      )}
+                      Merr gjithçka nga projekti
+                    </Button>
+                    <Button
+                      variant="outline-danger"
+                      size="sm"
+                      onClick={() => handleMenyra(MENYRAT.DERGO)}
+                      disabled={duke || Boolean(pune)}
+                    >
+                      {pune === MENYRAT.DERGO ? (
+                        <Spinner animation="border" size="sm" className="me-2" />
+                      ) : (
+                        <ArrowUpFromLine size={15} className="me-1" />
+                      )}
+                      Dërgo gjithçka nga kjo pajisje
+                    </Button>
+                  </div>
                 </div>
 
                 {celesiIRi === null ? (
@@ -724,6 +971,136 @@ function Sinkronizimi() {
                       </Col>
                     </Row>
                   </Form>
+                )}
+              </Card>
+
+              {/* Who wrote what. One account is signed in on every device, so without this the
+                  project cannot answer the only question that matters after a sync does something
+                  unexpected - and the user was left comparing screenshots. */}
+              <Card className="profile-card border-0 p-4 mb-4">
+                <h2 className="fcp-card-title fw-bold mb-3">
+                  <Smartphone size={18} className="me-2 text-primary" />
+                  Pajisjet tuaja
+                </h2>
+
+                {emriRi === null ? (
+                  <div className="d-flex flex-wrap align-items-center gap-2 mb-3">
+                    <span className="fcp-row-sub">Kjo pajisje quhet</span>
+                    <strong>{pajisja.emri}</strong>
+                    <button
+                      type="button"
+                      className="btn btn-link p-0 text-decoration-none fcp-row-sub"
+                      onClick={() => setEmriRi(pajisja.emri)}
+                    >
+                      <KeyRound size={13} className="me-1" /> ndrysho
+                    </button>
+                  </div>
+                ) : (
+                  <Form onSubmit={handleEmri} className="mb-3">
+                    <InputGroup>
+                      <Form.Control
+                        value={emriRi}
+                        onChange={(e) => setEmriRi(e.target.value)}
+                        placeholder="p.sh. Tableti i shtëpisë"
+                        maxLength={40}
+                        autoFocus
+                      />
+                      <Button type="submit" className="btn-primary">
+                        <Save size={16} className="me-1" /> Ruaj
+                      </Button>
+                      <Button variant="secondary" onClick={() => setEmriRi(null)}>
+                        Anulo
+                      </Button>
+                    </InputGroup>
+                    <Form.Text muted>
+                      Emri ruhet vetëm në këtë shfletues dhe udhëton bashkë me çdo rresht që dërgon
+                      kjo pajisje, që ta njihni te lista dhe te gjurma më poshtë.
+                    </Form.Text>
+                  </Form>
+                )}
+
+                {pajisjet === null ? (
+                  <div className="fcp-row-sub">Po lexohen pajisjet...</div>
+                ) : pajisjet.length === 0 ? (
+                  <div className="fcp-row-sub">
+                    Asnjë pajisje nuk është shënuar ende te projekti. Shënimi shtohet në
+                    sinkronizimin e radhës.
+                  </div>
+                ) : (
+                  <div className="d-flex flex-column gap-2">
+                    {pajisjet.map((p) => (
+                      <div
+                        key={p.id}
+                        className="d-flex align-items-center justify-content-between gap-2 p-2 border border-secondary rounded-3"
+                      >
+                        <div className="d-flex align-items-center gap-2">
+                          <Laptop size={16} className={p.kjo ? "text-primary" : "text-muted"} />
+                          <div>
+                            <div className="fw-bold">
+                              {p.emri}
+                              {p.kjo && <span className="fcp-row-sub ms-2">(kjo pajisje)</span>}
+                            </div>
+                            <div className="fcp-row-sub">
+                              Sinkronizoi {saMePare(p.sinkFundit)} · mban {p.rreshta} rekorde · dërgoi{" "}
+                              {p.derguar} herën e fundit
+                            </div>
+                          </div>
+                        </div>
+                        {!p.kjo && (
+                          <Button
+                            variant="link"
+                            size="sm"
+                            className="text-muted p-1"
+                            title="Hiq nga lista"
+                            onClick={() => handleHarroPajisjen(p)}
+                            disabled={Boolean(pune)}
+                          >
+                            <X size={16} />
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <button
+                  type="button"
+                  className="btn btn-link p-0 mt-3 text-decoration-none fcp-row-sub align-self-start"
+                  onClick={() => setGjurmaHapur((e) => !e)}
+                >
+                  <ScrollText size={14} className="me-1" />
+                  {gjurmaHapur ? "Fshih ndryshimet e fundit" : "Shiko ndryshimet e fundit te projekti"}
+                </button>
+
+                {gjurmaHapur && (
+                  <div className="mt-2">
+                    {ndryshimet === null ? (
+                      <div className="fcp-row-sub">Po lexohet...</div>
+                    ) : ndryshimet.length === 0 ? (
+                      <div className="fcp-row-sub">Projekti nuk ka ende asnjë rresht.</div>
+                    ) : (
+                      <ul className="list-unstyled mb-0 small">
+                        {ndryshimet.map((n) => (
+                          <li key={`${n.store}:${n.id}:${n.kur}`} className="fcp-row-sub py-1">
+                            {saMePare(n.kur)} · {n.fshire ? "u fshi" : "u shkrua"} {emriStorit(n.store)}{" "}
+                            ·{" "}
+                            {n.pajisja ? (
+                              <strong>{n.pajisja}{n.kjo ? " (kjo pajisje)" : ""}</strong>
+                            ) : (
+                              <em>pa gjurmë pajisjeje</em>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                    {konfigurimi.pajisjeKolona === false && (
+                      <Alert variant="warning" className="py-2 px-3 small mt-2 mb-0">
+                        Projekti juaj ende nuk i mban kolonat që tregojnë pajisjen. Shtypni{" "}
+                        <strong>Konfiguro projektin</strong> më lart dhe ekzekutoni skriptin - nga ai
+                        çast çdo rresht i ri e mban emrin e pajisjes që e dërgoi.
+                      </Alert>
+                    )}
+                  </div>
                 )}
               </Card>
 
@@ -786,6 +1163,17 @@ function Sinkronizimi() {
                 <strong>Fiton ndryshimi më i fundit.</strong> Nëse i njëjti transaksion redaktohet në
                 dy pajisje pa qenë online në mes, mbetet versioni i ruajtur më vonë. Rreshtat e
                 ndryshëm nuk përplasen kurrë.
+              </li>
+              <li>
+                <strong>Një pajisje e re nuk dërgon asgjë pa e pyetur ju.</strong> Sapo lidhet, ajo
+                vetëm lexon dhe ju tregon sa rreshta ka secila anë; deri sa të zgjidhni, kopja në
+                cloud nuk preket. Listat e parazgjedhura (llogaritë dhe kategoritë që krijohen vetë)
+                humbasin gjithmonë ndaj asaj që ka cloud-i, sepse kanë të njëjtat id në çdo pajisje.
+              </li>
+              <li>
+                <strong>Çdo rresht mban emrin e pajisjes që e dërgoi.</strong> Me një email të vetëm
+                në të gjitha pajisjet, kjo është e vetmja mënyrë për të parë se cila prej tyre e bëri
+                një ndryshim - shihni listën te <strong>Pajisjet tuaja</strong> më lart.
               </li>
             </ul>
           </Card>

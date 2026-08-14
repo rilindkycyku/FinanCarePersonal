@@ -1101,8 +1101,22 @@ export function generateDueTransactions(rec, todayStr, maxCatchUp = 60) {
  * of what a wipe would cost: three weeks with nothing recorded is not the same risk as three weeks
  * of daily entries. `duhet` is deliberately quiet on an empty or barely-used ledger - a brand new
  * database has nothing to lose and being nagged on day one only teaches the user to ignore it.
+ *
+ * `sinkronizuar` does not change any of the arithmetic; it changes what may be *said* about it. A
+ * device syncing to the user's own Supabase project is not "the only place this data exists", and
+ * telling somebody it is - while the cloud copy sits there holding the same 81 transactions - is
+ * how a warning stops being believed. What stays true even then, and is why this still fires: the
+ * invoice photos are in this browser and nowhere else, and a cloud copy is one mistaken upload from
+ * matching whatever the worst device holds.
  */
-export function backupStatus({ profile = {}, transactions = [], sot = new Date(), afati = 30, minimumi = 10 } = {}) {
+export function backupStatus({
+  profile = {},
+  transactions = [],
+  sot = new Date(),
+  afati = 30,
+  minimumi = 10,
+  sinkronizuar = false,
+} = {}) {
   const stamp = Date.parse(profile?.kopjaFundit ?? "");
   const kurre = !Number.isFinite(stamp);
   const tani = sot instanceof Date ? sot.getTime() : Date.parse(sot);
@@ -1114,6 +1128,7 @@ export function backupStatus({ profile = {}, transactions = [], sot = new Date()
 
   return {
     kurre,
+    sinkronizuar,
     data: kurre ? null : profile.kopjaFundit,
     ditet,
     teReja,

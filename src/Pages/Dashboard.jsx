@@ -16,6 +16,7 @@ import ShpenzimiDitor from "../Components/ShpenzimiDitor";
 import SinkronizimiNdaloi from "../Components/SinkronizimiNdaloi";
 import { Kpi, Panel, ProgressBar, Empty } from "../Components/Ui";
 import { useData } from "../Context/DataContext";
+import { useSync } from "../Context/SyncContext";
 import { emriIPlote } from "../lib/kategorite";
 import { getIcon } from "../lib/icons";
 import {
@@ -49,6 +50,9 @@ function Dashboard() {
   const { profile, accounts, categories, transactions, budgets, goals, recurring, borxhet, planet, faturat, loading,
     error,
     money, signedMoney, njeLlogari, llogariaKryesore } = useData();
+  // Only for what the backup reminder is allowed to claim: a synced device is not "the only place
+  // this exists", and a reminder that says otherwise gets ignored on the day it is right.
+  const { lidhur } = useSync();
   const [showTx, setShowTx] = useState(false);
 
   const today = todayISO();
@@ -66,7 +70,7 @@ function Dashboard() {
       qellimet: goals.map((g) => goalProgress(g, transactions)).slice(0, 3),
       teFundit: sortByDateDesc(transactions).slice(0, 6),
       dueTani: dueRecurring(recurring, today),
-      kopja: backupStatus({ profile, transactions }),
+      kopja: backupStatus({ profile, transactions, sinkronizuar: lidhur }),
       // Six months ahead, but only the first month and the low point are shown here.
       parashikimi: forecast({ accounts, transactions, recurring, plans: planet, today, muaj: 6 }),
       neVijim: upcomingRecurring(recurring, today, 14),
@@ -85,7 +89,7 @@ function Dashboard() {
       planetTotal: planTotals(planet, muajiKey, transactions),
       planetTeMbartura: overduePlans(planet, muajiKey).length,
     };
-  }, [accounts, categories, transactions, budgets, goals, recurring, borxhet, planet, profile, muajiKey, today]);
+  }, [accounts, categories, transactions, budgets, goals, recurring, borxhet, planet, profile, muajiKey, today, lidhur]);
 
   const pershendetja = profile.emri || "përdorues";
   // Both are optional targets set in Cilësimet; when unset the KPIs fall back to plain figures.
@@ -163,11 +167,19 @@ function Dashboard() {
               <span>
                 <ShieldAlert size={16} className="me-2" />
                 {stats.kopja.kurre ? (
-                  <>
-                    Të dhënat tuaja ndodhen vetëm në këtë shfletues dhe nuk keni ende asnjë kopje. Pastrimi i të dhënave
-                    të faqes do t&apos;i merrte me vete{" "}
-                    <strong>{transactions.length}</strong> transaksione.
-                  </>
+                  stats.kopja.sinkronizuar ? (
+                    <>
+                      Këto <strong>{transactions.length}</strong> transaksione janë te ky shfletues dhe te projekti juaj
+                      Supabase - por asnjëherë në një skedar. Fotot e faturave nuk sinkronizohen fare, dhe një gabim i
+                      vetëm te sinkronizimi prek të dyja anët njëherësh.
+                    </>
+                  ) : (
+                    <>
+                      Të dhënat tuaja ndodhen vetëm në këtë shfletues dhe nuk keni ende asnjë kopje. Pastrimi i të dhënave
+                      të faqes do t&apos;i merrte me vete{" "}
+                      <strong>{transactions.length}</strong> transaksione.
+                    </>
+                  )
                 ) : (
                   <>
                     Kopja e fundit është marrë <strong>{stats.kopja.ditet} ditë</strong> më parë dhe që atëherë keni

@@ -298,9 +298,9 @@ jo të vetes.
 Një rresht për çdo rekord - jo e gjithë baza në një rresht të vetëm, dhe jo një tabelë për çdo
 store:
 
-| user_id | store | record_id | updated_at | deleted | data |
-| --- | --- | --- | --- | --- | --- |
-| `a1b2…` | `transactions` | `tx_m4f2k9x` | `2026-08-11 18:02:18+00` | `false` | `{"id":"tx_m4f2k9x","data":"2026-08-11","lloji":"shpenzim","vlera":12.34,…}` |
+| user_id | store | record_id | updated_at | deleted | device_name | data |
+| --- | --- | --- | --- | --- | --- | --- |
+| `a1b2…` | `transactions` | `tx_m4f2k9x` | `2026-08-11 18:02:18+00` | `false` | `Chrome në Android` | `{"id":"tx_m4f2k9x","data":"2026-08-11","lloji":"shpenzim","vlera":12.34,…}` |
 
 Një libër me 800 transaksione, 6 llogari e 120 kategori (me nënkategoritë) bëhet rreth 930 rreshta,
 plus një rresht për profilin. Fushat e vetë rekordit rrinë brenda kolonës `data` (jsonb) sepse tabela ndodhet te
@@ -365,7 +365,25 @@ përditësohet. Kjo ishte arsyeja pse kolona është `jsonb` që në fillim.
   ta ekzekutoni skriptin sërish.
 - Rekordet e krijuara para se të ekzistonte sinkronizimi datohen te epoka, jo te «tani»: kështu një
   pajisje e re, që sapo ka mbjellë kategoritë e parazgjedhura me të njëjtat id, nuk i mbishkruan
-  riemërtimet e pajisjes së vjetër.
+  riemërtimet e pajisjes së vjetër. **Të njëjtën datë marrin edhe listat e parazgjedhura** kudo që
+  krijohen - te hapja e parë e bazës, te «Kthe listat e parazgjedhura» dhe pas një pastrimi të plotë
+  (`putSeed` te `db.js`). Pa këtë, një tablet i pastruar dhe i rilidhur i çonte 127 rreshta të
+  sapokrijuar mbi një vit kategorish të vërteta, sepse për rregullat e zakonshme ato ishin
+  «ndryshime të padërguara» dhe ndryshimi i padërguar fiton.
+- **Një pajisje e sapolidhur nuk dërgon asgjë derisa ta pyesë përdoruesin.** Sapo lidhet, ajo vetëm
+  lexon; faqja i tregon të dyja anët të numëruara (sa rreshta ka projekti, sa rekorde ka pajisja, sa
+  përputhen) dhe kërkon një nga tri përgjigjet: **Bashko** (projekti fiton çdo përplasje, ngarkohet
+  vetëm ajo që projekti nuk e ka), **Merr nga projekti** (pajisja bëhet kopje e tij) ose **Dërgo**
+  (kjo pajisje mbishkruan projektin). Të dyja të fundit kërkojnë të shkruhet fjala përkatëse, si
+  fshirja te Cilësimet. Pajisjet e lidhura para këtij release nuk pyeten - ato kanë vite që
+  sinkronizohen.
+- **Çdo rresht mban emrin e pajisjes që e dërgoi** (`device_id` / `device_name`, migrimi 2). Me një
+  llogari të vetme në të gjitha pajisjet, kjo është e vetmja mënyrë t&apos;i përgjigjesh pyetjes
+  «cila pajisje e bëri këtë?». Emri jepet vetë nga shfletuesi ("Chrome në Android") dhe ndryshohet
+  te faqja **Sinkronizimi**, ku qëndron edhe lista e pajisjeve që kanë sinkronizuar ndonjëherë me
+  projektin - me kohën e fundit, sa rekorde mban secila dhe sa dërgoi herën e fundit - dhe gjurma e
+  rreshtave të fundit të shkruar. Emri ruhet vetëm te ai shfletues: ai përshkruan pajisjen, jo
+  paratë, pra nuk sinkronizohet.
 - Sinkronizimi bëhet vetë - kur hapet aplikacioni, pak sekonda pas çdo ndryshimi, kur ktheheni te
   skeda, kur pajisja kthehet online dhe çdo dhjetë minuta sa kohë faqja rri e hapur - ose vetëm me
   buton, sipas çelësit te faqja.
@@ -395,6 +413,7 @@ src/
   lib/        db.js (IndexedDB), finance.js (çdo kalkulim), csv.js (leximi i ekstraktit),
               kategorite.js (nënkategoritë: prindi, familja, pema e kërkimi i zgjedhësit),
               skema.js (migrimet e projektit tuaj Supabase, të numëruara),
+              pajisja.js (emri dhe id-ja e kësaj pajisjeje, vula e çdo rreshti të dërguar),
               rregullat.js (kujtesa e kategorive), images.js (përpunimi i fotove të faturave),
               zip.js (arkivi i kopjes së plotë), calc.js (llogaritësi i fushave të vlerës),
               supabase.js (klienti i vogël i projektit tuaj), sinkronizimi.js (rregullat e bashkimit),

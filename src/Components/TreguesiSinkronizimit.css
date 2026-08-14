@@ -43,6 +43,15 @@
   background: rgba(239, 68, 68, 0.12);
 }
 
+/* Connected, reading, and deliberately sending nothing until the user says what should happen to
+   the cloud copy. Amber like "waiting", because that is what it is - but it will wait for ever
+   without a tap, so it does not get the quiet treatment. */
+.fcp-tregues-vendim {
+  color: #f59e0b;
+  border-color: rgba(245, 158, 11, 0.45);
+  background: rgba(245, 158, 11, 0.12);
+}
+
 .fcp-tregues-rrotullo {
   animation: fcp-tregues-spin 1s linear infinite;
 }

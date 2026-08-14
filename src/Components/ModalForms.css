@@ -887,3 +887,20 @@ body.light-mode .fcp-cat-trigger {
     font-size: 0.82rem;
   }
 }
+
+/* The three answers a device gives when it first meets a cloud copy (ModaliLidhjes). Buttons
+   rather than radios because the whole card is the target: the text is what the choice actually
+   means, and on a phone a 14-px radio next to a paragraph is a trap, not a control. */
+.fcp-zgjedhje {
+  color: inherit;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.fcp-zgjedhje:hover {
+  background-color: rgba(255, 255, 255, 0.04) !important;
+}
+
+.fcp-zgjedhje[aria-pressed="true"] {
+  background-color: rgba(255, 255, 255, 0.06) !important;
+  border-width: 2px !important;
+}

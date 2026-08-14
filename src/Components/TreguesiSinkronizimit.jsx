@@ -31,14 +31,19 @@ function TreguesiSinkronizimit() {
   if (!eshteKonfiguruar(konfigurimi)) return null;
 
   const deshtoi = !lidhur || Boolean(gabim || konfigurimi.fundit?.gabim);
-  const gjendja = duke ? "duke" : deshtoi ? "gabim" : paDerguar ? "pret" : "mire";
+  // A device that has just connected and has not yet been told what to do with the cloud copy is
+  // holding *everything* back, not a couple of edits - and it will go on holding it, silently, for
+  // as long as nobody opens the page. That earns the same mark a failure gets.
+  const paVendim = lidhur && konfigurimi.lidhjaVerifikuar === false;
+  const gjendja = duke ? "duke" : deshtoi ? "gabim" : paVendim ? "vendim" : paDerguar ? "pret" : "mire";
 
-  const Ikona = { duke: RefreshCw, gabim: TriangleAlert, pret: CloudOff, mire: Cloud }[gjendja];
+  const Ikona = { duke: RefreshCw, gabim: TriangleAlert, vendim: TriangleAlert, pret: CloudOff, mire: Cloud }[gjendja];
   const titulli = {
     duke: "Duke sinkronizuar...",
     gabim: lidhur
       ? `Sinkronizimi dështoi: ${gabim?.mesazhi || konfigurimi.fundit?.gabim}`
       : "Sesioni ka mbaruar - hyni sërish që sinkronizimi të vazhdojë",
+    vendim: "Kjo pajisje po vetëm lexon - vendosni çfarë të ndodhë me kopjen në cloud",
     pret: online ? "Ka ndryshime që presin të dërgohen" : "Pa internet - ndryshimet presin",
     mire: konfigurimi.fundit?.kur ? `Sinkronizuar në ${ora(konfigurimi.fundit.kur)}` : "Sinkronizimi është aktiv",
   }[gjendja];

@@ -16,6 +16,13 @@
  * - A sync pulls what changed since the last pull, applies it unless this device is holding an
  *   unsent change to the same record, then pushes what it is holding. **The last device to sync
  *   wins, per record.**
+ * - **Except on the very first sync of a newly connected device**, which pushes nothing at all
+ *   until the user has been shown what is in the cloud and has said what should happen to it. See
+ *   `permbledhjaLidhjes` and `MENYRAT` below: that rule is what stands between a tablet someone
+ *   has just wiped and a year of somebody's categories.
+ * - Every pushed row is stamped with which device pushed it (lib/pajisja.js), because the account
+ *   cannot say - the same email is signed in everywhere - and "which of my devices did that?" is
+ *   the first question anybody asks when a sync does something surprising.
  *
  * That rule is the honest choice here rather than a shortcut: one person's own ledger on their own
  * phone and laptop, where two devices editing *the same transaction* within the same minute is not
@@ -35,11 +42,15 @@
  */
 
 import {
-  SINK_PROFILE_ID, SINK_STORES, fshiRawShume, getAll, getFshirjet, getProfile, hiqFshirjet,
-  putProfileRaw, putRaw, putRawShume, shenoFshirjen, shenoFshirjetShume,
+  KOHA_PARA_SINKRONIZIMIT, SINK_PROFILE_ID, SINK_STORES, fshiRawShume, getAll, getFshirjet,
+  getProfile, hiqFshirjet, pastroStoretSink, putProfileRaw, putRaw, putRawShume, shenoFshirjen,
+  shenoFshirjetShume,
 } from "./db";
 import { TABELA, lexoKonfigurimin, rest, ruajKonfigurimin, siguroSesionin } from "./supabase";
-import { STORI_META } from "./skema";
+import { PREFIKSI_PAJISJES, STORI_META } from "./skema";
+import { pajisjaKjo, stampaPajisjes } from "./pajisja";
+
+export { KOHA_PARA_SINKRONIZIMIT } from "./db";
 
 /** The profile is a single record in a store of its own, so it travels under a fixed id. */
 export const STORI_PROFILIT = "profile";
@@ -159,8 +170,14 @@ export function gjendjaLokale({ storet = {}, profili = null, fshirjet = [] }) {
  * `maxTs` is the new pull watermark: the newest `updated_at` seen, *including* the rows that were
  * skipped. Skipping one is a decision that it is already accounted for, so re-downloading it on
  * every future sync would achieve nothing.
+ *
+ * `cloudFiton` drops rule 1 for the length of one sync: what the cloud holds is applied even over
+ * an unsent local change. It is not for ordinary syncing - it is for the moment a device joins a
+ * cloud copy it has never met (`MENYRAT.BASHKO` / `MENYRAT.MERR`), where "unsent" means nothing
+ * more than "written before this browser had anywhere to send it", and where the records most
+ * likely to collide are the starter lists that every device creates with the same ids.
  */
-export function planiIAplikimit(rreshtat, { kohet, pezull = new Set() }) {
+export function planiIAplikimit(rreshtat, { kohet, pezull = new Set() }, { cloudFiton = false } = {}) {
   const shkruaj = [];
   const fshi = [];
   let anashkaluar = 0;
@@ -180,7 +197,7 @@ export function planiIAplikimit(rreshtat, { kohet, pezull = new Set() }) {
     const celesi = celesiRreshtit(rr.store, rr.id);
     // Not yet sent from here: this device's version is the one going out, so what came down is
     // last round's news whatever its timestamp says.
-    if (pezull.has(celesi)) {
+    if (!cloudFiton && pezull.has(celesi)) {
       anashkaluar++;
       continue;
     }
@@ -209,7 +226,7 @@ export function planiIAplikimit(rreshtat, { kohet, pezull = new Set() }) {
 /** The table's columns. `user_id` is sent rather than left to the column default, because a bulk
  * insert through PostgREST fills omitted keys with NULL unless asked otherwise - and NULL is the
  * one value the row-level-security check will refuse. */
-export function rreshtiPerServer(rr, userId) {
+export function rreshtiPerServer(rr, userId, pajisja = null) {
   // `sinkPezull` is this device's own bookkeeping - "not sent yet" - and sending it would tell the
   // next device to send it again, for ever. `updated_at` is sent for a project whose setup script
   // predates the timestamp trigger; where the trigger exists it overrides this with the server's
@@ -223,6 +240,9 @@ export function rreshtiPerServer(rr, userId) {
     updated_at: new Date(rr.perditesuar).toISOString(),
     deleted: Boolean(rr.fshire),
     data: rr.fshire ? null : teDhenat,
+    // Left off entirely for a project still on migration 1, where the columns do not exist yet and
+    // naming them would have PostgREST refuse the whole batch.
+    ...(pajisja ? { device_id: pajisja.id, device_name: pajisja.emri } : {}),
   };
 }
 
@@ -267,9 +287,13 @@ export async function lexoGjendjen() {
  * the cloud has never seen still gets pushed. Records the user actually edits are stamped properly
  * by db.js from then on.
  *
- * The date is also what marks such a record as still owed to the cloud - see `pastampuarat`.
+ * The date is also what marks such a record as still owed to the cloud - see `pastampuarat`, and
+ * `putSeed` in db.js for the other writer that uses it: the starter lists, whose fixed ids collide
+ * with rows the cloud has been holding for months.
+ *
+ * The constant itself lives in db.js, because the writes that need it are there and db.js cannot
+ * import this file. It is re-exported at the top so every reader of sync keeps finding it here.
  */
-export const KOHA_PARA_SINKRONIZIMIT = 1;
 
 /**
  * Which records predate sync, and so are still owed to the cloud.
@@ -412,6 +436,230 @@ export function numriLokal({ storet = {}, profili = null, fshirjet = [] } = {}) 
   return rekordet + profil + (fshirjet?.length ?? 0);
 }
 
+// ---- joining a cloud copy: what the two sides hold, before anything is written ----
+
+/**
+ * What this device would push and what it holds, as one key per record - the local half of the
+ * comparison a device makes when it first meets a cloud copy.
+ */
+function celesatLokale({ storet = {}, profili = null, fshirjet = [] } = {}) {
+  const celesat = new Set();
+  for (const [store, rekordet] of Object.entries(storet)) {
+    for (const rekordi of rekordet ?? []) {
+      if (rekordi?.id) celesat.add(celesiRreshtit(store, rekordi.id));
+    }
+  }
+  if (profili && Object.keys(profili).length > 0) {
+    celesat.add(celesiRreshtit(STORI_PROFILIT, SINK_PROFILE_ID));
+  }
+  for (const f of fshirjet ?? []) {
+    if (f?.store && f?.id) celesat.add(celesiRreshtit(f.store, f.id));
+  }
+  return celesat;
+}
+
+/** `${store}:${id}` → how many of each store a set of keys holds, for a summary a person can read
+ * ("81 transaksione, 121 kategori") rather than a bare row count. */
+export function sipasStorit(celesat) {
+  const numrat = {};
+  for (const celesi of celesat) {
+    const teksti = String(celesi);
+    const ndarja = teksti.indexOf(":");
+    // Anything without a store in front of it is not one of these keys at all - and `slice(0, -1)`
+    // on a string with no colon would invent a store name out of the id.
+    if (ndarja <= 0) continue;
+    const store = teksti.slice(0, ndarja);
+    numrat[store] = (numrat[store] ?? 0) + 1;
+  }
+  return numrat;
+}
+
+/**
+ * Whether this device is carrying anything of its own yet.
+ *
+ * "Nothing of its own" is not the same as empty: a browser that has just been wiped, or installed
+ * this morning, holds two accounts and a hundred-odd categories - the starter lists, with the same
+ * fixed ids every device creates. Those are dated `KOHA_PARA_SINKRONIZIMIT` (`putSeed` in db.js),
+ * so what the question really asks is whether anything here has a date of its own.
+ *
+ * It decides which direction is *offered first* when a device joins a cloud copy, and nothing more.
+ * The user still chooses.
+ */
+export function pajisjaPaTeDhena({ storet = {}, fshirjet = [] } = {}) {
+  if ((fshirjet?.length ?? 0) > 0) return false;
+  for (const rekordet of Object.values(storet)) {
+    for (const rekordi of rekordet ?? []) {
+      if ((Number(rekordi?.perditesuar) || 0) > KOHA_PARA_SINKRONIZIMIT) return false;
+    }
+  }
+  return true;
+}
+
+/** The three answers to "this device and the cloud copy do not match - which one is right?". */
+export const MENYRAT = {
+  /** Keep both: the cloud wins wherever the same record exists on both sides, and whatever only
+   * this device has is uploaded. The safe answer, and the one offered first. */
+  BASHKO: "bashko",
+  /** Take the cloud copy and drop what is here. For the device that was wiped, or is new. */
+  MERR: "merr",
+  /** This device is the real one: everything here goes up, over whatever the cloud holds. */
+  DERGO: "dergo",
+};
+
+/**
+ * The two sides counted against each other, without writing a single thing.
+ *
+ * This is what a newly connected device shows before it is allowed to push - see `ekzekuto`. It
+ * costs two short-string columns of the cloud table and one read of the local one, which is
+ * nothing next to what it prevents: the reason this exists is a tablet that was wiped, reconnected,
+ * and quietly pushed its hundred-odd freshly seeded default categories over a year of real ones on
+ * every other device. Nobody was ever asked, because nobody was ever shown the numbers.
+ */
+export async function permbledhjaLidhjes() {
+  const gjendja = await lexoGjendjen();
+  const cloud = await celesatCloud();
+  const lokale = celesatLokale(gjendja);
+
+  let teNjejta = 0;
+  for (const celesi of lokale) if (cloud.has(celesi)) teNjejta++;
+
+  const paTeDhena = pajisjaPaTeDhena(gjendja);
+  return {
+    lokal: lokale.size,
+    cloud: cloud.size,
+    teNjejta,
+    vetemLokale: lokale.size - teNjejta,
+    vetemCloud: cloud.size - teNjejta,
+    lokalSipasStorit: sipasStorit(lokale),
+    cloudSipasStorit: sipasStorit(cloud),
+    paTeDhena,
+    // Offered first, never applied by itself. An empty cloud has nothing to lose; a device with
+    // nothing of its own has nothing worth defending; anything else keeps both sides.
+    rekomandimi: cloud.size === 0 ? MENYRAT.DERGO : paTeDhena ? MENYRAT.MERR : MENYRAT.BASHKO,
+  };
+}
+
+// ---- which device did that ----
+
+/**
+ * This device's own row in the user's project: name, when it last synced, how much it holds.
+ *
+ * It lives under the `meta` store, which sync itself reads straight past, so it is bookkeeping
+ * about the ledger rather than part of it. The point is the sync page on *another* device: with
+ * one account signed in everywhere, a list of devices and what each of them last did is the only
+ * way to answer "where did that come from?" - and the only proof the user has that the tablet, not
+ * the phone, is what emptied a category list.
+ *
+ * Best effort throughout: a device that cannot register itself still syncs perfectly.
+ */
+export async function regjistroPajisjen({ derguar = 0, marre = 0, rreshta = 0 } = {}) {
+  const k = await siguroSesionin();
+  const pajisja = pajisjaKjo();
+  if (!pajisja.id) return null;
+
+  const rreshti = {
+    user_id: k.userId,
+    store: STORI_META,
+    record_id: `${PREFIKSI_PAJISJES}${pajisja.id}`,
+    deleted: false,
+    data: {
+      id: pajisja.id,
+      emri: pajisja.emri,
+      krijuar: pajisja.krijuar,
+      sinkFundit: new Date().toISOString(),
+      derguar,
+      marre,
+      rreshta,
+    },
+    ...(k.pajisjeKolona === false ? {} : { device_id: pajisja.id, device_name: pajisja.emri }),
+  };
+
+  await rest(`${TABELA}?on_conflict=user_id,store,record_id`, {
+    method: "POST",
+    headers: { Prefer: "resolution=merge-duplicates,return=minimal" },
+    body: [rreshti],
+  }).catch(async (err) => {
+    if (!koloneQeMungon(err)) throw err;
+    ruajKonfigurimin({ pajisjeKolona: false });
+    delete rreshti.device_id;
+    delete rreshti.device_name;
+    await rest(`${TABELA}?on_conflict=user_id,store,record_id`, {
+      method: "POST",
+      headers: { Prefer: "resolution=merge-duplicates,return=minimal" },
+      body: [rreshti],
+    });
+  });
+  return pajisja;
+}
+
+/** Every device that has ever synced with this project, newest first. */
+export async function lexoPajisjet() {
+  const rreshtat = await rest(
+    `${TABELA}?store=eq.${STORI_META}&record_id=like.${encodeURIComponent(`${PREFIKSI_PAJISJES}*`)}` +
+      "&select=record_id,updated_at,data&order=updated_at.desc"
+  );
+  const kjo = pajisjaKjo().id;
+  return (Array.isArray(rreshtat) ? rreshtat : []).map((rr) => {
+    const id = rr?.data?.id || String(rr?.record_id || "").slice(PREFIKSI_PAJISJES.length);
+    return {
+      id,
+      emri: rr?.data?.emri || "Pajisje pa emër",
+      krijuar: rr?.data?.krijuar ?? null,
+      sinkFundit: rr?.data?.sinkFundit || rr?.updated_at || null,
+      derguar: Number(rr?.data?.derguar) || 0,
+      marre: Number(rr?.data?.marre) || 0,
+      rreshta: Number(rr?.data?.rreshta) || 0,
+      kjo: id === kjo,
+    };
+  });
+}
+
+/** Removes a device from that list - for one that was sold, reinstalled or is simply gone. It does
+ * not disconnect anything: the row is a note about a device, not the device's access. */
+export async function harroPajisjen(id) {
+  await rest(
+    `${TABELA}?store=eq.${STORI_META}&record_id=eq.${encodeURIComponent(`${PREFIKSI_PAJISJES}${id}`)}`,
+    { method: "DELETE", headers: { Prefer: "return=minimal" } }
+  );
+}
+
+/**
+ * The last few rows written to the project, and which device wrote each one.
+ *
+ * The audit trail the user asked for, and the thing that turns "something overwrote my categories"
+ * into a sentence with a subject in it. Rows written before migration 2 have no device on them,
+ * which is said plainly rather than guessed at.
+ */
+export async function ndryshimetEFundit(sa = 12) {
+  const k = lexoKonfigurimin();
+  const mePajisje = k.pajisjeKolona !== false;
+  const kolonat = mePajisje
+    ? "store,record_id,updated_at,deleted,device_id,device_name"
+    : "store,record_id,updated_at,deleted";
+  const shtegu = (kol) =>
+    `${TABELA}?store=neq.${STORI_META}&select=${kol}&order=updated_at.desc&limit=${sa}`;
+
+  let rreshtat;
+  try {
+    rreshtat = await rest(shtegu(kolonat));
+  } catch (err) {
+    if (!mePajisje || !koloneQeMungon(err)) throw err;
+    ruajKonfigurimin({ pajisjeKolona: false });
+    rreshtat = await rest(shtegu("store,record_id,updated_at,deleted"));
+  }
+
+  const kjo = pajisjaKjo().id;
+  return (Array.isArray(rreshtat) ? rreshtat : []).map((rr) => ({
+    store: rr?.store || "",
+    id: rr?.record_id || "",
+    kur: rr?.updated_at || null,
+    fshire: Boolean(rr?.deleted),
+    pajisjaId: rr?.device_id || "",
+    pajisja: rr?.device_name || "",
+    kjo: Boolean(rr?.device_id) && rr.device_id === kjo,
+  }));
+}
+
 /**
  * The records the cloud has never heard of, whatever this device believes about them.
  *
@@ -497,19 +745,48 @@ export async function riparoTani() {
  * `select=` keeps the response to three columns - without it the whole `data` payload comes back
  * and a first sync would pay for itself twice.
  */
-async function dergoRreshtat(rreshtat, userId) {
+/**
+ * "That column is not in the table" - a project that has never run migration 2.
+ *
+ * Worth telling apart from every other failure, because the answer is not to stop: the device
+ * stamp is a nice-to-have, the ledger is not, and a phone must go on syncing with a project the
+ * user has not got round to updating. PostgREST reports it as PGRST204 and names the column.
+ */
+function koloneQeMungon(err) {
+  if (err?.kodiPg === "PGRST204") return true;
+  return /device_id|device_name/i.test(err?.message || "");
+}
+
+async function upsertRreshtat(pjesa) {
+  return rest(`${TABELA}?on_conflict=user_id,store,record_id&select=store,record_id,updated_at`, {
+    method: "POST",
+    body: pjesa,
+    // An upsert: the same record edited twice must update its row, not fail on the primary key.
+    headers: { Prefer: "resolution=merge-duplicates,return=representation" },
+  });
+}
+
+async function dergoRreshtat(rreshtat, k) {
   const kohet = new Map();
+  // Left off from the start for a project already known not to have the columns; discovered the
+  // hard way (once) for a project nobody has asked about yet.
+  let pajisja = k.pajisjeKolona === false ? null : stampaPajisjes();
+  let dihet = k.pajisjeKolona !== null;
+
   for (let i = 0; i < rreshtat.length; i += KUFIRI_DERGIMIT) {
-    const pjesa = rreshtat.slice(i, i + KUFIRI_DERGIMIT).map((rr) => rreshtiPerServer(rr, userId));
-    const pergjigja = await rest(
-      `${TABELA}?on_conflict=user_id,store,record_id&select=store,record_id,updated_at`,
-      {
-        method: "POST",
-        body: pjesa,
-        // An upsert: the same record edited twice must update its row, not fail on the primary key.
-        headers: { Prefer: "resolution=merge-duplicates,return=representation" },
-      }
-    );
+    const copa = rreshtat.slice(i, i + KUFIRI_DERGIMIT);
+    let pergjigja;
+    try {
+      pergjigja = await upsertRreshtat(copa.map((rr) => rreshtiPerServer(rr, k.userId, pajisja)));
+    } catch (err) {
+      if (!pajisja || !koloneQeMungon(err)) throw err;
+      // Remembered, so the next push does not spend a failed request finding this out again. The
+      // sync page offers the migration that brings the columns back.
+      ruajKonfigurimin({ pajisjeKolona: false });
+      pajisja = null;
+      dihet = true;
+      pergjigja = await upsertRreshtat(copa.map((rr) => rreshtiPerServer(rr, k.userId, null)));
+    }
     for (const row of Array.isArray(pergjigja) ? pergjigja : []) {
       const ts = Date.parse(row?.updated_at);
       if (row?.store && row?.record_id && Number.isFinite(ts)) {
@@ -517,6 +794,10 @@ async function dergoRreshtat(rreshtat, userId) {
       }
     }
   }
+  // A push that went through carrying the stamp is proof the project has the columns. A push of
+  // nothing is proof of nothing, and recording it would leave a project still on migration 1
+  // believed to be past it - the one belief that makes the next real push fail.
+  if (rreshtat.length > 0 && pajisja && !dihet) ruajKonfigurimin({ pajisjeKolona: true });
   return kohet;
 }
 
@@ -652,16 +933,25 @@ let nePritje = null;
  * triggered by several things at once (a save, the tab regaining focus, coming back online) and
  * two overlapping runs would push the same rows twice and race over the watermarks.
  *
- * `ngaFillimi` ignores the watermarks and takes the whole cloud copy from the top. It is what the
- * "download everything again" button does, and what recovers a device whose watermark is ahead of
- * what it actually holds - after a restored backup, for instance.
+ * `ngaFillimi` ignores the watermarks and takes the whole cloud copy from the top. It is what
+ * recovers a device whose watermark is ahead of what it actually holds - after a restored backup,
+ * for instance.
+ *
+ * `menyra` is one of `MENYRAT`, and it is how a device joins a cloud copy: which side wins, and
+ * whether anything is pushed at all. See `ekzekuto`.
  */
 export function sinkronizo(opsionet = {}) {
-  if (nePritje) return nePritje;
-  nePritje = ekzekuto(opsionet).finally(() => {
-    nePritje = null;
+  // A sync the user asked for by name - "take the cloud copy", "this device is the right one" - is
+  // never answered with somebody else's run. It waits for the one in flight and then does its own
+  // thing, because joining an ordinary sync would silently do the opposite of what was pressed.
+  if (nePritje && !opsionet.menyra) return nePritje;
+
+  const paraardhesi = nePritje ? nePritje.catch(() => undefined) : Promise.resolve();
+  const im = paraardhesi.then(() => ekzekuto(opsionet)).finally(() => {
+    if (nePritje === im) nePritje = null;
   });
-  return nePritje;
+  nePritje = im;
+  return im;
 }
 
 export function dukeSinkronizuar() {
@@ -670,6 +960,9 @@ export function dukeSinkronizuar() {
 
 /** How often the two sides are counted against each other. */
 const NDERMJET_KONTROLLEVE = 24 * 60 * 60 * 1000;
+
+/** How often a device re-signs its own row when nothing at all has moved. */
+const NDERMJET_SHENIMEVE = 60 * 60 * 1000;
 
 /**
  * Once a day, checks that the cloud holds at least as much as this device does, and repairs it when
@@ -684,8 +977,8 @@ const NDERMJET_KONTROLLEVE = 24 * 60 * 60 * 1000;
  * Skipped when the sync is already a full one: `ngaFillimi` re-sends everything regardless of
  * flags, so there is nothing here to add.
  */
-async function riparoNeseMungon(gjendja, k, ngaFillimi) {
-  if (ngaFillimi) return 0;
+async function riparoNeseMungon(gjendja, k, anashkalo) {
+  if (anashkalo) return 0;
   if (Date.now() - (Number(k.kontrolluarMe) || 0) < NDERMJET_KONTROLLEVE) return 0;
 
   try {
@@ -702,32 +995,84 @@ async function riparoNeseMungon(gjendja, k, ngaFillimi) {
   }
 }
 
-async function ekzekuto({ ngaFillimi: kerkuar = false } = {}) {
+/**
+ * One sync, in whichever of the four shapes applies.
+ *
+ * The ordinary one (no `menyra`, connection long since settled) is what it has always been: pull
+ * what changed, apply it unless this device is holding an unsent change to the same record, push
+ * what it is holding.
+ *
+ * The other three exist because of one failure that is not hypothetical - a device that has just
+ * been wiped or installed holds the starter lists, whose ids are the *same ids* the cloud has been
+ * holding for months under the user's own names. Left to the ordinary rules, those seeded rows are
+ * this device's unsent changes and they win. So:
+ *
+ * - **No decision yet** (`lidhjaVerifikuar === false`): this device pulls and pushes **nothing**,
+ *   and says so (`kerkohetVendim`). Nothing can be lost by a sync that only reads.
+ * - **`BASHKO`**: full pull with the cloud winning every collision, then push only what the cloud
+ *   has never heard of. Both sides survive; the seeded defaults quietly lose, which is correct.
+ * - **`MERR`**: the cloud copy replaces what is here. The download is completed *before* anything
+ *   local is cleared, so a failed request leaves the ledger untouched.
+ * - **`DERGO`**: this device is declared the right one and everything here goes up over the cloud.
+ *   The page makes the user type the word for that one.
+ */
+async function ekzekuto({ ngaFillimi: kerkuar = false, menyra = null } = {}) {
   const nisi = Date.now();
   try {
     const k = await siguroSesionin();
     if (!k.userId) throw new Error("Sesioni nuk ka përdorues - hyni sërish.");
-    // Either the user asked for it, or a previous run left the cloud copy empty and owing.
-    const ngaFillimi = kerkuar || Boolean(k.ngaFillimiTjeter);
 
-    const gjendja = await lexoGjendjen();
+    // Connected, but nobody has yet said what should happen to what is up there. Read-only until
+    // they do - see the sync page, which is where the question gets asked.
+    const paVendim = !menyra && k.lidhjaVerifikuar === false;
+    // Either the user asked for it, a mode was chosen, or a previous run left the cloud empty and
+    // owing. A device with no decision also takes the whole table: its watermarks mean nothing yet.
+    // The watermark still moves normally afterwards - whichever mode is eventually chosen ignores
+    // it and reads the whole table again, so there is nothing to be gained by holding it back.
+    const ngaFillimi = Boolean(menyra) || kerkuar || Boolean(k.ngaFillimiTjeter);
+
+    let gjendja = await lexoGjendjen();
     const stampuar = await stampoPastampuarat(gjendja);
     await migroPezullimet(gjendja, k);
 
-    const rreshtat = await shkarkoRreshtat(ngaFillimi ? "" : k.pulledAt);
-    const plani = planiIAplikimit(rreshtat, gjendjaLokale(gjendja));
+    const rreshtat = await shkarkoRreshtat(ngaFillimi || paVendim ? "" : k.pulledAt);
+
+    // Cleared only now, with the whole cloud copy already in hand: a download that failed half way
+    // must leave the device exactly as it was, not empty.
+    if (menyra === MENYRAT.MERR) {
+      await pastroStoretSink();
+      gjendja = await lexoGjendjen();
+    }
+
+    // Joining a copy is the one time an unsent local change is not the newer truth - it is whatever
+    // this browser happened to write before it had anywhere to send it.
+    const cloudFiton = menyra === MENYRAT.MERR || menyra === MENYRAT.BASHKO;
+    const plani = planiIAplikimit(rreshtat, gjendjaLokale(gjendja), { cloudFiton });
     await apliko(plani);
 
-    const riparuar = await riparoNeseMungon(gjendja, k, ngaFillimi);
+    const riparuar = await riparoNeseMungon(gjendja, k, ngaFillimi || paVendim);
 
-    const perDergim = ndryshimetLokale({
-      ...gjendja,
-      // A full download also re-sends everything, so that a cloud copy which lost rows (or was
-      // never fully written by an interrupted first sync) is completed from this device.
-      gjithcka: ngaFillimi,
-      perjashto: plani.celesat,
-    });
-    const kohetServerit = await dergoRreshtat(perDergim, k.userId);
+    // Everything the cloud already holds, from the download that has just finished - so a merge can
+    // push what is missing without asking the project a second time.
+    const celesatECloud =
+      menyra === MENYRAT.BASHKO
+        ? new Set(rreshtat.map((rr) => celesiRreshtit(rr.store, rr.id)))
+        : null;
+    const perjashto = celesatECloud
+      ? new Set([...plani.celesat, ...celesatECloud])
+      : plani.celesat;
+
+    const perDergim =
+      paVendim || menyra === MENYRAT.MERR
+        ? []
+        : ndryshimetLokale({
+            ...gjendja,
+            // A full download also re-sends everything, so that a cloud copy which lost rows (or
+            // was never fully written by an interrupted first sync) is completed from this device.
+            gjithcka: ngaFillimi,
+            perjashto,
+          });
+    const kohetServerit = await dergoRreshtat(perDergim, k);
     await shenoTeDerguarat(perDergim, kohetServerit);
     const oraServerit = zbulojOrenELServerit(perDergim, kohetServerit);
 
@@ -740,6 +1085,9 @@ async function ekzekuto({ ngaFillimi: kerkuar = false } = {}) {
       gabim: null,
       marre: plani.shkruaj.length + plani.fshi.length,
       derguar: perDergim.length,
+      // Carried into the saved summary so the page can go on saying "this device has not decided"
+      // after a reload, rather than only in the moment the sync returned.
+      kerkohetVendim: paVendim,
     };
     ruajKonfigurimin({
       pulledAt: pulledAt ? new Date(pulledAt).toISOString() : "",
@@ -747,12 +1095,32 @@ async function ekzekuto({ ngaFillimi: kerkuar = false } = {}) {
       // the cloud is now the flag on each record, not anything derived from this.
       pushedAt: nisi,
       ngaFillimiTjeter: false,
+      // Answering the question is what settles it, and it stays settled from then on.
+      ...(menyra ? { lidhjaVerifikuar: true } : {}),
       // Left alone when this run pushed nothing, so a quiet sync does not erase what the last
       // busy one found out.
       ...(oraServerit === null ? {} : { oraServerit }),
       fundit: permbledhja,
     });
-    return { ...permbledhja, stampuar, riparuar, anashkaluar: plani.anashkaluar, ndryshoi: permbledhja.marre > 0 };
+
+    // Last, and never fatal: the ledger has already moved, and a device that failed to sign its
+    // own name in the project has still synced perfectly.
+    //
+    // Written when something actually moved, and otherwise at most once an hour. An open tab syncs
+    // every ten minutes whether or not anything happened, and a note saying "this device was here"
+    // does not need re-writing - nor does every other device need to download it - for a check that
+    // found nothing. The full read below is the reason it is worth throttling at all.
+    if (permbledhja.marre > 0 || permbledhja.derguar > 0 || Date.now() - (Number(k.pajisjaShenuarMe) || 0) > NDERMJET_SHENIMEVE) {
+      await regjistroPajisjen({
+        derguar: permbledhja.derguar,
+        marre: permbledhja.marre,
+        rreshta: numriLokal(await lexoGjendjen()),
+      })
+        .then(() => ruajKonfigurimin({ pajisjaShenuarMe: Date.now() }))
+        .catch(() => undefined);
+    }
+
+    return { ...permbledhja, menyra, stampuar, riparuar, anashkaluar: plani.anashkaluar, ndryshoi: permbledhja.marre > 0 };
   } catch (err) {
     ruajKonfigurimin({
       fundit: { kur: new Date().toISOString(), gabim: err?.message || "Sinkronizimi dështoi.", marre: 0, derguar: 0 },
@@ -793,8 +1161,15 @@ export async function fshiCloud() {
   });
   // Everything this device holds is now missing from the cloud, though none of it is *flagged* as
   // unsent - it was sent, to rows that no longer exist. So the next sync is told to send the lot,
-  // which is what the button's own description promises.
-  ruajKonfigurimin({ pulledAt: "", pushedAt: 0, fundit: null, ngaFillimiTjeter: true });
+  // which is what the button's own description promises. Emptying the copy on purpose, behind two
+  // confirmations, *is* the decision about what happens to it - so the device is not asked again.
+  ruajKonfigurimin({
+    pulledAt: "",
+    pushedAt: 0,
+    fundit: null,
+    ngaFillimiTjeter: true,
+    lidhjaVerifikuar: true,
+  });
 }
 
 /** Sync from scratch on the next run without touching anything already stored - used after
