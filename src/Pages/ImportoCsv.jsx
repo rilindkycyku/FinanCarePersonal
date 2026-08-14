@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Container, Row, Col, Card, Form, Button, Alert, Table } from "react-bootstrap";
+import { Container, Row, Col, Card, Form, Button, Table } from "react-bootstrap";
 import { FileSpreadsheet, Upload, Check, CircleAlert, Wand2, ArrowRight } from "lucide-react";
 import NavBar from "../Components/NavBar";
 import Footer from "../Components/Footer";
@@ -54,7 +54,14 @@ function ImportoCsv() {
   const [opsionet, setOpsionet] = useState({ ditaEPare: true, shenjaPerkundert: false });
   const [llogaria, setLlogaria] = useState("");
   const [zgjedhjet, setZgjedhjet] = useState({}); // celesi -> { perfshij, kategoriaId }
-  const [mesazhi, setMesazhi] = useState(null);
+
+  /** The result of a button, in a dialog rather than a banner - same reason as everywhere else in
+   * the app: the answer belongs where the eye already is, not at the top of the page. */
+  const njofto = (lloji, teksti) =>
+    dialog.alert(teksti, {
+      title: { success: "U krye", danger: "Gabim", warning: "Kujdes", info: "Njoftim" }[lloji],
+      variant: lloji,
+    });
   const [duke, setDuke] = useState(false);
 
   const aktive = useMemo(() => accounts.filter((a) => !a.arkivuar), [accounts]);
@@ -100,7 +107,6 @@ function ImportoCsv() {
     const f = e.target.files?.[0];
     e.target.value = "";
     if (!f) return;
-    setMesazhi(null);
     try {
       const text = await f.text();
       const lexuar = parseDelimited(text);
@@ -111,7 +117,7 @@ function ImportoCsv() {
       setZgjedhjet({});
       setLlogaria(njeLlogari ? llogariaKryesore?.id || "" : aktive[0]?.id || "");
     } catch (err) {
-      setMesazhi({ type: "danger", text: `Skedari nuk u lexua: ${err.message}` });
+      njofto("danger", `Skedari nuk u lexua: ${err.message}`);
     }
   };
 
@@ -143,7 +149,7 @@ function ImportoCsv() {
     const perfshira = rreshtat.filter((r) => zgjedhja(r).perfshij);
     if (perfshira.length === 0) return;
     if (!llogaria) {
-      setMesazhi({ type: "danger", text: "Zgjidhni llogarinë ku hyjnë këto lëvizje." });
+      njofto("danger", "Zgjidhni llogarinë ku hyjnë këto lëvizje.");
       return;
     }
 
@@ -204,7 +210,7 @@ function ImportoCsv() {
       await reload();
       navigate("/transaksionet");
     } catch (err) {
-      setMesazhi({ type: "danger", text: `Importimi dështoi: ${err.message}` });
+      njofto("danger", `Importimi dështoi: ${err.message}`);
       setDuke(false);
     }
   };
@@ -238,12 +244,6 @@ function ImportoCsv() {
             </Button>
             <input ref={fileRef} type="file" accept=".csv,.txt,text/csv,text/plain" hidden onChange={handleFile} />
           </div>
-
-          {mesazhi && (
-            <Alert variant={mesazhi.type} onClose={() => setMesazhi(null)} dismissible>
-              {mesazhi.text}
-            </Alert>
-          )}
 
           {!parsed ? (
             <Card className="profile-card border-0 p-4">

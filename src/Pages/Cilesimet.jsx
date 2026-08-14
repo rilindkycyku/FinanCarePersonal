@@ -39,7 +39,6 @@ function Cilesimet() {
   // Read once on mount and refreshed after asking: the browser answer can only change through the
   // button below or through the site settings, which reload the page anyway.
   const [leja, setLeja] = useState(lejaAktuale());
-  const [message, setMessage] = useState(null);
 
   useEffect(() => {
     setForm({
@@ -79,7 +78,7 @@ function Cilesimet() {
       njoftimeLimiti: form.njoftimeLimiti,
       cilesiaFaturave: form.cilesiaFaturave,
     });
-    setMessage({ type: "success", text: "Cilësimet u ruajtën." });
+    await dialog.alert("Cilësimet u ruajtën.", { title: "U krye", variant: "success" });
   };
 
   /**
@@ -216,12 +215,6 @@ function Cilesimet() {
             Emri, monedha dhe objektivat tuaja. Monedha përdoret në çdo faqe, në eksportet Excel dhe në kopjet JSON.
           </p>
 
-          {message && (
-            <Alert variant={message.type} onClose={() => setMessage(null)} dismissible>
-              {message.text}
-            </Alert>
-          )}
-
           <Card className="profile-card border-0 p-4 mb-4">
             <Form onSubmit={handleSave}>
               <Row className="g-3">
@@ -346,7 +339,7 @@ function Cilesimet() {
             </Form>
           </Card>
 
-          <CilesimiNjeLlogari onMessage={(text) => setMessage({ type: "success", text })} />
+          <CilesimiNjeLlogari onMessage={(text) => dialog.alert(text, { title: "U krye", variant: "success" })} />
 
           {/* The memory is built from the user's own choices, so they get to see what it learned and
               throw it away - a suggestion nobody can inspect or undo is just the app being odd. */}
