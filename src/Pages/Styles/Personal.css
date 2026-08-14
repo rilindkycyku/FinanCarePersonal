@@ -613,8 +613,13 @@ button.hero-cta {
   align-items: start;
 }
 
-/* One parent and everything filed under it, kept together as a block. */
-.fcp-cat-group {
+/* One parent and everything filed under it, kept together as a block.
+   Deliberately NOT `.fcp-cat-group`: that name is taken by the group heading inside the category
+   picker (Components/ModalForms.css), and CSS has no scoping to keep the two apart. The picker's
+   rule made this a `display: flex`, uppercase, letter-spaced row - which is how the page came to
+   show its subcategories beside the parent instead of beneath it, with every name truncated to
+   "USHQI...". Nothing here overrode it, because nothing here set those properties at all. */
+.fcp-cat-familje {
   min-width: 0;
 }
 
