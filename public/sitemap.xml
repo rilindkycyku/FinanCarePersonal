@@ -5,11 +5,17 @@
   <url><loc>https://personal.financare.rilindkycyku.dev/</loc><priority>1.0</priority></url>
   <url><loc>https://personal.financare.rilindkycyku.dev/transaksionet</loc><priority>0.8</priority></url>
   <url><loc>https://personal.financare.rilindkycyku.dev/llogarite</loc><priority>0.8</priority></url>
+  <url><loc>https://personal.financare.rilindkycyku.dev/borxhet</loc><priority>0.8</priority></url>
   <url><loc>https://personal.financare.rilindkycyku.dev/kategorite</loc><priority>0.6</priority></url>
+  <url><loc>https://personal.financare.rilindkycyku.dev/planifikuara</loc><priority>0.8</priority></url>
   <url><loc>https://personal.financare.rilindkycyku.dev/buxhetet</loc><priority>0.8</priority></url>
   <url><loc>https://personal.financare.rilindkycyku.dev/qellimet</loc><priority>0.8</priority></url>
   <url><loc>https://personal.financare.rilindkycyku.dev/te-perseritura</loc><priority>0.8</priority></url>
   <url><loc>https://personal.financare.rilindkycyku.dev/statistikat</loc><priority>0.7</priority></url>
   <url><loc>https://personal.financare.rilindkycyku.dev/cilesimet</loc><priority>0.4</priority></url>
+  <!-- The same page under both of its addresses: one lands on the export half, the other on the
+       sync half. -->
   <url><loc>https://personal.financare.rilindkycyku.dev/te-dhena</loc><priority>0.4</priority></url>
+  <url><loc>https://personal.financare.rilindkycyku.dev/sinkronizimi</loc><priority>0.4</priority></url>
+  <url><loc>https://personal.financare.rilindkycyku.dev/importo-csv</loc><priority>0.4</priority></url>
 </urlset>

@@ -126,6 +126,9 @@ ngriti versionin.
   lexoni, me një buton *Kopjo* pranë. Më parë shkruante «adresa e këtij aplikacioni» dhe ju linte ta
   gjenit - që në telefon do të thoshte të dilnit nga faqja për ta parë, e pastaj ta shkruanit me
   dorë te një fushë në një pajisje tjetër.
+- **Një buxhet mbi një kategori të arkivuar e thotë atë te rreshti i vet.** Buxheti nuk ndalet nga
+  arkivimi - vazhdon të masë çdo gjë që bie ende aty - por pa këtë shenjë ai lexohet si kufi mbi një
+  kategori që asnjë formular nuk e ofron më.
 - **Sinkronizimi dhe Eksporto / Importo janë një faqe e vetme me dy gjysma.** Ishin dy zëra menuje
   për të njëjtën pyetje - *ku ekziston ky libër përveç këtij shfletuesi* - dhe sinkronizimi është
   vetë një eksport me një import që ndodhin vetvetiu; kush kërkonte njërën duhej ta dinte
@@ -133,6 +136,10 @@ ngriti versionin.
   (`/sinkronizimi` dhe `/te-dhena`), pra çdo lidhje e shkruar deri sot - shenja te shiriti, njoftimi
   te ekrani kryesor, `?konfiguro=1` - bie aty ku binte. Ngarkohet vetëm gjysma që shihet: pjesa e
   sinkronizimit nuk numëron rreshtat e projektit sa kohë që në ekran janë butonat e eksportit.
+  <br />Te menyja mbetet **një zë i vetëm**, *Të dhënat & Sinkronizimi*, i ndezur nga të dyja
+  adresat - dy zëra për të njëjtën faqe kërkonin të zgjidhej gjysma para se të dihej çfarë kishte
+  secila. Edhe `sitemap.xml` i ka tani të katërta adresat që i mungonin (borxhet, planifikuara,
+  sinkronizimi, importo-csv).
 
 ## [2.2.0] - 2026-08-13
 

@@ -4,7 +4,7 @@ import { Dropdown } from "react-bootstrap";
 import {
   LayoutDashboard, ArrowRightLeft, Wallet, Tags, PiggyBank, Target, Repeat,
   BarChart3, Settings, DatabaseBackup, Sun, Moon, ChevronDown, Menu, X, Receipt,
-  ClipboardList, FileSpreadsheet, RefreshCw,
+  ClipboardList, FileSpreadsheet,
 } from "lucide-react";
 import { useTheme } from "../Context/ThemeContext";
 import ButonPasqyra from "./ButonPasqyra";
@@ -42,12 +42,18 @@ const CATEGORIES = [
     links: [
       { to: "/statistikat", label: "Statistikat", icon: BarChart3 },
       { to: "/cilesimet", label: "Cilësimet", icon: Settings },
-      { to: "/te-dhena", label: "Eksporto / Importo", icon: DatabaseBackup },
-      { to: "/sinkronizimi", label: "Sinkronizimi", icon: RefreshCw },
+      // One page, two halves, two addresses - one entry. Two entries pointing at the same page
+      // asked the reader to pick a half before knowing what was in either.
+      { to: "/te-dhena", label: "Të dhënat & Sinkronizimi", icon: DatabaseBackup, edhe: ["/sinkronizimi"] },
       { to: "/importo-csv", label: "Importo nga CSV", icon: FileSpreadsheet },
     ],
   },
 ];
+
+/** Whether an entry is the page being read. A page can answer to more than one address - the data
+ * page keeps both `/te-dhena` and `/sinkronizimi` - and the menu has to know a link's other names,
+ * or arriving by one of them lights up nothing. */
+const linkuAktiv = (link, pathname) => pathname === link.to || Boolean(link.edhe?.includes(pathname));
 
 function NavBar() {
   const { theme, toggleTheme } = useTheme();
@@ -91,7 +97,7 @@ function NavBar() {
 
         {CATEGORIES.map((category) => {
           const CategoryIcon = category.icon;
-          const isActiveCategory = category.links.some((l) => pathname.startsWith(l.to));
+          const isActiveCategory = category.links.some((l) => pathname.startsWith(l.to) || linkuAktiv(l, pathname));
           return (
             <Dropdown key={category.label}>
               <Dropdown.Toggle as="button" className={`fcp-navlink fcp-navdropdown-toggle${isActiveCategory ? " active" : ""}`}>
@@ -102,7 +108,7 @@ function NavBar() {
               <Dropdown.Menu className="fcp-navdropdown-menu">
                 {category.links.map((link) => {
                   const Icon = link.icon;
-                  const isActive = pathname === link.to;
+                  const isActive = linkuAktiv(link, pathname);
                   return (
                     <Dropdown.Item
                       key={link.to}
@@ -182,7 +188,7 @@ function NavBar() {
               </div>
               {category.links.map((link) => {
                 const Icon = link.icon;
-                const isActive = pathname === link.to;
+                const isActive = linkuAktiv(link, pathname);
                 return (
                   <NavLink key={link.to} to={link.to} className={`fcp-mobile-navlink${isActive ? " active" : ""}`}>
                     <Icon size={16} />

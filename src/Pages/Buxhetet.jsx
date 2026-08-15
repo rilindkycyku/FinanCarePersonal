@@ -16,7 +16,7 @@ import { useDialog } from "../Context/DialogContext";
 import { STORES } from "../lib/db";
 import { budgetProgress, effectiveBudgets, monthKeyBounds } from "../lib/finance";
 import { formatPercent, markup, monthKey, monthLabel, plainAmount, todayISO, toNumber } from "../lib/format";
-import { emriIPlote, familjaSet, kategoriTeHapura, rrenjaE } from "../lib/kategorite";
+import { emriIPlote, eshteArkivuar, familjaSet, kategoriTeHapura, rrenjaE } from "../lib/kategorite";
 import { getIcon } from "../lib/icons";
 import "./Styles/PremiumTheme.css";
 import "./Styles/DizajniPergjithshem.css";
@@ -210,6 +210,10 @@ function Buxhetet() {
             ) : (
               progressiDitor.map((b) => {
                 const Icon = getIcon(b.ikona);
+                // The category was put away, the budget was not: it goes on measuring whatever
+                // still lands there, and the row says so rather than leaving a limit on a category
+                // no form offers any more.
+                const kategoriaArkivuar = eshteArkivuar(categories, b.kategoriaId);
                 return (
                   <div className={`fcp-tracked${b.tepruar ? " over" : ""}`} key={b.id}>
                     <div className="fcp-tracked-head">
@@ -217,7 +221,10 @@ function Buxhetet() {
                         <Icon size={16} />
                       </div>
                       <div className="fcp-row-main">
-                        <div className="fcp-row-title">{b.emri}</div>
+                        <div className="fcp-row-title">
+                          {b.emri}
+                          {kategoriaArkivuar && <span className="fcp-cat-flamur ms-2">Kategori e arkivuar</span>}
+                        </div>
                         <div className="fcp-row-sub">
                           {money(b.shpenzuar)} nga {money(b.buxheti)} · {formatPercent(b.perqindja)}
                           {b.rimbartur > 0 && ` · përfshirë ${money(b.rimbartur)} të bartura`}

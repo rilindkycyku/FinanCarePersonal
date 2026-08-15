@@ -41,7 +41,7 @@ const QUICK_ACTIONS = [
   { to: "/te-perseritura", label: "Pagesat e Përsëritura", icon: Repeat },
   { to: "/statistikat", label: "Statistikat", icon: BarChart3 },
   { to: "/cilesimet", label: "Cilësimet", icon: Settings },
-  { to: "/te-dhena", label: "Eksporto / Importo", icon: DatabaseBackup },
+  { to: "/te-dhena", label: "Të dhënat & Sinkronizimi", icon: DatabaseBackup },
   { to: "/importo-csv", label: "Importo nga CSV", icon: FileSpreadsheet },
 ];
 

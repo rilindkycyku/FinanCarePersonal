@@ -88,7 +88,9 @@ sa shpenzohet, sa mbetet dhe sa po kursesh.
   nënkategoritë e veta me vete. Te faqja Kategoritë një çelës i kthen në pamje, dhe te dritarja e
   zgjedhjes butoni *«Shfaq edhe N kategori të arkivuara»* i sjell kur po rregulloni një transaksion
   të vjetër - kategoria që mban një transaksion shfaqet gjithmonë te formulari i tij, e arkivuar apo
-  jo, që një ruajtje e radhës të mos e lërë atë «Pa kategori».
+  jo, që një ruajtje e radhës të mos e lërë atë «Pa kategori». Një buxhet i vendosur mbi një
+  kategori të arkivuar vazhdon të masë çdo gjë që bie ende aty, dhe rreshti i tij e thotë se
+  kategoria është arkivuar.
 - **Buxhetet** - kufi mujor shpenzimi për kategori, me ecuri, sinjalizim kur teprohet, lëvizje nga
   muaji në muaj dhe mundësi që një buxhet të vlejë vetëm për një muaj të caktuar. Një buxhet mbi një
   kategori kryesore numëron edhe nënkategoritë e saj, pra *200 € për Ushqim & Pije* mat marketin,
