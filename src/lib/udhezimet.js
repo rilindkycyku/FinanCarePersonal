@@ -367,9 +367,10 @@ export const UDHEZIMET = [
       {
         titulli: "Kur e blini",
         teksti:
-          "Butoni «Shëno si të blerë» te rreshti e kthen planin në transaksion të vërtetë me një klikim, dhe " +
-          "«Zhbëj blerjen» e kthen mbrapsht nëse e shtypët gabimisht. Pas blerjes plani e lexon vlerën prej " +
-          "transaksionit - nëse e korrigjoni çmimin, plani nuk mbetet me një shifër që nuk u pagua kurrë.",
+          "Butoni «Shëno si të blerë» te rreshti hap një formular të shkurtër - data, vlera (e plotësuar me " +
+          "atë të planifikuar, por e ndryshueshme, sepse rëndon ajo që pagoi vërtet dyqani), llogaria dhe " +
+          "kategoria - dhe një konfirmim e kthen planin në transaksion. «Zhbëj blerjen» e kthen mbrapsht. Pas " +
+          "kësaj plani e lexon vlerën prej transaksionit, pra korrigjimi i çmimit korrigjon edhe planin.",
       },
       {
         titulli: "Planet e mbetura",
@@ -685,6 +686,16 @@ export const UDHEZIMET = [
           "mban të njëjtat shifra në disa fletë.",
       },
       {
+        titulli: "Transfero në një pajisje tjetër",
+        teksti:
+          "Te kartela «Ndaje» ka tri butona për ta çuar gjithë bazën diku tjetër pa skedar dhe pa server: " +
+          "«Dërgo me QR» e ndan në disa kode që lexohen me «Prano me kamerë» te pajisja tjetër, kurse «Dërgo " +
+          "me një link» i vendos të gjitha në një link të vetëm - dhe kur të dhënat janë mjaft të vogla, në " +
+          "një kod të vetëm që hapet me kamerën e zakonshme të telefonit. Pajisja që e pranon pyet përpara " +
+          "dhe pastaj zëvendëson çka ka, prandaj përdoreni për të kaluar te një pajisje e re, jo për të " +
+          "bashkuar dy të tilla. Fotot e faturave nuk hyjnë këtu - ato udhëtojnë vetëm me arkivin ZIP.",
+      },
+      {
         titulli: "Hapësira dhe qëndrueshmëria",
         teksti:
           "Faqja tregon sa zënë fotot dhe sa hapësirë ju ka lënë shfletuesi, me butonin «Ngjesh fotot " +
@@ -750,6 +761,8 @@ export const UDHEZIMET = [
       "Shkon vetëm ajo që ndryshoi që nga hera e fundit, jo e gjithë baza; fshirjet udhëtojnë si shënime varri, pra një transaksion i fshirë në telefon nuk rikthehet nga kompjuteri.",
       "Orën e rreshtave e vendos serveri, pra fiton pajisja e fundit që sinkronizohet - edhe kur ora e telefonit është e gabuar.",
       "Fotot e faturave nuk sinkronizohen: për to mbetet arkivi ZIP. Çelësi service_role refuzohet me vetëdije, sepse anashkalon rregullat e sigurisë.",
+      "Gjendjen e sinkronizimit e tregon ikona e resë te shiriti i sipërm - e qetë kur gjithçka është në rregull, e kuqe kur përpjekja e fundit dështoi ose kur ndryshimet presin pa dalë dot. Prekjeni dhe ju sjell këtu.",
+      "Kur aplikacioni përditësohet dhe projektit tuaj i duhet një hap i ri, faqja e thotë vetë me butonin «Përditëso projektin» ose «Riparo kopjen në cloud» - ekzekutimi i sërishëm i skriptit është i sigurt.",
     ],
     shihEdhe: ["te-dhena", "cilesimet", "fillimi"],
   },
@@ -848,13 +861,16 @@ export const UDHEZIMET = [
         titulli: "Pasqyra dhe ndarja",
         teksti:
           "Ikona te shiriti i sipërm ndërton pasqyrën PDF për periudhën që zgjidhni, kudo që ndodheni. Te " +
-          "faqja Eksporto / Importo, kartela «Ndaje» jep QR-in e aplikacionit dhe mundësinë t'ia dorëzoni një " +
-          "pasqyrë a kopje aplikacioneve të tjera të telefonit - pa u ngarkuar askund.",
+          "faqja Eksporto / Importo, kartela «Ndaje» ka dy gjysma: linku e kodi QR i vetë aplikacionit (nuk " +
+          "mbajnë asgjë tuajën), dhe dorëzimi i pasqyrës PDF, i tabelës Excel, i një përmbledhjeje si tekst " +
+          "ose i kopjes së plotë JSON te cilido aplikacion i telefonit. Skedari ndërtohet këtu dhe i kalohet " +
+          "atij drejtpërdrejt - asgjë nuk ngarkohet askund.",
       },
     ],
     keshilla: [
       "Etiketat janë fjalë të lira mbi një transaksion («pushime2026»); ndryshe nga kategoria, mund të vihen disa njëherësh dhe filtrohen te Transaksionet.",
       "Veprimet e gjata - arkivi ZIP, importimi, ngjeshja e fotove - e bllokojnë ekranin me qëllim, që një prekje e dytë të mos e nisë punën dy herë.",
+      "Nëse ju del njoftimi se baza është e zënë nga një skedë tjetër, mjafton ta mbyllni atë skedë - të dhënat janë të paprekura dhe faqja vazhdon vetë sapo të lirohet.",
     ],
     shihEdhe: ["transaksionet", "te-dhena", "cilesimet"],
   },
