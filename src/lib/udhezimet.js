@@ -367,9 +367,9 @@ export const UDHEZIMET = [
       {
         titulli: "Kur e blini",
         teksti:
-          "Butoni te rreshti e kthen planin në transaksion të vërtetë me një klikim. Pas kësaj plani e lexon " +
-          "vlerën prej transaksionit - nëse e korrigjoni çmimin, plani nuk mbetet me një shifër që nuk u " +
-          "pagua kurrë.",
+          "Butoni «Shëno si të blerë» te rreshti e kthen planin në transaksion të vërtetë me një klikim, dhe " +
+          "«Zhbëj blerjen» e kthen mbrapsht nëse e shtypët gabimisht. Pas blerjes plani e lexon vlerën prej " +
+          "transaksionit - nëse e korrigjoni çmimin, plani nuk mbetet me një shifër që nuk u pagua kurrë.",
       },
       {
         titulli: "Planet e mbetura",
@@ -416,6 +416,14 @@ export const UDHEZIMET = [
           "e dobishme kur dhjetori kërkon një kufi tjetër nga muajt e tjerë.",
       },
       {
+        titulli: "Bartja e tepricës",
+        teksti:
+          "Çelësi «Bart tepricën në muajin tjetër» te formulari ia shton kufirit të muajit pasues atë që nuk " +
+          "u shpenzua - i dobishëm për kategori si veshjet, ku një muaj i qetë paguan blerjen e muajit " +
+          "tjetër. Bartja ndalet te muaji i parë i tepruar dhe nuk kalon kurrë një muaj buxhet shtesë; " +
+          "rreshti e thotë sa është bartur.",
+      },
+      {
         titulli: "Ndërroni muajin",
         teksti:
           "Shigjetat sipër tregojnë çdo muaj tjetër me buxhetet që vlenin atëherë dhe me shpenzimin e vërtetë " +
@@ -443,8 +451,10 @@ export const UDHEZIMET = [
       {
         titulli: "Shtoni qëllimin",
         teksti:
-          "«Shto Qëllim» kërkon emrin, shumën e synuar, llogarinë ku mblidhen paratë dhe - nëse ka - datën " +
-          "deri kur e doni. Përshkrimi është për ju, që gjashtë muaj më vonë ta dini pse e nisët.",
+          "«Shto Qëllim» kërkon emrin, vlerën e synuar, llogarinë e kursimit dhe - nëse ka - afatin. Fusha " +
+          "«Kursuar Deri Tani» është për paratë që i kishit mënjanë para se ta hapnit qëllimin, pra ecuria " +
+          "nis aty ku jeni vërtet dhe jo nga zeroja. Përshkrimi është për ju, që gjashtë muaj më vonë ta " +
+          "dini pse e nisët.",
       },
       {
         titulli: "Shtoni një kontribut",
@@ -534,7 +544,7 @@ export const UDHEZIMET = [
       {
         titulli: "Zgjidhni periudhën",
         teksti:
-          "Zgjedhësi te koka e faqes ndërron mes muajit, muajve të fundit, vitit ose gjithë historikut. " +
+          "Zgjedhësi te koka e faqes ndërron mes «Ky muaj», «Muaji i kaluar», «Këtë vit» dhe «Gjithçka». " +
           "Kutitë sipër - hyrjet, shpenzimet, bilanci neto, mesatarja ditore, numri i transaksioneve, " +
           "kategoria më e shpenzuar - rillogariten të gjitha për të.",
       },
@@ -557,6 +567,14 @@ export const UDHEZIMET = [
           "Kategoritë renditen sipas shumës, me nënkategoritë e hapura nën secilën, pra pjesët vazhdojnë të " +
           "mblidhen sa muaji. Poshtë tyre vijnë ndarja sipas llogarive dhe pesë shpenzimet më të mëdha të " +
           "periudhës.",
+      },
+      {
+        titulli: "Krahasimet",
+        teksti:
+          "«Hyrje kundrejt Shpenzimeve - 6 Muajt e Fundit» dhe «Bilanci Mujor» tregojnë drejtimin, jo vetëm " +
+          "muajin. Paneli «Ndryshimi ndaj muajit të kaluar» i vë kategoritë përballë njëra-tjetrës - aty " +
+          "shihet nëse një kategori po rritet apo ishte thjesht një muaj i keq. Nëse përdorni etiketa, ka " +
+          "edhe një ndarje sipas tyre.",
       },
     ],
     keshilla: [
@@ -596,6 +614,13 @@ export const UDHEZIMET = [
         teksti:
           "E lartë (2000px), Normale (1600px) ose Kursim hapësire (1200px). Vlen për fotot e reja; ato " +
           "ekzistuese rikodohen me butonin «Ngjesh fotot ekzistuese» te faqja Eksporto / Importo.",
+      },
+      {
+        titulli: "Një llogari kryesore",
+        teksti:
+          "I njëjti çelës që ka faqja Llogaritë ndodhet edhe këtu: bashkon gjithçka në një llogari të vetme " +
+          "dhe i heq formularëve pyetjen për llogarinë. Dritarja para se ta zbatojë e thotë saktësisht se " +
+          "çfarë do të bashkohet.",
       },
       {
         titulli: "Kujtesa e kategorive",
@@ -695,9 +720,10 @@ export const UDHEZIMET = [
       {
         titulli: "Hapi 2 - lidhni pajisjen",
         teksti:
-          "Vendosni adresën e projektit dhe çelësin publik publishable (ose anon-in e vjetër). Pastaj " +
-          "«Regjistrohu» në pajisjen e parë me një email e fjalëkalim, dhe «Hyr» me të njëjtat në çdo pajisje " +
-          "tjetër.",
+          "Vendosni adresën e projektit dhe çelësin publik publishable (ose anon-in e vjetër). Pastaj, në " +
+          "pajisjen e parë, shkruani një email e fjalëkalim dhe shtypni «Krijo llogari» - llogaria krijohet " +
+          "brenda projektit tuaj. Në çdo pajisje tjetër shkruani të njëjtat dhe shtypni «Hyr dhe " +
+          "sinkronizo».",
       },
       {
         titulli: "Automatik apo me buton",
