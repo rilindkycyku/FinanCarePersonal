@@ -7,6 +7,7 @@ import ZgjedhesiKategorive from "./ZgjedhesiKategorive";
 import { makeId, STORES } from "../lib/db";
 import { toNumber, todayISO } from "../lib/format";
 import { debtTypeMeta } from "../lib/options";
+import { kategoriTeHapura } from "../lib/kategorite";
 import "./ModalForms.css";
 import Zgjedhesi from "./Zgjedhesi";
 import { opsionetLlogarive } from "../lib/opsionet";
@@ -46,8 +47,10 @@ function ShtoPagesenBorxhit({ show, onHide, borxhi, initial }) {
 
   const aktive = useMemo(() => accounts.filter((a) => !a.arkivuar), [accounts]);
 
+  // Only for the hint under the field, so it counts what the picker would offer - archived ones
+  // are not among them.
   const kategoriteERelevante = useMemo(
-    () => categories.filter((c) => c.lloji === txLloji).sort((a, b) => a.emri.localeCompare(b.emri)),
+    () => kategoriTeHapura(categories).filter((c) => c.lloji === txLloji),
     [categories, txLloji]
   );
 

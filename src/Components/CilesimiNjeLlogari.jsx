@@ -19,14 +19,20 @@ import "../Pages/Styles/Personal.css";
  * cash, bank and card are no longer tracked apart. Turning it on offers to merge whatever accounts
  * already exist into the main one - otherwise their balances and transactions would be stranded on
  * accounts nothing points at any more.
+ *
+ * What it did is said here rather than handed to the page as a prop: a merge that rewrote every
+ * transaction is not a thing to report only where somebody remembered to wire it up, and on
+ * Llogaritë nobody had - the switch flipped and the sentence went nowhere.
  */
-function CilesimiNjeLlogari({ onMessage }) {
+function CilesimiNjeLlogari() {
   const {
     profile, accounts, transactions, recurring, goals,
     njeLlogari, llogariaKryesore, save, saveMany, destroyMany, saveProfile, money,
   } = useData();
   const dialog = useDialog();
   const [busy, setBusy] = useState(false);
+
+  const njofto = (teksti) => dialog.alert(teksti, { title: "U krye", variant: "success" });
 
   const tjera = accounts.filter((a) => a.id !== llogariaKryesore?.id);
 
@@ -84,12 +90,12 @@ function CilesimiNjeLlogari({ onMessage }) {
       return;
     }
     await saveProfile({ ...profile, njeLlogari: true, llogariaKryesoreId: target.id });
-    onMessage?.(`Modaliteti me një llogari u aktivizua - gjithçka regjistrohet te "${target.emri}".`);
+    njofto(`Modaliteti me një llogari u aktivizua - gjithçka regjistrohet te "${target.emri}".`);
   };
 
   const disable = async () => {
     await saveProfile({ ...profile, njeLlogari: false });
-    onMessage?.("Modaliteti me një llogari u çaktivizua - mund të shtoni sërish llogari të veçanta.");
+    njofto("Modaliteti me një llogari u çaktivizua - mund të shtoni sërish llogari të veçanta.");
   };
 
   const run = async (fn) => {
@@ -105,7 +111,7 @@ function CilesimiNjeLlogari({ onMessage }) {
     run(async () => {
       if (!llogariaKryesore) return;
       if (await confirmMerge(llogariaKryesore)) {
-        onMessage?.(`Llogaritë u bashkuan te "${llogariaKryesore.emri}".`);
+        njofto(`Llogaritë u bashkuan te "${llogariaKryesore.emri}".`);
       }
     });
 

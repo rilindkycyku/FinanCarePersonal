@@ -9,6 +9,52 @@ e fundit kur rregullohet diçka, dhe e para vetëm kur ndryshon vetë forma e pr
 herë, te `2.0.0`, kur të dhënat mësuan të dalin nga shfletuesi. Datat janë ato të commit-it që e
 ngriti versionin.
 
+## [2.4.0] - 2026-08-15
+
+### Shtuar
+- **Kategoritë që nuk përdoren më arkivohen në vend që të fshihen.** Deri tani zgjedhja ishte të
+  mbaheshin përgjithmonë te çdo formular ose të fshiheshin - dhe fshirja e rishkruan të kaluarën:
+  transaksionet e saj bëhen «Pa kategori» dhe statistikat e çdo muaji të shkuar ndryshojnë. Një
+  kategori e arkivuar mbetet e paprekur; ajo thjesht nuk shfaqet më te zgjedhësit. Një kategori
+  kryesore i merr nënkategoritë me vete, sepse një «Netflix» pa asgjë sipër nuk është ajo që kërkoi
+  kush arkivoi «Abonime».
+  <br />Nuk zhduket dot pa u kërkuar: te faqja **Kategoritë** një çelës i kthen në pamje me gjithë
+  shifrat e tyre, dhe te dritarja e zgjedhjes butoni **«Shfaq edhe N kategori të arkivuara»** i
+  sjell aty ku duhen vërtet - kur po rifutet një transaksion i vjetër. Kategoria që një transaksion
+  e mban tashmë shfaqet gjithmonë te formulari i tij, e arkivuar apo jo: një fushë që e heq vetë
+  përgjigjen do ta ruante rreshtin si «Pa kategori» pa e pyetur njeri. Edhe kujtesa e kategorive
+  (rregullat që plotësojnë vetë fushën nga përshkrimi) nuk propozon më një kategori të arkivuar.
+- **Hapi 1 e thotë vetë adresën që kërkon Supabase te Site URL**, e lexuar nga vetë faqja që po
+  lexoni, me një buton *Kopjo* pranë. Më parë shkruante «adresa e këtij aplikacioni» dhe ju linte ta
+  gjenit - që në telefon do të thoshte të dilnit nga faqja për ta parë, e pastaj ta shkruanit me
+  dorë te një fushë në një pajisje tjetër.
+
+### Rregulluar
+- **Çelësi «një llogari kryesore» nuk thoshte asgjë kur shtypej te faqja Llogaritë.** Të njëjtin
+  bllok e kanë të dyja faqet, por fjalinë e rezultatit - përfshirë atë të bashkimit që rishkruan çdo
+  transaksion - e dorëzonte te faqja përmes një prop-i, dhe vetëm Cilësimet e kishin lidhur. Tani e
+  thotë vetë blloku, me të njëjtën dritare në të dyja faqet.
+
+### Ndryshuar
+- **Sinkronizimi dhe Eksporto / Importo janë një faqe e vetme me dy gjysma.** Ishin dy zëra menuje
+  për të njëjtën pyetje - *ku ekziston ky libër përveç këtij shfletuesi* - dhe sinkronizimi është
+  vetë një eksport me një import që ndodhin vetvetiu; kush kërkonte njërën duhej ta dinte
+  paraprakisht se te cila prej të dyjave ishte. Të dyja adresat mbeten të vlefshme
+  (`/sinkronizimi` dhe `/te-dhena`), pra çdo lidhje e shkruar deri sot - shenja te shiriti, njoftimi
+  te ekrani kryesor, `?konfiguro=1` - bie aty ku binte. Ngarkohet vetëm gjysma që shihet: pjesa e
+  sinkronizimit nuk numëron rreshtat e projektit sa kohë që në ekran janë butonat e eksportit.
+  <br />Te menyja mbetet **një zë i vetëm**, *Të dhënat & Sinkronizimi*, i ndezur nga të dyja
+  adresat - dy zëra për të njëjtën faqe kërkonin të zgjidhej gjysma para se të dihej çfarë kishte
+  secila. Edhe `sitemap.xml` i ka tani të katërta adresat që i mungonin (borxhet, planifikuara,
+  sinkronizimi, importo-csv).
+- **Njoftimi i kopjes rezervë u zhvendos nga Paneli te faqja ku ka çfarë të bëhet me të.** Janë tri
+  rreshta tekst mbi çdo shifër të ekranit kryesor: lexohen një herë, dhe pastaj rrinë çdo ditë mes
+  përshëndetjes dhe bilancit, në telefon aq sa e shtyjnë bilancin poshtë faqes. Aty ku ndodhet tani
+  nuk mbyllet dot dhe nuk zhduket derisa të merret një kopje.
+- **Një buxhet mbi një kategori të arkivuar e thotë atë te rreshti i vet.** Buxheti nuk ndalet nga
+  arkivimi - vazhdon të masë çdo gjë që bie ende aty - por pa këtë shenjë ai lexohet si kufi mbi një
+  kategori që asnjë formular nuk e ofron më.
+
 ## [2.3.0] - 2026-08-14
 
 ### Rregulluar

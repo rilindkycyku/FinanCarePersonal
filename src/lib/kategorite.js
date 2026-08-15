@@ -104,6 +104,49 @@ export function familjaSet(categories, id) {
   return new Set(familja(categories, id));
 }
 
+/**
+ * Whether this category is put away: archived itself, or filed under a parent that is. A parent
+ * takes its children with it, because a subcategory left behind alone would come back into every
+ * picker as a top-level row - "Market" with nothing above it - which is not what archiving "Ushqim
+ * & Pije" was meant to do.
+ */
+export function eshteArkivuar(categories, id) {
+  const byId = indeksi(categories);
+  const kategoria = byId.get(id);
+  if (!kategoria) return false;
+  return Boolean(kategoria.arkivuar || prindiVlefshem(byId, kategoria)?.arkivuar);
+}
+
+/**
+ * The categories a picker should offer: everything still in use, plus the ids named in `ruaj`.
+ *
+ * Archiving is for the category that is done with rather than wrong - a subscription that ended, a
+ * shop that closed. Deleting it would rewrite history (its transactions become "Pa kategori" and
+ * every past month's statistics change), so the record stays and only stops being *offered*.
+ *
+ * `ruaj` is what keeps that from rewriting history by another route: a form opened on a transaction
+ * filed under an archived category passes its own value in, so the field shows what it was filed
+ * under instead of coming up empty and saving the change back as "no category". The parent comes
+ * along with it, otherwise the picker would have a child with no group to sit in.
+ */
+export function kategoriTeHapura(categories, ...ruaj) {
+  const byId = indeksi(categories);
+  const mbaj = new Set();
+  ruaj.filter(Boolean).forEach((id) => {
+    const kategoria = byId.get(id);
+    if (!kategoria) return;
+    mbaj.add(kategoria.id);
+    const prindi = prindiVlefshem(byId, kategoria);
+    if (prindi) mbaj.add(prindi.id);
+  });
+
+  return lista(categories).filter((c) => {
+    if (mbaj.has(c.id)) return true;
+    if (c.arkivuar) return false;
+    return !prindiVlefshem(byId, c)?.arkivuar;
+  });
+}
+
 /** "Ushqim & Pije › Market" for a subcategory, plain "Ushqim & Pije" for a top-level one. */
 export function emriIPlote(categories, id, fallback = "") {
   const byId = indeksi(categories);
@@ -179,14 +222,22 @@ export function kerkoKategorite(categories, lloji, teksti) {
 
 /**
  * The categories that may be chosen as a parent for `kategoria`: same direction, top-level only
- * (one level deep), and never itself or anything already filed under it.
+ * (one level deep), still in use, and never itself or anything already filed under it. An archived
+ * parent is still offered when it is the one this category already sits under - the field has to be
+ * able to show where the category is before it can be asked to move it.
  */
 export function prinderitEMundshem(categories, kategoria) {
   if (!kategoria?.lloji) return [];
   const byId = indeksi(categories);
   const eSaj = familjaSet(categories, kategoria.id);
   return lista(categories)
-    .filter((c) => c.lloji === kategoria.lloji && !eSaj.has(c.id) && !prindiVlefshem(byId, c))
+    .filter(
+      (c) =>
+        c.lloji === kategoria.lloji &&
+        !eSaj.has(c.id) &&
+        !prindiVlefshem(byId, c) &&
+        (!c.arkivuar || c.id === kategoria.prindi)
+    )
     .sort(sipasEmrit);
 }
 

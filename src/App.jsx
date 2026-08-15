@@ -17,8 +17,10 @@ const Planifikuara = lazy(() => import("./Pages/Planifikuara"));
 const TePerseritura = lazy(() => import("./Pages/TePerseritura"));
 const Statistika = lazy(() => import("./Pages/Statistika"));
 const Cilesimet = lazy(() => import("./Pages/Cilesimet"));
+// Both addresses are the same page - syncing and exporting are two halves of one question, and
+// `/sinkronizimi` stays a real address because the sync indicator, the home-screen warning and
+// `?konfiguro=1` all point at it.
 const TeDhena = lazy(() => import("./Pages/TeDhena"));
-const Sinkronizimi = lazy(() => import("./Pages/Sinkronizimi"));
 const ImportoCsv = lazy(() => import("./Pages/ImportoCsv"));
 
 function App() {
@@ -37,7 +39,7 @@ function App() {
         <Route path="/statistikat" element={<Statistika />} />
         <Route path="/cilesimet" element={<Cilesimet />} />
         <Route path="/te-dhena" element={<TeDhena />} />
-        <Route path="/sinkronizimi" element={<Sinkronizimi />} />
+        <Route path="/sinkronizimi" element={<TeDhena />} />
         <Route path="/importo-csv" element={<ImportoCsv />} />
       </Routes>
     </Suspense>

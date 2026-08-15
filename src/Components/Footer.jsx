@@ -6,7 +6,7 @@ import "./Footer.css";
 const LIDHJET = [
   { to: "/transaksionet", label: "Transaksionet" },
   { to: "/statistikat", label: "Statistikat" },
-  { to: "/te-dhena", label: "Pasqyra & kopjet" },
+  { to: "/te-dhena", label: "Të dhënat & sinkronizimi" },
   { to: "/cilesimet", label: "Cilësimet" },
 ];
 

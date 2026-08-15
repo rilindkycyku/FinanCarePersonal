@@ -476,6 +476,70 @@
   border-radius: 3px;
 }
 
+/* The address to paste into the project's Site URL field, read from the browser itself - with the
+   button that saves retyping a domain on a phone. */
+.fcp-adresa-faqes {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin: 0.5rem 0;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid var(--sp-border);
+  border-radius: var(--sp-radius-md, 12px);
+  background: var(--sp-surface-2);
+}
+
+.fcp-adresa-faqes code {
+  overflow-wrap: anywhere;
+  font-size: 0.8rem;
+}
+
+/* ── Two halves of one page ───────────────────────────────────
+   Sinkronizimi and Eksporto / Importo, which used to be two menu entries. Each tab is a real link
+   (the URL still says which half is open), drawn as a switch rather than as a list of links. */
+.fcp-faqe-tabs {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: 1.5rem;
+  padding: 0.3rem;
+  border: 1px solid var(--sp-border);
+  border-radius: 14px;
+  background: var(--sp-surface-2);
+}
+
+.fcp-faqe-tab {
+  display: flex;
+  flex: 1 1 0;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.6rem 0.75rem;
+  border: none;
+  border-radius: 11px;
+  background: transparent;
+  color: var(--sp-text-muted);
+  font-size: 0.82rem;
+  font-weight: 800;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.fcp-faqe-tab:hover {
+  color: var(--sp-text);
+}
+
+.fcp-faqe-tab.active {
+  background: var(--sp-surface);
+  color: var(--sp-emerald);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+}
+
+@media (max-width: 575.98px) {
+  .fcp-faqe-tab { padding: 0.55rem 0.4rem; font-size: 0.75rem; }
+  .fcp-faqe-tab span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+}
+
 /* ── Section headings inside pages ────────────────────────── */
 .fcp-section-title {
   font-weight: 900;
@@ -680,6 +744,29 @@ button.hero-cta {
   padding: 0.45rem 0.6rem;
   background: transparent;
   border-style: dashed;
+}
+
+/* Put away, not deleted: still on the page when asked for, and visibly out of the list in use. */
+.fcp-cat-card.arkivuar {
+  opacity: 0.6;
+}
+
+.fcp-cat-flamur {
+  display: inline-block;
+  margin-right: 0.35rem;
+  padding: 0.05rem 0.3rem;
+  border-radius: 5px;
+  background: var(--sp-surface-3);
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.fcp-cat-arkivi-switch {
+  margin: 1rem 0 0.25rem;
+  font-size: 0.8rem;
+  color: var(--sp-text-muted);
 }
 
 .fcp-cat-card.nen .fcp-cat-name {

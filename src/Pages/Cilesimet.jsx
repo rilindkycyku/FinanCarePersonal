@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Card, Form, Row, Col, Button, Alert } from "react-bootstrap";
+import { Card, Form, Row, Col, Button } from "react-bootstrap";
 import { Settings, Save, Trash2, RotateCcw, Sun, Moon, AlertTriangle, BellRing, Eraser } from "lucide-react";
 import NavBar from "../Components/NavBar";
 import Footer from "../Components/Footer";
@@ -339,7 +339,7 @@ function Cilesimet() {
             </Form>
           </Card>
 
-          <CilesimiNjeLlogari onMessage={(text) => dialog.alert(text, { title: "U krye", variant: "success" })} />
+          <CilesimiNjeLlogari />
 
           {/* The memory is built from the user's own choices, so they get to see what it learned and
               throw it away - a suggestion nobody can inspect or undo is just the app being odd. */}

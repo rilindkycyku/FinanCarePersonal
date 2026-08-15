@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   emriIPlote,
+  eshteArkivuar,
+  kategoriTeHapura,
   kerkoKategorite,
   familja,
   mundTeKeteNjePrind,
@@ -146,5 +148,49 @@ describe("kategorite", () => {
     expect(prindiPerRuajtje(lista, market, "e_fshire")).toBe(null);
     // A category that has children of its own cannot be filed under anything.
     expect(prindiPerRuajtje(lista, lista[0], "transport")).toBe(null);
+  });
+});
+
+describe("kategori të arkivuara", () => {
+  const meArkiv = [
+    kategori("ushqim", "Ushqim & Pije"),
+    kategori("market", "Market", { prindi: "ushqim" }),
+    kategori("transport", "Transport", { arkivuar: true }),
+    kategori("taxi", "Taxi", { prindi: "transport" }),
+    kategori("rroga", "Rroga", { lloji: "hyrje" }),
+  ];
+
+  it("takes the subcategories of an archived parent with it", () => {
+    expect(eshteArkivuar(meArkiv, "transport")).toBe(true);
+    expect(eshteArkivuar(meArkiv, "taxi")).toBe(true);
+    expect(eshteArkivuar(meArkiv, "market")).toBe(false);
+    expect(eshteArkivuar(meArkiv, "s_ekziston")).toBe(false);
+  });
+
+  it("keeps the archived ones out of what a picker offers", () => {
+    expect(kategoriTeHapura(meArkiv).map((c) => c.id)).toEqual(["ushqim", "market", "rroga"]);
+  });
+
+  it("still offers the choice a record already holds, together with its parent", () => {
+    expect(kategoriTeHapura(meArkiv, "taxi").map((c) => c.id)).toEqual([
+      "ushqim", "market", "transport", "taxi", "rroga",
+    ]);
+    // A value that is not archived at all changes nothing, and neither does an unknown id.
+    expect(kategoriTeHapura(meArkiv, "market").map((c) => c.id)).toEqual(["ushqim", "market", "rroga"]);
+    expect(kategoriTeHapura(meArkiv, "s_ekziston").map((c) => c.id)).toEqual(["ushqim", "market", "rroga"]);
+  });
+
+  it("does not offer an archived category as a parent, unless it is the current one", () => {
+    const eRe = kategori("e_re", "E re");
+    expect(prinderitEMundshem(meArkiv, eRe).map((c) => c.id)).toEqual(["ushqim"]);
+    expect(prinderitEMundshem(meArkiv, { ...eRe, prindi: "transport" }).map((c) => c.id)).toEqual([
+      "transport", "ushqim",
+    ]);
+  });
+
+  it("a tree built from the open list leaves the archived family out whole", () => {
+    const pema = pemaKategorive(kategoriTeHapura(meArkiv), "shpenzim");
+    expect(pema.map((r) => r.id)).toEqual(["ushqim"]);
+    expect(pema[0].femijet.map((c) => c.id)).toEqual(["market"]);
   });
 });

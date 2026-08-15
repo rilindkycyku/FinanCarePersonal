@@ -4,7 +4,7 @@ import { Container, Row, Col, Button, Alert } from "react-bootstrap";
 import {
   LayoutDashboard, Wallet, TrendingUp, TrendingDown, PiggyBank, Percent, PlusCircle,
   ArrowRightLeft, Tags, Target, Repeat, BarChart3, Settings, DatabaseBackup, CalendarClock,
-  Receipt, ClipboardList, ShieldAlert, LineChart, TriangleAlert, FileSpreadsheet, Paperclip,
+  Receipt, ClipboardList, LineChart, TriangleAlert, FileSpreadsheet, Paperclip,
 } from "lucide-react";
 import NavBar from "../Components/NavBar";
 import PageTitle from "../Components/PageTitle";
@@ -16,11 +16,10 @@ import ShpenzimiDitor from "../Components/ShpenzimiDitor";
 import SinkronizimiNdaloi from "../Components/SinkronizimiNdaloi";
 import { Kpi, Panel, ProgressBar, Empty } from "../Components/Ui";
 import { useData } from "../Context/DataContext";
-import { useSync } from "../Context/SyncContext";
 import { emriIPlote } from "../lib/kategorite";
 import { getIcon } from "../lib/icons";
 import {
-  accountsWithBalances, backupStatus, budgetProgress, cashflow, debtProgress, debtTotals, dueRecurring,
+  accountsWithBalances, budgetProgress, cashflow, debtProgress, debtTotals, dueRecurring,
   filterByRange, forecast, goalProgress, monthBounds, overduePlans, planTotals, plansForMonth,
   sortByDateDesc, totalBalance, totalsByCategory, upcomingRecurring,
 } from "../lib/finance";
@@ -42,7 +41,7 @@ const QUICK_ACTIONS = [
   { to: "/te-perseritura", label: "Pagesat e Përsëritura", icon: Repeat },
   { to: "/statistikat", label: "Statistikat", icon: BarChart3 },
   { to: "/cilesimet", label: "Cilësimet", icon: Settings },
-  { to: "/te-dhena", label: "Eksporto / Importo", icon: DatabaseBackup },
+  { to: "/te-dhena", label: "Të dhënat & Sinkronizimi", icon: DatabaseBackup },
   { to: "/importo-csv", label: "Importo nga CSV", icon: FileSpreadsheet },
 ];
 
@@ -50,9 +49,6 @@ function Dashboard() {
   const { profile, accounts, categories, transactions, budgets, goals, recurring, borxhet, planet, faturat, loading,
     error,
     money, signedMoney, njeLlogari, llogariaKryesore } = useData();
-  // Only for what the backup reminder is allowed to claim: a synced device is not "the only place
-  // this exists", and a reminder that says otherwise gets ignored on the day it is right.
-  const { lidhur } = useSync();
   const [showTx, setShowTx] = useState(false);
 
   const today = todayISO();
@@ -70,7 +66,6 @@ function Dashboard() {
       qellimet: goals.map((g) => goalProgress(g, transactions)).slice(0, 3),
       teFundit: sortByDateDesc(transactions).slice(0, 6),
       dueTani: dueRecurring(recurring, today),
-      kopja: backupStatus({ profile, transactions, sinkronizuar: lidhur }),
       // Six months ahead, but only the first month and the low point are shown here.
       parashikimi: forecast({ accounts, transactions, recurring, plans: planet, today, muaj: 6 }),
       neVijim: upcomingRecurring(recurring, today, 14),
@@ -89,7 +84,7 @@ function Dashboard() {
       planetTotal: planTotals(planet, muajiKey, transactions),
       planetTeMbartura: overduePlans(planet, muajiKey).length,
     };
-  }, [accounts, categories, transactions, budgets, goals, recurring, borxhet, planet, profile, muajiKey, today, lidhur]);
+  }, [accounts, categories, transactions, budgets, goals, recurring, borxhet, planet, muajiKey, today]);
 
   const pershendetja = profile.emri || "përdorues";
   // Both are optional targets set in Cilësimet; when unset the KPIs fall back to plain figures.
@@ -159,40 +154,10 @@ function Dashboard() {
             </Alert>
           )}
 
-          {/* Everything is in this browser and nowhere else, so the only thing that survives a
-              cleared cache is a file kept somewhere else. Shown only when there is something to
-              lose - see `backupStatus` in finance.js. */}
-          {stats.kopja.duhet && (
-            <Alert variant="secondary" className="d-flex align-items-center justify-content-between flex-wrap gap-2">
-              <span>
-                <ShieldAlert size={16} className="me-2" />
-                {stats.kopja.kurre ? (
-                  stats.kopja.sinkronizuar ? (
-                    <>
-                      Këto <strong>{transactions.length}</strong> transaksione janë te ky shfletues dhe te projekti juaj
-                      Supabase - por asnjëherë në një skedar. Fotot e faturave nuk sinkronizohen fare, dhe një gabim i
-                      vetëm te sinkronizimi prek të dyja anët njëherësh.
-                    </>
-                  ) : (
-                    <>
-                      Të dhënat tuaja ndodhen vetëm në këtë shfletues dhe nuk keni ende asnjë kopje. Pastrimi i të dhënave
-                      të faqes do t&apos;i merrte me vete{" "}
-                      <strong>{transactions.length}</strong> transaksione.
-                    </>
-                  )
-                ) : (
-                  <>
-                    Kopja e fundit është marrë <strong>{stats.kopja.ditet} ditë</strong> më parë dhe që atëherë keni
-                    shtuar <strong>{stats.kopja.teReja}</strong>{" "}
-                    {stats.kopja.teReja === 1 ? "transaksion" : "transaksione"} që nuk janë në asnjë skedar.
-                  </>
-                )}
-              </span>
-              <Link to="/te-dhena" className="btn btn-outline-light btn-sm">
-                Merr një kopje
-              </Link>
-            </Alert>
-          )}
+          {/* The backup reminder used to sit here, above the figures. It is now pinned to the two
+              pages where it can be acted on - Sinkronizimi and Eksporto / Importo - because on the
+              home screen it was read once and then in the way of the balance every day after
+              (`NjoftimiKopjes`). */}
 
           <Row className="g-2 g-md-4">
             <Kpi
