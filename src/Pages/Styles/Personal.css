@@ -476,6 +476,26 @@
   border-radius: 3px;
 }
 
+/* The address to paste into the project's Site URL field, read from the browser itself - with the
+   button that saves retyping a domain on a phone. */
+.fcp-adresa-faqes {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin: 0.5rem 0;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid var(--sp-border);
+  border-radius: var(--sp-radius-md, 12px);
+  background: var(--sp-surface-2);
+}
+
+.fcp-adresa-faqes code {
+  overflow-wrap: anywhere;
+  font-size: 0.8rem;
+}
+
 /* ── Two halves of one page ───────────────────────────────────
    Sinkronizimi and Eksporto / Importo, which used to be two menu entries. Each tab is a real link
    (the URL still says which half is open), drawn as a switch rather than as a list of links. */

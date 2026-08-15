@@ -15,6 +15,7 @@ import { etiketatE, pastroEtiketat, perdorimiEtiketave } from "../lib/etiketat";
 import { convertedAmount, currencyFields, dailyLimit, goalProgress } from "../lib/finance";
 import { njofto } from "../lib/njoftimet";
 import { mesoRregullen, sugjeroKategorine } from "../lib/rregullat";
+import { kategoriTeHapura } from "../lib/kategorite";
 import "./ModalForms.css";
 
 const TYPE_BUTTONS = [
@@ -123,8 +124,10 @@ function ShtoTransaksionin({
 
   const aktive = useMemo(() => accounts.filter((a) => !a.arkivuar), [accounts]);
 
+  // Only for the hint under the field ("there are none for this direction"), so it counts what the
+  // picker would actually offer rather than what the store holds.
   const kategoriteERelevante = useMemo(
-    () => categories.filter((c) => c.lloji === tx.lloji).sort((a, b) => a.emri.localeCompare(b.emri)),
+    () => kategoriTeHapura(categories).filter((c) => c.lloji === tx.lloji),
     [categories, tx.lloji]
   );
 

@@ -122,6 +122,10 @@ ngriti versionin.
   çdo shifër të ekranit kryesor: lexohen një herë, dhe pastaj rrinë çdo ditë mes përshëndetjes dhe
   bilancit, në telefon aq sa e shtyjnë bilancin poshtë faqes. Aty ku ndodhet tani nuk mbyllet dot
   dhe nuk zhduket derisa të merret një kopje.
+- **Hapi 1 e thotë vetë adresën që kërkon Supabase te Site URL**, e lexuar nga vetë faqja që po
+  lexoni, me një buton *Kopjo* pranë. Më parë shkruante «adresa e këtij aplikacioni» dhe ju linte ta
+  gjenit - që në telefon do të thoshte të dilnit nga faqja për ta parë, e pastaj ta shkruanit me
+  dorë te një fushë në një pajisje tjetër.
 - **Sinkronizimi dhe Eksporto / Importo janë një faqe e vetme me dy gjysma.** Ishin dy zëra menuje
   për të njëjtën pyetje - *ku ekziston ky libër përveç këtij shfletuesi* - dhe sinkronizimi është
   vetë një eksport me një import që ndodhin vetvetiu; kush kërkonte njërën duhej ta dinte

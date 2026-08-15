@@ -171,7 +171,8 @@ function Kategorite() {
           )}
         </div>
         <div className="fcp-cat-actions">
-          {!nen && (
+          {/* Nothing new goes under an archived parent - it would be born hidden. */}
+          {!nen && !arkivuar && (
             <button
               type="button"
               className="fcp-icon-action"

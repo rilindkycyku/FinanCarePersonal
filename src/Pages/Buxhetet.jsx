@@ -16,7 +16,7 @@ import { useDialog } from "../Context/DialogContext";
 import { STORES } from "../lib/db";
 import { budgetProgress, effectiveBudgets, monthKeyBounds } from "../lib/finance";
 import { formatPercent, markup, monthKey, monthLabel, plainAmount, todayISO, toNumber } from "../lib/format";
-import { emriIPlote, familjaSet, rrenjaE } from "../lib/kategorite";
+import { emriIPlote, familjaSet, kategoriTeHapura, rrenjaE } from "../lib/kategorite";
 import { getIcon } from "../lib/icons";
 import "./Styles/PremiumTheme.css";
 import "./Styles/DizajniPergjithshem.css";
@@ -104,7 +104,7 @@ function Buxhetet() {
         .filter((tx) => tx.lloji === "shpenzim" && tx.data >= start && tx.data <= end)
         .map((tx) => tx.kategoriaId)
     );
-    return categories
+    return kategoriTeHapura(categories)
       .filter((c) => c.lloji === "shpenzim" && !mbuluara.has(c.id))
       .filter((c) => !mbuluara.has(rrenjaE(categories, c.id)))
       .filter((c) => !c.prindi || perdorura.has(c.id))

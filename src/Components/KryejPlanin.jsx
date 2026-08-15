@@ -5,6 +5,7 @@ import VleraInput from "./VleraInput";
 import ZgjedhesiKategorive from "./ZgjedhesiKategorive";
 import { makeId, STORES } from "../lib/db";
 import { toNumber, todayISO } from "../lib/format";
+import { kategoriTeHapura } from "../lib/kategorite";
 import "./ModalForms.css";
 import Zgjedhesi from "./Zgjedhesi";
 import { opsionetLlogarive } from "../lib/opsionet";
@@ -25,8 +26,11 @@ function KryejPlanin({ show, onHide, plani }) {
 
   const aktive = useMemo(() => accounts.filter((a) => !a.arkivuar), [accounts]);
 
+  // Archived ones are left out: this list also supplies the fallback the form opens on, and an
+  // archived category is precisely the one nobody wants a new purchase filed under.
   const kategorite = useMemo(
-    () => categories.filter((c) => c.lloji === "shpenzim").sort((a, b) => a.emri.localeCompare(b.emri)),
+    () => kategoriTeHapura(categories).filter((c) => c.lloji === "shpenzim")
+      .sort((a, b) => a.emri.localeCompare(b.emri)),
     [categories]
   );
 

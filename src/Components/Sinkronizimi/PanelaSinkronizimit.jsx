@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Alert, Button, Card, Col, Form, InputGroup, Row, Spinner } from "react-bootstrap";
 import {
-  AlertTriangle, ArrowDownToLine, ArrowUpFromLine, Cloud, CloudOff, Code2, Database, ExternalLink,
+  AlertTriangle, ArrowDownToLine, ArrowUpFromLine, Check, Cloud, CloudOff, Code2, Copy, Database, ExternalLink,
   KeyRound, Laptop, LogIn, RefreshCw, Save, ScrollText, ShieldCheck, Smartphone, Trash2, UserPlus,
   Wand2, X,
 } from "lucide-react";
@@ -59,6 +59,16 @@ function saMePare(vlera) {
  * needed. Only the half on screen is mounted (see `TeDhena`), so nothing here counts cloud rows or
  * lists devices while the export buttons are the ones being read.
  */
+/**
+ * The address to hand Supabase as the Site URL, read from the browser rather than written down.
+ *
+ * The step used to say "the address of this application" and leave the reader to find it - which on
+ * a phone means leaving the page. The app is served from a few places (the deployed site, a phone
+ * on the local network during development, the installed PWA), and the one that matters is
+ * whichever one is being read right now, so this is the origin of this very page.
+ */
+const adresaEFaqes = typeof window === "undefined" ? "" : window.location.origin;
+
 function PanelaSinkronizimit() {
   const dialog = useDialog();
   const { konfigurimi, lidhur, automatik, duke, gabim, sinkronizoTani, pastroGabimin } = useSync();
@@ -107,6 +117,7 @@ function PanelaSinkronizimit() {
   // a device connected before this release carries `null` and has long since decided by using it.
   const duhetVendim = lidhur && konfigurimi.lidhjaVerifikuar === false;
   const [lidhjaHapur, setLidhjaHapur] = useState(false);
+  const [adresaKopjuar, setAdresaKopjuar] = useState(false);
 
   /**
    * `?konfiguro=1` opens the setup dialog straight away - the home screen sends people here with
@@ -122,6 +133,18 @@ function PanelaSinkronizimit() {
   }, [searchParams, setSearchParams]);
 
   const setField = (name, value) => setForm((prev) => ({ ...prev, [name]: value }));
+
+  /** Copying beats retyping a domain into a field on another device; when the clipboard is refused
+   * (an insecure context), the address is right there to be selected by hand. */
+  const kopjoAdresen = async () => {
+    try {
+      await navigator.clipboard.writeText(adresaEFaqes);
+      setAdresaKopjuar(true);
+      setTimeout(() => setAdresaKopjuar(false), 2500);
+    } catch {
+      setAdresaKopjuar(false);
+    }
+  };
 
   /**
    * Every result of a button on this page, said in a dialog rather than in a banner at the top.
@@ -695,9 +718,17 @@ function PanelaSinkronizimit() {
               </li>
               <li>
                 Te <strong>Authentication → URL Configuration</strong> vendosni{" "}
-                <strong>Site URL</strong> te adresa e këtij aplikacioni. Parazgjedhja e Supabase
-                është <code>http://localhost:3000</code>, pra linku i konfirmimit do të hapte një
-                faqe që nuk ekziston. Me adresën e duhur, ai link ju kthen këtu tashmë të futur.
+                <strong>Site URL</strong> te adresa e këtij aplikacioni - domethënë kjo:
+                <div className="fcp-adresa-faqes">
+                  <code>{adresaEFaqes}</code>
+                  <Button variant="outline-light" size="sm" onClick={kopjoAdresen}>
+                    {adresaKopjuar ? <Check size={14} className="me-1" /> : <Copy size={14} className="me-1" />}
+                    {adresaKopjuar ? "U kopjua" : "Kopjo"}
+                  </Button>
+                </div>
+                Parazgjedhja e Supabase është <code>http://localhost:3000</code>, pra linku i
+                konfirmimit do të hapte një faqe që nuk ekziston. Me adresën e duhur, ai link ju
+                kthen këtu tashmë të futur.
               </li>
               <li>
                 Te <strong>Project Settings</strong> merrni <strong>Project URL</strong> (te{" "}
