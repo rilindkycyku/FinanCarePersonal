@@ -18,4 +18,7 @@
   <url><loc>https://personal.financare.rilindkycyku.dev/te-dhena</loc><priority>0.4</priority></url>
   <url><loc>https://personal.financare.rilindkycyku.dev/sinkronizimi</loc><priority>0.4</priority></url>
   <url><loc>https://personal.financare.rilindkycyku.dev/importo-csv</loc><priority>0.4</priority></url>
+  <!-- Udhëzuesi hapet te skeda e parë; çdo skedë tjetër ka adresën e vet nën këtë, por ato janë i
+       njëjti dokument i ndarë me skeda dhe nuk listohen një nga një. -->
+  <url><loc>https://personal.financare.rilindkycyku.dev/udhezuesi</loc><priority>0.5</priority></url>
 </urlset>

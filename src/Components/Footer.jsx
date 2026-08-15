@@ -8,6 +8,7 @@ const LIDHJET = [
   { to: "/statistikat", label: "Statistikat" },
   { to: "/te-dhena", label: "Të dhënat & sinkronizimi" },
   { to: "/cilesimet", label: "Cilësimet" },
+  { to: "/udhezuesi", label: "Udhëzuesi" },
 ];
 
 function Footer() {

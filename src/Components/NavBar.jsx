@@ -4,7 +4,7 @@ import { Dropdown } from "react-bootstrap";
 import {
   LayoutDashboard, ArrowRightLeft, Wallet, Tags, PiggyBank, Target, Repeat,
   BarChart3, Settings, DatabaseBackup, Sun, Moon, ChevronDown, Menu, X, Receipt,
-  ClipboardList, FileSpreadsheet,
+  ClipboardList, FileSpreadsheet, BookOpen,
 } from "lucide-react";
 import { useTheme } from "../Context/ThemeContext";
 import ButonPasqyra from "./ButonPasqyra";
@@ -46,14 +46,21 @@ const CATEGORIES = [
       // asked the reader to pick a half before knowing what was in either.
       { to: "/te-dhena", label: "Të dhënat & Sinkronizimi", icon: DatabaseBackup, edhe: ["/sinkronizimi"] },
       { to: "/importo-csv", label: "Importo nga CSV", icon: FileSpreadsheet },
+      // Çdo skedë e udhëzuesit ka adresën e vet nën këtë - `/udhezuesi/buxhetet` - prandaj zëri
+      // ndizet edhe prej tyre, jo vetëm prej listës së parë.
+      { to: "/udhezuesi", label: "Udhëzuesi", icon: BookOpen, nenshtigje: true },
     ],
   },
 ];
 
 /** Whether an entry is the page being read. A page can answer to more than one address - the data
  * page keeps both `/te-dhena` and `/sinkronizimi` - and the menu has to know a link's other names,
- * or arriving by one of them lights up nothing. */
-const linkuAktiv = (link, pathname) => pathname === link.to || Boolean(link.edhe?.includes(pathname));
+ * or arriving by one of them lights up nothing. `nenshtigje` covers the guide, whose every tab is
+ * an address of its own beneath `/udhezuesi`. */
+const linkuAktiv = (link, pathname) =>
+  pathname === link.to ||
+  Boolean(link.edhe?.includes(pathname)) ||
+  Boolean(link.nenshtigje && pathname.startsWith(`${link.to}/`));
 
 function NavBar() {
   const { theme, toggleTheme } = useTheme();

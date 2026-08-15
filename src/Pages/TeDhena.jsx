@@ -7,6 +7,7 @@ import NavBar from "../Components/NavBar";
 import Footer from "../Components/Footer";
 import PageTitle from "../Components/PageTitle";
 import PageLoading from "../Components/PageLoading";
+import ButoniUdhezimit from "../Components/ButoniUdhezimit";
 import PunaNeVazhdim from "../Components/PunaNeVazhdim";
 import NjoftimiKopjes from "../Components/NjoftimiKopjes";
 import PanelaSinkronizimit from "../Components/Sinkronizimi/PanelaSinkronizimit";
@@ -416,6 +417,12 @@ function TeDhena() {
               );
             })}
           </nav>
+
+          {/* Two halves, two guides: the button reads the address it sits on, so it opens the one
+              for the tab that is actually open. */}
+          <div className="d-flex justify-content-end mb-3">
+            <ButoniUdhezimit />
+          </div>
 
           {/* One reminder for the whole page: whichever half is open, the thing it is missing is a
               file kept somewhere else. On the sync half the link is the way over to the buttons

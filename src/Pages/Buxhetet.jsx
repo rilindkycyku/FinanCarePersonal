@@ -7,6 +7,7 @@ import {
 import NavBar from "../Components/NavBar";
 import Footer from "../Components/Footer";
 import PageTitle from "../Components/PageTitle";
+import ButoniUdhezimit from "../Components/ButoniUdhezimit";
 import PageLoading from "../Components/PageLoading";
 import ShtoBuxhetin from "../Components/ShtoBuxhetin";
 import Tabela from "../Components/Tabela/Tabela";
@@ -164,6 +165,7 @@ function Buxhetet() {
             <div>
               <h1>Buxhetet</h1>
               <p>Caktoni një kufi mujor shpenzimi për secilën kategori dhe ndiqni sa ka mbetur.</p>
+              <ButoniUdhezimit className="mt-2" />
             </div>
             <div className="d-flex align-items-center gap-2 flex-wrap">
               <div className="fcp-month-nav">

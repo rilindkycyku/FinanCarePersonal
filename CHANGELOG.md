@@ -9,6 +9,32 @@ e fundit kur rregullohet diçka, dhe e para vetëm kur ndryshon vetë forma e pr
 herë, te `2.0.0`, kur të dhënat mësuan të dalin nga shfletuesi. Datat janë ato të commit-it që e
 ngriti versionin.
 
+## [2.5.0] - 2026-08-15
+
+### Shtuar
+- **Udhëzuesi: një udhëzim për secilën faqe, në një faqe të vetme me skeda.** Aplikacioni i
+  shpjegonte gjërat aty ku ndodhnin - një fjali nën një fushë, një paragraf te një kartelë - dhe kjo
+  vlen kur dikush e ka gjetur tashmë faqen e duhur. Nuk vlen kur pyetja është *ku bëhet kjo* ose
+  *pse kjo shifër nuk përputhet me tjetrën*: përgjigja ndodhej diku nëpër katërmbëdhjetë faqe, dhe
+  gjendej vetëm duke i hapur me radhë. Tani secila faqe ka skedën e vet me përmbledhjen, hapat me
+  radhë dhe këshillat që dallojnë gjërat që ngatërrohen - plani nga buxheti, borxhi nga bilanci,
+  kopja JSON nga ekstrakti CSV. Përveç faqeve ka edhe dy skeda që nuk janë faqe: *Fillimi i shpejtë*
+  për gjashtë hapat e parë, dhe *Vegla të përbashkëta* për llogaritësin, fotot e faturave, tabelat
+  dhe monedhën tjetër - gjëra që përsëriten kudo dhe nuk i takojnë asnjë faqeje.
+  <br />Kutia e kërkimit i lexon edhe hapat e këshillat, jo vetëm titujt, sepse kush shkruan
+  *dublikat* ose *shënime varri* nuk e di se te cila faqe përgjigjet - dhe pikërisht kjo është
+  arsyeja pse po kërkon. Nuk kërkon as shkronjat me theks: *keste* gjen *kësti*.
+- **Lidhja «Si përdoret» te koka e çdo faqeje**, e cila hap pikërisht skedën e asaj faqeje. Çdo
+  skedë ka adresën e vet (`/udhezuesi/buxhetet`), pra një udhëzim dërgohet me lidhje dhe kthimi
+  mbrapa te shfletuesi kthen atë që lexuat, jo listën nga fillimi. Faqja nuk e emërton udhëzimin që
+  kërkon - e gjen nga adresa ku ndodhet - prandaj nuk mbetet asnjë lidhje e thyer pas një
+  riemërtimi, dhe një faqe pa udhëzim thjesht nuk e vizaton butonin.
+
+### Ndryshuar
+- **`paTheks` u zhvendos te `format.js`** dhe lexohet nga të dy vendet që kërkojnë tekst shqip -
+  zgjedhësi i kategorive dhe udhëzuesi - në vend që udhëzuesi të mbante një kopje të dytë të së
+  njëjtës gjashtë rreshta.
+
 ## [2.4.0] - 2026-08-15
 
 ### Shtuar

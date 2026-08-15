@@ -5,6 +5,7 @@ import { Tags, Plus, Edit3, Trash2, TrendingUp, TrendingDown, CornerDownRight, A
 import NavBar from "../Components/NavBar";
 import Footer from "../Components/Footer";
 import PageTitle from "../Components/PageTitle";
+import ButoniUdhezimit from "../Components/ButoniUdhezimit";
 import PageLoading from "../Components/PageLoading";
 import ShtoKategorine from "../Components/ShtoKategorine";
 import Tabela from "../Components/Tabela/Tabela";
@@ -250,6 +251,7 @@ function Kategorite() {
                 Kategoritë klasifikojnë transaksionet dhe janë baza e buxheteve e statistikave. Një kategori mund të
                 ketë nënkategori - shpenzimi i tyre numërohet edhe te kategoria kryesore.
               </p>
+              <ButoniUdhezimit className="mt-2" />
             </div>
             <div className="d-flex gap-2">
               <Button className="btn-primary" onClick={() => openNew("shpenzim")}>

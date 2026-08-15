@@ -5,6 +5,7 @@ import { Target, Plus, Edit3, Trash2, PiggyBank, CheckCircle2, CalendarClock } f
 import NavBar from "../Components/NavBar";
 import Footer from "../Components/Footer";
 import PageTitle from "../Components/PageTitle";
+import ButoniUdhezimit from "../Components/ButoniUdhezimit";
 import PageLoading from "../Components/PageLoading";
 import ShtoQellimin from "../Components/ShtoQellimin";
 import ShtoTransaksionin from "../Components/ShtoTransaksionin";
@@ -98,6 +99,7 @@ function Qellimet() {
             <div>
               <h1>Qëllimet e Kursimit</h1>
               <p>Caktoni sa doni të kursesh, shtoni kontribute dhe shikoni sa afër jeni.</p>
+              <ButoniUdhezimit className="mt-2" />
             </div>
             <Button className="btn-primary" onClick={openNew}>
               <Plus size={16} className="me-1" /> Shto Qëllim

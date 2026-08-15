@@ -5,6 +5,7 @@ import { Wallet, Plus, Edit3, Trash2, Archive, ArchiveRestore, TrendingUp, Trend
 import NavBar from "../Components/NavBar";
 import Footer from "../Components/Footer";
 import PageTitle from "../Components/PageTitle";
+import ButoniUdhezimit from "../Components/ButoniUdhezimit";
 import PageLoading from "../Components/PageLoading";
 import Tabela from "../Components/Tabela/Tabela";
 import ShtoLlogarine from "../Components/ShtoLlogarine";
@@ -167,6 +168,7 @@ function Llogarite() {
                   ? "Një llogari e vetme mban gjithçka - kesh, bankë dhe kartelë bashkë, pa u ndarë."
                   : "Kesh, llogari bankare, kartela dhe kursime - bilanci llogaritet nga transaksionet."}
               </p>
+              <ButoniUdhezimit className="mt-2" />
             </div>
             {!njeLlogari && (
               <Button className="btn-primary" onClick={openNew}>

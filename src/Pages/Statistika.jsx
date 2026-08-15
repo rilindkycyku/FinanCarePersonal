@@ -8,6 +8,7 @@ import {
 import NavBar from "../Components/NavBar";
 import Footer from "../Components/Footer";
 import PageTitle from "../Components/PageTitle";
+import ButoniUdhezimit from "../Components/ButoniUdhezimit";
 import PageLoading from "../Components/PageLoading";
 import { Kpi, Panel, ProgressBar, Empty } from "../Components/Ui";
 import GrafikuBilancit from "../Components/GrafikuBilancit";
@@ -220,6 +221,7 @@ function Statistika() {
             <div>
               <h1>Statistikat</h1>
               <p>Përmbledhje e financave tuaja - {periodLabel(period)}.</p>
+              <ButoniUdhezimit className="mt-2" />
             </div>
             <Zgjedhesi
               value={period}

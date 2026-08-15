@@ -5,6 +5,7 @@ import { TrendingUp, TrendingDown, Percent, Hash, Filter, X, CopyPlus, Paperclip
 import NavBar from "../Components/NavBar";
 import Footer from "../Components/Footer";
 import PageTitle from "../Components/PageTitle";
+import ButoniUdhezimit from "../Components/ButoniUdhezimit";
 import PageLoading from "../Components/PageLoading";
 import Tabela from "../Components/Tabela/Tabela";
 import ShtoTransaksionin from "../Components/ShtoTransaksionin";
@@ -201,6 +202,7 @@ function Transaksionet() {
             <div>
               <h1>Transaksionet</h1>
               <p>Të gjitha hyrjet, shpenzimet dhe transferet tuaja në një vend.</p>
+              <ButoniUdhezimit className="mt-2" />
             </div>
           </div>
 

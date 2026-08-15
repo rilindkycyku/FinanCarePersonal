@@ -9,6 +9,7 @@ import {
 import NavBar from "../Components/NavBar";
 import Footer from "../Components/Footer";
 import PageTitle from "../Components/PageTitle";
+import ButoniUdhezimit from "../Components/ButoniUdhezimit";
 import PageLoading from "../Components/PageLoading";
 import ShtoPlanin from "../Components/ShtoPlanin";
 import KryejPlanin from "../Components/KryejPlanin";
@@ -243,6 +244,7 @@ function Planifikuara() {
                 Çka dini se do ta blini këtë muaj por ende nuk e keni blerë. Vlera lihet mënjanë që tani, pra shpenzimi
                 ditor tregon vetëm paratë që janë vërtet të lira.
               </p>
+              <ButoniUdhezimit className="mt-2" />
             </div>
             <div className="d-flex align-items-center gap-2 flex-wrap">
               <div className="fcp-month-nav">
