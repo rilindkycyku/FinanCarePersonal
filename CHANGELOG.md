@@ -29,6 +29,12 @@ ngriti versionin.
   gjenit - që në telefon do të thoshte të dilnit nga faqja për ta parë, e pastaj ta shkruanit me
   dorë te një fushë në një pajisje tjetër.
 
+### Rregulluar
+- **Çelësi «një llogari kryesore» nuk thoshte asgjë kur shtypej te faqja Llogaritë.** Të njëjtin
+  bllok e kanë të dyja faqet, por fjalinë e rezultatit - përfshirë atë të bashkimit që rishkruan çdo
+  transaksion - e dorëzonte te faqja përmes një prop-i, dhe vetëm Cilësimet e kishin lidhur. Tani e
+  thotë vetë blloku, me të njëjtën dritare në të dyja faqet.
+
 ### Ndryshuar
 - **Sinkronizimi dhe Eksporto / Importo janë një faqe e vetme me dy gjysma.** Ishin dy zëra menuje
   për të njëjtën pyetje - *ku ekziston ky libër përveç këtij shfletuesi* - dhe sinkronizimi është
