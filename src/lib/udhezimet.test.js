@@ -12,8 +12,8 @@ import {
 /**
  * Adresat që njeh `App.jsx`. Mbahen këtu me dorë me qëllim: nëse shtohet një faqe e re dhe kjo
  * listë përditësohet, testi kërkon edhe udhëzimin e saj - që është pikërisht rregulli që kjo faqe
- * premton (një udhëzim për çdo faqe). `/te-dhena` dhe `/sinkronizimi` janë dy gjysma të së njëjtës
- * faqe dhe kanë nga një udhëzim secila.
+ * premton (një udhëzim për çdo faqe). `/te-dhena` dhe `/sinkronizimi` janë dy adresa të së njëjtës
+ * faqe - një zë menuje - prandaj i takojnë të njëjtit udhëzim.
  */
 const SHTIGJET = [
   "/",
@@ -39,11 +39,13 @@ describe("përmbajtja e udhëzimeve", () => {
     });
   });
 
-  it("nuk ka id apo shteg të dyfishuar", () => {
+  it("nuk ka id apo adresë të dyfishuar", () => {
     const idet = UDHEZIMET.map((u) => u.id);
     expect(new Set(idet).size).toBe(idet.length);
 
-    const shtigjet = UDHEZIMET.map((u) => u.shtegu).filter(Boolean);
+    // Adresat kryesore bashkë me emrat e tjerë të së njëjtës faqe: dy udhëzime nuk guxojnë ta
+    // kërkojnë të njëjtën adresë, ose butoni «Si përdoret» do të zgjidhte njërin rastësisht.
+    const shtigjet = UDHEZIMET.flatMap((u) => [u.shtegu, ...(u.edhe || [])]).filter(Boolean);
     expect(new Set(shtigjet).size).toBe(shtigjet.length);
   });
 
@@ -63,6 +65,11 @@ describe("përmbajtja e udhëzimeve", () => {
 
   it("çdo udhëzim i takon një grupi të njohur", () => {
     UDHEZIMET.forEach((u) => expect(GRUPET, u.id).toContain(u.grupi));
+  });
+
+  it("grupi i parë rri pa titull, si «Paneli» te menyja", () => {
+    expect(GRUPET[0]).toBeNull();
+    expect(udhezimetEGrupit(null).map((u) => u.id)).toContain("paneli");
   });
 
   it("grupet nuk mbeten bosh dhe së bashku mbulojnë gjithë listën", () => {
@@ -90,9 +97,9 @@ describe("udhezimiI / udhezimiPerShteg", () => {
     expect(udhezimiI("nuk-ekziston")).toBeNull();
   });
 
-  it("i ndan dy gjysmat e faqes së të dhënave", () => {
+  it("të dyja adresat e faqes së të dhënave çojnë te i njëjti udhëzim", () => {
     expect(udhezimiPerShteg("/te-dhena")?.id).toBe("te-dhena");
-    expect(udhezimiPerShteg("/sinkronizimi")?.id).toBe("sinkronizimi");
+    expect(udhezimiPerShteg("/sinkronizimi")?.id).toBe("te-dhena");
   });
 
   it("nuk e ngatërron një adresë të panjohur me udhëzimet pa faqe", () => {

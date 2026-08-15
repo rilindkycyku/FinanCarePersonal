@@ -18,15 +18,18 @@ import { paTheks } from "./format";
 
 /**
  * Grupet, në të njëjtën radhë si te shiriti i menysë - kush e njeh menynë e gjen udhëzimin aty ku
- * e pret. "Fillimi" dhe "Vegla" janë të vetmet që nuk kanë zë menuje: e para sepse nuk është faqe
- * por rradhë punësh, e dyta sepse janë gjëra që përsëriten në çdo faqe.
+ * e pret, me të njëjtët emra dhe në të njëjtin rend.
+ *
+ * I pari nuk ka titull me qëllim: te menyja «Paneli» rri i vetëm sipër grupeve, dhe një titull
+ * mbi të do ta ndryshonte pikërisht atë. Bashkë me të rri fillimi i shpejtë, i cili nuk është faqe
+ * fare. "Vegla" është grupi tjetër pa zë menuje - gjëra që përsëriten në çdo faqe.
  */
-export const GRUPET = ["Fillimi", "Financat", "Planifikimi", "Më shumë", "Vegla"];
+export const GRUPET = [null, "Financat", "Planifikimi", "Më shumë", "Vegla"];
 
 export const UDHEZIMET = [
   {
     id: "fillimi",
-    grupi: "Fillimi",
+    grupi: null,
     etiketa: "Fillimi i shpejtë",
     titulli: "Fillimi i shpejtë",
     ikona: "Rocket",
@@ -91,7 +94,7 @@ export const UDHEZIMET = [
 
   {
     id: "paneli",
-    grupi: "Fillimi",
+    grupi: null,
     etiketa: "Paneli",
     titulli: "Paneli",
     ikona: "LayoutDashboard",
@@ -649,21 +652,55 @@ export const UDHEZIMET = [
   {
     id: "te-dhena",
     grupi: "Më shumë",
-    etiketa: "Eksporto / Importo",
-    titulli: "Eksporto / Importo",
+    etiketa: "Të dhënat & Sinkronizimi",
+    titulli: "Të dhënat & Sinkronizimi",
     ikona: "DatabaseBackup",
     shtegu: "/te-dhena",
+    // Një faqe me dy gjysma dhe dy adresa, njësoj si te menyja - prandaj një udhëzim i vetëm, që
+    // përgjigjet nga të dyja adresat (butoni «Si përdoret» te secila gjysmë e gjen këtë).
+    edhe: ["/sinkronizimi"],
     permbledhje:
-      "Të dhënat rrinë në këtë shfletues - dhe, nëse e lidhni, te projekti juaj Supabase - prandaj kopja " +
-      "mbetet punë e juaja. Faqja jep tri formate për të dalë, dy sjellje për të hyrë, një pasqyrë PDF dhe " +
-      "shifrat e hapësirës që po përdorni.",
+      "Ku ekziston ky libër përveç këtij shfletuesi. Faqja ka dy gjysma: «Sinkronizimi» i mban pajisjet " +
+      "tuaja në hap përmes një projekti Supabase që e zotëroni ju, kurse «Eksporto / Importo» merr e kthen " +
+      "kopje si skedar. Sinkronizimi është vetë një eksport me një import që ndodhin vetvetiu - prandaj " +
+      "rrinë bashkë.",
     hapat: [
+      {
+        titulli: "Sinkronizimi, Hapi 1 - projekti dhe tabela",
+        teksti:
+          "Krijoni një projekt Supabase (plani falas mjafton) dhe ekzekutoni skriptin SQL që jua jep vetë " +
+          "faqja - një tabelë e vetme dhe rregulli RLS që lejon vetëm llogarinë tuaj. Faqja ju tregon edhe " +
+          "adresën që duhet vendosur te Site URL, me një buton për ta kopjuar.",
+      },
+      {
+        titulli: "Sinkronizimi, Hapi 2 - lidhni pajisjen",
+        teksti:
+          "Vendosni adresën e projektit dhe çelësin publik publishable (ose anon-in e vjetër). Pastaj, në " +
+          "pajisjen e parë, shkruani një email e fjalëkalim dhe shtypni «Krijo llogari» - llogaria krijohet " +
+          "brenda projektit tuaj. Në çdo pajisje tjetër shkruani të njëjtat dhe shtypni «Hyr dhe " +
+          "sinkronizo».",
+      },
+      {
+        titulli: "Automatik apo me buton",
+        teksti:
+          "Me çelësin e ndezur sinkronizimi bëhet vetë: kur hapet aplikacioni, pak sekonda pas çdo ndryshimi, " +
+          "kur ktheheni te skeda dhe kur pajisja kthehet online. Me të fikur, asgjë nuk del nga shfletuesi " +
+          "derisa ta shtypni «Sinkronizo tani». Shkëputja («Shkëput këtë pajisje») harron projektin, çelësin " +
+          "dhe sesionin, pa i prekur as të dhënat këtu as kopjen te projekti.",
+      },
+      {
+        titulli: "Kur dy pajisje nuk përputhen",
+        teksti:
+          "Tri butona e zgjidhin ju: «Bashko me projektin», «Merr gjithçka nga projekti» dhe «Dërgo gjithçka " +
+          "nga kjo pajisje». Dy të fundit mbishkruajnë njërën anë, prandaj secili kërkon të shkruani fjalën e " +
+          "vet përpara.",
+      },
       {
         titulli: "Kopje e plotë (ZIP)",
         teksti:
-          "Gjithçka: të dhënat te backup.json dhe fotot e faturave si skedarë të veçantë brenda arkivit. Ky " +
-          "është formati që duhet mbajtur nëse keni foto - ato hyjnë ashtu siç janë ruajtur, pra funksionon " +
-          "edhe në telefon dhe me mijëra fatura.",
+          "Gjysma tjetër e faqes. Arkivi ZIP mban gjithçka: të dhënat te backup.json dhe fotot e faturave si " +
+          "skedarë të veçantë brenda tij. Ky është formati që duhet mbajtur nëse keni foto - ato hyjnë ashtu " +
+          "siç janë ruajtur, pra funksionon edhe në telefon dhe me mijëra fatura.",
       },
       {
         titulli: "JSON dhe Excel",
@@ -704,67 +741,15 @@ export const UDHEZIMET = [
       },
     ],
     keshilla: [
+      "Sinkronizimi çon vetëm ajo që ndryshoi që nga hera e fundit, jo të gjithë bazën; fshirjet udhëtojnë si shënime varri, pra një transaksion i fshirë në telefon nuk rikthehet nga kompjuteri.",
+      "Orën e rreshtave e vendos serveri, pra fiton pajisja e fundit që sinkronizohet - edhe kur ora e telefonit është e gabuar.",
+      "Fotot e faturave nuk sinkronizohen: për to mbetet arkivi ZIP. Çelësi service_role refuzohet me vetëdije, sepse anashkalon rregullat e sigurisë.",
+      "Gjendjen e sinkronizimit e tregon ikona e resë te shiriti i sipërm - e qetë kur gjithçka është në rregull, e kuqe kur përpjekja e fundit dështoi ose kur ndryshimet presin pa dalë dot.",
+      "Kur aplikacioni përditësohet dhe projektit tuaj i duhet një hap i ri, faqja e thotë vetë me butonin «Përditëso projektin» ose «Riparo kopjen në cloud» - ekzekutimi i sërishëm i skriptit është i sigurt.",
       "Njoftimi i kopjes rezervë matet me sa transaksione janë shtuar që nga kopja e fundit - dy javë pa regjistruar asgjë nuk janë i njëjti rrezik me dy javë punë.",
       "Skedari njihet nga bajtët e parë, jo nga emri, pra një ZIP i riemërtuar importohet prapëseprapë si ZIP.",
     ],
-    shihEdhe: ["sinkronizimi", "importo-csv", "cilesimet"],
-  },
-
-  {
-    id: "sinkronizimi",
-    grupi: "Më shumë",
-    etiketa: "Sinkronizimi",
-    titulli: "Sinkronizimi mes pajisjeve",
-    ikona: "RefreshCw",
-    shtegu: "/sinkronizimi",
-    permbledhje:
-      "Telefoni dhe kompjuteri me të njëjtat të dhëna, pa një server të këtij aplikacioni në mes: " +
-      "sinkronizimi kalon përmes një projekti Supabase që e zotëroni ju. Është plotësisht opsional.",
-    hapat: [
-      {
-        titulli: "Hapi 1 - projekti dhe tabela",
-        teksti:
-          "Krijoni një projekt Supabase (plani falas mjafton) dhe ekzekutoni skriptin SQL që jua jep vetë " +
-          "faqja - një tabelë e vetme dhe rregulli RLS që lejon vetëm llogarinë tuaj. Faqja ju tregon edhe " +
-          "adresën që duhet vendosur te Site URL, me një buton për ta kopjuar.",
-      },
-      {
-        titulli: "Hapi 2 - lidhni pajisjen",
-        teksti:
-          "Vendosni adresën e projektit dhe çelësin publik publishable (ose anon-in e vjetër). Pastaj, në " +
-          "pajisjen e parë, shkruani një email e fjalëkalim dhe shtypni «Krijo llogari» - llogaria krijohet " +
-          "brenda projektit tuaj. Në çdo pajisje tjetër shkruani të njëjtat dhe shtypni «Hyr dhe " +
-          "sinkronizo».",
-      },
-      {
-        titulli: "Automatik apo me buton",
-        teksti:
-          "Me çelësin e ndezur sinkronizimi bëhet vetë: kur hapet aplikacioni, pak sekonda pas çdo ndryshimi, " +
-          "kur ktheheni te skeda dhe kur pajisja kthehet online. Me të fikur, asgjë nuk del nga shfletuesi " +
-          "derisa ta shtypni «Sinkronizo tani».",
-      },
-      {
-        titulli: "Kur dy pajisje nuk përputhen",
-        teksti:
-          "Tri butona e zgjidhin ju: «Bashko me projektin», «Merr gjithçka nga projekti» dhe «Dërgo gjithçka " +
-          "nga kjo pajisje». Dy të fundit mbishkruajnë njërën anë, prandaj secili kërkon të shkruani fjalën e " +
-          "vet përpara.",
-      },
-      {
-        titulli: "Shkëputja",
-        teksti:
-          "«Shkëput këtë pajisje» harron projektin, çelësin dhe sesionin. Të dhënat mbeten këtu dhe kopja te " +
-          "projekti juaj nuk preket - por kjo pajisje nuk merr më asgjë vetvetiu.",
-      },
-    ],
-    keshilla: [
-      "Shkon vetëm ajo që ndryshoi që nga hera e fundit, jo e gjithë baza; fshirjet udhëtojnë si shënime varri, pra një transaksion i fshirë në telefon nuk rikthehet nga kompjuteri.",
-      "Orën e rreshtave e vendos serveri, pra fiton pajisja e fundit që sinkronizohet - edhe kur ora e telefonit është e gabuar.",
-      "Fotot e faturave nuk sinkronizohen: për to mbetet arkivi ZIP. Çelësi service_role refuzohet me vetëdije, sepse anashkalon rregullat e sigurisë.",
-      "Gjendjen e sinkronizimit e tregon ikona e resë te shiriti i sipërm - e qetë kur gjithçka është në rregull, e kuqe kur përpjekja e fundit dështoi ose kur ndryshimet presin pa dalë dot. Prekjeni dhe ju sjell këtu.",
-      "Kur aplikacioni përditësohet dhe projektit tuaj i duhet një hap i ri, faqja e thotë vetë me butonin «Përditëso projektin» ose «Riparo kopjen në cloud» - ekzekutimi i sërishëm i skriptit është i sigurt.",
-    ],
-    shihEdhe: ["te-dhena", "cilesimet", "fillimi"],
+    shihEdhe: ["importo-csv", "cilesimet", "fillimi"],
   },
 
   {
@@ -883,11 +868,13 @@ export function udhezimiI(id) {
 
 /**
  * Udhëzimi që i takon një adrese të aplikacionit, që një faqe të gjejë të vetin pa e ditur ku
- * ndodhet në listë. `/sinkronizimi` dhe `/te-dhena` janë e njëjta faqe me dy gjysma, prandaj secila
- * gjysmë ka udhëzimin e vet dhe të dyja adresat gjejnë atë që u takon.
+ * ndodhet në listë. Një faqe mund të mbajë më shumë se një adresë - `/te-dhena` dhe `/sinkronizimi`
+ * janë dy gjysmat e së njëjtës faqe dhe një zë i vetëm menuje - prandaj `edhe` mban emrat e tjerë,
+ * njësoj si te shiriti i menysë.
  */
 export function udhezimiPerShteg(shtegu) {
-  return UDHEZIMET.find((u) => u.shtegu && u.shtegu === shtegu) || null;
+  if (!shtegu) return null;
+  return UDHEZIMET.find((u) => u.shtegu === shtegu || u.edhe?.includes(shtegu)) || null;
 }
 
 /** Udhëzimet e një grupi, në radhën e listës. */

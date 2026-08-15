@@ -128,8 +128,10 @@ function Udhezuesi() {
                     const eGrupit = rezultatet.filter((u) => u.grupi === grupi);
                     if (eGrupit.length === 0) return null;
                     return (
-                      <div className="fcp-udh-grup" key={grupi}>
-                        <div className="fcp-udh-grup-titull">{grupi}</div>
+                      <div className="fcp-udh-grup" key={grupi || "kryesor"}>
+                        {/* Grupi i parë nuk ka titull: te menyja «Paneli» rri i vetëm sipër
+                            grupeve, dhe kjo listë e ndjek atë. */}
+                        {grupi && <div className="fcp-udh-grup-titull">{grupi}</div>}
                         {eGrupit.map((u) => {
                           const Ikona = ikonaE(u.ikona);
                           const eshteAktiv = u.id === aktiv.id;
@@ -159,7 +161,7 @@ function Udhezuesi() {
                   <IkonaAktive size={22} />
                 </div>
                 <div className="min-w-0">
-                  <div className="fcp-udh-grup-titull mb-1">{aktiv.grupi}</div>
+                  {aktiv.grupi && <div className="fcp-udh-grup-titull mb-1">{aktiv.grupi}</div>}
                   <h2 className="fcp-udh-titull">{aktiv.titulli}</h2>
                 </div>
                 {aktiv.shtegu && (
