@@ -15,6 +15,7 @@ const blank = (lloji = "shpenzim", prindi = "") => ({
   prindi,
   ngjyra: "#10b981",
   ikona: "MoreHorizontal",
+  arkivuar: false,
 });
 
 /** Add/edit one category. A category belongs to exactly one direction (income or expense), which
@@ -80,6 +81,9 @@ function ShtoKategorine({ show, onHide, initial, llojiFillestar = "shpenzim", pr
       prindi,
       ngjyra: category.ngjyra,
       ikona: category.ikona,
+      // Written out with the rest of the record: renaming an archived category from here must not
+      // quietly put it back into every picker.
+      arkivuar: Boolean(category.arkivuar),
     });
 
     onHide();

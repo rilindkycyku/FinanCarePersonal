@@ -39,6 +39,18 @@ ngriti versionin.
   tjera të këtij lloji.
 
 ### Shtuar
+- **Kategoritë që nuk përdoren më arkivohen në vend që të fshihen.** Deri tani zgjedhja ishte të
+  mbaheshin përgjithmonë te çdo formular ose të fshiheshin - dhe fshirja e rishkruan të kaluarën:
+  transaksionet e saj bëhen «Pa kategori» dhe statistikat e çdo muaji të shkuar ndryshojnë. Një
+  kategori e arkivuar mbetet e paprekur; ajo thjesht nuk shfaqet më te zgjedhësit. Një kategori
+  kryesore i merr nënkategoritë me vete, sepse një «Netflix» pa asgjë sipër nuk është ajo që kërkoi
+  kush arkivoi «Abonime».
+  <br />Nuk zhduket dot pa u kërkuar: te faqja **Kategoritë** një çelës i kthen në pamje me gjithë
+  shifrat e tyre, dhe te dritarja e zgjedhjes butoni **«Shfaq edhe N kategori të arkivuara»** i
+  sjell aty ku duhen vërtet - kur po rifutet një transaksion i vjetër. Kategoria që një transaksion
+  e mban tashmë shfaqet gjithmonë te formulari i tij, e arkivuar apo jo: një fushë që e heq vetë
+  përgjigjen do ta ruante rreshtin si «Pa kategori» pa e pyetur njeri. Edhe kujtesa e kategorive
+  (rregullat që plotësojnë vetë fushën nga përshkrimi) nuk propozon më një kategori të arkivuar.
 - **Pajisja e sapolidhur pyet para se të dërgojë asgjë.** Sapo lidhet, ajo vetëm *lexon* nga
   projekti - asnjë transaksion, kategori apo llogari nuk shkon lart - dhe shfaq të dyja anët të
   numëruara **store për store** - sa transaksione, sa kategori, sa llogari ka secila anë - plus sa
@@ -106,12 +118,17 @@ ngriti versionin.
   pajisja sinkronizohet, sepse nuk është e vërtetë dhe një paralajmërim i pasaktë pushon së
   besuari. Thotë atë që mbetet e vërtetë: fotot e faturave nuk sinkronizohen fare, dhe një gabim i
   vetëm te sinkronizimi prek të dyja anët njëherësh.
-- **…dhe u zhvendos nga Paneli te dy faqet ku ka çfarë të bëhet me të** - Sinkronizimi dhe
-  Eksporto / Importo. Janë tri rreshta tekst mbi çdo shifër të ekranit kryesor: lexohen një herë,
-  dhe pastaj rrinë çdo ditë mes përshëndetjes dhe bilancit, në telefon aq sa e shtyjnë bilancin
-  poshtë faqes. Aty ku ndodhet tani nuk mbyllet dot dhe nuk zhduket derisa të merret një kopje -
-  te Sinkronizimi sepse pikërisht aty ngatërrohet sinkronizimi me kopjen rezervë, dhe te
-  Eksporto / Importo sepse butonat që e heqin janë pak centimetra poshtë tij.
+- **…dhe u zhvendos nga Paneli te faqja ku ka çfarë të bëhet me të.** Janë tri rreshta tekst mbi
+  çdo shifër të ekranit kryesor: lexohen një herë, dhe pastaj rrinë çdo ditë mes përshëndetjes dhe
+  bilancit, në telefon aq sa e shtyjnë bilancin poshtë faqes. Aty ku ndodhet tani nuk mbyllet dot
+  dhe nuk zhduket derisa të merret një kopje.
+- **Sinkronizimi dhe Eksporto / Importo janë një faqe e vetme me dy gjysma.** Ishin dy zëra menuje
+  për të njëjtën pyetje - *ku ekziston ky libër përveç këtij shfletuesi* - dhe sinkronizimi është
+  vetë një eksport me një import që ndodhin vetvetiu; kush kërkonte njërën duhej ta dinte
+  paraprakisht se te cila prej të dyjave ishte. Të dyja adresat mbeten të vlefshme
+  (`/sinkronizimi` dhe `/te-dhena`), pra çdo lidhje e shkruar deri sot - shenja te shiriti, njoftimi
+  te ekrani kryesor, `?konfiguro=1` - bie aty ku binte. Ngarkohet vetëm gjysma që shihet: pjesa e
+  sinkronizimit nuk numëron rreshtat e projektit sa kohë që në ekran janë butonat e eksportit.
 
 ## [2.2.0] - 2026-08-13
 

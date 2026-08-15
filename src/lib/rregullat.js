@@ -10,6 +10,7 @@
  * they travel with the JSON backup and never leave the browser. Pure functions: the caller saves
  * the profile.
  */
+import { eshteArkivuar } from "./kategorite";
 
 /** Words that appear on everyone's statement and identify nothing. */
 const FJALE_TE_ZAKONSHME = new Set([
@@ -52,15 +53,16 @@ function perputhja(rregull, fjalet) {
  * Matching is on shared words rather than on the whole string, which is what lets "POS 4415 SPAR
  * PRISHTINE 12.03" and "SPAR MARKET" find each other. A rule only applies to its own direction - a
  * "Spar" learned from an expense must not categorise an incoming payment that happens to mention
- * it - and a rule whose category has since been deleted is ignored rather than suggesting a name
- * that is no longer there. Where two rules match, the one sharing more words wins, then the one
- * confirmed more often.
+ * it - and a rule whose category has since been deleted or archived is ignored rather than filling
+ * the field with something the picker itself would no longer offer. Where two rules match, the one
+ * sharing more words wins, then the one confirmed more often.
  */
 export function sugjeroKategorine(pershkrimi, profile, categories = [], lloji = "shpenzim") {
   const fjalet = new Set(fjaletKryesore(pershkrimi));
   if (fjalet.size === 0) return null;
 
-  const ekziston = (id) => categories.some((c) => c.id === id && c.lloji === lloji);
+  const ekziston = (id) =>
+    categories.some((c) => c.id === id && c.lloji === lloji) && !eshteArkivuar(categories, id);
 
   const gjetur = rregullat(profile)
     .filter((r) => r.lloji === lloji && ekziston(r.kategoriaId))

@@ -366,6 +366,34 @@ body.light-mode .fcp-cat-trigger {
   color: var(--sp-text-muted);
 }
 
+/* Archived: still choosable - an old transaction may belong to exactly this one - but visibly not
+   part of the list in use. */
+.fcp-cat-row.arkivuar {
+  opacity: 0.6;
+  border-style: dashed;
+}
+
+.fcp-cat-arkivat {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  width: 100%;
+  margin-top: 0.15rem;
+  padding: 0.45rem 0.5rem;
+  border: 1px dashed var(--sp-border);
+  border-radius: var(--sp-radius-md);
+  background: transparent;
+  color: var(--sp-text-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.fcp-cat-arkivat:hover {
+  color: var(--sp-emerald);
+  border-color: var(--sp-emerald);
+}
+
 /* ── Confirming a due recurring payment ───────────────────────
    The month's running cost and the plan's paid/left standing are shown before the amount fields,
    so the adjustment is made with the whole picture in view. */

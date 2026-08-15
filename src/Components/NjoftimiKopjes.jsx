@@ -12,13 +12,12 @@ import { backupStatus } from "../lib/finance";
  * This used to live on the home screen, on top of everything else. It is three lines of prose about
  * Supabase, invoice photos and what a cleared cache would cost - true, and worth saying, but read
  * once and then in the way of the figures for every day after that; on a phone it pushed the
- * balance itself below the fold. So it moved to the two pages that are about exactly this: the sync
- * page, where the other half of the answer (the cloud copy) is, and Eksporto / Importo, where the
- * buttons that end the warning are. There it stays put - no dismissing, because the moment it
- * becomes dismissible it becomes a thing that gets dismissed rather than acted on.
+ * balance itself below the fold. So it moved to the page that is about exactly this - the one
+ * holding both Sinkronizimi and Eksporto / Importo - where it stays put: no dismissing, because the
+ * moment it becomes dismissible it becomes a thing that gets dismissed rather than acted on.
  *
- * `veprimi` is off on Eksporto / Importo: a link to the page you are already reading is noise, and
- * the export buttons are right below it.
+ * `veprimi` is off wherever the export buttons are already on screen: a link to the half of the
+ * page being read is noise.
  */
 function NjoftimiKopjes({ veprimi = true, className = "mb-4" }) {
   const { profile, transactions } = useData();

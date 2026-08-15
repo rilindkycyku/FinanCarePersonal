@@ -1,14 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button, Alert, Row, Col, Card, Form, Spinner } from "react-bootstrap";
 import { Download, Upload, DatabaseBackup, ShieldCheck, FileText, Sheet, GitMerge, FileSpreadsheet,
-  HardDrive, Minimize2, FileArchive, Lock, AlertTriangle, Smartphone } from "lucide-react";
+  HardDrive, Minimize2, FileArchive, Lock, AlertTriangle, Smartphone, RefreshCw } from "lucide-react";
 import NavBar from "../Components/NavBar";
 import Footer from "../Components/Footer";
 import PageTitle from "../Components/PageTitle";
 import PageLoading from "../Components/PageLoading";
 import PunaNeVazhdim from "../Components/PunaNeVazhdim";
 import NjoftimiKopjes from "../Components/NjoftimiKopjes";
+import PanelaSinkronizimit from "../Components/Sinkronizimi/PanelaSinkronizimit";
 import Ndaje from "../Components/Ndaje";
 import { useData } from "../Context/DataContext";
 import Zgjedhesi from "../Components/Zgjedhesi";
@@ -53,10 +54,40 @@ const PUNET = {
   },
 };
 
+/**
+ * The two halves of "where does this ledger live besides this browser", and the address each one
+ * keeps.
+ *
+ * They were two menu entries and two pages until it became clear they answer the same question:
+ * syncing is an import and an export that happen by themselves. Merging them into one page kept
+ * both paths - `/sinkronizimi` is where the sync indicator, the home-screen warning and every link
+ * written so far point, and `?konfiguro=1` still has to land on the setup dialog - so the tabs
+ * navigate rather than set state, and the URL goes on saying which half is open.
+ */
+const SEKSIONI = {
+  sinkronizimi: {
+    etiketa: "Sinkronizimi",
+    titulli: "Sinkronizimi",
+    pershkrimi: "Sinkronizoni financat tuaja mes pajisjeve përmes një projekti Supabase që e zotëroni vetë.",
+    shtegu: "/sinkronizimi",
+    ikona: RefreshCw,
+  },
+  kopjet: {
+    etiketa: "Eksporto / Importo",
+    titulli: "Eksporto / Importo",
+    pershkrimi: "Mbani një kopje të të dhënave tuaja - ZIP me foto, JSON, ose Excel - dhe kthejeni kur t'ju duhet.",
+    shtegu: "/te-dhena",
+    ikona: DatabaseBackup,
+  },
+};
+
 function TeDhena() {
   const { profile, accounts, categories, transactions, budgets, goals, recurring, borxhet, planet, faturat, reload,
     simboli, loading, njeLlogari } = useData();
   const dialog = useDialog();
+  const { pathname } = useLocation();
+  const navigate = useNavigate();
+  const seksioni = pathname === SEKSIONI.sinkronizimi.shtegu ? "sinkronizimi" : "kopjet";
 
   /**
    * The result of a button, said in a dialog rather than in a banner at the top of the page.
@@ -347,11 +378,11 @@ function TeDhena() {
     ["Fatura (foto)", faturat.length],
   ];
 
-  if (loading) return <PageLoading title="Eksporto / Importo" />;
+  if (loading) return <PageLoading title={SEKSIONI[seksioni].titulli} />;
 
   return (
     <div className="fcp-page">
-      <PageTitle title="Eksporto / Importo" />
+      <PageTitle title={SEKSIONI[seksioni].titulli} description={SEKSIONI[seksioni].pershkrimi} />
       <NavBar />
 
       <main className="fcp-main">
@@ -368,6 +399,33 @@ function TeDhena() {
         )}
 
         <div className="containerDashboardP">
+          <nav className="fcp-faqe-tabs" aria-label="Të dhënat">
+            {Object.entries(SEKSIONI).map(([celesi, s]) => {
+              const Ikona = s.ikona;
+              return (
+                <button
+                  key={celesi}
+                  type="button"
+                  className={`fcp-faqe-tab${celesi === seksioni ? " active" : ""}`}
+                  aria-current={celesi === seksioni ? "page" : undefined}
+                  onClick={() => navigate(s.shtegu)}
+                >
+                  <Ikona size={16} />
+                  <span>{s.etiketa}</span>
+                </button>
+              );
+            })}
+          </nav>
+
+          {/* One reminder for the whole page: whichever half is open, the thing it is missing is a
+              file kept somewhere else. On the sync half the link is the way over to the buttons
+              that take one; on the other half they are already on screen. */}
+          <NjoftimiKopjes veprimi={seksioni === "sinkronizimi"} />
+
+          {seksioni === "sinkronizimi" && <PanelaSinkronizimit />}
+
+          {seksioni === "kopjet" && (
+            <>
           <h1 className="fcp-section-title">
             <DatabaseBackup size={22} className="text-primary" />
             Eksporto / Importo Të Dhënat
@@ -376,9 +434,6 @@ function TeDhena() {
             Të gjitha të dhënat ruhen vetëm në këtë shfletues. Mbani një arkiv ZIP kur keni foto faturash, një JSON kur
             doni vetëm librin e llogarive, dhe një skedar Excel kur doni t&apos;i analizoni jashtë aplikacionit.
           </p>
-
-          {/* No link on this one: the buttons it would send you to are a few centimetres below. */}
-          <NjoftimiKopjes veprimi={false} />
 
           {afroPlot && (
             <Alert variant="warning" className="d-flex align-items-start gap-2">
@@ -642,6 +697,8 @@ function TeDhena() {
               </div>
             )}
           </Card>
+            </>
+          )}
         </div>
       </main>
 

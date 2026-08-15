@@ -82,6 +82,13 @@ sa shpenzohet, sa mbetet dhe sa po kursesh.
   Statistikat i mbledhin nënkategoritë te kategoria kryesore dhe e hapin ndarjen nën të, prandaj
   pjesët vazhdojnë të mblidhen sa muaji. Kur fshihet një kategori kryesore, nënkategoritë e saj nuk
   fshihen bashkë me të - ngrihen në kategori kryesore, sepse kanë transaksionet e veta.
+  <br />Një kategori që nuk përdoret më - abonimi që mbaroi, dyqani që u mbyll - **arkivohet** në
+  vend që të fshihet: transaksionet e saj mbeten aty ku janë dhe statistikat e muajve të kaluar nuk
+  ndryshojnë, thjesht nuk ju dilet më përpara nëpër formularë. Një kategori kryesore i merr
+  nënkategoritë e veta me vete. Te faqja Kategoritë një çelës i kthen në pamje, dhe te dritarja e
+  zgjedhjes butoni *«Shfaq edhe N kategori të arkivuara»* i sjell kur po rregulloni një transaksion
+  të vjetër - kategoria që mban një transaksion shfaqet gjithmonë te formulari i tij, e arkivuar apo
+  jo, që një ruajtje e radhës të mos e lërë atë «Pa kategori».
 - **Buxhetet** - kufi mujor shpenzimi për kategori, me ecuri, sinjalizim kur teprohet, lëvizje nga
   muaji në muaj dhe mundësi që një buxhet të vlejë vetëm për një muaj të caktuar. Një buxhet mbi një
   kategori kryesore numëron edhe nënkategoritë e saj, pra *200 € për Ushqim & Pije* mat marketin,
@@ -148,7 +155,7 @@ sa shpenzohet, sa mbetet dhe sa po kursesh.
   kthen bazën saktësisht siç ishte në skedar, **bashko** shton vetëm rreshtat që mungojnë e nuk prek
   asgjë ekzistuese - pra një kopje e vjetër e hapur gabimisht nuk fshin punën e muajve të fundit.
   Data e kopjes së fundit mbahet mend dhe kur ajo ka mbetur pas njoftimi rri i ngulitur te kjo faqe
-  dhe te Sinkronizimi - dy faqet ku mund të bëhet diçka për të - i matur me sa
+  - te të dyja gjysmat e saj, Sinkronizimi dhe Eksporto / Importo - i matur me sa
   transaksione janë shtuar që atëherë, sepse dy javë pa regjistruar asgjë nuk janë i njëjti rrezik
   me dy javë punë. ZIP-i është ai që duhet mbajtur kur ka foto: fotot hyjnë ashtu siç janë ruajtur,
   ndërsa në JSON do të duhej t'i koduar në base64 - një vit faturash bëhet një varg 222 MB që një
@@ -441,7 +448,8 @@ src/
               Faturat/ (fusha e fotove, galeria e një transaksioni, shikuesi)
   Pages/      Paneli, Transaksionet, Llogaritë, Borxhet & Kartelat, Kategoritë, Buxhetet,
               Qëllimet, Shpenzimet e Planifikuara, Pagesat e Përsëritura, Statistikat,
-              Cilësimet, Eksporto/Importo, Sinkronizimi, Importo nga CSV
+              Cilësimet, Të dhënat (Sinkronizimi + Eksporto/Importo, një faqe me dy gjysma
+              te /sinkronizimi dhe /te-dhena), Importo nga CSV
 ```
 
 Kalkulimet financiare janë të gjitha funksione të pastra në `src/lib/finance.js` - bilancet,

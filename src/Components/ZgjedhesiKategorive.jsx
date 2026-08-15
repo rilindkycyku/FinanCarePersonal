@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Modal, Form } from "react-bootstrap";
-import { Check, ChevronDown, ChevronLeft, ChevronRight, Search, Slash, X } from "lucide-react";
-import { emriIPlote, kerkoKategorite, pemaKategorive, rrenjaE } from "../lib/kategorite";
+import { Archive, Check, ChevronDown, ChevronLeft, ChevronRight, Search, Slash, X } from "lucide-react";
+import { emriIPlote, kategoriTeHapura, kerkoKategorite, pemaKategorive, rrenjaE } from "../lib/kategorite";
 import { getIcon } from "../lib/icons";
 import "./ModalForms.css";
 
@@ -56,15 +56,28 @@ function ZgjedhesiKategorive({
   // The parent whose subcategories are currently unlocked; null is the top-level list.
   const [hapja, setHapja] = useState(null);
   const [kerkimi, setKerkimi] = useState("");
+  // Archived categories are out of the way, not gone: this dialog is also where somebody goes to
+  // re-file an old transaction, and that answer may well be a category nobody uses any more.
+  const [meArkivat, setMeArkivat] = useState(false);
   const kerkimiRef = useRef(null);
 
-  const pema = useMemo(() => pemaKategorive(categories, lloji), [categories, lloji]);
+  // The current choice is always in the list, archived or not - a form that quietly dropped the
+  // category it was opened on would file the record as "Pa kategori" on the next save.
+  const hapura = useMemo(() => kategoriTeHapura(categories, value), [categories, value]);
+  const perZgjedhje = useMemo(() => (meArkivat ? categories || [] : hapura), [categories, hapura, meArkivat]);
+  // How many rows the switch would add here, in this picker's own direction.
+  const teArkivuara = useMemo(() => {
+    const ne = new Set(hapura.map((c) => c.id));
+    return (categories || []).filter((c) => c?.id && !ne.has(c.id) && (!lloji || c.lloji === lloji)).length;
+  }, [categories, hapura, lloji]);
+
+  const pema = useMemo(() => pemaKategorive(perZgjedhje, lloji), [perZgjedhje, lloji]);
   const zgjedhur = useMemo(
     () => (categories || []).find((c) => c && c.id === value) || null,
     [categories, value]
   );
   const emri = zgjedhur ? emriIPlote(categories, zgjedhur.id, zgjedhur.emri) : "";
-  const gjetjet = useMemo(() => kerkoKategorite(categories, lloji, kerkimi), [categories, lloji, kerkimi]);
+  const gjetjet = useMemo(() => kerkoKategorite(perZgjedhje, lloji, kerkimi), [perZgjedhje, lloji, kerkimi]);
 
   // A category chosen earlier sits inside a group, and the dialog is most useful reopened where
   // that choice lives - with its siblings in view, one tap from a correction.
@@ -73,6 +86,9 @@ function ZgjedhesiKategorive({
     const rrenja = value ? pema.find((r) => r.id === rrenjaE(categories, value)) : null;
     setHapja(rrenja?.femijet.length ? rrenja : null);
     setKerkimi("");
+    // Reopening starts from the short list again: the archived ones are shown on request, not
+    // because they were asked for once.
+    setMeArkivat(false);
     setHapur(true);
   };
 
@@ -99,12 +115,12 @@ function ZgjedhesiKategorive({
 
   const rreshti = (kategoria, { plote } = {}) => {
     const zgjedhurTani = kategoria.id === value;
-    const nen = nenshkrimi(kategoria, plote);
+    const nen = nenshkrimi(kategoria, kategoria.arkivuar ? "Arkivuar" : null, plote);
     return (
       <button
         key={kategoria.id}
         type="button"
-        className={`fcp-cat-row${zgjedhurTani ? " active" : ""}`}
+        className={`fcp-cat-row${zgjedhurTani ? " active" : ""}${kategoria.arkivuar ? " arkivuar" : ""}`}
         onClick={() => zgjidh(kategoria.id)}
         aria-current={zgjedhurTani ? "true" : undefined}
       >
@@ -178,18 +194,33 @@ function ZgjedhesiKategorive({
             <button
               key={r.id}
               type="button"
-              className={`fcp-cat-row${brenda ? " active" : ""}`}
+              className={`fcp-cat-row${brenda ? " active" : ""}${r.arkivuar ? " arkivuar" : ""}`}
               onClick={() => setHapja(r)}
             >
               <Shenja kategoria={r} />
               <span className="fcp-cat-row-text">
                 <span className="fcp-cat-row-name">{r.emri}</span>
-                <span className="fcp-cat-row-sub">{nenshkrimi(r, `${r.femijet.length} nënkategori`)}</span>
+                <span className="fcp-cat-row-sub">
+                  {nenshkrimi(r, r.arkivuar ? "Arkivuar" : null, `${r.femijet.length} nënkategori`)}
+                </span>
               </span>
               <ChevronRight size={16} className="fcp-cat-chevron" />
             </button>
           );
         })}
+
+        {/* The way back to a category that was put away - for the old transaction being re-filed,
+            where the right answer is a category nobody uses any more. */}
+        {teArkivuara > 0 && (
+          <button type="button" className="fcp-cat-arkivat" onClick={() => setMeArkivat((prev) => !prev)}>
+            <Archive size={14} />
+            <span>
+              {meArkivat
+                ? "Fshih kategoritë e arkivuara"
+                : `Shfaq edhe ${teArkivuara} ${teArkivuara === 1 ? "kategori të arkivuar" : "kategori të arkivuara"}`}
+            </span>
+          </button>
+        )}
       </>
     );
   };
