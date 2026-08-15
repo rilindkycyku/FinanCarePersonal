@@ -106,6 +106,12 @@ ngriti versionin.
   pajisja sinkronizohet, sepse nuk është e vërtetë dhe një paralajmërim i pasaktë pushon së
   besuari. Thotë atë që mbetet e vërtetë: fotot e faturave nuk sinkronizohen fare, dhe një gabim i
   vetëm te sinkronizimi prek të dyja anët njëherësh.
+- **…dhe u zhvendos nga Paneli te dy faqet ku ka çfarë të bëhet me të** - Sinkronizimi dhe
+  Eksporto / Importo. Janë tri rreshta tekst mbi çdo shifër të ekranit kryesor: lexohen një herë,
+  dhe pastaj rrinë çdo ditë mes përshëndetjes dhe bilancit, në telefon aq sa e shtyjnë bilancin
+  poshtë faqes. Aty ku ndodhet tani nuk mbyllet dot dhe nuk zhduket derisa të merret një kopje -
+  te Sinkronizimi sepse pikërisht aty ngatërrohet sinkronizimi me kopjen rezervë, dhe te
+  Eksporto / Importo sepse butonat që e heqin janë pak centimetra poshtë tij.
 
 ## [2.2.0] - 2026-08-13
 

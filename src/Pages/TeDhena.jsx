@@ -8,6 +8,7 @@ import Footer from "../Components/Footer";
 import PageTitle from "../Components/PageTitle";
 import PageLoading from "../Components/PageLoading";
 import PunaNeVazhdim from "../Components/PunaNeVazhdim";
+import NjoftimiKopjes from "../Components/NjoftimiKopjes";
 import Ndaje from "../Components/Ndaje";
 import { useData } from "../Context/DataContext";
 import Zgjedhesi from "../Components/Zgjedhesi";
@@ -375,6 +376,9 @@ function TeDhena() {
             Të gjitha të dhënat ruhen vetëm në këtë shfletues. Mbani një arkiv ZIP kur keni foto faturash, një JSON kur
             doni vetëm librin e llogarive, dhe një skedar Excel kur doni t&apos;i analizoni jashtë aplikacionit.
           </p>
+
+          {/* No link on this one: the buttons it would send you to are a few centimetres below. */}
+          <NjoftimiKopjes veprimi={false} />
 
           {afroPlot && (
             <Alert variant="warning" className="d-flex align-items-start gap-2">

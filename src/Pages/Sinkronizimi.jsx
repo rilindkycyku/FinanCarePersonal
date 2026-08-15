@@ -14,6 +14,7 @@ import FushaSekrete from "../Components/Sinkronizimi/FushaSekrete";
 import Footer from "../Components/Footer";
 import PageTitle from "../Components/PageTitle";
 import PageLoading from "../Components/PageLoading";
+import NjoftimiKopjes from "../Components/NjoftimiKopjes";
 import { useData } from "../Context/DataContext";
 import { useDialog } from "../Context/DialogContext";
 import { useSync } from "../Context/SyncContext";
@@ -609,6 +610,10 @@ function Sinkronizimi() {
             të dhënat udhëtojnë mes pajisjeve tuaja përmes <em>bazës suaj</em>. Askush tjetër, as unë
             as ndonjë shërbim i FinanCarePersonal, nuk i sheh dhe nuk i ruan ato.
           </p>
+
+          {/* Syncing is not a backup, and this is the page where that confusion lives: two copies
+              of the same ledger, both of which a bad upload can reach, and no file anywhere. */}
+          <NjoftimiKopjes />
 
           <ModaliKonfigurimit show={sqlHapur} onHide={() => setSqlHapur(false)} url={konfigurimi.url || normalizoUrl(form.url)}
             nga={skema?.versioni ?? 0}

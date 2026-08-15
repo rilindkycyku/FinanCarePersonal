@@ -147,7 +147,8 @@ sa shpenzohet, sa mbetet dhe sa po kursesh.
   të parë të skedarit e jo sipas emrit, dhe të dyja sjelljet vlejnë për të dyja: **zëvendëso** e
   kthen bazën saktësisht siç ishte në skedar, **bashko** shton vetëm rreshtat që mungojnë e nuk prek
   asgjë ekzistuese - pra një kopje e vjetër e hapur gabimisht nuk fshin punën e muajve të fundit.
-  Data e kopjes së fundit mbahet mend dhe Paneli e kujton kur ajo ka mbetur pas - i matur me sa
+  Data e kopjes së fundit mbahet mend dhe kur ajo ka mbetur pas njoftimi rri i ngulitur te kjo faqe
+  dhe te Sinkronizimi - dy faqet ku mund të bëhet diçka për të - i matur me sa
   transaksione janë shtuar që atëherë, sepse dy javë pa regjistruar asgjë nuk janë i njëjti rrezik
   me dy javë punë. ZIP-i është ai që duhet mbajtur kur ka foto: fotot hyjnë ashtu siç janë ruajtur,
   ndërsa në JSON do të duhej t'i koduar në base64 - një vit faturash bëhet një varg 222 MB që një
