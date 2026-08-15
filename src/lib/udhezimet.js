@@ -32,9 +32,9 @@ export const UDHEZIMET = [
     ikona: "Rocket",
     shtegu: null,
     permbledhje:
-      "Gjashtë hapa nga një aplikacion bosh te një regjistër që u përgjigjet pyetjeve tuaja. Asgjë nuk kërkon " +
-      "llogari dhe asgjë nuk dërgohet askund - të dhënat rrinë në këtë shfletues derisa ta lidhni vetë " +
-      "sinkronizimin ose të merrni një kopje.",
+      "Gjashtë hapa nga një aplikacion bosh te një regjistër që u përgjigjet pyetjeve tuaja. Nuk ka llogari " +
+      "për të hapur te ne dhe asgjë nuk del nga shfletuesi - derisa ta lidhni vetë sinkronizimin me një " +
+      "projekt Supabase tuajin, ose të merrni një kopje.",
     hapat: [
       {
         titulli: "Caktoni monedhën dhe emrin",
@@ -75,9 +75,11 @@ export const UDHEZIMET = [
       {
         titulli: "Mbani një kopje",
         teksti:
-          "Meqë nuk ka server, kopja jeni ju. Te faqja Eksporto / Importo merrni një arkiv ZIP (me fotot e " +
-          "faturave) ose një JSON, dhe kërkoni «ruajtje të qëndrueshme» që shfletuesi të mos i fshijë vetë " +
-          "të dhënat. Nëse doni të njëjtat të dhëna në telefon e në kompjuter, lidhni sinkronizimin.",
+          "Ky aplikacion nuk ka server të vetin, prandaj kopja jeni ju. Te faqja Eksporto / Importo merrni " +
+          "një arkiv ZIP (me fotot e faturave) ose një JSON, dhe kërkoni «ruajtje të qëndrueshme» që " +
+          "shfletuesi të mos i fshijë vetë të dhënat. Nëse doni të njëjtat të dhëna në telefon e në " +
+          "kompjuter - dhe një kopje që rri online - lidhni sinkronizimin me një projekt Supabase tuajin. " +
+          "Fotot e faturave nuk shkojnë atje, pra arkivi ZIP mbetet i nevojshëm edhe atëherë.",
       },
     ],
     keshilla: [
@@ -605,8 +607,10 @@ export const UDHEZIMET = [
         titulli: "Zona e Rrezikut",
         teksti:
           "«Pastro të gjitha të dhënat» fshin çdo transaksion, llogari, kategori, buxhet, qëllim, pagesë, " +
-          "borxh dhe vetë profilin nga ky shfletues. Kërkohen dy konfirmime dhe shkrimi i fjalës FSHI. Merrni " +
-          "një kopje para se ta prekni - nuk ka server dhe nuk zhbëhet.",
+          "borxh dhe vetë profilin nga ky shfletues. Kërkohen dy konfirmime dhe shkrimi i fjalës FSHI, dhe " +
+          "veprimi nuk zhbëhet - merrni një kopje para se ta prekni. Nëse pajisja sinkronizohet, rreshtat te " +
+          "projekti juaj Supabase nuk fshihen, por kjo pajisje shkëputet; kur ta rilidhni, zgjidhni «Merr " +
+          "nga projekti» ose «Bashko» - jo «Dërgo», sepse ajo do t'i çonte listat bosh mbi të dhënat tuaja.",
       },
     ],
     keshilla: [
@@ -624,8 +628,9 @@ export const UDHEZIMET = [
     ikona: "DatabaseBackup",
     shtegu: "/te-dhena",
     permbledhje:
-      "Meqë të dhënat rrinë vetëm në këtë shfletues, kopja jeni ju. Faqja jep tri formate për të dalë, dy " +
-      "sjellje për të hyrë, një pasqyrë PDF dhe shifrat e hapësirës që po përdorni.",
+      "Të dhënat rrinë në këtë shfletues - dhe, nëse e lidhni, te projekti juaj Supabase - prandaj kopja " +
+      "mbetet punë e juaja. Faqja jep tri formate për të dalë, dy sjellje për të hyrë, një pasqyrë PDF dhe " +
+      "shifrat e hapësirës që po përdorni.",
     hapat: [
       {
         titulli: "Kopje e plotë (ZIP)",
