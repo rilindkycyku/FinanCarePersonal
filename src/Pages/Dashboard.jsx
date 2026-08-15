@@ -4,12 +4,13 @@ import { Container, Row, Col, Button, Alert } from "react-bootstrap";
 import {
   LayoutDashboard, Wallet, TrendingUp, TrendingDown, PiggyBank, Percent, PlusCircle,
   ArrowRightLeft, Tags, Target, Repeat, BarChart3, Settings, DatabaseBackup, CalendarClock,
-  Receipt, ClipboardList, LineChart, TriangleAlert, FileSpreadsheet, Paperclip,
+  Receipt, ClipboardList, LineChart, TriangleAlert, FileSpreadsheet, Paperclip, BookOpen,
 } from "lucide-react";
 import NavBar from "../Components/NavBar";
 import PageTitle from "../Components/PageTitle";
 import PageLoading from "../Components/PageLoading";
 import Footer from "../Components/Footer";
+import ButoniUdhezimit from "../Components/ButoniUdhezimit";
 import ShtoTransaksionin from "../Components/ShtoTransaksionin";
 import ButonPasqyra from "../Components/ButonPasqyra";
 import ShpenzimiDitor from "../Components/ShpenzimiDitor";
@@ -43,6 +44,8 @@ const QUICK_ACTIONS = [
   { to: "/cilesimet", label: "Cilësimet", icon: Settings },
   { to: "/te-dhena", label: "Të dhënat & Sinkronizimi", icon: DatabaseBackup },
   { to: "/importo-csv", label: "Importo nga CSV", icon: FileSpreadsheet },
+  // Fundi i rrjetës, sepse kjo është faqja ku dikush që sapo e hapi aplikacionin kërkon ku të nisë.
+  { to: "/udhezuesi", label: "Udhëzuesi", icon: BookOpen },
 ];
 
 function Dashboard() {
@@ -118,7 +121,8 @@ function Dashboard() {
             <Row className="align-items-center justify-content-between g-3">
               <Col xs="auto">
                 <h1 className="fw-bold mb-2">Mirësevini, {pershendetja} 👋</h1>
-                <p className="opacity-75 mb-0">{dataAktuale}.</p>
+                <p className="opacity-75 mb-2">{dataAktuale}.</p>
+                <ButoniUdhezimit />
               </Col>
               <Col xs="auto" className="d-flex flex-wrap gap-2">
                 <button type="button" className="hero-cta" onClick={() => setShowTx(true)}>

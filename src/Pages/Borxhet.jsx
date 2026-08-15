@@ -9,6 +9,7 @@ import {
 import NavBar from "../Components/NavBar";
 import Footer from "../Components/Footer";
 import PageTitle from "../Components/PageTitle";
+import ButoniUdhezimit from "../Components/ButoniUdhezimit";
 import PageLoading from "../Components/PageLoading";
 import ShtoBorxhin from "../Components/ShtoBorxhin";
 import ShtoPagesenBorxhit from "../Components/ShtoPagesenBorxhit";
@@ -320,6 +321,7 @@ function Borxhet() {
             <div>
               <h1>Borxhet & Kartelat</h1>
               <p>Kartelat e kreditit, kreditë dhe huatë - të mbajtura si shënim, jashtë bilancit tuaj.</p>
+              <ButoniUdhezimit className="mt-2" />
             </div>
             <Button className="btn-primary" onClick={() => openNew(null)}>
               <Plus size={16} className="me-1" /> Shto Borxh

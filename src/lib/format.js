@@ -45,6 +45,19 @@ export function formatPercent(value, decimals = 0) {
 }
 
 /**
+ * Diacritics folded away and case dropped, so a search box answers to what is typed rather than to
+ * what is spelled: "keste" finds "Këste të Kartelës", "pergjithesi" finds "përgjithësi". Albanian
+ * names carry ë and ç on nearly every other word and nobody reaches for them on a phone keyboard.
+ */
+export function paTheks(teksti) {
+  return String(teksti ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
+/**
  * Text made safe to put inside a table cell's markup - see `markup()` below, which is where the
  * app's own HTML cells are built and the only place this is normally needed.
  */

@@ -6,6 +6,7 @@ import NavBar from "../Components/NavBar";
 import Footer from "../Components/Footer";
 import PageTitle from "../Components/PageTitle";
 import PageLoading from "../Components/PageLoading";
+import ButoniUdhezimit from "../Components/ButoniUdhezimit";
 import CilesimiNjeLlogari from "../Components/CilesimiNjeLlogari";
 import { useData } from "../Context/DataContext";
 import Zgjedhesi from "../Components/Zgjedhesi";
@@ -211,9 +212,12 @@ function Cilesimet() {
             <Settings size={22} className="text-primary" />
             Cilësimet
           </h1>
-          <p className="text-muted mb-4">
+          <p className="text-muted mb-2">
             Emri, monedha dhe objektivat tuaja. Monedha përdoret në çdo faqe, në eksportet Excel dhe në kopjet JSON.
           </p>
+          <div className="mb-4">
+            <ButoniUdhezimit />
+          </div>
 
           <Card className="profile-card border-0 p-4 mb-4">
             <Form onSubmit={handleSave}>

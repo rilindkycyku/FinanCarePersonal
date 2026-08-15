@@ -5,6 +5,7 @@ import { FileSpreadsheet, Upload, Check, CircleAlert, Wand2, ArrowRight } from "
 import NavBar from "../Components/NavBar";
 import Footer from "../Components/Footer";
 import PageTitle from "../Components/PageTitle";
+import ButoniUdhezimit from "../Components/ButoniUdhezimit";
 import PageLoading from "../Components/PageLoading";
 import PunaNeVazhdim from "../Components/PunaNeVazhdim";
 import ZgjedhesiKategorive from "../Components/ZgjedhesiKategorive";
@@ -238,6 +239,7 @@ function ImportoCsv() {
                 Shkarkoni ekstraktin e bankës ose të kartelës si CSV dhe lexojeni këtu. Skedari nuk dërgohet askund -
                 lexohet brenda shfletuesit, si çdo gjë tjetër në këtë aplikacion.
               </p>
+              <ButoniUdhezimit className="mt-2" />
             </div>
             <Button className="btn-primary" onClick={() => fileRef.current?.click()}>
               <Upload size={16} className="me-1" /> {file ? "Zgjidh skedar tjetër" : "Zgjidh skedarin"}

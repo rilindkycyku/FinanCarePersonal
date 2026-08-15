@@ -20,6 +20,8 @@
  * Pure functions only; the caller saves the record.
  */
 
+import { paTheks } from "./format";
+
 /** Written between a parent and its child wherever the full name is spelled out. */
 export const NDARESI = " › ";
 
@@ -180,18 +182,6 @@ export function pemaKategorive(categories, lloji) {
     .sort(sipasEmrit)
     .map((r) => ({ ...r, femijet: (femijet.get(r.id) || []).sort(sipasEmrit) }));
 }
-
-/**
- * Diacritics folded away and case dropped, so a search box answers to what is typed rather than to
- * what is spelled: "keste" finds "Këste të Kartelës", "pergjithesi" finds "përgjithësi". Albanian
- * names carry ë and ç on nearly every other word and nobody reaches for them on a phone keyboard.
- */
-const paTheks = (teksti) =>
-  String(teksti ?? "")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .trim();
 
 /**
  * A flat search over one direction's tree, for the picker's search box: every category whose own

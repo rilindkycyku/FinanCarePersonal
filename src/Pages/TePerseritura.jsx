@@ -7,6 +7,7 @@ import {
 import NavBar from "../Components/NavBar";
 import Footer from "../Components/Footer";
 import PageTitle from "../Components/PageTitle";
+import ButoniUdhezimit from "../Components/ButoniUdhezimit";
 import PageLoading from "../Components/PageLoading";
 import ShtoTePerseritur from "../Components/ShtoTePerseritur";
 import KonfirmoPagesen from "../Components/KonfirmoPagesen";
@@ -122,6 +123,7 @@ function TePerseritura() {
             <div>
               <h1>Pagesat e Përsëritura</h1>
               <p>Qira, abonime, rroga - planifikoni çka përsëritet dhe konfirmojeni kur vjen data.</p>
+              <ButoniUdhezimit className="mt-2" />
             </div>
             <Button className="btn-primary" onClick={openNew}>
               <Plus size={16} className="me-1" /> Shto Pagesë

@@ -195,6 +195,13 @@ sa shpenzohet, sa mbetet dhe sa po kursesh.
   arkivi ZIP. Çelësi *service_role* refuzohet me vetëdije: ai anashkalon rregullat e sigurisë dhe
   nuk ka pse të ndodhet kurrë në një shfletues. Hapat, forma e tabelës dhe kufizimet janë te
   seksioni [Sinkronizimi mes pajisjeve](#sinkronizimi-mes-pajisjeve).
+- **Udhëzuesi** - një faqe me nga një skedë për secilën faqe të aplikacionit: çfarë bën, hapat me
+  radhë dhe ato pak gjëra që ia vlen të dihen para se të preket diçka (një plan nuk është buxhet;
+  një borxh nuk e prek bilancin; asgjë nuk regjistrohet derisa të shtypet butoni i fundit te
+  importimi). Kutia e kërkimit i lexon edhe hapat, jo vetëm titujt, prandaj *dublikat* ose *kursi*
+  gjejnë faqen edhe kur nuk dihet se cila është. Çdo skedë ka adresën e vet - `/udhezuesi/buxhetet`
+  - dhe te koka e çdo faqeje ndodhet lidhja **«Si përdoret»**, e cila hap pikërisht udhëzimin e asaj
+  faqeje: pyetja lind aty ku dikush ka ngecur, jo te një zë menuje larg saj.
 - **Tema e errët / e bardhë**, dizajn responsiv për telefon, dhe monedhë e konfigurueshme.
 
 ## Konfigurimi
@@ -444,14 +451,15 @@ src/
               rregullat.js (kujtesa e kategorive), images.js (përpunimi i fotove të faturave),
               zip.js (arkivi i kopjes së plotë), calc.js (llogaritësi i fushave të vlerës),
               supabase.js (klienti i vogël i projektit tuaj), sinkronizimi.js (rregullat e bashkimit),
-              format.js, options.js, exportExcel.js
+              format.js, options.js, exportExcel.js,
+              udhezimet.js (teksti i Udhëzuesit: një udhëzim për çdo faqe, i kërkueshëm)
   Components/ NavBar, Footer, Tabela (kërkim/renditje/eksport), modalet e shtimit, Ui.jsx,
               ZgjedhesiKategorive (zgjedhësi me dritare i çdo fushe kategorie),
               Faturat/ (fusha e fotove, galeria e një transaksioni, shikuesi)
   Pages/      Paneli, Transaksionet, Llogaritë, Borxhet & Kartelat, Kategoritë, Buxhetet,
               Qëllimet, Shpenzimet e Planifikuara, Pagesat e Përsëritura, Statistikat,
               Cilësimet, Të dhënat (Sinkronizimi + Eksporto/Importo, një faqe me dy gjysma
-              te /sinkronizimi dhe /te-dhena), Importo nga CSV
+              te /sinkronizimi dhe /te-dhena), Importo nga CSV, Udhëzuesi
 ```
 
 Kalkulimet financiare janë të gjitha funksione të pastra në `src/lib/finance.js` - bilancet,

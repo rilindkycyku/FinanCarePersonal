@@ -22,6 +22,9 @@ const Cilesimet = lazy(() => import("./Pages/Cilesimet"));
 // `?konfiguro=1` all point at it.
 const TeDhena = lazy(() => import("./Pages/TeDhena"));
 const ImportoCsv = lazy(() => import("./Pages/ImportoCsv"));
+// Udhëzimet janë tekst i pandryshueshëm dhe i gjatë - pjesa e vetme e aplikacionit që shumica e
+// hap një herë - prandaj rri në një copë të vetën dhe nuk shkarkohet derisa të kërkohet.
+const Udhezuesi = lazy(() => import("./Pages/Udhezuesi"));
 
 function App() {
   return (
@@ -41,6 +44,10 @@ function App() {
         <Route path="/te-dhena" element={<TeDhena />} />
         <Route path="/sinkronizimi" element={<TeDhena />} />
         <Route path="/importo-csv" element={<ImportoCsv />} />
+        {/* Skeda e hapur qëndron te adresa, që një udhëzim të jetë i dërgueshëm dhe që butoni
+            «Si përdoret» te çdo faqe të hapë pikërisht të vetin. */}
+        <Route path="/udhezuesi" element={<Udhezuesi />} />
+        <Route path="/udhezuesi/:faqja" element={<Udhezuesi />} />
       </Routes>
     </Suspense>
   );
