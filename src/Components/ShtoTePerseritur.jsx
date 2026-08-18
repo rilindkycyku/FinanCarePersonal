@@ -169,7 +169,9 @@ function ShtoTePerseritur({ show, onHide, initial }) {
   return (
     <Modal show={show} onHide={onHide} centered size="lg" className="sp-modal">
       <Modal.Header closeButton>
-        <Modal.Title>{initial ? "Ndrysho Pagesën e Përsëritur" : "Shto Pagesë të Përsëritur"}</Modal.Title>
+        {/* `initial` without an id is a prefilled *new* schedule - what the detected-subscription
+            card hands over - so the title follows the id rather than the presence of values. */}
+        <Modal.Title>{initial?.id ? "Ndrysho Pagesën e Përsëritur" : "Shto Pagesë të Përsëritur"}</Modal.Title>
       </Modal.Header>
 
       <Form onSubmit={handleSave}>

@@ -507,6 +507,17 @@ export const UDHEZIMET = [
           "«Qera - Shtator 2026» - pra dy rreshta me të njëjtin emër nuk ngatërrohen më.",
       },
       {
+        titulli: "«Duket se përsëriten»",
+        teksti:
+          "Sipër listës shfaqen pagesat që historiku juaj i tregon si të përsëritura por që nuk janë " +
+          "shtuar kurrë - abonimi që paguhet çdo muaj me të njëjtën shifër, qiraja, palestra. Njihen " +
+          "nga fjalët e përshkrimit (njësoj si kujtesa e kategorive, pra «POS 4415 NETFLIX.COM 12.03» " +
+          "dhe «NETFLIX COM» janë e njëjta gjë), nga vlera e përafërt dhe nga ritmi që përsëritet - " +
+          "kafja e përditshme nuk hyn, sepse hapat e saj nuk përputhen. Asgjë nuk krijohet vetë: " +
+          "«Shto» hap formularin e zakonshëm të parambushur, kurse «×» e heq sugjerimin përgjithmonë " +
+          "(vendimi ruhet te profili, pra vlen edhe te pajisjet e tjera).",
+      },
+      {
         titulli: "Konfirmoni kur arrin data",
         teksti:
           "Pagesat që kanë arritur datën shënohen sipër faqes dhe te Paneli. Konfirmojini një nga një me " +

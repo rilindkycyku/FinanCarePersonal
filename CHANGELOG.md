@@ -9,6 +9,22 @@ e fundit kur rregullohet diçka, dhe e para vetëm kur ndryshon vetë forma e pr
 herë, te `2.0.0`, kur të dhënat mësuan të dalin nga shfletuesi. Datat janë ato të commit-it që e
 ngriti versionin.
 
+## [2.9.0] - 2026-08-18
+
+### Shtuar
+- **«Duket se përsëriten» - abonimet gjenden vetë te historiku.** Netflix-i, palestra, qiraja dhe
+  rroga janë tashmë në regjistër dymbëdhjetë herë në vit, por shpesh nuk janë kurrë te Pagesat e
+  Përsëritura - pra parashikimi nuk i pret dhe asgjë nuk kujton kur afrohen. Tani faqja e tyre i
+  nxjerr vetë sipër listës: njihen nga fjalët e përshkrimit (po ajo përputhje fjalësh që mëson
+  kategoritë, prandaj «POS 4415 NETFLIX.COM 12.03» dhe «NETFLIX COM» janë e njëjta gjë), nga vlera
+  e përafërt - një rritje çmimi nuk e prish - dhe nga ritmi që përsëritet.
+  <br />Zakoni nuk ngatërrohet me abonimin: sa më i shpejtë ritmi, aq më shumë prova kërkohen - tre
+  pagesa një muaj larg njëra-tjetrës janë abonim, tre pagesa një javë larg janë drekat e javës. Një
+  pagesë e vonuar falet; dy ritme të ndryshme në të njëjtin varg nuk janë orar fare.
+  <br />Asgjë nuk krijohet pa u pranuar: «Shto» hap formularin e zakonshëm të parambushur me emrin,
+  vlerën, ritmin, kategorinë dhe datën e radhës, ku çdo hamendje korrigjohet. «×» e heq sugjerimin,
+  dhe ai vendim ruhet te profili - pra një «jo» i dhënë te telefoni nuk ripyetet te laptopi.
+
 ## [2.8.0] - 2026-08-18
 
 ### Shtuar
