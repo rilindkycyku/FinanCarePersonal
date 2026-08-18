@@ -600,6 +600,53 @@ export const UDHEZIMET = [
   },
 
   {
+    id: "viti",
+    grupi: "Më shumë",
+    etiketa: "Viti në një faqe",
+    titulli: "Viti në një faqe",
+    ikona: "CalendarRange",
+    shtegu: "/viti",
+    permbledhje:
+      "Një vit i tërë krahasuar me atë përpara: sa hyri, sa doli, ku shkoi dhe çfarë ndryshoi - " +
+      "pyetja që një filtër periudhe nuk e përgjigj dot, sepse nuk ka me çfarë ta krahasojë.",
+    hapat: [
+      {
+        titulli: "Zgjidhni vitin",
+        teksti:
+          "Lista përmban vetëm vitet që kanë transaksione, dhe hapet te më i freskëti - pra më 3 janar " +
+          "hapet viti që sapo mbaroi, i cili është edhe ai që doni të shihni atë ditë.",
+      },
+      {
+        titulli: "Katër shifrat lart",
+        teksti:
+          "Hyrjet, shpenzimet, sa u kursye dhe bilanci në fund të vitit. Nën secilën shkruhet sa ndryshoi " +
+          "ndaj vitit të kaluar - dhe kur viti është ende në vazhdim, krahasimi bëhet me të njëjtët muaj " +
+          "të vitit të kaluar (shënohet «jan-gus»), sepse tetë muaj kundrejt dymbëdhjetëve nuk thonë " +
+          "asgjë për financat, vetëm për kalendarin.",
+      },
+      {
+        titulli: "Muaj pas muaji",
+        teksti:
+          "Dymbëdhjetë muajt njëri pas tjetrit, hyrjet përballë shpenzimeve. Muajt bosh mbeten bosh - " +
+          "boshllëku është pjesë e figurës.",
+      },
+      {
+        titulli: "Momentet dhe kategoritë",
+        teksti:
+          "Muaji më i shtrenjtë, muaji më i kursyer, dita ku doli më shumë, mesatarja mujore, dhe dy " +
+          "kategoritë që u rritën e u ulën më shumë - te secila shifra e madhe është ndryshimi, kurse " +
+          "totali i vitit rri poshtë. Më poshtë vjen lista e plotë e kategorive me pjesën e tyre të " +
+          "vitit dhe ndryshimin ndaj vitit të kaluar.",
+      },
+    ],
+    keshilla: [
+      "Statistikat përgjigjen «si duket kjo periudhë»; kjo faqe përgjigjet «a ishte ky vit më i mirë se i kaluari».",
+      "Për listën e plotë të lëvizjeve të vitit, pasqyra PDF me periudhën «Viti» e nxjerr rresht për rresht.",
+    ],
+    shihEdhe: ["statistikat", "buxhetet", "te-dhena"],
+  },
+
+  {
     id: "cilesimet",
     grupi: "Më shumë",
     etiketa: "Cilësimet",

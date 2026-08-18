@@ -9,6 +9,23 @@ e fundit kur rregullohet diçka, dhe e para vetëm kur ndryshon vetë forma e pr
 herë, te `2.0.0`, kur të dhënat mësuan të dalin nga shfletuesi. Datat janë ato të commit-it që e
 ngriti versionin.
 
+## [2.10.0] - 2026-08-18
+
+### Shtuar
+- **«Viti në një faqe» - një vit i tërë, krahasuar me atë përpara.** Statistikat e tregojnë çdo
+  periudhë, vitin përfshirë, por një zgjedhës periudhe nuk ka me çfarë ta krahasojë - dhe pyetja e
+  janarit është pikërisht *a ishte ky vit më i mirë se i kaluari, dhe ku ndryshoi*. Faqja e re
+  përgjigjet: katër shifrat e vitit me ndryshimin ndaj vitit të kaluar, dymbëdhjetë muajt njëri pas
+  tjetrit, kategoritë me pjesën e tyre dhe sa u rritën a u ulën, dhe momentet - muaji më i
+  shtrenjtë, muaji më i kursyer, dita ku doli më shumë, dhe dy kategoritë që ndryshuan më shumë.
+  <br />Kur viti është ende në vazhdim, krahasimi bëhet **me të njëjtët muaj** të vitit të kaluar
+  dhe faqja e shkruan ("+15% ndaj 2025 (jan-gus)"): tetë muaj rroge kundrejt dymbëdhjetëve do të
+  lexoheshin si rënie e të ardhurave, e cila nuk është e dhënë për financat e askujt, vetëm për
+  kalendarin. Shifrat vetë mbeten të vitit të plotë.
+  <br />Asnjë llogaritje e re: muajt vijnë nga `cashflow`, kategoritë nga `totalsByCategory`,
+  bilancet nga `totalBalance` - po ato funksione që përdorin Paneli dhe pasqyra, pra faqja e vitit
+  nuk ka si të thotë shifra të tjera.
+
 ## [2.9.0] - 2026-08-18
 
 ### Shtuar

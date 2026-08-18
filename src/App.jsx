@@ -16,6 +16,7 @@ const Qellimet = lazy(() => import("./Pages/Qellimet"));
 const Planifikuara = lazy(() => import("./Pages/Planifikuara"));
 const TePerseritura = lazy(() => import("./Pages/TePerseritura"));
 const Statistika = lazy(() => import("./Pages/Statistika"));
+const Viti = lazy(() => import("./Pages/Viti"));
 const Cilesimet = lazy(() => import("./Pages/Cilesimet"));
 // Both addresses are the same page - syncing and exporting are two halves of one question, and
 // `/sinkronizimi` stays a real address because the sync indicator, the home-screen warning and
@@ -40,6 +41,7 @@ function App() {
         <Route path="/planifikuara" element={<Planifikuara />} />
         <Route path="/te-perseritura" element={<TePerseritura />} />
         <Route path="/statistikat" element={<Statistika />} />
+        <Route path="/viti" element={<Viti />} />
         <Route path="/cilesimet" element={<Cilesimet />} />
         <Route path="/te-dhena" element={<TeDhena />} />
         <Route path="/sinkronizimi" element={<TeDhena />} />
