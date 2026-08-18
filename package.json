@@ -1,11 +1,12 @@
 {
   "name": "financarepersonal",
   "private": true,
-  "version": "2.6.0",
+  "version": "2.7.0",
   "type": "module",
   "scripts": {
     "dev": "vite --host",
     "build": "vite build",
+    "ikonat": "node scripts/ikonat.mjs",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",

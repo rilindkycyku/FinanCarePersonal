@@ -15,6 +15,11 @@ import { ThemeProvider } from "./Context/ThemeContext";
 import { DialogProvider } from "./Context/DialogContext";
 import { DataProvider } from "./Context/DataContext";
 import { SyncProvider } from "./Context/SyncContext";
+import { nisInstalimin } from "./lib/instalimi";
+
+// Chrome fires `beforeinstallprompt` once and early - before React has rendered anything - so the
+// listener has to be here rather than inside the component that offers the install.
+nisInstalimin();
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 

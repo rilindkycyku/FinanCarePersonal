@@ -627,6 +627,17 @@ export const UDHEZIMET = [
           "çfarë do të bashkohet.",
       },
       {
+        titulli: "Në ekranin kryesor",
+        teksti:
+          "Aplikacioni instalohet në telefon si çdo aplikacion tjetër - hapet nga ikona, pa shiritin " +
+          "e adresës. Te Android shfaqet butoni «Instaloje aplikacionin» (edhe një njoftim i vetëm te " +
+          "Paneli, që mbyllet dhe nuk kthehet për një muaj); te iPhone bëhet me dorë nga butoni i " +
+          "ndarjes te Safari, «Add to Home Screen», sepse Safari nuk e lejon faqen ta ofrojë vetë. " +
+          "Te iPhone ka edhe një arsye praktike: Safari i fshin të dhënat e një faqeje që nuk hapet " +
+          "për shtatë ditë, kurse një aplikacion të instaluar nuk e prek. Pasi të instalohet, " +
+          "shtypja e gjatë mbi ikonë hap direkt «Shto transaksion».",
+      },
+      {
         titulli: "Raporti mujor me email",
         teksti:
           "Në fillim të çdo muaji, hera e parë që hapet aplikacioni dërgon me email pasqyrën e muajit që " +

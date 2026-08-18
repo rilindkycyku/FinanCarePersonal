@@ -9,6 +9,7 @@ import PageLoading from "../Components/PageLoading";
 import ButoniUdhezimit from "../Components/ButoniUdhezimit";
 import CilesimiNjeLlogari from "../Components/CilesimiNjeLlogari";
 import RaportiMujor from "../Components/RaportiMujor";
+import InstaloAplikacionin from "../Components/InstaloAplikacionin";
 import { useData } from "../Context/DataContext";
 import Zgjedhesi from "../Components/Zgjedhesi";
 import { opsionetMonedhave } from "../lib/opsionet";
@@ -381,6 +382,8 @@ function Cilesimet() {
           </Card>
 
           <RaportiMujor />
+
+          <InstaloAplikacionin />
 
           <Card className="profile-card border-0 p-4 mb-4">
             <h2 className="fcp-card-title fw-bold mb-3">Pamja</h2>

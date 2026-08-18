@@ -9,6 +9,26 @@ e fundit kur rregullohet diçka, dhe e para vetëm kur ndryshon vetë forma e pr
 herë, te `2.0.0`, kur të dhënat mësuan të dalin nga shfletuesi. Datat janë ato të commit-it që e
 ngriti versionin.
 
+## [2.7.0] - 2026-08-18
+
+### Shtuar
+- **Instalimi në ekranin kryesor, i ofruar nga vetë aplikacioni.** Deri tani «shtoje te ekrani
+  kryesor» ishte diçka që duhej ta dinte përdoruesi dhe ta gjente te menyja e shfletuesit. Tani
+  Paneli e ofron një herë me një njoftim që mbyllet (dhe nuk rikthehet për një muaj), kurse te
+  Cilësimet ka kartelën e vet që rri aty. Te Android shtypet butoni dhe gati; te iPhone shpjegohen
+  hapat te butoni i ndarjes, sepse Safari nuk i lejon faqes një buton për këtë - dhe pikërisht te
+  iPhone kjo ka rëndësi, meqë Safari i fshin të dhënat e një faqeje që nuk hapet për shtatë ditë,
+  ndërsa aplikacionin e instaluar nuk e prek.
+- **Shtypja e gjatë mbi ikonë hap «Shto transaksion»** (dhe «Llogaritë»), pa kaluar nga Paneli.
+
+### Rregulluar
+- **Ikonat që i mungonin manifestit.** Aplikacioni deklaronte vetëm ikona 16, 32 dhe 180 piksele -
+  nën atë që Chrome kërkon (192 dhe 512) para se ta ofrojë fare instalimin, prandaj te shumë
+  telefona njoftimi i instalimit nuk dilte kurrë. U shtuan të dyja, bashkë me një kopje
+  «maskable» për ikonat e rrumbullakëta të Android-it. Ikona e re është shenja e FinanCare mbi
+  sfondin blu të errët të aplikacionit; e vjetra ishte logoja me shkrim mbi të bardhë, që në
+  telefon dukej si një katror i bardhë. E njëjta ikonë përdoret edhe te njoftimet.
+
 ## [2.6.0] - 2026-08-18
 
 ### Shtuar
