@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Modal, Button, Form, Row, Col, Alert } from "react-bootstrap";
 import { TrendingUp, TrendingDown, ArrowRightLeft, Wand2 } from "lucide-react";
 import { useData } from "../Context/DataContext";
@@ -155,6 +155,23 @@ function ShtoTransaksionin({
   );
 
   const setField = (name, value) => setTx((prev) => ({ ...prev, [name]: value }));
+
+  const kategoriaRef = useRef(null);
+
+  /**
+   * Enter on the amount walks to the category instead of saving. The amount is where the form
+   * opens and the category is the other thing it cannot be saved without, so Enter there was only
+   * ever bouncing off the "zgjidh një kategori" error - on a phone the key is right under the
+   * keypad that was just used. With nothing chosen yet the picker opens outright; where a category
+   * is already in place the field only takes focus, so a second Enter still opens it and the
+   * choice is never reopened over the user's head.
+   */
+  const enterTeKategoria = (e) => {
+    if (e.key !== "Enter" || isTransfer) return;
+    e.preventDefault();
+    if (tx.kategoriaId) kategoriaRef.current?.focus();
+    else kategoriaRef.current?.hap();
+  };
 
   /**
    * Typing a description fills the category in from what was picked for that shop last time - but
@@ -362,6 +379,7 @@ function ShtoTransaksionin({
                 onChange={(vlera) => setField("vlera", vlera)}
                 simboli={tx.monedhaOrigjinale ? currencySymbol(tx.monedhaOrigjinale) : simboli}
                 titulliKalkulatorit="Vlera e transaksionit"
+                onKeyDown={enterTeKategoria}
                 autoFocus
                 required
               />
@@ -430,6 +448,7 @@ function ShtoTransaksionin({
                   Kategoria <span className="text-danger">*</span>
                 </Form.Label>
                 <ZgjedhesiKategorive
+                  ref={kategoriaRef}
                   id="tx-kategoriaid"
                   categories={categories}
                   lloji={tx.lloji}

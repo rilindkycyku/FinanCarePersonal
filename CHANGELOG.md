@@ -9,6 +9,17 @@ e fundit kur rregullohet diçka, dhe e para vetëm kur ndryshon vetë forma e pr
 herë, te `2.0.0`, kur të dhënat mësuan të dalin nga shfletuesi. Datat janë ato të commit-it që e
 ngriti versionin.
 
+## [2.5.1] - 2026-08-18
+
+### Rregulluar
+- **Enter te vlera e transaksionit çon te kategoria, jo te gabimi.** Forma hapet me kursorin te
+  *Vlera*, dhe në telefon tasti Enter rri pikërisht nën tastierën numerike që sapo u përdor - por
+  ai e dërgonte formën, e cila nuk mund të ruhet pa kategori, pra e vetmja gjë që ndodhte ishte
+  «Zgjidh një kategori» me kuq. Tani Enter aty hap listën e kategorive: hapi që do të bëhej
+  gjithsesi. Nëse kategoria është zgjedhur tashmë - p.sh. te një transaksion që po redaktohet -
+  Enter vetëm kalon te fusha, pa e rihapur zgjedhjen mbi kokën e askujt. Te transferi, ku në vend
+  të kategorisë ka llogarinë e dytë, Enter mbetet siç ishte.
+
 ## [2.5.0] - 2026-08-15
 
 ### Shtuar
