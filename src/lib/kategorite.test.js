@@ -1,17 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  emriIPlote,
-  eshteArkivuar,
-  kategoriTeHapura,
-  kerkoKategorite,
-  familja,
-  mundTeKeteNjePrind,
-  nenkategorite,
-  pemaKategorive,
-  prinderitEMundshem,
-  prindiI,
-  prindiPerRuajtje,
-  rrenjaE,
+  emriIPlote, eshteArkivuar, familja, idetJashteLimitit, jashteLimititPer, kategoriTeHapura, kerkoKategorite, mundTeKeteNjePrind, nenkategorite, pemaKategorive, prinderitEMundshem, prindiI, prindiPerRuajtje, rrenjaE,
 } from "./kategorite";
 
 const kategori = (id, emri, extra = {}) => ({ id, emri, lloji: "shpenzim", ...extra });
@@ -192,5 +181,52 @@ describe("kategori të arkivuara", () => {
     const pema = pemaKategorive(kategoriTeHapura(meArkiv), "shpenzim");
     expect(pema.map((r) => r.id)).toEqual(["ushqim"]);
     expect(pema[0].femijet.map((c) => c.id)).toEqual(["market"]);
+  });
+});
+
+/**
+ * "Not a daily expense" - the flag that keeps a tank of fuel from being reported as a blown day.
+ * What matters is that it reaches the subcategories (nobody marks each child by hand) and that a
+ * single transaction can still disagree with its own category.
+ */
+describe("idetJashteLimitit", () => {
+  const lista = [
+    { id: "transport", emri: "Transport", lloji: "shpenzim", jashteLimitit: true },
+    { id: "karburant", emri: "Karburant", lloji: "shpenzim", prindi: "transport" },
+    { id: "ushqim", emri: "Ushqim", lloji: "shpenzim" },
+    { id: "market", emri: "Market", lloji: "shpenzim", prindi: "ushqim" },
+    { id: "sigurimi", emri: "Sigurimi", lloji: "shpenzim", jashteLimitit: true },
+  ];
+
+  it("covers the marked category and everything under it", () => {
+    const jashte = idetJashteLimitit(lista);
+    expect(jashte.has("transport")).toBe(true);
+    expect(jashte.has("karburant")).toBe(true);
+    expect(jashte.has("sigurimi")).toBe(true);
+  });
+
+  it("leaves the day-to-day ones alone", () => {
+    const jashte = idetJashteLimitit(lista);
+    expect(jashte.has("ushqim")).toBe(false);
+    expect(jashte.has("market")).toBe(false);
+  });
+
+  it("is empty for a ledger where nothing is marked", () => {
+    expect(idetJashteLimitit([{ id: "a", emri: "A", lloji: "shpenzim" }]).size).toBe(0);
+  });
+});
+
+describe("jashteLimititPer", () => {
+  const jashte = new Set(["karburant"]);
+
+  it("follows the category when the transaction says nothing", () => {
+    expect(jashteLimititPer({ kategoriaId: "karburant" }, jashte)).toBe(true);
+    expect(jashteLimititPer({ kategoriaId: "market" }, jashte)).toBe(false);
+    expect(jashteLimititPer({ kategoriaId: "market", jashteLimitit: null }, jashte)).toBe(false);
+  });
+
+  it("lets one transaction disagree with its category, both ways", () => {
+    expect(jashteLimititPer({ kategoriaId: "market", jashteLimitit: true }, jashte)).toBe(true);
+    expect(jashteLimititPer({ kategoriaId: "karburant", jashteLimitit: false }, jashte)).toBe(false);
   });
 });

@@ -16,7 +16,7 @@ import { convertedAmount, currencyFields, dailyLimit, goalProgress } from "../li
 import { njofto, njoftoListen } from "../lib/njoftimet";
 import { mesoRregullen, sugjeroKategorine } from "../lib/rregullat";
 import { paralajmerimetPasTransaksionit } from "../lib/paralajmerimet";
-import { kategoriTeHapura } from "../lib/kategorite";
+import { idetJashteLimitit, kategoriTeHapura } from "../lib/kategorite";
 import "./ModalForms.css";
 
 const TYPE_BUTTONS = [
@@ -38,6 +38,8 @@ const blank = (lloji = "shpenzim") => ({
   etiketat: [],
   monedhaOrigjinale: "",
   kursi: "",
+  // null means "whatever the category says"; a boolean is this record overriding it.
+  jashteLimitit: null,
 });
 
 /**
@@ -91,6 +93,7 @@ function ShtoTransaksionin({
         // Cleaned on the way in as well as on the way out, so a record that predates tags (or one
         // restored from a hand-edited backup) opens as untagged instead of breaking the field.
         etiketat: etiketatE(initial),
+        jashteLimitit: typeof initial.jashteLimitit === "boolean" ? initial.jashteLimitit : null,
       });
       return;
     }
@@ -158,6 +161,22 @@ function ShtoTransaksionin({
   const setField = (name, value) => setTx((prev) => ({ ...prev, [name]: value }));
 
   const kategoriaRef = useRef(null);
+
+  /**
+   * Whether this expense counts against today's allowance.
+   *
+   * The category is the rule of thumb and the switch is the exception, so the record only stores an
+   * answer where it *disagrees* with its category - set it back to what the category says and the
+   * override is dropped, which keeps a later change to the category flowing through to it.
+   */
+  const kategoriaJashteLimitit = useMemo(
+    () => idetJashteLimitit(categories).has(tx.kategoriaId),
+    [categories, tx.kategoriaId]
+  );
+  const jashteLimititTani =
+    typeof tx.jashteLimitit === "boolean" ? tx.jashteLimitit : kategoriaJashteLimitit;
+  const ndryshoJashteLimitit = (vlera) =>
+    setField("jashteLimitit", vlera === kategoriaJashteLimitit ? null : vlera);
 
   /**
    * Enter on the amount walks to the category instead of saving. The amount is where the form
@@ -259,6 +278,9 @@ function ShtoTransaksionin({
       // Only ever set once: two transactions on the same date are ordered by when they were
       // entered (finance.js), so re-stamping this on an edit would move an old row to the top.
       krijuar: tx.krijuar || new Date().toISOString(),
+      // Null unless this record disagrees with its category, so marking "Karburant" as not
+      // day-to-day later still reaches the fuel already recorded.
+      jashteLimitit: typeof tx.jashteLimitit === "boolean" ? tx.jashteLimitit : null,
       ...monedhat,
     };
 
@@ -269,7 +291,9 @@ function ShtoTransaksionin({
     if (profile.njoftimeLimiti) {
       const sot = todayISO();
       const tjeret = transactions.filter((t) => t.id !== rekordi.id);
-      const bazat = { accounts, plans: planet, recurring, today: sot, limitiManual: profile.limitiDitor };
+      const bazat = {
+        accounts, plans: planet, recurring, categories, today: sot, limitiManual: profile.limitiDitor,
+      };
       const para = dailyLimit({ ...bazat, transactions: tjeret });
       const pas = dailyLimit({ ...bazat, transactions: [...tjeret, rekordi] });
       if (!para.tejkaluar && pas.tejkaluar) {
@@ -476,6 +500,23 @@ function ShtoTransaksionin({
                   <div className="fcp-modal-hint">
                     Nuk ka kategori për këtë lloj - shtoni një te faqja Kategoritë.
                   </div>
+                )}
+                {tx.lloji === "shpenzim" && (
+                  <>
+                    <Form.Check
+                      type="switch"
+                      id="tx-jashtelimitit"
+                      className="mt-2"
+                      label="Nuk llogaritet te limiti i sotëm"
+                      checked={jashteLimititTani}
+                      onChange={(e) => ndryshoJashteLimitit(e.target.checked)}
+                    />
+                    <div className="fcp-modal-hint">
+                      {kategoriaJashteLimitit && jashteLimititTani
+                        ? "Vjen nga kategoria, e cila është shënuar si jo e përditshme. Fikeni po ta doni këtë shpenzim të numëruar te dita."
+                        : "Për blerjet që mbajnë gjatë - një depo karburant, një palë këpucë. Paratë dalin njësoj nga bilanci, por dita e sotme nuk numërohet e tejkaluar për to."}
+                    </div>
+                  </>
                 )}
               </Form.Group>
             )}

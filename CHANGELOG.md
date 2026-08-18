@@ -9,6 +9,26 @@ e fundit kur rregullohet diçka, dhe e para vetëm kur ndryshon vetë forma e pr
 herë, te `2.0.0`, kur të dhënat mësuan të dalin nga shfletuesi. Datat janë ato të commit-it që e
 ngriti versionin.
 
+## [2.11.0] - 2026-08-18
+
+### Shtuar
+- **«Nuk është shpenzim i përditshëm» - limiti ditor pushon së gënjyeri për karburantin.** Një depo
+  80 € kundrejt një limiti ditor 60 € e shpallte ditën të tejkaluar dhe lëshonte njoftimin, kur ajo
+  depo është tri javë vozitje: shpenzimi ishte i ditës vetëm sepse atë ditë u pagua. Tani kategoritë
+  kanë një çelës për këtë - karburanti, sigurimi, pajisjet - dhe ai vlen edhe për nënkategoritë e
+  tyre.
+  <br />Paraja nuk zhduket nga llogaria: ajo del njësoj nga bilanci, pra çdo ditë e mbetur e muajit
+  bëhet pak më e ngushtë - në shembullin e mësipërm limiti bie nga 64,29 € në 58,57 € dhe dita
+  mbetet e patejkaluar. Pikërisht kështu i trajton aplikacioni prej kohësh këstet dhe blerjet e
+  planifikuara; kjo vetëm ia zgjeron rregullin gjërave që i blen rrallë.
+  <br />I njëjti çelës ndodhet edhe te formulari i transaksionit, për rastin e kundërt: furnizimi i
+  madh mujor te një kategori që përndryshe është e përditshme. Kategoria është rregull i
+  përgjithshëm, transaksioni ka fjalën e fundit - dhe kur nuk thotë asgjë, ndjek kategorinë, pra
+  shënimi i mëvonshëm i «Karburant» vlen edhe për karburantin e regjistruar javën e kaluar.
+  <br />Kutia «Sa mund të shpenzoj sot» e shpjegon veten: thotë sa nga shpenzimet e sotme mbetën
+  jashtë llogarisë së ditës dhe, kur një blerje e vetme e kalon limitin, të kujton se mund ta
+  shënoni ashtu - përndryshe çelësi do të ishte një cilësim që s'e gjen kurrë kush.
+
 ## [2.10.0] - 2026-08-18
 
 ### Shtuar

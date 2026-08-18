@@ -14,7 +14,7 @@ import { useData } from "../Context/DataContext";
 import { useDialog } from "../Context/DialogContext";
 import { STORES } from "../lib/db";
 import { plainAmount } from "../lib/format";
-import { emriIPlote, kategoriTeHapura, nenkategorite, pemaKategorive } from "../lib/kategorite";
+import { emriIPlote, idetJashteLimitit, kategoriTeHapura, nenkategorite, pemaKategorive } from "../lib/kategorite";
 import { getIcon } from "../lib/icons";
 import "./Styles/PremiumTheme.css";
 import "./Styles/DizajniPergjithshem.css";
@@ -150,6 +150,8 @@ function Kategorite() {
     }
   };
 
+  const jashteLimitit = useMemo(() => idetJashteLimitit(categories), [categories]);
+
   const renderCard = (c, { nen = false, prindiArkivuar = false } = {}) => {
     const Icon = getIcon(c.ikona);
     const arkivuar = Boolean(c.arkivuar) || prindiArkivuar;
@@ -162,6 +164,13 @@ function Kategorite() {
           <div className="fcp-cat-name">{c.emri}</div>
           <div className="fcp-cat-sub">
             {arkivuar && <span className="fcp-cat-flamur">Arkivuar</span>}
+            {/* Marked here as well as in the form: a category whose spending is left out of the
+                daily allowance changes a figure on the dashboard, so the list has to say so. */}
+            {jashteLimitit.has(c.id) && (
+              <span className="fcp-cat-flamur" title="Nuk llogaritet te limiti ditor">
+                Jo e përditshme
+              </span>
+            )}
             {c.numri === 0 ? "E papërdorur" : `${c.numri} × · ${money(c.vlera)}`}
           </div>
           {!nen && c.femijet?.length > 0 && (

@@ -16,6 +16,7 @@ const blank = (lloji = "shpenzim", prindi = "") => ({
   ngjyra: "#10b981",
   ikona: "MoreHorizontal",
   arkivuar: false,
+  jashteLimitit: false,
 });
 
 /** Add/edit one category. A category belongs to exactly one direction (income or expense), which
@@ -84,6 +85,9 @@ function ShtoKategorine({ show, onHide, initial, llojiFillestar = "shpenzim", pr
       // Written out with the rest of the record: renaming an archived category from here must not
       // quietly put it back into every picker.
       arkivuar: Boolean(category.arkivuar),
+      // Only meaningful for spending; a category switched to income drops it rather than carrying
+      // an invisible flag that would come back if it were switched again.
+      jashteLimitit: category.lloji === "shpenzim" && Boolean(category.jashteLimitit),
     });
 
     onHide();
@@ -152,6 +156,24 @@ function ShtoKategorine({ show, onHide, initial, llojiFillestar = "shpenzim", pr
                   : `Kjo kategori ka vetë ${femijet.length} nënkategori, prandaj mbetet kategori kryesore.`}
               </div>
             </Form.Group>
+
+            {category.lloji === "shpenzim" && (
+              <Form.Group as={Col} md={12} controlId="category-jashtelimitit">
+                <Form.Check
+                  type="switch"
+                  id="category-jashtelimitit-switch"
+                  label="Nuk është shpenzim i përditshëm"
+                  checked={Boolean(category.jashteLimitit)}
+                  onChange={(e) => setField("jashteLimitit", e.target.checked)}
+                />
+                <div className="fcp-modal-hint">
+                  Për gjërat që blihen rrallë e mbajnë gjatë - karburanti, sigurimi, pajisjet.
+                  Shpenzimi vazhdon të dalë nga bilanci (pra ditët e mbetura bëhen pak më të
+                  ngushta), por nuk i ngarkohet ditës që u ble - një depo karburanti është tri javë
+                  vozitje, jo një ditë e tejkaluar. Vlen edhe për nënkategoritë e saj.
+                </div>
+              </Form.Group>
+            )}
 
             <Col md={12}>
               <ColorPicker value={category.ngjyra} onChange={(c) => setField("ngjyra", c)} />

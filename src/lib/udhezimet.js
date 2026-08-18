@@ -115,7 +115,10 @@ export const UDHEZIMET = [
         teksti:
           "Kutia e majtë e hap vetë llogaritjen: bilanci i shpenzueshëm (kursimet dhe investimet nuk hyjnë), " +
           "plus hyrjet që priten ende këtë muaj, minus pagesat e përsëritura të pakonfirmuara dhe planet e " +
-          "pablera - e ndarë me ditët që kanë mbetur, dhe minus sa keni shpenzuar sot.",
+          "pablera - e ndarë me ditët që kanë mbetur, dhe minus sa keni shpenzuar sot. Shpenzimet e " +
+          "shënuara si jo të përditshme (karburanti, sigurimi) nuk i ngarkohen ditës: dalin nga bilanci " +
+          "dhe ndahen mbi ditët që mbeten, dhe kutia e thotë sa ishin. Kur një blerje e vetme e kalon " +
+          "limitin, kutia të kujton se mund ta shënoni ashtu.",
       },
       {
         titulli: "Çka është premtuar tashmë",
@@ -320,6 +323,18 @@ export const UDHEZIMET = [
           "Te formulari zgjidhni një prind dhe kategoria bëhet nënkategori - Ushqim & Pije › Market. Lista " +
           "mbetet një nivel e thellë me qëllim: një nivel i tretë nuk shton përgjigje të re, vetëm punë " +
           "arkivimi.",
+      },
+      {
+        titulli: "«Nuk është shpenzim i përditshëm»",
+        teksti:
+          "Çelësi te formulari i kategorive - për gjërat që blihen rrallë e mbajnë gjatë: karburanti, " +
+          "sigurimi, pajisjet. Një depo 80 € kundrejt një limiti ditor 60 € e shpall ditën të tejkaluar, " +
+          "kur në të vërtetë ajo depo është tri javë vozitje. E shënuar kështu, paraja del njësoj nga " +
+          "bilanci - pra çdo ditë e mbetur e muajit bëhet pak më e ngushtë - por dita e blerjes nuk " +
+          "numërohet e tejkaluar dhe njoftimi nuk bie. Vlen edhe për nënkategoritë, dhe një transaksion " +
+          "i vetëm mund të thotë të kundërtën e kategorisë së vet (çelësi i njëjtë ndodhet te formulari " +
+          "i transaksionit) - p.sh. furnizimi i madh mujor te një kategori që përndryshe është e " +
+          "përditshme.",
       },
       {
         titulli: "Arkivimi",

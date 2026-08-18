@@ -107,6 +107,48 @@ export function familjaSet(categories, id) {
 }
 
 /**
+ * The categories whose spending is **not** day-to-day money - a tank of fuel, a year's insurance,
+ * the winter coat - together with everything filed under them.
+ *
+ * The daily allowance is a number for the money that goes out in ordinary days, and one 80 € tank
+ * against a 60 € day says the day was blown when nothing of the sort happened: that tank is three
+ * weeks of driving. Marked here, the purchase still leaves the account - so the days that follow
+ * are each a little tighter, which is the truth - but it is not charged to the day it happened on.
+ *
+ * A parent takes its children with it, the way archiving does: somebody who marks "Transport" means
+ * the fuel under it too, and marking each child by hand is the kind of chore that gets abandoned
+ * half way.
+ */
+export function idetJashteLimitit(categories) {
+  const byId = indeksi(categories);
+  const jashte = new Set();
+  lista(categories).forEach((c) => {
+    let aktuale = c;
+    // Walk up to the root: the flag on any ancestor covers this one.
+    for (let hapi = 0; aktuale && hapi < 8; hapi++) {
+      if (aktuale.jashteLimitit) {
+        jashte.add(c.id);
+        return;
+      }
+      aktuale = prindiVlefshem(byId, aktuale);
+    }
+  });
+  return jashte;
+}
+
+/**
+ * Whether one transaction counts against today's allowance.
+ *
+ * The transaction's own answer wins where it has one: a category is a rule of thumb, and the big
+ * monthly stock-up in an otherwise daily category ("Ushqim & Pije") is exactly the exception the
+ * rule of thumb gets wrong.
+ */
+export function jashteLimititPer(tx, jashte) {
+  if (typeof tx?.jashteLimitit === "boolean") return tx.jashteLimitit;
+  return jashte.has(tx?.kategoriaId);
+}
+
+/**
  * Whether this category is put away: archived itself, or filed under a parent that is. A parent
  * takes its children with it, because a subcategory left behind alone would come back into every
  * picker as a top-level row - "Market" with nothing above it - which is not what archiving "Ushqim
