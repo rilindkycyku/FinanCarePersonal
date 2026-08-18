@@ -37,7 +37,8 @@ function Cilesimet() {
   const { lidhur } = useSync();
   const [form, setForm] = useState({
     emri: "", monedha: DEFAULT_CURRENCY, teArdhuratMujore: "", objektiviKursimit: "", limitiDitor: "",
-    njoftimeLimiti: false, cilesiaFaturave: CILESIA_PARAZGJEDHUR,
+    njoftimeLimiti: false, njoftimeBuxheti: false, njoftimeQellimi: false, njoftimePagesa: false,
+    cilesiaFaturave: CILESIA_PARAZGJEDHUR,
   });
   // Read once on mount and refreshed after asking: the browser answer can only change through the
   // button below or through the site settings, which reload the page anyway.
@@ -51,6 +52,9 @@ function Cilesimet() {
       objektiviKursimit: profile.objektiviKursimit ? String(profile.objektiviKursimit) : "",
       limitiDitor: profile.limitiDitor ? String(profile.limitiDitor) : "",
       njoftimeLimiti: Boolean(profile.njoftimeLimiti),
+      njoftimeBuxheti: Boolean(profile.njoftimeBuxheti),
+      njoftimeQellimi: Boolean(profile.njoftimeQellimi),
+      njoftimePagesa: Boolean(profile.njoftimePagesa),
       cilesiaFaturave: profile.cilesiaFaturave || CILESIA_PARAZGJEDHUR,
     });
   }, [profile]);
@@ -79,6 +83,9 @@ function Cilesimet() {
       objektiviKursimit: toNumber(form.objektiviKursimit),
       limitiDitor: toNumber(form.limitiDitor),
       njoftimeLimiti: form.njoftimeLimiti,
+      njoftimeBuxheti: form.njoftimeBuxheti,
+      njoftimeQellimi: form.njoftimeQellimi,
+      njoftimePagesa: form.njoftimePagesa,
       cilesiaFaturave: form.cilesiaFaturave,
     });
     await dialog.alert("Cilësimet u ruajtën.", { title: "U krye", variant: "success" });
@@ -294,18 +301,40 @@ function Cilesimet() {
                   <Form.Check
                     type="switch"
                     id="njoftime-limiti"
-                    label="Njofto kur tejkalohet limiti ditor"
+                    label="Kur tejkalohet limiti ditor"
                     checked={form.njoftimeLimiti}
                     onChange={(e) => setField("njoftimeLimiti", e.target.checked)}
+                  />
+                  <Form.Check
+                    type="switch"
+                    id="njoftime-buxheti"
+                    label="Kur një buxhet arrin 80% ose mbaron"
+                    checked={form.njoftimeBuxheti}
+                    onChange={(e) => setField("njoftimeBuxheti", e.target.checked)}
+                  />
+                  <Form.Check
+                    type="switch"
+                    id="njoftime-qellimi"
+                    label="Kur arrihet një qëllim kursimi"
+                    checked={form.njoftimeQellimi}
+                    onChange={(e) => setField("njoftimeQellimi", e.target.checked)}
+                  />
+                  <Form.Check
+                    type="switch"
+                    id="njoftime-pagesa"
+                    label="Kur pagesat e përsëritura presin konfirmim"
+                    checked={form.njoftimePagesa}
+                    onChange={(e) => setField("njoftimePagesa", e.target.checked)}
                   />
                   <div className="fcp-row-sub mt-1">
                     {leja === "unsupported"
                       ? "Ky shfletues nuk i mbështet njoftimet."
                       : leja === "denied"
                         ? "Njoftimet janë bllokuar për këtë faqe - hapini nga cilësimet e shfletuesit."
-                        : "Njoftimi shfaqet vetëm kur një shpenzim i ri e kalon limitin, jo për çdo shpenzim pas tij."}
+                        : "Njoftimi vjen kur diçka kalon vijën - shpenzimi që e kalon limitin, blerja që e mbaron buxhetin - jo për çdo shpenzim pas saj. Pagesat që presin kujtohen një herë në ditë."}
                   </div>
-                  {form.njoftimeLimiti && leja === "default" && (
+                  {(form.njoftimeLimiti || form.njoftimeBuxheti || form.njoftimeQellimi || form.njoftimePagesa) &&
+                    leja === "default" && (
                     <Button
                       variant="outline-light"
                       size="sm"

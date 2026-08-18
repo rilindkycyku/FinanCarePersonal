@@ -13,8 +13,9 @@ import { makeId, sinkronizoFaturat, STORES } from "../lib/db";
 import { currencySymbol, formatMoney, toNumber, todayISO } from "../lib/format";
 import { etiketatE, pastroEtiketat, perdorimiEtiketave } from "../lib/etiketat";
 import { convertedAmount, currencyFields, dailyLimit, goalProgress } from "../lib/finance";
-import { njofto } from "../lib/njoftimet";
+import { njofto, njoftoListen } from "../lib/njoftimet";
 import { mesoRregullen, sugjeroKategorine } from "../lib/rregullat";
+import { paralajmerimetPasTransaksionit } from "../lib/paralajmerimet";
 import { kategoriTeHapura } from "../lib/kategorite";
 import "./ModalForms.css";
 
@@ -57,8 +58,8 @@ function ShtoTransaksionin({
   qellimiFiksuar,
   destinacioniFillestar,
 }) {
-  const { accounts, categories, goals, transactions, planet, recurring, faturat, save, saveProfile, reload,
-    profile, monedha, simboli, njeLlogari, llogariaKryesore } = useData();
+  const { accounts, categories, goals, budgets, transactions, planet, recurring, faturat, save, saveProfile,
+    reload, profile, monedha, simboli, njeLlogari, llogariaKryesore } = useData();
   const [tx, setTx] = useState(blank(llojiFillestar));
   // Invoice photos are staged here and only written once the transaction itself is saved, so a
   // cancelled form leaves nothing behind (see sinkronizoFaturat).
@@ -278,6 +279,15 @@ function ShtoTransaksionin({
         );
       }
     }
+
+    // The rest of the crossings this record may have caused - a budget three quarters gone, a
+    // savings goal reached. Same rule as the limit above: the ledger before and after are compared,
+    // so nothing announces a state that was already true.
+    njoftoListen(
+      paralajmerimetPasTransaksionit({
+        profile, categories, budgets, goals, transactions, rekordi, monedha,
+      })
+    );
 
     // Two things the profile remembers from a saved transaction: the exchange rate, so the next
     // $ subscription starts from the one used last time, and the description → category pairing,

@@ -9,6 +9,21 @@ e fundit kur rregullohet diçka, dhe e para vetëm kur ndryshon vetë forma e pr
 herë, te `2.0.0`, kur të dhënat mësuan të dalin nga shfletuesi. Datat janë ato të commit-it që e
 ngriti versionin.
 
+## [2.8.0] - 2026-08-18
+
+### Shtuar
+- **Njoftime edhe për buxhetet, qëllimet dhe pagesat që presin.** Deri tani njoftimi ishte vetëm
+  për limitin ditor. Tani, po me atë rregull: njoftimi vjen kur diçka **e kalon vijën**, jo kur
+  gjendja vazhdon të jetë e kaluar. Blerja që e çon një buxhet mbi 80% e thotë një herë, ajo që e
+  mbaron krejt e thotë një herë tjetër dhe thotë sa mbi buxhet shkoi - kurse blerjet e tjera të
+  atij muaji nuk thonë asgjë. Kontributi që e mbush një qëllim kursimi përgëzohet një herë. Dhe
+  pagesat e përsëritura që kanë arritur datën kujtohen një herë në ditë kur hapet aplikacioni,
+  sepse ai është njoftimi që kursen një faturë të harruar.
+  <br />Buxheti numëron edhe nënkategoritë, njësoj si te faqja Buxhetet, dhe i përket muajit ku bie
+  transaksioni - një blerje e prapadatuar në korrik flet për korrikun. Çdo njoftim mbahet mend për
+  pajisjen që e tregoi (leja e njoftimeve është e asaj pajisjeje), pra telefoni nuk hesht sepse
+  laptopi e pa i pari.
+
 ## [2.7.0] - 2026-08-18
 
 ### Shtuar

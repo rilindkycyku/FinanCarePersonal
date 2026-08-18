@@ -609,9 +609,12 @@ export const UDHEZIMET = [
       {
         titulli: "Limiti ditor dhe njoftimet",
         teksti:
-          "Lëreni bosh dhe limiti llogaritet vetë nga paratë e lira dhe ditët e mbetura. Çelësi i njoftimeve " +
-          "ju paralajmëron kur një shpenzim i ri e kalon limitin - vetëm një herë, jo për çdo shpenzim pas tij " +
-          "- dhe kërkon lejen e shfletuesit.",
+          "Lëreni bosh dhe limiti llogaritet vetë nga paratë e lira dhe ditët e mbetura. Katër çelësa " +
+          "njoftimesh: shpenzimi që kalon limitin ditor, buxheti që arrin 80% ose mbaron, qëllimi i " +
+          "kursimit që arrihet, dhe pagesat e përsëritura që kanë arritur datën. Të tria të parat " +
+          "njoftojnë vetëm kur diçka e kalon vijën - jo për çdo shpenzim pas saj - kurse pagesat që " +
+          "presin kujtohen një herë në ditë. Të gjitha kërkojnë lejen e shfletuesit dhe vlejnë vetëm " +
+          "për pajisjen ku e jepni atë leje.",
       },
       {
         titulli: "Cilësia e fotove të faturave",

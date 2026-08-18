@@ -10,6 +10,7 @@ import App from "./App";
 import GabimIPapritur from "./Components/GabimIPapritur";
 import ImportoNgaLinku from "./Components/ImportoNgaLinku";
 import RaportiAutomatik from "./Components/RaportiAutomatik";
+import Paralajmerimet from "./Components/Paralajmerimet";
 import { BrowserRouter } from "react-router-dom";
 import { ThemeProvider } from "./Context/ThemeContext";
 import { DialogProvider } from "./Context/DialogContext";
@@ -41,6 +42,8 @@ root.render(
               {/* The first opening of a new month is the only schedule a browser can keep, so the
                   monthly report is checked here rather than by anything resembling a cron. */}
               <RaportiAutomatik />
+              {/* Reminders that belong to opening the app, not to saving something. */}
+              <Paralajmerimet />
               {/* Page views only - no financial data leaves the browser, since every figure lives in
                   IndexedDB and none of it is passed to the tracker. Inside the router so client-side
                   navigations between the pages are counted too. */}
