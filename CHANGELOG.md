@@ -9,6 +9,28 @@ e fundit kur rregullohet diçka, dhe e para vetëm kur ndryshon vetë forma e pr
 herë, te `2.0.0`, kur të dhënat mësuan të dalin nga shfletuesi. Datat janë ato të commit-it që e
 ngriti versionin.
 
+## [2.6.0] - 2026-08-18
+
+### Shtuar
+- **Raporti mujor me email.** Në fillim të çdo muaji, hera e parë që hapet aplikacioni dërgon
+  pasqyrën e muajit që sapo u mbyll: hyrjet, shpenzimet, bilanci mbyllës dhe ku shkuan paratë në
+  trup të emailit, kurse pasqyra e plotë - e ndarë sipas hyrjeve, blerjeve, kësteve e transfereve -
+  shkon bashkëngjitur si PDF, po ai që nxjerr vetë aplikacioni. Shifrat i llogarit i njëjti kod që
+  vizaton edhe ekranet, prandaj emaili nuk ka si të thotë një shifër tjetër nga aplikacioni.
+  <br />Emaili niset nga projekti juaj i Supabase-it, jo nga ndonjë server i këtij aplikacioni -
+  sepse nuk ka të tillë. Një funksion i vogël te projekti juaj mban çelësin e Resend (çelësi nuk
+  guxon të rrijë te shfletuesi, ku do të ishte publik), dhe kartela e re te Cilësimet i jep hapat,
+  kodin për ta ngjitur dhe një kontroll që pyet vetë projektin nëse funksioni është aty - njësoj si
+  kontrolli i skemës te Sinkronizimi.
+  <br />Adresa lihet bosh për llogarinë me të cilën hyni te projekti - e vetmja që Resend e pranon
+  derisa të verifikoni një domen tuajin - ose shkruhet një tjetër. Edhe muaji pa asnjë transaksion
+  dërgohet: pikërisht ai muaj është shenja se diçka ka mbetur pa u shënuar. Çelësi te Cilësimet e
+  ndal krejt.
+  <br />Me disa pajisje raporti niset një herë të vetme: kush e dërgon nuk vendoset te telefoni por
+  te projekti, ku muaji «zihet» me një rresht `meta` para se emaili të niset, dhe pajisja e dytë e
+  gjen të zënë. Një dërgim që dështon e ruan arsyen, e thotë te Cilësimet dhe riprovohet - jo më
+  shumë se pesë herë, që një gabim i vazhdueshëm të mos bëhet pesë email në ditë.
+
 ## [2.5.1] - 2026-08-18
 
 ### Rregulluar

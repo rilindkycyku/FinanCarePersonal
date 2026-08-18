@@ -627,6 +627,17 @@ export const UDHEZIMET = [
           "çfarë do të bashkohet.",
       },
       {
+        titulli: "Raporti mujor me email",
+        teksti:
+          "Në fillim të çdo muaji, hera e parë që hapet aplikacioni dërgon me email pasqyrën e muajit që " +
+          "sapo mbaroi - shifrat kryesore në trup dhe pasqyra e plotë si PDF bashkëngjitur. Emaili niset " +
+          "nga projekti juaj i Supabase-it, pra kërkon një projekt të lidhur dhe një funksion të vogël me " +
+          "çelësin tuaj të Resend; hapat e instalimit janë brenda vetë kartelës, një herë të vetme. Adresa " +
+          "lihet bosh për llogarinë me të cilën hyni te projekti, ose shkruhet një tjetër. Edhe një muaj " +
+          "pa asnjë transaksion dërgohet - pikërisht ai muaj është shenja që diçka ka mbetur pa u shënuar. " +
+          "Çelësi e ndal krejt kur nuk e doni më.",
+      },
+      {
         titulli: "Kujtesa e kategorive",
         teksti:
           "Këtu shihen rregullat që aplikacioni ka mësuar nga përshkrimet tuaja - «spar» → Ushqim & Pije - " +
@@ -644,6 +655,7 @@ export const UDHEZIMET = [
     ],
     keshilla: [
       "Ndryshimi i monedhës ndryshon vetëm simbolin - vlerat e ruajtura nuk konvertohen.",
+      "Raporti mujor dërgohet një herë të vetme edhe kur keni disa pajisje: kush e dërgon vendoset te projekti, jo te telefoni.",
       "«Kthe listat e parazgjedhura» shton përsëri kategoritë që mungojnë pa i fshirë të dhënat ekzistuese.",
     ],
     shihEdhe: ["te-dhena", "llogarite", "kategorite"],

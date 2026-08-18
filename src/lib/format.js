@@ -5,7 +5,7 @@
  */
 
 import { format, parseISO } from "date-fns";
-import { CURRENCIES, DEFAULT_CURRENCY, MONTHS_LONG } from "./options";
+import { CURRENCIES, DEFAULT_CURRENCY, MONTHS_GENITIVE, MONTHS_LONG } from "./options";
 
 // Intl always resolves to *some* locale, so this never throws even where "sq-AL" data is absent.
 const numberFormatter = new Intl.NumberFormat(["sq-AL", "de-DE"], {
@@ -133,4 +133,12 @@ export function monthLabel(key) {
   const [year, month] = String(key).split("-");
   const index = parseInt(month, 10) - 1;
   return `${MONTHS_LONG[index] ?? month} ${year}`;
+}
+
+/** "2026-07" → "korrikut 2026" - the form that follows a noun: *pasqyra e korrikut*, *raporti i
+ * korrikut*. Same list the PDF statement titles itself from. */
+export function monthLabelGenitive(key) {
+  const [year, month] = String(key).split("-");
+  const index = parseInt(month, 10) - 1;
+  return `${MONTHS_GENITIVE[index] ?? month} ${year}`;
 }
