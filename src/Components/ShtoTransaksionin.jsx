@@ -163,6 +163,10 @@ function ShtoTransaksionin({
 
   const kategoriaRef = useRef(null);
 
+  /** The amount input's id - `controlId` on its Form.Group is what puts it there. Compared by id
+   * rather than by ref because `VleraInput` owns its input and does not hand one back. */
+  const ID_VLERES = "tx-vlera";
+
   /** Whether this expense belongs to the month rather than to today - the purchase's own answer,
    * since the same category holds both the weekly shop and the once-a-season stock-up. */
   const mujorTani = tx.ritmi === RITMI_MUJOR;
@@ -183,20 +187,35 @@ function ShtoTransaksionin({
   };
 
   /**
-   * What the phone's keypad puts on its action key - and the reason the handler above runs on a
-   * phone at all.
+   * The same walk, for the phone - where the key above is never delivered at all.
    *
-   * Left to itself that key reads «next», and «next» is not a key press: Android hands it to the
-   * browser as an editor action, which walks focus to the next *editable* field by itself without
-   * ever dispatching Enter. The category is a button - it opens a dialog rather than being a
-   * `<select>` - so it is stepped straight over, and the user lands on Përshkrimi with the one
-   * field they cannot save without still empty behind them.
+   * «next» on a phone keypad is not a key press. Android hands it to the browser as an editor
+   * action and the browser moves focus to the next *editable* field itself, dispatching nothing
+   * the page can listen for. The category opens a dialog rather than being a `<select>`, so it is
+   * a button; a button is not an editable field; the walk steps straight over it and lands on
+   * Përshkrimi, leaving the one field the form cannot be saved without empty behind the user.
+   * (`enterKeyHint="go"`, which should have turned that action into a real Enter, does not on
+   * every keyboard - so the arrival is caught here instead of the key.)
    *
-   * «go» is delivered as a real Enter instead, which `enterTeKategoria` takes and turns into the
-   * picker. A transfer has no category to walk to, so there the plain «next» is left alone and the
-   * keypad goes on doing what it always did.
+   * Three things have to hold, and together they describe only that walk: focus came straight
+   * from the amount, no finger landed on Përshkrimi to put it there, and there is still a category
+   * to go to. A deliberate tap is always left alone.
+   *
+   * It stops at the picker, exactly where Enter stops on a desktop - the two keys should not lead
+   * to two different places, and a form that carried on focusing fields by itself would be typing
+   * on the user's behalf.
    */
-  const veprimiTastieres = isTransfer ? null : { enterKeyHint: "go" };
+  const prekjaPershkrimit = useRef(0);
+
+  const fokusiIPershkrimit = (e) => {
+    if (isTransfer || tx.kategoriaId) return;
+    if (e.relatedTarget?.id !== ID_VLERES) return;
+    if (Date.now() - prekjaPershkrimit.current < 700) return;
+    // The keypad is still up for the field the user is being taken out of, and it would sit over
+    // the dialog that is about to open.
+    e.target.blur();
+    kategoriaRef.current?.hap();
+  };
 
   /**
    * Typing a description fills the category in from what was picked for that shop last time - but
@@ -415,7 +434,6 @@ function ShtoTransaksionin({
                 simboli={tx.monedhaOrigjinale ? currencySymbol(tx.monedhaOrigjinale) : simboli}
                 titulliKalkulatorit="Vlera e transaksionit"
                 onKeyDown={enterTeKategoria}
-                {...veprimiTastieres}
                 autoFocus
                 required
               />
@@ -531,6 +549,8 @@ function ShtoTransaksionin({
                 placeholder={isTransfer ? "p.sh. Kursim mujor" : "p.sh. Blerje në supermarket"}
                 value={tx.pershkrimi}
                 onChange={(e) => ndryshoPershkrimin(e.target.value)}
+                onPointerDown={() => (prekjaPershkrimit.current = Date.now())}
+                onFocus={fokusiIPershkrimit}
               />
             </Form.Group>
 
