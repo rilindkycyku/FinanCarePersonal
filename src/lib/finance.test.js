@@ -890,9 +890,9 @@ describe("dailyLimit", () => {
    * The money is gone from the balance either way - what is at stake is whether the app reports a
    * blown day and fires a notification for it.
    */
-  it("leaves a category marked as not day-to-day out of today's spending", () => {
+  it("leaves a category marked as monthly out of today's spending", () => {
     const categories = [
-      { id: "transport", emri: "Transport", lloji: "shpenzim", jashteLimitit: true },
+      { id: "transport", emri: "Transport", lloji: "shpenzim", ritmi: "mujor" },
       { id: "karburant", emri: "Karburant", lloji: "shpenzim", prindi: "transport" },
       { id: "ushqim", emri: "Ushqim", lloji: "shpenzim" },
     ];
@@ -906,21 +906,21 @@ describe("dailyLimit", () => {
     });
 
     expect(limit.shpenzuarSot).toBe(12);
-    expect(limit.jashteLimititSot).toBe(80);
+    expect(limit.mujoreSot).toBe(80);
     expect(limit.tejkaluar).toBe(false);
     // The 80 € is still gone: it comes off the pool, so every remaining day is a little tighter.
     expect(limit.disponueshme).toBe(920);
     expect(limit.limiti).toBeCloseTo(920 / 22);
   });
 
-  it("still counts it where nothing is marked", () => {
+  it("counts it as daily where nothing says otherwise", () => {
     const limit = dailyLimit({
       ...baza,
       categories: [{ id: "karburant", emri: "Karburant", lloji: "shpenzim" }],
       transactions: [tx("1", { data: "2026-08-10", vlera: 80, kategoriaId: "karburant" })],
     });
     expect(limit.shpenzuarSot).toBe(80);
-    expect(limit.jashteLimititSot).toBe(0);
+    expect(limit.mujoreSot).toBe(0);
     expect(limit.tejkaluar).toBe(true);
   });
 
@@ -930,10 +930,10 @@ describe("dailyLimit", () => {
       ...baza,
       categories,
       // The monthly stock-up, in a category that is otherwise daily.
-      transactions: [tx("1", { data: "2026-08-10", vlera: 150, kategoriaId: "ushqim", jashteLimitit: true })],
+      transactions: [tx("1", { data: "2026-08-10", vlera: 150, kategoriaId: "ushqim", ritmi: "mujor" })],
     });
     expect(limit.shpenzuarSot).toBe(0);
-    expect(limit.jashteLimititSot).toBe(150);
+    expect(limit.mujoreSot).toBe(150);
   });
 
   it("lets a fixed limit from Cilësimet win", () => {

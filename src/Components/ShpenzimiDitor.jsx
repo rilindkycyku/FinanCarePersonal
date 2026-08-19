@@ -4,7 +4,7 @@ import { Gauge } from "lucide-react";
 import { Panel, ProgressBar, Empty } from "./Ui";
 import { useData } from "../Context/DataContext";
 import { dailyLimit } from "../lib/finance";
-import { emriIPlote, idetJashteLimitit, jashteLimititPer } from "../lib/kategorite";
+import { emriIPlote, eshteMujore, kategoriteMujore } from "../lib/kategorite";
 import { monthLabel, todayISO } from "../lib/format";
 import "../Pages/Styles/Personal.css";
 
@@ -44,14 +44,14 @@ function ShpenzimiDitor({ action = "Planifiko", actionTo = "/planifikuara" }) {
    */
   const shkaktari = useMemo(() => {
     if (!d.tejkaluar || !d.caktuar) return null;
-    const jashte = idetJashteLimitit(categories);
+    const mujoret = kategoriteMujore(categories);
     const sotShpenzimet = transactions.filter(
       (tx) =>
         tx.lloji === "shpenzim" &&
         tx.data === sot &&
         !tx.perseritjaId &&
         !tx.planiId &&
-        !jashteLimititPer(tx, jashte)
+        !eshteMujore(tx, mujoret)
     );
     const meIMadhi = [...sotShpenzimet].sort((a, b) => Number(b.vlera) - Number(a.vlera))[0];
     // Only when that single purchase is the whole story - on a day of many small ones the limit
@@ -76,10 +76,10 @@ function ShpenzimiDitor({ action = "Planifiko", actionTo = "/planifikuara" }) {
           </div>
           {/* Without this line the card looks broken on the day somebody fills the tank: the
               balance fell by 80 € and "shpenzuar sot" says 12 €. */}
-          {d.jashteLimititSot > 0 && (
+          {d.mujoreSot > 0 && (
             <div className="fcp-daily-sub">
-              Jashtë llogarisë së ditës: <strong>{money(d.jashteLimititSot)}</strong> - shpenzime jo
-              të përditshme, të ndara mbi ditët që kanë mbetur.
+              Shpenzime mujore sot: <strong>{money(d.mujoreSot)}</strong> - të ndara mbi ditët që
+              kanë mbetur, jo mbi këtë ditë.
             </div>
           )}
           <ProgressBar value={d.perqindja} color="var(--sp-cyan)" over={d.tejkaluar} />
@@ -97,8 +97,8 @@ function ShpenzimiDitor({ action = "Planifiko", actionTo = "/planifikuara" }) {
             <div className="fcp-daily-note">
               Vetëm {emriIPlote(categories, shkaktari.kategoriaId, "ky shpenzim")} (
               {money(Number(shkaktari.vlera))}) e kaloi limitin. Nëse është diçka që mban gjatë -
-              karburant, sigurim, pajisje - shënojeni si <Link to="/kategorite">jo të përditshme</Link>{" "}
-              dhe ndahet mbi ditët që mbeten, në vend që t&apos;i ngarkohet kësaj dite.
+              karburant, sigurim, pajisje - bëjeni <Link to="/kategorite">shpenzim mujor</Link> dhe
+              ndahet mbi ditët që mbeten, në vend që t&apos;i ngarkohet kësaj dite.
             </div>
           )}
         </div>

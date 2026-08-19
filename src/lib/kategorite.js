@@ -107,45 +107,67 @@ export function familjaSet(categories, id) {
 }
 
 /**
- * The categories whose spending is **not** day-to-day money - a tank of fuel, a year's insurance,
- * the winter coat - together with everything filed under them.
+ * Spending that belongs to the month rather than to the day it was paid on.
  *
- * The daily allowance is a number for the money that goes out in ordinary days, and one 80 € tank
- * against a 60 € day says the day was blown when nothing of the sort happened: that tank is three
- * weeks of driving. Marked here, the purchase still leaves the account - so the days that follow
- * are each a little tighter, which is the truth - but it is not charged to the day it happened on.
+ * Every expense is **daily** unless it says otherwise, because most of them are: a coffee, a bus
+ * ticket, the shopping. A few are not - a tank of fuel, a year's insurance, a pair of winter boots -
+ * and charging those to the day they were bought reports a blown day when nothing of the sort
+ * happened: that tank is three weeks of driving.
  *
- * A parent takes its children with it, the way archiving does: somebody who marks "Transport" means
- * the fuel under it too, and marking each child by hand is the kind of chore that gets abandoned
- * half way.
+ * A monthly expense still leaves the account, so it makes every remaining day of the month a little
+ * tighter; it simply is not counted against the day. That is exactly how instalments and planned
+ * purchases have always been treated (`dailyLimit` in finance.js) - this puts the same choice in the
+ * user's hands for anything else.
+ *
+ * Stored as `ritmi: "mujor"` on the category. `jashteLimitit: true` is the same thing under the name
+ * it shipped with for one release and is still read, so a device that saved it then keeps working.
  */
-export function idetJashteLimitit(categories) {
+export const RITMI_DITOR = "ditor";
+export const RITMI_MUJOR = "mujor";
+
+/** True for a record - category or transaction - that says it is monthly, in either spelling. */
+function shenuarMujor(rekordi) {
+  if (rekordi?.ritmi === RITMI_MUJOR) return true;
+  if (rekordi?.ritmi === RITMI_DITOR) return false;
+  return rekordi?.jashteLimitit === true;
+}
+
+/**
+ * The categories counted as monthly, together with everything filed under them.
+ *
+ * A parent takes its children with it, the way archiving does: somebody who marks "Transport" as
+ * monthly means the fuel under it too, and marking each child by hand is the kind of chore that
+ * gets abandoned half way.
+ */
+export function kategoriteMujore(categories) {
   const byId = indeksi(categories);
-  const jashte = new Set();
+  const mujoret = new Set();
   lista(categories).forEach((c) => {
     let aktuale = c;
-    // Walk up to the root: the flag on any ancestor covers this one.
+    // Walk up to the root: the choice on any ancestor covers this one.
     for (let hapi = 0; aktuale && hapi < 8; hapi++) {
-      if (aktuale.jashteLimitit) {
-        jashte.add(c.id);
+      if (shenuarMujor(aktuale)) {
+        mujoret.add(c.id);
         return;
       }
       aktuale = prindiVlefshem(byId, aktuale);
     }
   });
-  return jashte;
+  return mujoret;
 }
 
 /**
- * Whether one transaction counts against today's allowance.
+ * Whether one transaction is monthly spending.
  *
- * The transaction's own answer wins where it has one: a category is a rule of thumb, and the big
+ * The transaction's own answer wins where it has one: the category is a rule of thumb, and the big
  * monthly stock-up in an otherwise daily category ("Ushqim & Pije") is exactly the exception the
- * rule of thumb gets wrong.
+ * rule of thumb gets wrong. Saying nothing means "whatever my category says", so marking the
+ * category later reaches the records already written.
  */
-export function jashteLimititPer(tx, jashte) {
-  if (typeof tx?.jashteLimitit === "boolean") return tx.jashteLimitit;
-  return jashte.has(tx?.kategoriaId);
+export function eshteMujore(tx, mujoret) {
+  if (tx?.ritmi === RITMI_MUJOR || tx?.jashteLimitit === true) return true;
+  if (tx?.ritmi === RITMI_DITOR || tx?.jashteLimitit === false) return false;
+  return mujoret.has(tx?.kategoriaId);
 }
 
 /**

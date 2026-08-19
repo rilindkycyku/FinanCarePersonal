@@ -9,6 +9,19 @@ e fundit kur rregullohet diçka, dhe e para vetëm kur ndryshon vetë forma e pr
 herë, te `2.0.0`, kur të dhënat mësuan të dalin nga shfletuesi. Datat janë ato të commit-it që e
 ngriti versionin.
 
+## [2.11.1] - 2026-08-18
+
+### Ndryshuar
+- **«Shpenzim ditor» apo «shpenzim mujor», në vend të një mohimi.** Veçoria e mëparshme ishte një
+  çelës i quajtur «nuk është shpenzim i përditshëm» - e drejtë, por e shprehur së prapthi. Tani
+  kategoria e shpenzimit zgjedh hapur njërën nga të dyja, me **ditore** si parazgjedhje, sepse
+  ditore janë shumica; mujore do të thotë çka bën vërtet llogaritja - shpenzimi ndahet mbi muajin
+  në vend që t&apos;i ngarkohet ditës. Te lista kategoria shënohet «Mujore», te formulari i
+  transaksionit kutiza thotë «Shpenzim mujor - ndahet mbi muajin, jo mbi ditën e sotme», dhe kutia
+  e Panelit thotë «Shpenzime mujore sot».
+  <br />Llogaritja nuk ndryshoi aspak. Zgjedhja ruhet si `ritmi`; ajo e ruajtur nga versioni i
+  djeshëm (`jashteLimitit`) lexohet njësoj, pra asnjë kategori e shënuar dje nuk humbet shenjën.
+
 ## [2.11.0] - 2026-08-18
 
 ### Shtuar

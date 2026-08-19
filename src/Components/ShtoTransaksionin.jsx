@@ -16,7 +16,7 @@ import { convertedAmount, currencyFields, dailyLimit, goalProgress } from "../li
 import { njofto, njoftoListen } from "../lib/njoftimet";
 import { mesoRregullen, sugjeroKategorine } from "../lib/rregullat";
 import { paralajmerimetPasTransaksionit } from "../lib/paralajmerimet";
-import { idetJashteLimitit, kategoriTeHapura } from "../lib/kategorite";
+import { RITMI_DITOR, RITMI_MUJOR, kategoriTeHapura, kategoriteMujore } from "../lib/kategorite";
 import "./ModalForms.css";
 
 const TYPE_BUTTONS = [
@@ -38,8 +38,8 @@ const blank = (lloji = "shpenzim") => ({
   etiketat: [],
   monedhaOrigjinale: "",
   kursi: "",
-  // null means "whatever the category says"; a boolean is this record overriding it.
-  jashteLimitit: null,
+  // null means "whatever the category says"; "ditor" / "mujor" is this record overriding it.
+  ritmi: null,
 });
 
 /**
@@ -93,7 +93,14 @@ function ShtoTransaksionin({
         // Cleaned on the way in as well as on the way out, so a record that predates tags (or one
         // restored from a hand-edited backup) opens as untagged instead of breaking the field.
         etiketat: etiketatE(initial),
-        jashteLimitit: typeof initial.jashteLimitit === "boolean" ? initial.jashteLimitit : null,
+        ritmi:
+          initial.ritmi ||
+          // The name this shipped under for one release.
+          (typeof initial.jashteLimitit === "boolean"
+            ? initial.jashteLimitit
+              ? RITMI_MUJOR
+              : RITMI_DITOR
+            : null),
       });
       return;
     }
@@ -163,20 +170,19 @@ function ShtoTransaksionin({
   const kategoriaRef = useRef(null);
 
   /**
-   * Whether this expense counts against today's allowance.
+   * Whether this expense belongs to the month rather than to today.
    *
-   * The category is the rule of thumb and the switch is the exception, so the record only stores an
-   * answer where it *disagrees* with its category - set it back to what the category says and the
+   * The category is the rule of thumb and the box is the exception, so the record only stores an
+   * answer where it *disagrees* with its category - tick it back to what the category says and the
    * override is dropped, which keeps a later change to the category flowing through to it.
    */
-  const kategoriaJashteLimitit = useMemo(
-    () => idetJashteLimitit(categories).has(tx.kategoriaId),
+  const kategoriaMujore = useMemo(
+    () => kategoriteMujore(categories).has(tx.kategoriaId),
     [categories, tx.kategoriaId]
   );
-  const jashteLimititTani =
-    typeof tx.jashteLimitit === "boolean" ? tx.jashteLimitit : kategoriaJashteLimitit;
-  const ndryshoJashteLimitit = (vlera) =>
-    setField("jashteLimitit", vlera === kategoriaJashteLimitit ? null : vlera);
+  const mujorTani = tx.ritmi ? tx.ritmi === RITMI_MUJOR : kategoriaMujore;
+  const ndryshoRitmin = (mujor) =>
+    setField("ritmi", mujor === kategoriaMujore ? null : mujor ? RITMI_MUJOR : RITMI_DITOR);
 
   /**
    * Enter on the amount walks to the category instead of saving. The amount is where the form
@@ -278,9 +284,9 @@ function ShtoTransaksionin({
       // Only ever set once: two transactions on the same date are ordered by when they were
       // entered (finance.js), so re-stamping this on an edit would move an old row to the top.
       krijuar: tx.krijuar || new Date().toISOString(),
-      // Null unless this record disagrees with its category, so marking "Karburant" as not
-      // day-to-day later still reaches the fuel already recorded.
-      jashteLimitit: typeof tx.jashteLimitit === "boolean" ? tx.jashteLimitit : null,
+      // Null unless this record disagrees with its category, so marking "Karburant" as monthly
+      // later still reaches the fuel already recorded.
+      ritmi: tx.ritmi || null,
       ...monedhat,
     };
 
@@ -504,17 +510,17 @@ function ShtoTransaksionin({
                 {tx.lloji === "shpenzim" && (
                   <>
                     <Form.Check
-                      type="switch"
-                      id="tx-jashtelimitit"
+                      type="checkbox"
+                      id="tx-ritmi"
                       className="mt-2"
-                      label="Nuk llogaritet te limiti i sotëm"
-                      checked={jashteLimititTani}
-                      onChange={(e) => ndryshoJashteLimitit(e.target.checked)}
+                      label="Shpenzim mujor - ndahet mbi muajin, jo mbi ditën e sotme"
+                      checked={mujorTani}
+                      onChange={(e) => ndryshoRitmin(e.target.checked)}
                     />
                     <div className="fcp-modal-hint">
-                      {kategoriaJashteLimitit && jashteLimititTani
-                        ? "Vjen nga kategoria, e cila është shënuar si jo e përditshme. Fikeni po ta doni këtë shpenzim të numëruar te dita."
-                        : "Për blerjet që mbajnë gjatë - një depo karburant, një palë këpucë. Paratë dalin njësoj nga bilanci, por dita e sotme nuk numërohet e tejkaluar për to."}
+                      {kategoriaMujore && mujorTani
+                        ? "Vjen nga kategoria, e cila është mujore. Hiqeni shenjën po ta doni këtë shpenzim të numëruar te dita e sotme."
+                        : "Lëreni bosh për shpenzimet e zakonshme të ditës. Shënojeni për blerjet që mbajnë gjatë - një depo karburant, një sigurim, një palë këpucë."}
                     </div>
                   </>
                 )}
