@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
 import { Modal, Form } from "react-bootstrap";
 import { Archive, Check, ChevronDown, ChevronLeft, ChevronRight, Search, Slash, X } from "lucide-react";
 import { emriIPlote, kategoriTeHapura, kerkoKategorite, pemaKategorive, rrenjaE } from "../lib/kategorite";
@@ -39,19 +39,22 @@ function Shenja({ kategoria }) {
   );
 }
 
-function ZgjedhesiKategorive({
-  categories,
-  lloji,
-  value,
-  onChange,
-  placeholder = "Zgjidh kategorinë...",
-  emptyLabel,
-  id,
-  size,
-  disabled = false,
-  required = false,
-  title = "Zgjidh kategorinë",
-}) {
+const ZgjedhesiKategorive = forwardRef(function ZgjedhesiKategorive(
+  {
+    categories,
+    lloji,
+    value,
+    onChange,
+    placeholder = "Zgjidh kategorinë...",
+    emptyLabel,
+    id,
+    size,
+    disabled = false,
+    required = false,
+    title = "Zgjidh kategorinë",
+  },
+  ref
+) {
   const [hapur, setHapur] = useState(false);
   // The parent whose subcategories are currently unlocked; null is the top-level list.
   const [hapja, setHapja] = useState(null);
@@ -60,6 +63,7 @@ function ZgjedhesiKategorive({
   // re-file an old transaction, and that answer may well be a category nobody uses any more.
   const [meArkivat, setMeArkivat] = useState(false);
   const kerkimiRef = useRef(null);
+  const trigerRef = useRef(null);
 
   // The current choice is always in the list, archived or not - a form that quietly dropped the
   // category it was opened on would file the record as "Pa kategori" on the next save.
@@ -91,6 +95,11 @@ function ZgjedhesiKategorive({
     setMeArkivat(false);
     setHapur(true);
   };
+
+  // The forms this field sits in hand the keyboard on: Enter in the amount above should land the
+  // user here, on the one thing they cannot save without. `hap` opens the dialog outright,
+  // `focus` only walks to the trigger, so a form can choose between the two.
+  useImperativeHandle(ref, () => ({ hap, focus: () => trigerRef.current?.focus() }));
 
   const zgjidh = (kategoriaId) => {
     onChange(kategoriaId);
@@ -230,6 +239,7 @@ function ZgjedhesiKategorive({
       <button
         type="button"
         id={id}
+        ref={trigerRef}
         className={`fcp-cat-trigger${size === "sm" ? " sm" : ""}${zgjedhur ? "" : " bosh"}`}
         onClick={hap}
         disabled={disabled}
@@ -273,6 +283,6 @@ function ZgjedhesiKategorive({
       </Modal>
     </>
   );
-}
+});
 
 export default ZgjedhesiKategorive;

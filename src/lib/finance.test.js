@@ -885,6 +885,60 @@ describe("dailyLimit", () => {
     expect(limit.disponueshme).toBe(800);
   });
 
+  /**
+   * The tank of fuel: 80 € on a 45 €/day allowance, and nothing about that day was extravagant.
+   * The money is gone from the balance either way - what is at stake is whether the app reports a
+   * blown day and fires a notification for it.
+   */
+  it("leaves an expense marked monthly out of today's spending", () => {
+    const limit = dailyLimit({
+      ...baza,
+      transactions: [
+        tx("1", { data: "2026-08-10", vlera: 80, kategoriaId: "karburant", ritmi: "mujor" }),
+        tx("2", { data: "2026-08-10", vlera: 12, kategoriaId: "ushqim" }),
+      ],
+    });
+
+    expect(limit.shpenzuarSot).toBe(12);
+    expect(limit.mujoreSot).toBe(80);
+    expect(limit.tejkaluar).toBe(false);
+    // The 80 € is still gone: it comes off the pool, so every remaining day is a little tighter.
+    expect(limit.disponueshme).toBe(920);
+    expect(limit.limiti).toBeCloseTo(920 / 22);
+  });
+
+  it("counts it as daily where the expense says nothing", () => {
+    const limit = dailyLimit({
+      ...baza,
+      transactions: [tx("1", { data: "2026-08-10", vlera: 80, kategoriaId: "karburant" })],
+    });
+    expect(limit.shpenzuarSot).toBe(80);
+    expect(limit.mujoreSot).toBe(0);
+    expect(limit.tejkaluar).toBe(true);
+  });
+
+  it("asks the expense and not its category - the same category holds both kinds", () => {
+    const limit = dailyLimit({
+      ...baza,
+      // A category anybody would call daily, and the once-a-season stock-up inside it.
+      transactions: [
+        tx("1", { data: "2026-08-10", vlera: 150, kategoriaId: "ushqim", ritmi: "mujor" }),
+        tx("2", { data: "2026-08-10", vlera: 9, kategoriaId: "ushqim" }),
+      ],
+    });
+    expect(limit.shpenzuarSot).toBe(9);
+    expect(limit.mujoreSot).toBe(150);
+  });
+
+  it("still understands a record saved under the flag's first name", () => {
+    const limit = dailyLimit({
+      ...baza,
+      transactions: [tx("1", { data: "2026-08-10", vlera: 80, jashteLimitit: true })],
+    });
+    expect(limit.shpenzuarSot).toBe(0);
+    expect(limit.mujoreSot).toBe(80);
+  });
+
   it("lets a fixed limit from Cilësimet win", () => {
     const limit = dailyLimit({ ...baza, transactions: [], limitiManual: 25 });
     expect(limit.limiti).toBe(25);

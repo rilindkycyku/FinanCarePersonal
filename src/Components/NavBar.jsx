@@ -4,7 +4,7 @@ import { Dropdown } from "react-bootstrap";
 import {
   LayoutDashboard, ArrowRightLeft, Wallet, Tags, PiggyBank, Target, Repeat,
   BarChart3, Settings, DatabaseBackup, Sun, Moon, ChevronDown, Menu, X, Receipt,
-  ClipboardList, FileSpreadsheet, BookOpen,
+  ClipboardList, FileSpreadsheet, BookOpen, CalendarRange,
 } from "lucide-react";
 import { useTheme } from "../Context/ThemeContext";
 import ButonPasqyra from "./ButonPasqyra";
@@ -41,6 +41,7 @@ const CATEGORIES = [
     icon: Settings,
     links: [
       { to: "/statistikat", label: "Statistikat", icon: BarChart3 },
+      { to: "/viti", label: "Viti në një faqe", icon: CalendarRange },
       { to: "/cilesimet", label: "Cilësimet", icon: Settings },
       // One page, two halves, two addresses - one entry. Two entries pointing at the same page
       // asked the reader to pick a half before knowing what was in either.

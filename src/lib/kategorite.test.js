@@ -1,17 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  emriIPlote,
-  eshteArkivuar,
-  kategoriTeHapura,
-  kerkoKategorite,
-  familja,
-  mundTeKeteNjePrind,
-  nenkategorite,
-  pemaKategorive,
-  prinderitEMundshem,
-  prindiI,
-  prindiPerRuajtje,
-  rrenjaE,
+  emriIPlote, eshteArkivuar, familja, kategoriTeHapura, kerkoKategorite, mundTeKeteNjePrind, nenkategorite, pemaKategorive, prinderitEMundshem, prindiI, prindiPerRuajtje, rrenjaE,
 } from "./kategorite";
 
 const kategori = (id, emri, extra = {}) => ({ id, emri, lloji: "shpenzim", ...extra });

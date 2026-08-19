@@ -9,6 +9,156 @@ e fundit kur rregullohet diçka, dhe e para vetëm kur ndryshon vetë forma e pr
 herë, te `2.0.0`, kur të dhënat mësuan të dalin nga shfletuesi. Datat janë ato të commit-it që e
 ngriti versionin.
 
+## [2.12.0] - 2026-08-18
+
+### Ndryshuar
+- **Ditor apo mujor vendoset te vetë shpenzimi, jo te kategoria.** E njëjta kategori mban edhe
+  pazarin e javës edhe furnizimin e madh një herë në sezon, prandaj kategoria ishte vendi i gabuar
+  për këtë përgjigje - bashkë me të iku edhe trashëgimia te nënkategoritë dhe rregulli «transaksioni
+  e mbivendos kategorinë», dy koncepte që nuk duheshin.
+  <br />Tani shenja vihet aty ku e vëren njeriu: te lista e transaksioneve, çdo shpenzim ka një
+  buton te «Veprime» që e kthen nga ditor në mujor dhe anasjelltas - dielli ditor, kalendari mujor -
+  dhe rreshti e shfaq shenjën «Mujor» pranë llojit. Kutiza mbetet edhe brenda formularit. Kartela
+  «Sa mund të shpenzoj sot», kur një blerje e vetme e kalon limitin, tani të çon te lista.
+  <br />Llogaritja nuk ndryshoi: shpenzimi mujor del nga bilanci si çdo tjetër, por ndahet mbi ditët
+  që kanë mbetur në vend që t&apos;i ngarkohet ditës. Çka është shënuar më parë - me `ritmi` ose me
+  emrin e parë `jashteLimitit` - lexohet njësoj; ajo që humbet vlerën është vetëm shenja e vënë te
+  një kategori.
+
+## [2.11.1] - 2026-08-18
+
+### Ndryshuar
+- **«Shpenzim ditor» apo «shpenzim mujor», në vend të një mohimi.** Veçoria e mëparshme ishte një
+  çelës i quajtur «nuk është shpenzim i përditshëm» - e drejtë, por e shprehur së prapthi. Tani
+  kategoria e shpenzimit zgjedh hapur njërën nga të dyja, me **ditore** si parazgjedhje, sepse
+  ditore janë shumica; mujore do të thotë çka bën vërtet llogaritja - shpenzimi ndahet mbi muajin
+  në vend që t&apos;i ngarkohet ditës. Te lista kategoria shënohet «Mujore», te formulari i
+  transaksionit kutiza thotë «Shpenzim mujor - ndahet mbi muajin, jo mbi ditën e sotme», dhe kutia
+  e Panelit thotë «Shpenzime mujore sot».
+  <br />Llogaritja nuk ndryshoi aspak. Zgjedhja ruhet si `ritmi`; ajo e ruajtur nga versioni i
+  djeshëm (`jashteLimitit`) lexohet njësoj, pra asnjë kategori e shënuar dje nuk humbet shenjën.
+
+## [2.11.0] - 2026-08-18
+
+### Shtuar
+- **«Nuk është shpenzim i përditshëm» - limiti ditor pushon së gënjyeri për karburantin.** Një depo
+  80 € kundrejt një limiti ditor 60 € e shpallte ditën të tejkaluar dhe lëshonte njoftimin, kur ajo
+  depo është tri javë vozitje: shpenzimi ishte i ditës vetëm sepse atë ditë u pagua. Tani kategoritë
+  kanë një çelës për këtë - karburanti, sigurimi, pajisjet - dhe ai vlen edhe për nënkategoritë e
+  tyre.
+  <br />Paraja nuk zhduket nga llogaria: ajo del njësoj nga bilanci, pra çdo ditë e mbetur e muajit
+  bëhet pak më e ngushtë - në shembullin e mësipërm limiti bie nga 64,29 € në 58,57 € dhe dita
+  mbetet e patejkaluar. Pikërisht kështu i trajton aplikacioni prej kohësh këstet dhe blerjet e
+  planifikuara; kjo vetëm ia zgjeron rregullin gjërave që i blen rrallë.
+  <br />I njëjti çelës ndodhet edhe te formulari i transaksionit, për rastin e kundërt: furnizimi i
+  madh mujor te një kategori që përndryshe është e përditshme. Kategoria është rregull i
+  përgjithshëm, transaksioni ka fjalën e fundit - dhe kur nuk thotë asgjë, ndjek kategorinë, pra
+  shënimi i mëvonshëm i «Karburant» vlen edhe për karburantin e regjistruar javën e kaluar.
+  <br />Kutia «Sa mund të shpenzoj sot» e shpjegon veten: thotë sa nga shpenzimet e sotme mbetën
+  jashtë llogarisë së ditës dhe, kur një blerje e vetme e kalon limitin, të kujton se mund ta
+  shënoni ashtu - përndryshe çelësi do të ishte një cilësim që s'e gjen kurrë kush.
+
+## [2.10.0] - 2026-08-18
+
+### Shtuar
+- **«Viti në një faqe» - një vit i tërë, krahasuar me atë përpara.** Statistikat e tregojnë çdo
+  periudhë, vitin përfshirë, por një zgjedhës periudhe nuk ka me çfarë ta krahasojë - dhe pyetja e
+  janarit është pikërisht *a ishte ky vit më i mirë se i kaluari, dhe ku ndryshoi*. Faqja e re
+  përgjigjet: katër shifrat e vitit me ndryshimin ndaj vitit të kaluar, dymbëdhjetë muajt njëri pas
+  tjetrit, kategoritë me pjesën e tyre dhe sa u rritën a u ulën, dhe momentet - muaji më i
+  shtrenjtë, muaji më i kursyer, dita ku doli më shumë, dhe dy kategoritë që ndryshuan më shumë.
+  <br />Kur viti është ende në vazhdim, krahasimi bëhet **me të njëjtët muaj** të vitit të kaluar
+  dhe faqja e shkruan ("+15% ndaj 2025 (jan-gus)"): tetë muaj rroge kundrejt dymbëdhjetëve do të
+  lexoheshin si rënie e të ardhurave, e cila nuk është e dhënë për financat e askujt, vetëm për
+  kalendarin. Shifrat vetë mbeten të vitit të plotë.
+  <br />Asnjë llogaritje e re: muajt vijnë nga `cashflow`, kategoritë nga `totalsByCategory`,
+  bilancet nga `totalBalance` - po ato funksione që përdorin Paneli dhe pasqyra, pra faqja e vitit
+  nuk ka si të thotë shifra të tjera.
+
+## [2.9.0] - 2026-08-18
+
+### Shtuar
+- **«Duket se përsëriten» - abonimet gjenden vetë te historiku.** Netflix-i, palestra, qiraja dhe
+  rroga janë tashmë në regjistër dymbëdhjetë herë në vit, por shpesh nuk janë kurrë te Pagesat e
+  Përsëritura - pra parashikimi nuk i pret dhe asgjë nuk kujton kur afrohen. Tani faqja e tyre i
+  nxjerr vetë sipër listës: njihen nga fjalët e përshkrimit (po ajo përputhje fjalësh që mëson
+  kategoritë, prandaj «POS 4415 NETFLIX.COM 12.03» dhe «NETFLIX COM» janë e njëjta gjë), nga vlera
+  e përafërt - një rritje çmimi nuk e prish - dhe nga ritmi që përsëritet.
+  <br />Zakoni nuk ngatërrohet me abonimin: sa më i shpejtë ritmi, aq më shumë prova kërkohen - tre
+  pagesa një muaj larg njëra-tjetrës janë abonim, tre pagesa një javë larg janë drekat e javës. Një
+  pagesë e vonuar falet; dy ritme të ndryshme në të njëjtin varg nuk janë orar fare.
+  <br />Asgjë nuk krijohet pa u pranuar: «Shto» hap formularin e zakonshëm të parambushur me emrin,
+  vlerën, ritmin, kategorinë dhe datën e radhës, ku çdo hamendje korrigjohet. «×» e heq sugjerimin,
+  dhe ai vendim ruhet te profili - pra një «jo» i dhënë te telefoni nuk ripyetet te laptopi.
+
+## [2.8.0] - 2026-08-18
+
+### Shtuar
+- **Njoftime edhe për buxhetet, qëllimet dhe pagesat që presin.** Deri tani njoftimi ishte vetëm
+  për limitin ditor. Tani, po me atë rregull: njoftimi vjen kur diçka **e kalon vijën**, jo kur
+  gjendja vazhdon të jetë e kaluar. Blerja që e çon një buxhet mbi 80% e thotë një herë, ajo që e
+  mbaron krejt e thotë një herë tjetër dhe thotë sa mbi buxhet shkoi - kurse blerjet e tjera të
+  atij muaji nuk thonë asgjë. Kontributi që e mbush një qëllim kursimi përgëzohet një herë. Dhe
+  pagesat e përsëritura që kanë arritur datën kujtohen një herë në ditë kur hapet aplikacioni,
+  sepse ai është njoftimi që kursen një faturë të harruar.
+  <br />Buxheti numëron edhe nënkategoritë, njësoj si te faqja Buxhetet, dhe i përket muajit ku bie
+  transaksioni - një blerje e prapadatuar në korrik flet për korrikun. Çdo njoftim mbahet mend për
+  pajisjen që e tregoi (leja e njoftimeve është e asaj pajisjeje), pra telefoni nuk hesht sepse
+  laptopi e pa i pari.
+
+## [2.7.0] - 2026-08-18
+
+### Shtuar
+- **Instalimi në ekranin kryesor, i ofruar nga vetë aplikacioni.** Deri tani «shtoje te ekrani
+  kryesor» ishte diçka që duhej ta dinte përdoruesi dhe ta gjente te menyja e shfletuesit. Tani
+  Paneli e ofron një herë me një njoftim që mbyllet (dhe nuk rikthehet për një muaj), kurse te
+  Cilësimet ka kartelën e vet që rri aty. Te Android shtypet butoni dhe gati; te iPhone shpjegohen
+  hapat te butoni i ndarjes, sepse Safari nuk i lejon faqes një buton për këtë - dhe pikërisht te
+  iPhone kjo ka rëndësi, meqë Safari i fshin të dhënat e një faqeje që nuk hapet për shtatë ditë,
+  ndërsa aplikacionin e instaluar nuk e prek.
+- **Shtypja e gjatë mbi ikonë hap «Shto transaksion»** (dhe «Llogaritë»), pa kaluar nga Paneli.
+
+### Rregulluar
+- **Ikonat që i mungonin manifestit.** Aplikacioni deklaronte vetëm ikona 16, 32 dhe 180 piksele -
+  nën atë që Chrome kërkon (192 dhe 512) para se ta ofrojë fare instalimin, prandaj te shumë
+  telefona njoftimi i instalimit nuk dilte kurrë. U shtuan të dyja, bashkë me një kopje
+  «maskable» për ikonat e rrumbullakëta të Android-it. Ikona e re është shenja e FinanCare mbi
+  sfondin blu të errët të aplikacionit; e vjetra ishte logoja me shkrim mbi të bardhë, që në
+  telefon dukej si një katror i bardhë. E njëjta ikonë përdoret edhe te njoftimet.
+
+## [2.6.0] - 2026-08-18
+
+### Shtuar
+- **Raporti mujor me email.** Në fillim të çdo muaji, hera e parë që hapet aplikacioni dërgon
+  pasqyrën e muajit që sapo u mbyll: hyrjet, shpenzimet, bilanci mbyllës dhe ku shkuan paratë në
+  trup të emailit, kurse pasqyra e plotë - e ndarë sipas hyrjeve, blerjeve, kësteve e transfereve -
+  shkon bashkëngjitur si PDF, po ai që nxjerr vetë aplikacioni. Shifrat i llogarit i njëjti kod që
+  vizaton edhe ekranet, prandaj emaili nuk ka si të thotë një shifër tjetër nga aplikacioni.
+  <br />Emaili niset nga projekti juaj i Supabase-it, jo nga ndonjë server i këtij aplikacioni -
+  sepse nuk ka të tillë. Një funksion i vogël te projekti juaj mban çelësin e Resend (çelësi nuk
+  guxon të rrijë te shfletuesi, ku do të ishte publik), dhe kartela e re te Cilësimet i jep hapat,
+  kodin për ta ngjitur dhe një kontroll që pyet vetë projektin nëse funksioni është aty - njësoj si
+  kontrolli i skemës te Sinkronizimi.
+  <br />Adresa lihet bosh për llogarinë me të cilën hyni te projekti - e vetmja që Resend e pranon
+  derisa të verifikoni një domen tuajin - ose shkruhet një tjetër. Edhe muaji pa asnjë transaksion
+  dërgohet: pikërisht ai muaj është shenja se diçka ka mbetur pa u shënuar. Çelësi te Cilësimet e
+  ndal krejt.
+  <br />Me disa pajisje raporti niset një herë të vetme: kush e dërgon nuk vendoset te telefoni por
+  te projekti, ku muaji «zihet» me një rresht `meta` para se emaili të niset, dhe pajisja e dytë e
+  gjen të zënë. Një dërgim që dështon e ruan arsyen, e thotë te Cilësimet dhe riprovohet - jo më
+  shumë se pesë herë, që një gabim i vazhdueshëm të mos bëhet pesë email në ditë.
+
+## [2.5.1] - 2026-08-18
+
+### Rregulluar
+- **Enter te vlera e transaksionit çon te kategoria, jo te gabimi.** Forma hapet me kursorin te
+  *Vlera*, dhe në telefon tasti Enter rri pikërisht nën tastierën numerike që sapo u përdor - por
+  ai e dërgonte formën, e cila nuk mund të ruhet pa kategori, pra e vetmja gjë që ndodhte ishte
+  «Zgjidh një kategori» me kuq. Tani Enter aty hap listën e kategorive: hapi që do të bëhej
+  gjithsesi. Nëse kategoria është zgjedhur tashmë - p.sh. te një transaksion që po redaktohet -
+  Enter vetëm kalon te fusha, pa e rihapur zgjedhjen mbi kokën e askujt. Te transferi, ku në vend
+  të kategorisë ka llogarinë e dytë, Enter mbetet siç ishte.
+
 ## [2.5.0] - 2026-08-15
 
 ### Shtuar

@@ -115,7 +115,10 @@ export const UDHEZIMET = [
         teksti:
           "Kutia e majtë e hap vetë llogaritjen: bilanci i shpenzueshëm (kursimet dhe investimet nuk hyjnë), " +
           "plus hyrjet që priten ende këtë muaj, minus pagesat e përsëritura të pakonfirmuara dhe planet e " +
-          "pablera - e ndarë me ditët që kanë mbetur, dhe minus sa keni shpenzuar sot.",
+          "pablera - e ndarë me ditët që kanë mbetur, dhe minus sa keni shpenzuar sot. Shpenzimet e " +
+          "shënuara si mujore (karburanti, sigurimi) nuk i ngarkohen ditës: dalin nga bilanci dhe ndahen " +
+          "mbi ditët që mbeten, dhe kutia e thotë sa ishin. Kur një blerje e vetme e kalon limitin, kutia " +
+          "e emërton dhe të çon te lista e transaksioneve, ku shënohet me një buton.",
       },
       {
         titulli: "Çka është premtuar tashmë",
@@ -168,6 +171,24 @@ export const UDHEZIMET = [
           "Një transfer lëviz para mes dy llogarive tuaja, prandaj nuk numërohet as si hyrje as si shpenzim " +
           "dhe nuk hyn në statistikat e kategorive. Kontributet për qëllimet e kursimit janë pikërisht " +
           "transfere të tilla, të etiketuara me qëllimin.",
+      },
+      {
+        titulli: "Shpenzim ditor apo mujor",
+        teksti:
+          "Çdo shpenzim numërohet te dita kur ndodhi - kështu duhet për shumicën. Por një depo karburanti " +
+          "80 € kundrejt një limiti ditor 60 € do ta shpallte ditën të tejkaluar, kur ajo depo është tri " +
+          "javë vozitje. Prandaj çdo shpenzim mund të shënohet si «mujor»: paraja del njësoj nga bilanci - " +
+          "pra ditët e mbetura të muajit bëhen pak më të ngushta - por dita nuk numërohet e tejkaluar dhe " +
+          "njoftimi nuk bie.",
+      },
+      {
+        titulli: "Shënimi bëhet te vetë rreshti",
+        teksti:
+          "Te kolona «Veprime» çdo shpenzim ka një buton që e kthen nga ditor në mujor dhe anasjelltas - " +
+          "dielli do të thotë ditor, kalendari mujor - dhe rreshti e shfaq shenjën «Mujor» pranë llojit. " +
+          "E njëjta kutizë ndodhet edhe brenda formularit të transaksionit. Zgjedhja i takon vetë " +
+          "shpenzimit, jo kategorisë, sepse e njëjta kategori mban edhe pazarin e javës edhe furnizimin e " +
+          "madh një herë në sezon.",
       },
       {
         titulli: "Filtroni dhe kërkoni",
@@ -507,6 +528,17 @@ export const UDHEZIMET = [
           "«Qera - Shtator 2026» - pra dy rreshta me të njëjtin emër nuk ngatërrohen më.",
       },
       {
+        titulli: "«Duket se përsëriten»",
+        teksti:
+          "Sipër listës shfaqen pagesat që historiku juaj i tregon si të përsëritura por që nuk janë " +
+          "shtuar kurrë - abonimi që paguhet çdo muaj me të njëjtën shifër, qiraja, palestra. Njihen " +
+          "nga fjalët e përshkrimit (njësoj si kujtesa e kategorive, pra «POS 4415 NETFLIX.COM 12.03» " +
+          "dhe «NETFLIX COM» janë e njëjta gjë), nga vlera e përafërt dhe nga ritmi që përsëritet - " +
+          "kafja e përditshme nuk hyn, sepse hapat e saj nuk përputhen. Asgjë nuk krijohet vetë: " +
+          "«Shto» hap formularin e zakonshëm të parambushur, kurse «×» e heq sugjerimin përgjithmonë " +
+          "(vendimi ruhet te profili, pra vlen edhe te pajisjet e tjera).",
+      },
+      {
         titulli: "Konfirmoni kur arrin data",
         teksti:
           "Pagesat që kanë arritur datën shënohen sipër faqes dhe te Paneli. Konfirmojini një nga një me " +
@@ -589,6 +621,53 @@ export const UDHEZIMET = [
   },
 
   {
+    id: "viti",
+    grupi: "Më shumë",
+    etiketa: "Viti në një faqe",
+    titulli: "Viti në një faqe",
+    ikona: "CalendarRange",
+    shtegu: "/viti",
+    permbledhje:
+      "Një vit i tërë krahasuar me atë përpara: sa hyri, sa doli, ku shkoi dhe çfarë ndryshoi - " +
+      "pyetja që një filtër periudhe nuk e përgjigj dot, sepse nuk ka me çfarë ta krahasojë.",
+    hapat: [
+      {
+        titulli: "Zgjidhni vitin",
+        teksti:
+          "Lista përmban vetëm vitet që kanë transaksione, dhe hapet te më i freskëti - pra më 3 janar " +
+          "hapet viti që sapo mbaroi, i cili është edhe ai që doni të shihni atë ditë.",
+      },
+      {
+        titulli: "Katër shifrat lart",
+        teksti:
+          "Hyrjet, shpenzimet, sa u kursye dhe bilanci në fund të vitit. Nën secilën shkruhet sa ndryshoi " +
+          "ndaj vitit të kaluar - dhe kur viti është ende në vazhdim, krahasimi bëhet me të njëjtët muaj " +
+          "të vitit të kaluar (shënohet «jan-gus»), sepse tetë muaj kundrejt dymbëdhjetëve nuk thonë " +
+          "asgjë për financat, vetëm për kalendarin.",
+      },
+      {
+        titulli: "Muaj pas muaji",
+        teksti:
+          "Dymbëdhjetë muajt njëri pas tjetrit, hyrjet përballë shpenzimeve. Muajt bosh mbeten bosh - " +
+          "boshllëku është pjesë e figurës.",
+      },
+      {
+        titulli: "Momentet dhe kategoritë",
+        teksti:
+          "Muaji më i shtrenjtë, muaji më i kursyer, dita ku doli më shumë, mesatarja mujore, dhe dy " +
+          "kategoritë që u rritën e u ulën më shumë - te secila shifra e madhe është ndryshimi, kurse " +
+          "totali i vitit rri poshtë. Më poshtë vjen lista e plotë e kategorive me pjesën e tyre të " +
+          "vitit dhe ndryshimin ndaj vitit të kaluar.",
+      },
+    ],
+    keshilla: [
+      "Statistikat përgjigjen «si duket kjo periudhë»; kjo faqe përgjigjet «a ishte ky vit më i mirë se i kaluari».",
+      "Për listën e plotë të lëvizjeve të vitit, pasqyra PDF me periudhën «Viti» e nxjerr rresht për rresht.",
+    ],
+    shihEdhe: ["statistikat", "buxhetet", "te-dhena"],
+  },
+
+  {
     id: "cilesimet",
     grupi: "Më shumë",
     etiketa: "Cilësimet",
@@ -609,9 +688,12 @@ export const UDHEZIMET = [
       {
         titulli: "Limiti ditor dhe njoftimet",
         teksti:
-          "Lëreni bosh dhe limiti llogaritet vetë nga paratë e lira dhe ditët e mbetura. Çelësi i njoftimeve " +
-          "ju paralajmëron kur një shpenzim i ri e kalon limitin - vetëm një herë, jo për çdo shpenzim pas tij " +
-          "- dhe kërkon lejen e shfletuesit.",
+          "Lëreni bosh dhe limiti llogaritet vetë nga paratë e lira dhe ditët e mbetura. Katër çelësa " +
+          "njoftimesh: shpenzimi që kalon limitin ditor, buxheti që arrin 80% ose mbaron, qëllimi i " +
+          "kursimit që arrihet, dhe pagesat e përsëritura që kanë arritur datën. Të tria të parat " +
+          "njoftojnë vetëm kur diçka e kalon vijën - jo për çdo shpenzim pas saj - kurse pagesat që " +
+          "presin kujtohen një herë në ditë. Të gjitha kërkojnë lejen e shfletuesit dhe vlejnë vetëm " +
+          "për pajisjen ku e jepni atë leje.",
       },
       {
         titulli: "Cilësia e fotove të faturave",
@@ -625,6 +707,28 @@ export const UDHEZIMET = [
           "I njëjti çelës që ka faqja Llogaritë ndodhet edhe këtu: bashkon gjithçka në një llogari të vetme " +
           "dhe i heq formularëve pyetjen për llogarinë. Dritarja para se ta zbatojë e thotë saktësisht se " +
           "çfarë do të bashkohet.",
+      },
+      {
+        titulli: "Në ekranin kryesor",
+        teksti:
+          "Aplikacioni instalohet në telefon si çdo aplikacion tjetër - hapet nga ikona, pa shiritin " +
+          "e adresës. Te Android shfaqet butoni «Instaloje aplikacionin» (edhe një njoftim i vetëm te " +
+          "Paneli, që mbyllet dhe nuk kthehet për një muaj); te iPhone bëhet me dorë nga butoni i " +
+          "ndarjes te Safari, «Add to Home Screen», sepse Safari nuk e lejon faqen ta ofrojë vetë. " +
+          "Te iPhone ka edhe një arsye praktike: Safari i fshin të dhënat e një faqeje që nuk hapet " +
+          "për shtatë ditë, kurse një aplikacion të instaluar nuk e prek. Pasi të instalohet, " +
+          "shtypja e gjatë mbi ikonë hap direkt «Shto transaksion».",
+      },
+      {
+        titulli: "Raporti mujor me email",
+        teksti:
+          "Në fillim të çdo muaji, hera e parë që hapet aplikacioni dërgon me email pasqyrën e muajit që " +
+          "sapo mbaroi - shifrat kryesore në trup dhe pasqyra e plotë si PDF bashkëngjitur. Emaili niset " +
+          "nga projekti juaj i Supabase-it, pra kërkon një projekt të lidhur dhe një funksion të vogël me " +
+          "çelësin tuaj të Resend; hapat e instalimit janë brenda vetë kartelës, një herë të vetme. Adresa " +
+          "lihet bosh për llogarinë me të cilën hyni te projekti, ose shkruhet një tjetër. Edhe një muaj " +
+          "pa asnjë transaksion dërgohet - pikërisht ai muaj është shenja që diçka ka mbetur pa u shënuar. " +
+          "Çelësi e ndal krejt kur nuk e doni më.",
       },
       {
         titulli: "Kujtesa e kategorive",
@@ -644,6 +748,7 @@ export const UDHEZIMET = [
     ],
     keshilla: [
       "Ndryshimi i monedhës ndryshon vetëm simbolin - vlerat e ruajtura nuk konvertohen.",
+      "Raporti mujor dërgohet një herë të vetme edhe kur keni disa pajisje: kush e dërgon vendoset te projekti, jo te telefoni.",
       "«Kthe listat e parazgjedhura» shton përsëri kategoritë që mungojnë pa i fshirë të dhënat ekzistuese.",
     ],
     shihEdhe: ["te-dhena", "llogarite", "kategorite"],

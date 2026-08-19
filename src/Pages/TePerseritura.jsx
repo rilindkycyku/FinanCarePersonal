@@ -10,6 +10,7 @@ import PageTitle from "../Components/PageTitle";
 import ButoniUdhezimit from "../Components/ButoniUdhezimit";
 import PageLoading from "../Components/PageLoading";
 import ShtoTePerseritur from "../Components/ShtoTePerseritur";
+import AbonimetESugjeruara from "../Components/AbonimetESugjeruara";
 import KonfirmoPagesen from "../Components/KonfirmoPagesen";
 import Tabela from "../Components/Tabela/Tabela";
 import { Kpi, Empty, Panel, ProgressBar } from "../Components/Ui";
@@ -169,6 +170,14 @@ function TePerseritura() {
               color={stats.due.length > 0 ? "amber" : "cyan"}
             />
           </Row>
+
+          {/* Before the list, because it is about what is missing from it. */}
+          <AbonimetESugjeruara
+            onShto={(nisja) => {
+              setEditing(nisja);
+              setShowModal(true);
+            }}
+          />
 
           <section className="mb-4">
             <h2 className="fcp-section-title">

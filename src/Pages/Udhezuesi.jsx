@@ -2,7 +2,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
 import { Container, Form, InputGroup } from "react-bootstrap";
 import {
-  ArrowRightLeft, BarChart3, BookOpen, ChevronLeft, ChevronRight, ClipboardList, DatabaseBackup,
+  ArrowRightLeft, BarChart3, BookOpen, CalendarRange, ChevronLeft, ChevronRight, ClipboardList,
+  DatabaseBackup,
   ExternalLink, FileSpreadsheet, LayoutDashboard, Lightbulb, ListChecks, PiggyBank, Receipt,
   RefreshCw, Repeat, Rocket, Search, Settings, Tags, Target, Wallet, Wand2, X,
 } from "lucide-react";
@@ -20,8 +21,9 @@ import "./Styles/Personal.css";
  * e vizatueshme.
  */
 const IKONAT = {
-  ArrowRightLeft, BarChart3, ClipboardList, DatabaseBackup, FileSpreadsheet, LayoutDashboard,
-  PiggyBank, Receipt, RefreshCw, Repeat, Rocket, Settings, Tags, Target, Wallet, Wand2,
+  ArrowRightLeft, BarChart3, CalendarRange, ClipboardList, DatabaseBackup, FileSpreadsheet,
+  LayoutDashboard, PiggyBank, Receipt, RefreshCw, Repeat, Rocket, Settings, Tags, Target, Wallet,
+  Wand2,
 };
 
 const ikonaE = (emri) => IKONAT[emri] || BookOpen;

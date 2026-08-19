@@ -947,3 +947,13 @@ body.light-mode .fcp-cat-trigger {
 .fcp-zgj-i-ngushte {
   max-width: 320px;
 }
+
+/* The daily / monthly choice on a spending category. Neither side is good or bad news - unlike
+   income against expense - so the active one is the app's neutral accent rather than red or green. */
+.fcp-type-btn.active.ritmi {
+  background: var(--sp-cyan, #06b6d4);
+}
+
+.fcp-ritmi {
+  margin-bottom: 0.4rem;
+}

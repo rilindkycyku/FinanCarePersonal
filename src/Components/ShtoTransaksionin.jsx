@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Modal, Button, Form, Row, Col, Alert } from "react-bootstrap";
 import { TrendingUp, TrendingDown, ArrowRightLeft, Wand2 } from "lucide-react";
 import { useData } from "../Context/DataContext";
@@ -12,9 +12,10 @@ import FaturaFusha from "./Faturat/FaturaFusha";
 import { makeId, sinkronizoFaturat, STORES } from "../lib/db";
 import { currencySymbol, formatMoney, toNumber, todayISO } from "../lib/format";
 import { etiketatE, pastroEtiketat, perdorimiEtiketave } from "../lib/etiketat";
-import { convertedAmount, currencyFields, dailyLimit, goalProgress } from "../lib/finance";
-import { njofto } from "../lib/njoftimet";
+import { RITMI_MUJOR, convertedAmount, currencyFields, dailyLimit, goalProgress } from "../lib/finance";
+import { njofto, njoftoListen } from "../lib/njoftimet";
 import { mesoRregullen, sugjeroKategorine } from "../lib/rregullat";
+import { paralajmerimetPasTransaksionit } from "../lib/paralajmerimet";
 import { kategoriTeHapura } from "../lib/kategorite";
 import "./ModalForms.css";
 
@@ -37,6 +38,8 @@ const blank = (lloji = "shpenzim") => ({
   etiketat: [],
   monedhaOrigjinale: "",
   kursi: "",
+  // Only ever set to "mujor"; daily is the default and is not worth storing.
+  ritmi: null,
 });
 
 /**
@@ -57,8 +60,8 @@ function ShtoTransaksionin({
   qellimiFiksuar,
   destinacioniFillestar,
 }) {
-  const { accounts, categories, goals, transactions, planet, recurring, faturat, save, saveProfile, reload,
-    profile, monedha, simboli, njeLlogari, llogariaKryesore } = useData();
+  const { accounts, categories, goals, budgets, transactions, planet, recurring, faturat, save, saveProfile,
+    reload, profile, monedha, simboli, njeLlogari, llogariaKryesore } = useData();
   const [tx, setTx] = useState(blank(llojiFillestar));
   // Invoice photos are staged here and only written once the transaction itself is saved, so a
   // cancelled form leaves nothing behind (see sinkronizoFaturat).
@@ -90,6 +93,8 @@ function ShtoTransaksionin({
         // Cleaned on the way in as well as on the way out, so a record that predates tags (or one
         // restored from a hand-edited backup) opens as untagged instead of breaking the field.
         etiketat: etiketatE(initial),
+        // `jashteLimitit` is the name this shipped under for two releases.
+        ritmi: initial.ritmi || (initial.jashteLimitit === true ? RITMI_MUJOR : null),
       });
       return;
     }
@@ -155,6 +160,27 @@ function ShtoTransaksionin({
   );
 
   const setField = (name, value) => setTx((prev) => ({ ...prev, [name]: value }));
+
+  const kategoriaRef = useRef(null);
+
+  /** Whether this expense belongs to the month rather than to today - the purchase's own answer,
+   * since the same category holds both the weekly shop and the once-a-season stock-up. */
+  const mujorTani = tx.ritmi === RITMI_MUJOR;
+
+  /**
+   * Enter on the amount walks to the category instead of saving. The amount is where the form
+   * opens and the category is the other thing it cannot be saved without, so Enter there was only
+   * ever bouncing off the "zgjidh një kategori" error - on a phone the key is right under the
+   * keypad that was just used. With nothing chosen yet the picker opens outright; where a category
+   * is already in place the field only takes focus, so a second Enter still opens it and the
+   * choice is never reopened over the user's head.
+   */
+  const enterTeKategoria = (e) => {
+    if (e.key !== "Enter" || isTransfer) return;
+    e.preventDefault();
+    if (tx.kategoriaId) kategoriaRef.current?.focus();
+    else kategoriaRef.current?.hap();
+  };
 
   /**
    * Typing a description fills the category in from what was picked for that shop last time - but
@@ -241,6 +267,7 @@ function ShtoTransaksionin({
       // Only ever set once: two transactions on the same date are ordered by when they were
       // entered (finance.js), so re-stamping this on an edit would move an old row to the top.
       krijuar: tx.krijuar || new Date().toISOString(),
+      ritmi: tx.ritmi === RITMI_MUJOR ? RITMI_MUJOR : null,
       ...monedhat,
     };
 
@@ -261,6 +288,15 @@ function ShtoTransaksionin({
         );
       }
     }
+
+    // The rest of the crossings this record may have caused - a budget three quarters gone, a
+    // savings goal reached. Same rule as the limit above: the ledger before and after are compared,
+    // so nothing announces a state that was already true.
+    njoftoListen(
+      paralajmerimetPasTransaksionit({
+        profile, categories, budgets, goals, transactions, rekordi, monedha,
+      })
+    );
 
     // Two things the profile remembers from a saved transaction: the exchange rate, so the next
     // $ subscription starts from the one used last time, and the description → category pairing,
@@ -362,6 +398,7 @@ function ShtoTransaksionin({
                 onChange={(vlera) => setField("vlera", vlera)}
                 simboli={tx.monedhaOrigjinale ? currencySymbol(tx.monedhaOrigjinale) : simboli}
                 titulliKalkulatorit="Vlera e transaksionit"
+                onKeyDown={enterTeKategoria}
                 autoFocus
                 required
               />
@@ -430,6 +467,7 @@ function ShtoTransaksionin({
                   Kategoria <span className="text-danger">*</span>
                 </Form.Label>
                 <ZgjedhesiKategorive
+                  ref={kategoriaRef}
                   id="tx-kategoriaid"
                   categories={categories}
                   lloji={tx.lloji}
@@ -447,6 +485,25 @@ function ShtoTransaksionin({
                   <div className="fcp-modal-hint">
                     Nuk ka kategori për këtë lloj - shtoni një te faqja Kategoritë.
                   </div>
+                )}
+                {tx.lloji === "shpenzim" && (
+                  <>
+                    <Form.Check
+                      type="checkbox"
+                      id="tx-ritmi"
+                      className="mt-2"
+                      label="Shpenzim mujor - ndahet mbi muajin, jo mbi ditën e sotme"
+                      checked={mujorTani}
+                      onChange={(e) => setField("ritmi", e.target.checked ? RITMI_MUJOR : null)}
+                    />
+                    <div className="fcp-modal-hint">
+                      Lëreni bosh për shpenzimet e zakonshme të ditës. Shënojeni për blerjet që
+                      mbajnë gjatë - një depo karburant, një sigurim, një palë këpucë: paraja del
+                      njësoj nga bilanci, por ndahet mbi ditët që kanë mbetur në vend që t&apos;i
+                      ngarkohet kësaj dite. Të njëjtën shenjë mund ta vini edhe te lista e
+                      transaksioneve.
+                    </div>
+                  </>
                 )}
               </Form.Group>
             )}

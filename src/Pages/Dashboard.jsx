@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import NavBar from "../Components/NavBar";
 import PageTitle from "../Components/PageTitle";
+import InstaloAplikacionin from "../Components/InstaloAplikacionin";
 import PageLoading from "../Components/PageLoading";
 import Footer from "../Components/Footer";
 import ButoniUdhezimit from "../Components/ButoniUdhezimit";
@@ -135,6 +136,10 @@ function Dashboard() {
         </div>
 
         <Container>
+          {/* Offered here rather than buried in Cilësimet, because the people who would benefit
+              from an icon on their home screen are exactly the ones who never open Cilësimet. */}
+          <InstaloAplikacionin variant="baner" />
+
           {error && (
             <Alert variant="danger" className="mb-4">
               {error}

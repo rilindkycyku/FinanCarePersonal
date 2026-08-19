@@ -438,6 +438,44 @@ export async function rest(shtegu, { method = "GET", body, headers = {}, kthePer
 }
 
 /**
+ * Calls an Edge Function in the user's own project, signed in as the user.
+ *
+ * The same session the rest of this file uses: the function is deployed with "Verify JWT" on, so
+ * the project itself is what refuses a caller who is not its owner - this app never has to invent
+ * an authorisation rule of its own. A project with no such function answers 404, which is not an
+ * error in the usual sense but the ordinary state of every project that has not set the feature
+ * up, so it gets its own code for the caller to read.
+ */
+export async function thirrFunksionin(emri, { method = "POST", body } = {}) {
+  const k = await siguroSesionin();
+  let res;
+  try {
+    res = await fetch(`${k.url}/functions/v1/${emri}`, {
+      method,
+      headers: {
+        apikey: k.anonKey,
+        Authorization: `Bearer ${k.accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: body === undefined ? undefined : JSON.stringify(body),
+    });
+  } catch {
+    throw gabimi("Projekti nuk u arrit - kontrolloni internetin.", "rrjeti");
+  }
+
+  const data = await trupi(res);
+  if (res.ok) return data;
+
+  if (res.status === 404) {
+    throw gabimi(`Funksioni "${emri}" nuk është instaluar te projekti juaj.`, "pa-funksion");
+  }
+  if (res.status === 401 || res.status === 403) {
+    throw gabimi(data?.gabim || "Projekti nuk e lejoi thirrjen e funksionit.", "leje");
+  }
+  throw gabimi(data?.gabim || `Funksioni u përgjigj me gabimin ${res.status}.`, data?.kodi || "server");
+}
+
+/**
  * ---- Setting the project up ----
  *
  * The limit here is not a missing feature but the design of the API: the key saved on this device

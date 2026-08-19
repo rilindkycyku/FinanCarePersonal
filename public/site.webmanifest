@@ -9,8 +9,68 @@
   "background_color": "#080f1a",
   "theme_color": "#080f1a",
   "icons": [
-    { "src": "/img/web/favicon-16x16.png", "sizes": "16x16", "type": "image/png" },
-    { "src": "/img/web/favicon-32x32.png", "sizes": "32x32", "type": "image/png" },
-    { "src": "/img/web/apple-touch-icon.png", "sizes": "180x180", "type": "image/png", "purpose": "any" }
+    {
+      "src": "/img/web/favicon-16x16.png",
+      "sizes": "16x16",
+      "type": "image/png"
+    },
+    {
+      "src": "/img/web/favicon-32x32.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "/img/web/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/img/web/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/img/web/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/img/web/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "id": "/",
+  "shortcuts": [
+    {
+      "name": "Shto transaksion",
+      "short_name": "Shto",
+      "description": "Hap formularin e transaksionit të ri",
+      "url": "/transaksionet?shto=1",
+      "icons": [
+        {
+          "src": "/img/web/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Llogaritë",
+      "short_name": "Bilanci",
+      "description": "Bilanci i çdo llogarie",
+      "url": "/llogarite",
+      "icons": [
+        {
+          "src": "/img/web/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
   ]
 }

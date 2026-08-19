@@ -44,6 +44,9 @@ function Tabela({
   funksionButonExtra2,
   ikonaButonitExtra2,
   titulliButonitExtra2,
+  funksionButonExtra3,
+  ikonaButonitExtra3,
+  titulliButonitExtra3,
   funksionEshteEditimDisabled,
   funksionEshteShikimDisabled,
   funksionEshteFshirjeDisabled,
@@ -342,6 +345,31 @@ function Tabela({
                                 {ikonaButonitExtra2 || <Plus size={16} />}
                               </button>
                             )}
+                            {/* A third slot, for an action that is a *toggle*: its icon and its
+                                title are read per row, and a row the action does not apply to
+                                returns nothing and gets no button. */}
+                            {funksionButonExtra3 &&
+                              (() => {
+                                const ikona =
+                                  typeof ikonaButonitExtra3 === "function"
+                                    ? ikonaButonitExtra3(item.ID)
+                                    : ikonaButonitExtra3;
+                                if (!ikona) return null;
+                                const titulli =
+                                  typeof titulliButonitExtra3 === "function"
+                                    ? titulliButonitExtra3(item.ID)
+                                    : titulliButonitExtra3;
+                                return (
+                                  <button
+                                    type="button"
+                                    className="btn-action status"
+                                    onClick={() => funksionButonExtra3(item.ID)}
+                                    title={titulli || "Veprim"}
+                                  >
+                                    {ikona}
+                                  </button>
+                                );
+                              })()}
                           </div>
                         </td>
                       )}

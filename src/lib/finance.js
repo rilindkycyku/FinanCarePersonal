@@ -228,6 +228,25 @@ export function cashflow(transactions) {
   };
 }
 
+/** The two rhythms an expense can have. Daily is the default and is never stored. */
+export const RITMI_DITOR = "ditor";
+export const RITMI_MUJOR = "mujor";
+
+/**
+ * Whether this expense belongs to the month rather than to the day it was paid on.
+ *
+ * Asked of the transaction and of nothing else. It was briefly a property of the category as well,
+ * which the transaction could overrule, and that was one concept too many: the same category holds
+ * both the weekly shop and the once-a-season stock-up, so the honest place for the answer is the
+ * purchase itself.
+ *
+ * `jashteLimitit` is the same thing under the name it shipped with for two releases, still read so
+ * that nothing marked back then is forgotten.
+ */
+export function eshteMujore(tx) {
+  return tx?.ritmi === RITMI_MUJOR || tx?.jashteLimitit === true;
+}
+
 /**
  * Today's spending allowance - the figure that answers "sa mund të shpenzoj sot".
  *
@@ -246,7 +265,11 @@ export function cashflow(transactions) {
  *    today's allowance instead of quietly shrinking every day left in the month.
  *  - "Spent today" is day-to-day spending only. An instalment or a planned purchase booked today
  *    was already set aside as a commitment, so counting it again here would wipe out a day's
- *    allowance over money that was never part of it.
+ *    allowance over money that was never part of it. The same goes for an expense marked
+ *    **monthly** rather than daily: a tank of fuel is three weeks of driving, and charging all of
+ *    it to the day it was bought reports a blown day that never happened. Monthly spending still
+ *    leaves the balance, so it makes every remaining day of the month a little tighter - which is
+ *    exactly what it does in real life.
  */
 export function dailyLimit({
   accounts = [],
@@ -263,8 +286,16 @@ export function dailyLimit({
   // Clamped so a date outside the month (a clock set oddly) can never divide by zero or negatives.
   const ditetMbetura = Math.min(Math.max(ditetGjithsej - Number(today.slice(8, 10)) + 1, 1), ditetGjithsej);
 
-  const shpenzuarSot = transactions
-    .filter((tx) => tx.lloji === "shpenzim" && tx.data === today && !tx.perseritjaId && !tx.planiId)
+  const sotShpenzimet = transactions.filter(
+    (tx) => tx.lloji === "shpenzim" && tx.data === today && !tx.perseritjaId && !tx.planiId
+  );
+  const shpenzuarSot = sotShpenzimet
+    .filter((tx) => !eshteMujore(tx))
+    .reduce((sum, tx) => sum + toNumber(tx.vlera), 0);
+  // Reported rather than hidden: a card showing "spent today 12 €" on a day somebody also filled
+  // the tank has to say where the other 80 € went, or the figure looks broken.
+  const mujoreSot = sotShpenzimet
+    .filter((tx) => eshteMujore(tx))
     .reduce((sum, tx) => sum + toNumber(tx.vlera), 0);
 
   // The whole month is the window on purpose: `shumaPritur` is what is still unbooked, which for a
@@ -293,6 +324,7 @@ export function dailyLimit({
     caktuar: limiti > 0,
     manual: manual > 0,
     shpenzuarSot,
+    mujoreSot,
     mbetur: limiti - shpenzuarSot,
     perqindja: limiti > 0 ? (shpenzuarSot / limiti) * 100 : shpenzuarSot > 0 ? 100 : 0,
     tejkaluar: limiti - shpenzuarSot < 0,

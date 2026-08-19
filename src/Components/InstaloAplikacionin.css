@@ -1,0 +1,68 @@
+/* The "put me on your home screen" banner. It sits above the dashboard's own content, so it is
+   built to be ignorable: one line of surface, no colour of its own beyond the mark, and a close
+   button that means it for a month. */
+
+.fcp-instalo-baner {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  /* Room on the right for the close button, which is pinned rather than flowed - wrapped along
+     with everything else it ended up under the text on a phone. */
+  padding: 0.75rem 2.4rem 0.75rem 0.9rem;
+  border: 1px solid var(--sp-border, rgba(255, 255, 255, 0.1));
+  border-radius: var(--sp-radius-md, 14px);
+  background: var(--sp-surface-2, #162033);
+}
+
+.fcp-instalo-ikona {
+  flex: 0 0 auto;
+  color: var(--sp-emerald, #10b981);
+}
+
+.fcp-instalo-tekst {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+  flex: 1 1 auto;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: var(--sp-text-muted, #94a3b8);
+}
+
+.fcp-instalo-tekst strong {
+  color: var(--sp-text, #e2e8f0);
+  font-size: 0.9rem;
+}
+
+.fcp-instalo-mbyll {
+  position: absolute;
+  top: 0.45rem;
+  right: 0.45rem;
+  padding: 0.2rem;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--sp-text-muted, #94a3b8);
+  line-height: 0;
+}
+
+.fcp-instalo-mbyll:hover {
+  color: var(--sp-text, #e2e8f0);
+  background: var(--sp-surface, #0f172a);
+}
+
+/* On a phone the row keeps its shape - mark, text, close - and only the button drops underneath,
+   full width. Wrapping the text instead left the mark and the X alone on a line of their own. */
+@media (max-width: 560px) {
+  .fcp-instalo-baner {
+    flex-wrap: wrap;
+  }
+
+  .fcp-instalo-baner .btn {
+    order: 3;
+    flex: 1 1 100%;
+  }
+}
