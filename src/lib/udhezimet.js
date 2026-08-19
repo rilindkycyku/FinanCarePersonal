@@ -118,7 +118,7 @@ export const UDHEZIMET = [
           "pablera - e ndarë me ditët që kanë mbetur, dhe minus sa keni shpenzuar sot. Shpenzimet e " +
           "shënuara si mujore (karburanti, sigurimi) nuk i ngarkohen ditës: dalin nga bilanci dhe ndahen " +
           "mbi ditët që mbeten, dhe kutia e thotë sa ishin. Kur një blerje e vetme e kalon limitin, kutia " +
-          "të kujton se mund ta bëni mujore.",
+          "e emërton dhe të çon te lista e transaksioneve, ku shënohet me një buton.",
       },
       {
         titulli: "Çka është premtuar tashmë",
@@ -171,6 +171,24 @@ export const UDHEZIMET = [
           "Një transfer lëviz para mes dy llogarive tuaja, prandaj nuk numërohet as si hyrje as si shpenzim " +
           "dhe nuk hyn në statistikat e kategorive. Kontributet për qëllimet e kursimit janë pikërisht " +
           "transfere të tilla, të etiketuara me qëllimin.",
+      },
+      {
+        titulli: "Shpenzim ditor apo mujor",
+        teksti:
+          "Çdo shpenzim numërohet te dita kur ndodhi - kështu duhet për shumicën. Por një depo karburanti " +
+          "80 € kundrejt një limiti ditor 60 € do ta shpallte ditën të tejkaluar, kur ajo depo është tri " +
+          "javë vozitje. Prandaj çdo shpenzim mund të shënohet si «mujor»: paraja del njësoj nga bilanci - " +
+          "pra ditët e mbetura të muajit bëhen pak më të ngushta - por dita nuk numërohet e tejkaluar dhe " +
+          "njoftimi nuk bie.",
+      },
+      {
+        titulli: "Shënimi bëhet te vetë rreshti",
+        teksti:
+          "Te kolona «Veprime» çdo shpenzim ka një buton që e kthen nga ditor në mujor dhe anasjelltas - " +
+          "dielli do të thotë ditor, kalendari mujor - dhe rreshti e shfaq shenjën «Mujor» pranë llojit. " +
+          "E njëjta kutizë ndodhet edhe brenda formularit të transaksionit. Zgjedhja i takon vetë " +
+          "shpenzimit, jo kategorisë, sepse e njëjta kategori mban edhe pazarin e javës edhe furnizimin e " +
+          "madh një herë në sezon.",
       },
       {
         titulli: "Filtroni dhe kërkoni",
@@ -323,26 +341,6 @@ export const UDHEZIMET = [
           "Te formulari zgjidhni një prind dhe kategoria bëhet nënkategori - Ushqim & Pije › Market. Lista " +
           "mbetet një nivel e thellë me qëllim: një nivel i tretë nuk shton përgjigje të re, vetëm punë " +
           "arkivimi.",
-      },
-      {
-        titulli: "Shpenzim ditor apo mujor",
-        teksti:
-          "Te formulari i një kategorie shpenzimi zgjidhet njëra nga të dyja. «Ditor» është " +
-          "parazgjedhja dhe e drejta për shumicën: shpenzimi i ngarkohet ditës kur ndodh. " +
-          "«Mujor» është për gjërat që blihen rrallë e mbajnë gjatë - karburanti, sigurimi, " +
-          "pajisjet: një depo 80 € kundrejt një limiti ditor 60 € do ta shpallte ditën të tejkaluar, kur " +
-          "ajo depo është tri javë vozitje. E zgjedhur mujore, paraja del njësoj nga bilanci - pra çdo " +
-          "ditë e mbetur e muajit bëhet pak më e ngushtë - por dita e blerjes nuk numërohet e tejkaluar " +
-          "dhe njoftimi nuk bie. Vlen edhe për nënkategoritë; te lista kategoria shënohet «Mujore».",
-      },
-      {
-        titulli: "Përjashtimi për një transaksion të vetëm",
-        teksti:
-          "Te formulari i transaksionit ka një kutizë «Shpenzim mujor», e cila ndjek kategorinë derisa " +
-          "ta prekni. Shënojeni për furnizimin e madh mujor te një kategori që përndryshe është ditore, " +
-          "ose hiqeni për një blerje të vogël te një kategori mujore. Derisa nuk e prekni, transaksioni " +
-          "ndjek kategorinë - prandaj po e bëtë «Karburant» mujore sot, kjo vlen edhe për karburantin e " +
-          "regjistruar javën e kaluar.",
       },
       {
         titulli: "Arkivimi",

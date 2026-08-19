@@ -14,9 +14,7 @@ import { useData } from "../Context/DataContext";
 import { useDialog } from "../Context/DialogContext";
 import { STORES } from "../lib/db";
 import { plainAmount } from "../lib/format";
-import {
-  emriIPlote, kategoriTeHapura, kategoriteMujore, nenkategorite, pemaKategorive,
-} from "../lib/kategorite";
+import { emriIPlote, kategoriTeHapura, nenkategorite, pemaKategorive } from "../lib/kategorite";
 import { getIcon } from "../lib/icons";
 import "./Styles/PremiumTheme.css";
 import "./Styles/DizajniPergjithshem.css";
@@ -152,8 +150,6 @@ function Kategorite() {
     }
   };
 
-  const mujoret = useMemo(() => kategoriteMujore(categories), [categories]);
-
   const renderCard = (c, { nen = false, prindiArkivuar = false } = {}) => {
     const Icon = getIcon(c.ikona);
     const arkivuar = Boolean(c.arkivuar) || prindiArkivuar;
@@ -166,13 +162,6 @@ function Kategorite() {
           <div className="fcp-cat-name">{c.emri}</div>
           <div className="fcp-cat-sub">
             {arkivuar && <span className="fcp-cat-flamur">Arkivuar</span>}
-            {/* Marked here as well as in the form: a category counted over the month rather than
-                the day changes a figure on the dashboard, so the list has to say so. */}
-            {mujoret.has(c.id) && (
-              <span className="fcp-cat-flamur" title="Ndahet mbi muajin, nuk ngarkohet te dita">
-                Mujore
-              </span>
-            )}
             {c.numri === 0 ? "E papërdorur" : `${c.numri} × · ${money(c.vlera)}`}
           </div>
           {!nen && c.femijet?.length > 0 && (

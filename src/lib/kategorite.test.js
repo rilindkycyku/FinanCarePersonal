@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  emriIPlote, eshteArkivuar, eshteMujore, familja, kategoriTeHapura, kategoriteMujore, kerkoKategorite, mundTeKeteNjePrind, nenkategorite, pemaKategorive, prinderitEMundshem, prindiI, prindiPerRuajtje, rrenjaE,
+  emriIPlote, eshteArkivuar, familja, kategoriTeHapura, kerkoKategorite, mundTeKeteNjePrind, nenkategorite, pemaKategorive, prinderitEMundshem, prindiI, prindiPerRuajtje, rrenjaE,
 } from "./kategorite";
 
 const kategori = (id, emri, extra = {}) => ({ id, emri, lloji: "shpenzim", ...extra });
@@ -181,68 +181,5 @@ describe("kategori të arkivuara", () => {
     const pema = pemaKategorive(kategoriTeHapura(meArkiv), "shpenzim");
     expect(pema.map((r) => r.id)).toEqual(["ushqim"]);
     expect(pema[0].femijet.map((c) => c.id)).toEqual(["market"]);
-  });
-});
-
-/**
- * Daily against monthly spending - the choice that keeps a tank of fuel from being reported as a
- * blown day. What matters is that it reaches the subcategories (nobody marks each child by hand),
- * that a single transaction can still disagree with its own category, and that everything is daily
- * until somebody says otherwise.
- */
-describe("kategoriteMujore", () => {
-  const lista = [
-    { id: "transport", emri: "Transport", lloji: "shpenzim", ritmi: "mujor" },
-    { id: "karburant", emri: "Karburant", lloji: "shpenzim", prindi: "transport" },
-    { id: "ushqim", emri: "Ushqim", lloji: "shpenzim" },
-    { id: "market", emri: "Market", lloji: "shpenzim", prindi: "ushqim" },
-    { id: "sigurimi", emri: "Sigurimi", lloji: "shpenzim", ritmi: "mujor" },
-  ];
-
-  it("covers the category marked monthly and everything under it", () => {
-    const mujoret = kategoriteMujore(lista);
-    expect(mujoret.has("transport")).toBe(true);
-    expect(mujoret.has("karburant")).toBe(true);
-    expect(mujoret.has("sigurimi")).toBe(true);
-  });
-
-  it("leaves the daily ones alone - which is everything that has not said otherwise", () => {
-    const mujoret = kategoriteMujore(lista);
-    expect(mujoret.has("ushqim")).toBe(false);
-    expect(mujoret.has("market")).toBe(false);
-    expect(kategoriteMujore([{ id: "a", emri: "A", lloji: "shpenzim" }]).size).toBe(0);
-  });
-
-  it("still reads the flag under the name it shipped with", () => {
-    expect(kategoriteMujore([{ id: "a", emri: "A", lloji: "shpenzim", jashteLimitit: true }]).has("a")).toBe(true);
-  });
-
-  it("lets a child be daily under a parent that never said anything", () => {
-    const mujoret = kategoriteMujore([
-      { id: "ushqim", emri: "Ushqim", lloji: "shpenzim" },
-      { id: "furnizimi", emri: "Furnizimi mujor", lloji: "shpenzim", prindi: "ushqim", ritmi: "mujor" },
-    ]);
-    expect(mujoret.has("furnizimi")).toBe(true);
-    expect(mujoret.has("ushqim")).toBe(false);
-  });
-});
-
-describe("eshteMujore", () => {
-  const mujoret = new Set(["karburant"]);
-
-  it("follows the category when the transaction says nothing", () => {
-    expect(eshteMujore({ kategoriaId: "karburant" }, mujoret)).toBe(true);
-    expect(eshteMujore({ kategoriaId: "market" }, mujoret)).toBe(false);
-    expect(eshteMujore({ kategoriaId: "market", ritmi: null }, mujoret)).toBe(false);
-  });
-
-  it("lets one transaction disagree with its category, both ways", () => {
-    expect(eshteMujore({ kategoriaId: "market", ritmi: "mujor" }, mujoret)).toBe(true);
-    expect(eshteMujore({ kategoriaId: "karburant", ritmi: "ditor" }, mujoret)).toBe(false);
-  });
-
-  it("understands a transaction saved under the older name", () => {
-    expect(eshteMujore({ kategoriaId: "market", jashteLimitit: true }, mujoret)).toBe(true);
-    expect(eshteMujore({ kategoriaId: "karburant", jashteLimitit: false }, mujoret)).toBe(false);
   });
 });

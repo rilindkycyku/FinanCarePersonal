@@ -12,11 +12,11 @@ import FaturaFusha from "./Faturat/FaturaFusha";
 import { makeId, sinkronizoFaturat, STORES } from "../lib/db";
 import { currencySymbol, formatMoney, toNumber, todayISO } from "../lib/format";
 import { etiketatE, pastroEtiketat, perdorimiEtiketave } from "../lib/etiketat";
-import { convertedAmount, currencyFields, dailyLimit, goalProgress } from "../lib/finance";
+import { RITMI_MUJOR, convertedAmount, currencyFields, dailyLimit, goalProgress } from "../lib/finance";
 import { njofto, njoftoListen } from "../lib/njoftimet";
 import { mesoRregullen, sugjeroKategorine } from "../lib/rregullat";
 import { paralajmerimetPasTransaksionit } from "../lib/paralajmerimet";
-import { RITMI_DITOR, RITMI_MUJOR, kategoriTeHapura, kategoriteMujore } from "../lib/kategorite";
+import { kategoriTeHapura } from "../lib/kategorite";
 import "./ModalForms.css";
 
 const TYPE_BUTTONS = [
@@ -38,7 +38,7 @@ const blank = (lloji = "shpenzim") => ({
   etiketat: [],
   monedhaOrigjinale: "",
   kursi: "",
-  // null means "whatever the category says"; "ditor" / "mujor" is this record overriding it.
+  // Only ever set to "mujor"; daily is the default and is not worth storing.
   ritmi: null,
 });
 
@@ -93,14 +93,8 @@ function ShtoTransaksionin({
         // Cleaned on the way in as well as on the way out, so a record that predates tags (or one
         // restored from a hand-edited backup) opens as untagged instead of breaking the field.
         etiketat: etiketatE(initial),
-        ritmi:
-          initial.ritmi ||
-          // The name this shipped under for one release.
-          (typeof initial.jashteLimitit === "boolean"
-            ? initial.jashteLimitit
-              ? RITMI_MUJOR
-              : RITMI_DITOR
-            : null),
+        // `jashteLimitit` is the name this shipped under for two releases.
+        ritmi: initial.ritmi || (initial.jashteLimitit === true ? RITMI_MUJOR : null),
       });
       return;
     }
@@ -169,20 +163,9 @@ function ShtoTransaksionin({
 
   const kategoriaRef = useRef(null);
 
-  /**
-   * Whether this expense belongs to the month rather than to today.
-   *
-   * The category is the rule of thumb and the box is the exception, so the record only stores an
-   * answer where it *disagrees* with its category - tick it back to what the category says and the
-   * override is dropped, which keeps a later change to the category flowing through to it.
-   */
-  const kategoriaMujore = useMemo(
-    () => kategoriteMujore(categories).has(tx.kategoriaId),
-    [categories, tx.kategoriaId]
-  );
-  const mujorTani = tx.ritmi ? tx.ritmi === RITMI_MUJOR : kategoriaMujore;
-  const ndryshoRitmin = (mujor) =>
-    setField("ritmi", mujor === kategoriaMujore ? null : mujor ? RITMI_MUJOR : RITMI_DITOR);
+  /** Whether this expense belongs to the month rather than to today - the purchase's own answer,
+   * since the same category holds both the weekly shop and the once-a-season stock-up. */
+  const mujorTani = tx.ritmi === RITMI_MUJOR;
 
   /**
    * Enter on the amount walks to the category instead of saving. The amount is where the form
@@ -284,9 +267,7 @@ function ShtoTransaksionin({
       // Only ever set once: two transactions on the same date are ordered by when they were
       // entered (finance.js), so re-stamping this on an edit would move an old row to the top.
       krijuar: tx.krijuar || new Date().toISOString(),
-      // Null unless this record disagrees with its category, so marking "Karburant" as monthly
-      // later still reaches the fuel already recorded.
-      ritmi: tx.ritmi || null,
+      ritmi: tx.ritmi === RITMI_MUJOR ? RITMI_MUJOR : null,
       ...monedhat,
     };
 
@@ -297,9 +278,7 @@ function ShtoTransaksionin({
     if (profile.njoftimeLimiti) {
       const sot = todayISO();
       const tjeret = transactions.filter((t) => t.id !== rekordi.id);
-      const bazat = {
-        accounts, plans: planet, recurring, categories, today: sot, limitiManual: profile.limitiDitor,
-      };
+      const bazat = { accounts, plans: planet, recurring, today: sot, limitiManual: profile.limitiDitor };
       const para = dailyLimit({ ...bazat, transactions: tjeret });
       const pas = dailyLimit({ ...bazat, transactions: [...tjeret, rekordi] });
       if (!para.tejkaluar && pas.tejkaluar) {
@@ -515,12 +494,14 @@ function ShtoTransaksionin({
                       className="mt-2"
                       label="Shpenzim mujor - ndahet mbi muajin, jo mbi ditën e sotme"
                       checked={mujorTani}
-                      onChange={(e) => ndryshoRitmin(e.target.checked)}
+                      onChange={(e) => setField("ritmi", e.target.checked ? RITMI_MUJOR : null)}
                     />
                     <div className="fcp-modal-hint">
-                      {kategoriaMujore && mujorTani
-                        ? "Vjen nga kategoria, e cila është mujore. Hiqeni shenjën po ta doni këtë shpenzim të numëruar te dita e sotme."
-                        : "Lëreni bosh për shpenzimet e zakonshme të ditës. Shënojeni për blerjet që mbajnë gjatë - një depo karburant, një sigurim, një palë këpucë."}
+                      Lëreni bosh për shpenzimet e zakonshme të ditës. Shënojeni për blerjet që
+                      mbajnë gjatë - një depo karburant, një sigurim, një palë këpucë: paraja del
+                      njësoj nga bilanci, por ndahet mbi ditët që kanë mbetur në vend që t&apos;i
+                      ngarkohet kësaj dite. Të njëjtën shenjë mund ta vini edhe te lista e
+                      transaksioneve.
                     </div>
                   </>
                 )}

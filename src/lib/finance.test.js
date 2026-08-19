@@ -890,17 +890,11 @@ describe("dailyLimit", () => {
    * The money is gone from the balance either way - what is at stake is whether the app reports a
    * blown day and fires a notification for it.
    */
-  it("leaves a category marked as monthly out of today's spending", () => {
-    const categories = [
-      { id: "transport", emri: "Transport", lloji: "shpenzim", ritmi: "mujor" },
-      { id: "karburant", emri: "Karburant", lloji: "shpenzim", prindi: "transport" },
-      { id: "ushqim", emri: "Ushqim", lloji: "shpenzim" },
-    ];
+  it("leaves an expense marked monthly out of today's spending", () => {
     const limit = dailyLimit({
       ...baza,
-      categories,
       transactions: [
-        tx("1", { data: "2026-08-10", vlera: 80, kategoriaId: "karburant" }),
+        tx("1", { data: "2026-08-10", vlera: 80, kategoriaId: "karburant", ritmi: "mujor" }),
         tx("2", { data: "2026-08-10", vlera: 12, kategoriaId: "ushqim" }),
       ],
     });
@@ -913,10 +907,9 @@ describe("dailyLimit", () => {
     expect(limit.limiti).toBeCloseTo(920 / 22);
   });
 
-  it("counts it as daily where nothing says otherwise", () => {
+  it("counts it as daily where the expense says nothing", () => {
     const limit = dailyLimit({
       ...baza,
-      categories: [{ id: "karburant", emri: "Karburant", lloji: "shpenzim" }],
       transactions: [tx("1", { data: "2026-08-10", vlera: 80, kategoriaId: "karburant" })],
     });
     expect(limit.shpenzuarSot).toBe(80);
@@ -924,16 +917,26 @@ describe("dailyLimit", () => {
     expect(limit.tejkaluar).toBe(true);
   });
 
-  it("lets one transaction disagree with its category", () => {
-    const categories = [{ id: "ushqim", emri: "Ushqim", lloji: "shpenzim" }];
+  it("asks the expense and not its category - the same category holds both kinds", () => {
     const limit = dailyLimit({
       ...baza,
-      categories,
-      // The monthly stock-up, in a category that is otherwise daily.
-      transactions: [tx("1", { data: "2026-08-10", vlera: 150, kategoriaId: "ushqim", ritmi: "mujor" })],
+      // A category anybody would call daily, and the once-a-season stock-up inside it.
+      transactions: [
+        tx("1", { data: "2026-08-10", vlera: 150, kategoriaId: "ushqim", ritmi: "mujor" }),
+        tx("2", { data: "2026-08-10", vlera: 9, kategoriaId: "ushqim" }),
+      ],
+    });
+    expect(limit.shpenzuarSot).toBe(9);
+    expect(limit.mujoreSot).toBe(150);
+  });
+
+  it("still understands a record saved under the flag's first name", () => {
+    const limit = dailyLimit({
+      ...baza,
+      transactions: [tx("1", { data: "2026-08-10", vlera: 80, jashteLimitit: true })],
     });
     expect(limit.shpenzuarSot).toBe(0);
-    expect(limit.mujoreSot).toBe(150);
+    expect(limit.mujoreSot).toBe(80);
   });
 
   it("lets a fixed limit from Cilësimet win", () => {

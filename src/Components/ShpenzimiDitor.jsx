@@ -3,8 +3,8 @@ import { Link } from "react-router-dom";
 import { Gauge } from "lucide-react";
 import { Panel, ProgressBar, Empty } from "./Ui";
 import { useData } from "../Context/DataContext";
-import { dailyLimit } from "../lib/finance";
-import { emriIPlote, eshteMujore, kategoriteMujore } from "../lib/kategorite";
+import { dailyLimit, eshteMujore } from "../lib/finance";
+import { emriIPlote } from "../lib/kategorite";
 import { monthLabel, todayISO } from "../lib/format";
 import "../Pages/Styles/Personal.css";
 
@@ -27,11 +27,10 @@ function ShpenzimiDitor({ action = "Planifiko", actionTo = "/planifikuara" }) {
         transactions,
         plans: planet,
         recurring,
-        categories,
         today: sot,
         limitiManual: profile.limitiDitor,
       }),
-    [accounts, transactions, planet, recurring, categories, sot, profile.limitiDitor]
+    [accounts, transactions, planet, recurring, sot, profile.limitiDitor]
   );
 
   /**
@@ -44,20 +43,19 @@ function ShpenzimiDitor({ action = "Planifiko", actionTo = "/planifikuara" }) {
    */
   const shkaktari = useMemo(() => {
     if (!d.tejkaluar || !d.caktuar) return null;
-    const mujoret = kategoriteMujore(categories);
     const sotShpenzimet = transactions.filter(
       (tx) =>
         tx.lloji === "shpenzim" &&
         tx.data === sot &&
         !tx.perseritjaId &&
         !tx.planiId &&
-        !eshteMujore(tx, mujoret)
+        !eshteMujore(tx)
     );
     const meIMadhi = [...sotShpenzimet].sort((a, b) => Number(b.vlera) - Number(a.vlera))[0];
     // Only when that single purchase is the whole story - on a day of many small ones the limit
     // really was spent.
     return meIMadhi && Number(meIMadhi.vlera) >= d.limiti ? meIMadhi : null;
-  }, [d.tejkaluar, d.caktuar, d.limiti, categories, transactions, sot]);
+  }, [d.tejkaluar, d.caktuar, d.limiti, transactions, sot]);
 
   const rreshtat = [
     ["Bilanci i shpenzueshëm", d.bilanci, "neutral"],
@@ -97,8 +95,8 @@ function ShpenzimiDitor({ action = "Planifiko", actionTo = "/planifikuara" }) {
             <div className="fcp-daily-note">
               Vetëm {emriIPlote(categories, shkaktari.kategoriaId, "ky shpenzim")} (
               {money(Number(shkaktari.vlera))}) e kaloi limitin. Nëse është diçka që mban gjatë -
-              karburant, sigurim, pajisje - bëjeni <Link to="/kategorite">shpenzim mujor</Link> dhe
-              ndahet mbi ditët që mbeten, në vend që t&apos;i ngarkohet kësaj dite.
+              karburant, sigurim, pajisje - shënojeni si <Link to="/transaksionet">shpenzim
+              mujor</Link> dhe ndahet mbi ditët që mbeten, në vend që t&apos;i ngarkohet kësaj dite.
             </div>
           )}
         </div>

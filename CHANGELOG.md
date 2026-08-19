@@ -9,6 +9,22 @@ e fundit kur rregullohet diçka, dhe e para vetëm kur ndryshon vetë forma e pr
 herë, te `2.0.0`, kur të dhënat mësuan të dalin nga shfletuesi. Datat janë ato të commit-it që e
 ngriti versionin.
 
+## [2.12.0] - 2026-08-18
+
+### Ndryshuar
+- **Ditor apo mujor vendoset te vetë shpenzimi, jo te kategoria.** E njëjta kategori mban edhe
+  pazarin e javës edhe furnizimin e madh një herë në sezon, prandaj kategoria ishte vendi i gabuar
+  për këtë përgjigje - bashkë me të iku edhe trashëgimia te nënkategoritë dhe rregulli «transaksioni
+  e mbivendos kategorinë», dy koncepte që nuk duheshin.
+  <br />Tani shenja vihet aty ku e vëren njeriu: te lista e transaksioneve, çdo shpenzim ka një
+  buton te «Veprime» që e kthen nga ditor në mujor dhe anasjelltas - dielli ditor, kalendari mujor -
+  dhe rreshti e shfaq shenjën «Mujor» pranë llojit. Kutiza mbetet edhe brenda formularit. Kartela
+  «Sa mund të shpenzoj sot», kur një blerje e vetme e kalon limitin, tani të çon te lista.
+  <br />Llogaritja nuk ndryshoi: shpenzimi mujor del nga bilanci si çdo tjetër, por ndahet mbi ditët
+  që kanë mbetur në vend që t&apos;i ngarkohet ditës. Çka është shënuar më parë - me `ritmi` ose me
+  emrin e parë `jashteLimitit` - lexohet njësoj; ajo që humbet vlerën është vetëm shenja e vënë te
+  një kategori.
+
 ## [2.11.1] - 2026-08-18
 
 ### Ndryshuar

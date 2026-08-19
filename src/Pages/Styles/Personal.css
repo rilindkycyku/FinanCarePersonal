@@ -332,6 +332,13 @@
   white-space: nowrap;
 }
 
+/* "Mujor" beside the type on a transaction row: an expense the daily allowance leaves out. Muted
+   rather than coloured - it qualifies the row, it is not a second type. */
+.fcp-pill-mujor {
+  color: var(--sp-text-muted, #94a3b8);
+  margin-left: 0.3rem;
+}
+
 /* A tag as it appears on a transaction row and in the statistics list. Coloured from the tag's own
    name (etiketat.js), so the same tag is the same colour everywhere without a colour to store. */
 .fcp-etiketa-tag {

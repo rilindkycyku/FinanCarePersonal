@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Container, Row, Col, Form, Button } from "react-bootstrap";
-import { TrendingUp, TrendingDown, Percent, Hash, Filter, X, CopyPlus, Paperclip } from "lucide-react";
+import {
+  TrendingUp, TrendingDown, Percent, Hash, Filter, X, CopyPlus, Paperclip, CalendarDays, Sun,
+} from "lucide-react";
 import NavBar from "../Components/NavBar";
 import Footer from "../Components/Footer";
 import PageTitle from "../Components/PageTitle";
@@ -17,7 +19,7 @@ import Zgjedhesi from "../Components/Zgjedhesi";
 import { opsionetLlogarive } from "../lib/opsionet";
 import { useDialog } from "../Context/DialogContext";
 import { STORES } from "../lib/db";
-import { cashflow, sortByDateDesc } from "../lib/finance";
+import { RITMI_MUJOR, cashflow, eshteMujore, sortByDateDesc } from "../lib/finance";
 import { etiketatE, kaEtiketen, ngjyraEtiketes, perdorimiEtiketave } from "../lib/etiketat";
 import { emriIPlote, familjaSet } from "../lib/kategorite";
 import { escapeHtml, formatMoney, formatPercent, markup, plainAmount, todayISO, toNumber } from "../lib/format";
@@ -29,8 +31,8 @@ import "./Styles/Personal.css";
 const TYPE_PILL_COLORS = { hyrje: "var(--sp-emerald)", shpenzim: "var(--sp-red-text)", transfer: "var(--sp-cyan)" };
 
 function Transaksionet() {
-  const { accounts, categories, goals, transactions, faturat, destroy, simboli, money, loading, njeLlogari } =
-    useData();
+  const { accounts, categories, goals, transactions, faturat, save, destroy, simboli, money, loading,
+    njeLlogari } = useData();
   const [filtri, setFiltri] = useState({ kategoria: "", llogaria: "", etiketa: "", min: "", max: "" });
   const dialog = useDialog();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -111,7 +113,13 @@ function Transaksionet() {
         ID: tx.id,
         Data: tx.data,
         Lloji: markup(
-          `<span class="fcp-pill" style="color:${TYPE_PILL_COLORS[tx.lloji]}">${escapeHtml(llojiEtiketa)}</span>`,
+          `<span class="fcp-pill" style="color:${TYPE_PILL_COLORS[tx.lloji]}">${escapeHtml(llojiEtiketa)}</span>` +
+            // Said on the row itself: an expense kept out of the day's allowance explains a figure
+            // on the dashboard, so it must be visible without opening anything.
+            (eshteMujore(tx) ? ` <span class="fcp-pill fcp-pill-mujor">Mujor</span>` : ""),
+          // The plain text stays the bare type: it is what the filter chips, the search and the
+          // exports read, and "Shpenzim Mujor" as a value of its own would split the expense filter
+          // in two so that "Shpenzim" no longer meant every expense.
           llojiEtiketa
         ),
         Kategoria: tx.lloji === "transfer" ? "-" : emriIPlote(categories, tx.kategoriaId, "Pa kategori"),
@@ -175,6 +183,24 @@ function Transaksionet() {
     const { id: _id, krijuar: _krijuar, perseritjaId: _perseritjaId, borxhiId: _borxhiId, ...fushat } = tx;
     setEditing({ ...fushat, data: todayISO() });
     setShowModal(true);
+  };
+
+  /**
+   * Daily or monthly, from the list.
+   *
+   * The form has the same checkbox, but this is where somebody *notices*: the fuel is already
+   * recorded, the daily figure looks wrong, and the row that caused it is right there. One tap
+   * writes the record and every figure that reads it follows.
+   */
+  const ndryshoRitmin = async (id) => {
+    const tx = transactions.find((t) => t.id === id);
+    if (!tx || tx.lloji !== "shpenzim") return;
+    await save(STORES.transactions, {
+      ...tx,
+      ritmi: eshteMujore(tx) ? null : RITMI_MUJOR,
+      // Written out so a record marked under the old name stops disagreeing with the new one.
+      jashteLimitit: null,
+    });
   };
 
   const onDelete = async (id) => {
@@ -330,6 +356,18 @@ function Transaksionet() {
           funksionButonExtra2={(id) => setFaturaTx(transactions.find((t) => t.id === id) || null)}
           ikonaButonitExtra2={<Paperclip size={16} />}
           titulliButonitExtra2="Faturat (foto)"
+          funksionButonExtra3={ndryshoRitmin}
+          ikonaButonitExtra3={(id) => {
+            const tx = transactions.find((t) => t.id === id);
+            if (!tx || tx.lloji !== "shpenzim") return null;
+            return eshteMujore(tx) ? <CalendarDays size={16} /> : <Sun size={16} />;
+          }}
+          titulliButonitExtra3={(id) => {
+            const tx = transactions.find((t) => t.id === id);
+            return eshteMujore(tx)
+              ? "Shpenzim mujor - ktheje te shpenzimet e ditës"
+              : "Shpenzim ditor - bëje mujor (ndahet mbi ditët e mbetura)";
+          }}
           dateField="Data"
           filterField="Lloji"
           mosShfaqID
