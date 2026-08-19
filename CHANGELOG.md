@@ -9,6 +9,20 @@ e fundit kur rregullohet diçka, dhe e para vetëm kur ndryshon vetë forma e pr
 herë, te `2.0.0`, kur të dhënat mësuan të dalin nga shfletuesi. Datat janë ato të commit-it që e
 ngriti versionin.
 
+## [2.12.1] - 2026-08-19
+
+### Rregulluar
+- **Tasti i tastierës së telefonit e kapërcente Kategorinë.** Te «Transaksion i Ri» shkruhej vlera,
+  shtypej tasti i tastierës dhe kursori binte te *Përshkrimi* - me kategorinë, fushën pa të cilën
+  transaksioni nuk ruhet, të lënë bosh pas krahëve. Enter-i e hapte zgjedhësin që nga versioni i
+  kaluar, por atë tast telefoni nuk e dërgon kurrë: kur mbi të shkruhet «next», Android-i ia jep
+  shfletuesit si veprim redaktimi dhe shfletuesi vetë kalon te fusha e ardhshme **e shkruajtshme**.
+  Kategoria është buton - hap një dritare, nuk është `<select>` - prandaj shkelej përmbi pa u parë
+  fare.
+  <br />Tani tasti thotë «shko» dhe vjen si Enter i vërtetë, pra bën atë që bënte te kompjuteri: pa
+  kategori të zgjedhur hap zgjedhësin, me një të zgjedhur i jep fokusin. Te transferi, që nuk ka
+  kategori ku të shkohet, tastiera mbetet siç ishte.
+
 ## [2.12.0] - 2026-08-18
 
 ### Ndryshuar

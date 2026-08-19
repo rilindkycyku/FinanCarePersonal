@@ -183,6 +183,22 @@ function ShtoTransaksionin({
   };
 
   /**
+   * What the phone's keypad puts on its action key - and the reason the handler above runs on a
+   * phone at all.
+   *
+   * Left to itself that key reads «next», and «next» is not a key press: Android hands it to the
+   * browser as an editor action, which walks focus to the next *editable* field by itself without
+   * ever dispatching Enter. The category is a button - it opens a dialog rather than being a
+   * `<select>` - so it is stepped straight over, and the user lands on Përshkrimi with the one
+   * field they cannot save without still empty behind them.
+   *
+   * «go» is delivered as a real Enter instead, which `enterTeKategoria` takes and turns into the
+   * picker. A transfer has no category to walk to, so there the plain «next» is left alone and the
+   * keypad goes on doing what it always did.
+   */
+  const veprimiTastieres = isTransfer ? null : { enterKeyHint: "go" };
+
+  /**
    * Typing a description fills the category in from what was picked for that shop last time - but
    * only while the field is still empty, so a suggestion can never overwrite a deliberate choice.
    * `sugjeruar` is what tells the hint below the field to appear, and it goes as soon as the user
@@ -399,6 +415,7 @@ function ShtoTransaksionin({
                 simboli={tx.monedhaOrigjinale ? currencySymbol(tx.monedhaOrigjinale) : simboli}
                 titulliKalkulatorit="Vlera e transaksionit"
                 onKeyDown={enterTeKategoria}
+                {...veprimiTastieres}
                 autoFocus
                 required
               />
