@@ -9,6 +9,20 @@ e fundit kur rregullohet diçka, dhe e para vetëm kur ndryshon vetë forma e pr
 herë, te `2.0.0`, kur të dhënat mësuan të dalin nga shfletuesi. Datat janë ato të commit-it që e
 ngriti versionin.
 
+## [2.12.2] - 2026-08-19
+
+### Rregulluar
+- **Tasti i telefonit e kapërcente Kategorinë - tani ndalon te ajo.** Rregullimi i djeshëm mbeti pa
+  efekt te tastiera e telefonit: `enterKeyHint` supozohej ta kthente atë tast në Enter të vërtetë,
+  por jo çdo tastierë e dëgjon. Arsyeja është më e thellë - «next» nuk është shtypje tasti fare.
+  Android-i ia jep shfletuesit si veprim redaktimi dhe shfletuesi kalon vetë te fusha e ardhshme
+  **e shkruajtshme**, pa dërguar asgjë që faqja të mund ta dëgjojë; kategoria është buton, sepse hap
+  një dritare në vend të një `<select>`, prandaj shkelej përmbi.
+  <br />Tani nuk pritet më tasti, por *mbërritja*: kur fokusi vjen drejt e nga vlera te Përshkrimi,
+  pa asnjë gisht që ta ketë prekur atë fushë, dhe kategoria është ende bosh - hapet zgjedhësi.
+  Prekja e qëllimshme e Përshkrimit mbetet e paprekur, si edhe transferi, që nuk ka kategori. Ndalon
+  te zgjedhësi, pikërisht aty ku ndalon Enter-i te kompjuteri.
+
 ## [2.12.1] - 2026-08-19
 
 ### Rregulluar
