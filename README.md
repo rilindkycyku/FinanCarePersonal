@@ -133,9 +133,15 @@ sa shpenzohet, sa mbetet dhe sa po kursesh.
   shkruani vlerën e faturës, monedhën dhe kursin - ruhet vlera e kthyer në monedhën tuaj (vlera
   origjinale mbahet për krahasim me ekstraktin e kartelës). Kursi i fundit për çdo monedhë mbahet
   mend, sepse aplikacioni nuk ka backend për t'i marrë kurset vetë.
-- **Statistikat** - hyrje kundrejt shpenzimeve për 6 muajt e fundit, bilanc mujor, ndarja sipas
-  kategorive e llogarive (me nënkategoritë e hapura nën secilën kategori), mesatarja ditore dhe 5
-  shpenzimet më të mëdha, për periudhë të zgjedhur.
+- **Statistikat** - katër pamje për periudhën e zgjedhur, që rrëshqitja të mos jetë çmimi i
+  përgjigjes. **Përmbledhje**: shifrat kryesore, bilanci ndër muaj me parashikimin, hyrje kundrejt
+  shpenzimeve për 6 muajt e fundit dhe bilanci mujor. **Kategoritë**: unaza e ndarjes, renditja me
+  nënkategoritë e hapura nën secilën, etiketat dhe krahasimi me muajin e kaluar. **Ritmi**: shuma e
+  mbledhur ditë pas dite përballë të njëjtës pjesë të periudhës së kaluar, mesatarja për çdo ditë
+  të javës (jo shuma - një muaj mban pesë të shtuna dhe katër të marta po aq shpesh), kalendari i
+  muajit i ngjyrosur sipas asaj që doli, ndarja sipas madhësisë së blerjes dhe 5 shpenzimet më të
+  mëdha. **Llogaritë** (kur ka më shumë se një): aktiviteti dhe transferet. Pamja e hapur qëndron
+  te adresa.
 - **Bilanci ndër muaj dhe parashikimi** - një vijë e vetme: muajt e kaluar me vijë të plotë, muajt
   që vijnë me vijë të ndërprerë. Parashikimi nuk supozon asgjë nga mesatarja e së kaluarës - ecën
   ditë për ditë mbi atë që dihet tashmë (transaksionet me datë të ardhshme, këstet e pagesat e

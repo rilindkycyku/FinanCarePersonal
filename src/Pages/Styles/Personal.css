@@ -566,6 +566,187 @@
   .fcp-faqe-tab span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 }
 
+/* A tab strip that has more tabs than a phone is wide. It scrolls sideways instead of wrapping to
+   a second row or squeezing four labels into ellipses - the tabs keep their own width and the
+   strip keeps its one-line height, which is the whole reason it is up there. */
+.fcp-tabs-rrjedh {
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.fcp-tabs-rrjedh::-webkit-scrollbar { display: none; }
+
+.fcp-tabs-rrjedh .fcp-faqe-tab {
+  flex: 1 0 auto;
+  white-space: nowrap;
+}
+
+/* ── Statistika: rhythm charts ────────────────────────────── */
+
+/* Seven weekday columns, one bar each. Shorter than the six-month chart because it carries a
+   ranking under it, and wider bars because a single bar in a column of one reads as a hairline at
+   the width the paired chart uses. */
+.fcp-chart-e-ulet { height: 130px; }
+.fcp-bar-e-gjere { width: 68%; max-width: 34px; }
+
+/* The pace line: this period solid, the one before it as a thin dashed reference. Same reasoning
+   as the forecast line - what is being compared against should not look as solid as what is. */
+.fcp-ritmi-tani {
+  fill: none;
+  stroke: var(--sp-red);
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.fcp-ritmi-para {
+  fill: none;
+  stroke: var(--sp-text-muted);
+  stroke-width: 1.5;
+  stroke-dasharray: 5 4;
+  opacity: 0.8;
+}
+
+.fcp-legend-swatch-vije {
+  width: 14px;
+  height: 0;
+  border-radius: 0;
+  border-top: 2px dashed var(--sp-text-muted);
+}
+
+/* ── Statistika: the month as a grid ──────────────────────── */
+.fcp-kalendar-koka,
+.fcp-kalendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.fcp-kalendar-koka {
+  margin-bottom: 5px;
+  font-size: 0.62rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--sp-text-muted);
+  text-align: center;
+}
+
+.fcp-kalendar-qeli {
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 7px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--sp-text-muted);
+  background: var(--sp-surface-3);
+}
+
+.fcp-kalendar-qeli.bosh { background: transparent; }
+
+/* Five steps, not a gradient: two cells four percent apart cannot be told apart by eye, and a
+   stepped scale is readable without a key to decode it. Level 0 is "nothing", which is why it is
+   the panel's own surface rather than the palest red. */
+.fcp-kalendar-qeli.niveli-1 { background: rgba(239, 68, 68, 0.22); color: var(--sp-text-soft); }
+.fcp-kalendar-qeli.niveli-2 { background: rgba(239, 68, 68, 0.42); color: #fff; }
+.fcp-kalendar-qeli.niveli-3 { background: rgba(239, 68, 68, 0.66); color: #fff; }
+.fcp-kalendar-qeli.niveli-4 { background: rgba(239, 68, 68, 0.92); color: #fff; }
+
+.fcp-kalendar-legjenda {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 0.85rem;
+}
+
+.fcp-kalendar-qeli.mostra {
+  width: 14px;
+  height: 14px;
+  aspect-ratio: auto;
+  border-radius: 4px;
+  flex: 0 0 auto;
+}
+
+/* ── Statistika: the share ring ───────────────────────────── */
+.fcp-unaz-wrap {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.fcp-unaz {
+  position: relative;
+  width: 130px;
+  height: 130px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+}
+
+/* The hole is a filled circle in the panel's colour rather than a mask: identical in every
+   browser, and it inherits the theme along with everything else on the card. */
+.fcp-unaz-vrima {
+  position: absolute;
+  inset: 23px;
+  border-radius: 50%;
+  background: var(--sp-surface);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  text-align: center;
+  padding: 0 6px;
+}
+
+.fcp-unaz-vlera {
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: var(--sp-text);
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+}
+
+.fcp-unaz-etiketa {
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--sp-text-muted);
+}
+
+.fcp-unaz-legjenda {
+  flex: 1 1 150px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+
+.fcp-unaz-legjenda li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.22rem 0;
+  font-size: 0.78rem;
+  color: var(--sp-text-soft);
+}
+
+.fcp-unaz-emri {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fcp-unaz-perqind {
+  font-weight: 800;
+  color: var(--sp-text);
+}
+
 /* ── Section headings inside pages ────────────────────────── */
 .fcp-section-title {
   font-weight: 900;
@@ -640,7 +821,18 @@
   .fcp-account-name { font-size: 0.78rem; }
 
   .fcp-chart { height: 140px; gap: 0.25rem; }
+  .fcp-chart-e-ulet { height: 112px; }
   .fcp-chart-label { font-size: 0.58rem; }
+  /* The ring and its key sit side by side down to the narrowest phone: stacked, the panel is
+     twice as tall for the same information, which is the opposite of why the ring is there. */
+  .fcp-unaz-wrap { gap: 0.85rem; }
+  .fcp-unaz { width: 104px; height: 104px; }
+  .fcp-unaz-vrima { inset: 18px; }
+  .fcp-unaz-vlera { font-size: 0.72rem; }
+  .fcp-unaz-legjenda { flex-basis: 120px; }
+  .fcp-unaz-legjenda li { font-size: 0.72rem; padding: 0.15rem 0; }
+  .fcp-kalendar-koka, .fcp-kalendar-grid { gap: 3px; }
+  .fcp-kalendar-qeli { border-radius: 6px; font-size: 0.62rem; }
   .fcp-section-title { font-size: 0.84rem; margin-bottom: 0.6rem; }
 }
 
@@ -663,9 +855,24 @@ body.light-mode .fcp-panel-header {
 
 body.light-mode .fcp-kpi-icon,
 body.light-mode .fcp-row-icon,
-body.light-mode .fcp-progress {
+body.light-mode .fcp-progress,
+body.light-mode .fcp-kalendar-qeli {
   background: #eef2f7;
 }
+
+/* The ring's hole is the card it sits on, and the card is white here. Without this the middle of
+   the ring stays the dark surface and the total inside it disappears. */
+body.light-mode .fcp-unaz-vrima { background: #ffffff; }
+
+/* Every step has to be repeated here, not just the pale ones. `body.light-mode .fcp-kalendar-qeli`
+   carries an element and two classes, which outweighs the plain `.fcp-kalendar-qeli.niveli-4` above
+   - so without these the busiest day of the month is painted the same neutral grey as an empty one,
+   with white text on it. */
+body.light-mode .fcp-kalendar-qeli.bosh { background: transparent; }
+body.light-mode .fcp-kalendar-qeli.niveli-1 { background: rgba(239, 68, 68, 0.16); color: var(--sp-text); }
+body.light-mode .fcp-kalendar-qeli.niveli-2 { background: rgba(239, 68, 68, 0.34); color: var(--sp-text); }
+body.light-mode .fcp-kalendar-qeli.niveli-3 { background: rgba(239, 68, 68, 0.62); color: #fff; }
+body.light-mode .fcp-kalendar-qeli.niveli-4 { background: rgba(239, 68, 68, 0.9); color: #fff; }
 
 /* The dashboard CTA is a <button> here (it opens the transaction modal instead of navigating),
    so it needs the border/appearance reset that an <a> doesn't. */
@@ -1207,6 +1414,10 @@ body.light-mode .card.profile-card.fcp-zona-rrezik:hover {
 
 .fcp-line-dot.parashikim { background: var(--sp-cyan); }
 .fcp-line-dot.neg { background: var(--sp-red); }
+/* The marker at the head of the pace line follows that line's own colour - an emerald dot on the
+   end of a red curve reads as a second series. It has to sit here, after the base rule: the two
+   carry the same weight, so the one written later is the one that applies. */
+.fcp-line-dot.fcp-dot-i-kuq { background: var(--sp-red); }
 
 .fcp-line-labels {
   display: flex;

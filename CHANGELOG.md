@@ -9,6 +9,49 @@ e fundit kur rregullohet diçka, dhe e para vetëm kur ndryshon vetë forma e pr
 herë, te `2.0.0`, kur të dhënat mësuan të dalin nga shfletuesi. Datat janë ato të commit-it që e
 ngriti versionin.
 
+## [2.16.0] - 2026-08-22
+
+### Shtuar
+- **Statistikat u ndanë në katër pamje.** Faqja ishte një kolonë e vetme me dhjetë panele, që në
+  telefon do të thoshte rreth njëmbëdhjetë ekrane rrëshqitje deri te i fundit - dhe i fundit ishte
+  pikërisht aty ku rrinin përgjigjet. Tani janë katër skeda, të ndara sipas pyetjes që bëhet, jo
+  sipas mënyrës si llogariten shifrat: **Përmbledhje** (shifrat kryesore, bilanci ndër muaj me
+  parashikimin, drejtimi i gjashtë muajve), **Kategoritë** (ku shkuan paratë), **Ritmi** (kur
+  dolën) dhe **Llogaritë** (nga cila llogari). Pamja e hapur qëndron te adresa
+  (`?pamja=ritmi`), pra butoni i kthimit lëviz mes tyre dhe një pamje mund të mbahet e hapur.
+
+- **Pesë grafikë të rinj.**
+  - **Sa shpejt po shpenzohet** - shuma e mbledhur ditë pas dite, përballë të njëjtës pjesë të
+    periudhës së kaluar. Një shtyllë për çdo ditë është pothuajse e palexueshme, sepse shpenzimi
+    është me kërcime; shuma që vetëm rritet është forma që një njeri e gjykon me një shikim, dhe
+    pyetja e vetme që i bëhet - *a jam para apo pas se herës së kaluar?* - është ajo që vlen në
+    mes të muajit.
+  - **Sipas ditës së javës** - shtatë shtylla me **mesataren** për çdo ditë të tillë, jo shumën.
+    Një muaj mban pesë të shtuna dhe katër të marta po aq shpesh, dhe një renditje sipas shumës
+    do të tregonte kalendarin në vend të zakonit.
+  - **Kalendari i muajit** - çdo ditë e ngjyrosur sipas asaj që doli, në pesë shkallë. Kategoritë
+    thonë *çfarë* dhe ritmi thotë *sa shpejt*; asnjëra nuk thotë *kur*, dhe «kur» është modeli që
+    njeriu e njeh menjëherë te muaji i vet - java e pagës, dy fundjavat që kushtojnë sa katër.
+  - **Ndarja e shpenzimeve si unazë** - forma e periudhës me një shikim: një kategori me bisht,
+    apo gjashtë sish afërsisht të barabarta.
+  - **Sipas madhësisë së shpenzimit** - sa para dhe sa blerje bien në secilin brez vlere. Nëse
+    pak blerje mbajnë shumicën e parave, kursimi vjen nga ato; nëse i mban brezi më i vogël, vjen
+    nga zakoni i përditshëm. Janë dy probleme të ndryshme dhe duken njësoj te një listë kategorish.
+
+- **Paneli i transfereve.** Transferet kishin vetëm një numër te kutitë sipër; tani te pamja
+  «Llogaritë» shihet edhe lista e tyre, me rreshtin që thotë pse nuk numërohen as si hyrje as si
+  shpenzim në asnjë shifër të faqes.
+
+### Ndryshuar
+- **Kutitë e shifrave rrinë te pamja «Përmbledhje».** Tetë kuti në telefon janë katër rreshta para
+  se të fillojë grafiku i parë; tani secila pamje nis me atë që pamja premton.
+- **Kalendari dhe krahasimi i ritmit shfaqen vetëm kur kanë kuptim** - kalendari për një muaj,
+  krahasimi për një periudhë që ka një të mëparshme. Te «Gjithçka» mungojnë të dyja, sepse një
+  kalendar prej vitesh është një mur qelizash dhe një krahasim pa periudhë të mëparshme nuk ekziston.
+- **Pamja «Llogaritë» shfaqet vetëm kur ka disa llogari** - pra kur çelësi «Përdor vetëm një llogari
+  kryesore» është i fikur dhe ka më shumë se një llogari aktive. Ndryshe skeda do të hapej mbi një
+  rresht që përsërit bilancin dhe një listë transferesh që s'ka nga të vijë.
+
 ## [2.15.0] - 2026-08-22
 
 ### Shtuar
