@@ -98,6 +98,8 @@ imports, so keep doing that unless you are converting deliberately.
 | `images.js` / `zip.js` | In-browser photo re-encoding; hand-written ZIP writer/reader |
 | `exportExcel.js` / `exportPdf.js` | Excel export and the bank-style PDF statement |
 | `calc.js` | Recursive-descent arithmetic parser for the amount fields (never `eval`) |
+| `transferQr.js` | Whole-database handover to another device as a chain of deflated QR codes |
+| `instalimi.js` | Captures `beforeinstallprompt` once, at startup, so "add to home screen" can be offered |
 | `format.js`, `options.js`, `opsionet.js`, `icons.js` | Formatting, defaults, picker rows, icon registry |
 
 ## Architecture rules
