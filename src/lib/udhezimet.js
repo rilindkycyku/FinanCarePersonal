@@ -525,7 +525,11 @@ export const UDHEZIMET = [
         teksti:
           "Paratë rrallë lëvizin në muajin që u takojnë: qiraja merret një muaj përpara, rroga vjen në " +
           "fillim të muajit pasardhës. Kur e caktoni muajin e mbuluar, transaksioni e mban te përshkrimi - " +
-          "«Qera - Shtator 2026» - pra dy rreshta me të njëjtin emër nuk ngatërrohen më.",
+          "«Qera - Shtator 2026» - pra dy rreshta me të njëjtin emër nuk ngatërrohen më. Muaji numërohet " +
+          "gjithnjë nga data e vetë pagesës te skedula, jo nga dita kur i jepni ose i merrni paratë: një " +
+          "qira me datë 1 shtator, që mbulon shtatorin, është «Muajin e vetë datës» edhe kur e merrni " +
+          "javën e fundit të gushtit. Formulari e tregon poshtë zgjedhësit se si do të duket përshkrimi, " +
+          "dhe dritarja e konfirmimit e përsërit para se ta regjistrojë.",
       },
       {
         titulli: "«Duket se përsëriten»",

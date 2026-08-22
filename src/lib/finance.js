@@ -1094,14 +1094,24 @@ export function idIPerseritjes(recId, data) {
  * schedule was never given one, and nothing is labelled - which is every schedule that existed
  * before this, and the reason nothing changes for them.
  *
+ * The gap is counted from the occurrence's **scheduled date**, never from the day the money really
+ * moved. That is the only anchor that holds: the rent of the first of September is September's rent
+ * whether it was handed over three days early, on the day, or a week late, and a schedule caught up
+ * after three idle months has to label each of its three occurrences with its own month. So a
+ * schedule dated the first of the month, covering that same month, is `0` - even when it is always
+ * collected in the last days of the month before.
+ *
  * Deliberately month arithmetic and not "add 30 days": the answer for the 31st of a short month has
  * to be the month, not a date that slid into the next one.
  */
+// Worded against the schedule's own date - "paguar në gusht" invited the reading that the offset
+// counts from the day the money is handed over, and a rent dated the first of September, collected
+// a few days early, was then labelled October instead of September.
 export const ZHVENDOSJET_E_PERIUDHES = [
   { value: "", label: "Pa shënim muaji" },
-  { value: "-1", label: "Muaji i kaluar (p.sh. rroga e gushtit, paguar në shtator)" },
-  { value: "0", label: "Muaji i pagesës" },
-  { value: "1", label: "Muaji i ardhshëm (p.sh. qiraja e shtatorit, marrë në gusht)" },
+  { value: "-1", label: "Muajin para datës (rroga e gushtit, me datë 1 shtator)" },
+  { value: "0", label: "Muajin e vetë datës (qiraja e shtatorit, me datë 1 shtator)" },
+  { value: "1", label: "Muajin pas datës (qiraja e tetorit, me datë 1 shtator)" },
 ];
 
 export function periudhaEMbuluar(dataStr, zhvendosje) {
