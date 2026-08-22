@@ -1,8 +1,8 @@
 import { useMemo, useState } from "react";
 import { Container, Row, Button, Alert } from "react-bootstrap";
 import {
-  Repeat, Plus, Edit3, Trash2, CheckCircle2, CalendarClock, Pause, Play, TrendingUp, TrendingDown,
-  CalendarRange,
+  Repeat, Plus, Edit3, Trash2, CheckCircle2, CalendarCheck, CalendarClock, Pause, Play, TrendingUp,
+  TrendingDown, CalendarRange,
 } from "lucide-react";
 import NavBar from "../Components/NavBar";
 import Footer from "../Components/Footer";
@@ -80,11 +80,17 @@ function TePerseritura() {
   };
 
   /** Opens the confirmation modal, where the amount of each due occurrence can still be corrected
-   * before it is booked (see KonfirmoPagesen). */
+   * before it is booked (see KonfirmoPagesen).
+   *
+   * A schedule whose date has not arrived yet can be confirmed too: the rent for the first of the
+   * month is often handed over in the last days of the previous one, and waiting for the date meant
+   * the payment could not be recorded when it actually happened. `paraKohe` says so out loud in the
+   * dialog and books the occurrence that was next in line. */
   const confirmOne = (rec) => {
-    const { changed } = generateDueTransactions(rec, today);
+    const paraKohe = !isRecurringDue(rec, today);
+    const { changed } = generateDueTransactions(rec, today, 60, { paraKohe });
     if (!changed) return;
-    setKonfirmimi({ rec });
+    setKonfirmimi({ rec, paraKohe });
   };
 
   /** Same dialog, widened to every schedule that has come due - amounts stay adjustable instead of
@@ -123,7 +129,7 @@ function TePerseritura() {
           <div className="fcp-page-head">
             <div>
               <h1>Pagesat e Përsëritura</h1>
-              <p>Qira, abonime, rroga - planifikoni çka përsëritet dhe konfirmojeni kur vjen data.</p>
+              <p>Qira, abonime, rroga - planifikoni çka përsëritet dhe konfirmojeni kur paguhet, edhe para datës.</p>
               <ButoniUdhezimit className="mt-2" />
             </div>
             <Button className="btn-primary" onClick={openNew}>
@@ -219,14 +225,16 @@ function TePerseritura() {
                         {money(r.vlera)}
                       </div>
                       <div className="fcp-tracked-actions">
-                        {due && (
+                        {/* Shown before the date as well: a payment made early is still a payment,
+                            and the dialog is where it gets its real date. */}
+                        {r.aktiv && r.dataETjetres && (
                           <button
                             type="button"
                             className="fcp-icon-action add"
-                            title="Regjistro tani"
+                            title={due ? "Regjistro tani" : `Regjistro para kohe (${formatDate(r.dataETjetres)})`}
                             onClick={() => confirmOne(r)}
                           >
-                            <CheckCircle2 size={14} />
+                            {due ? <CheckCircle2 size={14} /> : <CalendarCheck size={14} />}
                           </button>
                         )}
                         <button
@@ -334,6 +342,7 @@ function TePerseritura() {
           show={Boolean(konfirmimi)}
           rec={konfirmimi?.rec}
           gjithcka={konfirmimi?.gjithcka}
+          paraKohe={konfirmimi?.paraKohe}
           onHide={() => setKonfirmimi(null)}
         />
 

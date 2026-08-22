@@ -545,6 +545,14 @@ export const UDHEZIMET = [
           "shenjën te rreshti, ose të gjitha me «Regjistro të gjitha». Rastet e mbetura pas kapërcehen vetë.",
       },
       {
+        titulli: "…ose para kohe, kur paguhet më herët",
+        teksti:
+          "Qiraja e datës 1 shpesh merret ditët e fundit të muajit paraprak. Prandaj çdo pagesë aktive e " +
+          "ka shenjën edhe para datës: dritarja e njëjtë hapet, tregon se cilës datë i takon pagesa dhe ku " +
+          "shkon radha pas saj, kurse transaksioni regjistrohet me ditën kur lëvizën vërtet paratë. Muaji i " +
+          "mbuluar dhe hapi i skedulës mbeten ata që do të ishin po ta kishit konfirmuar vetë ditën e datës.",
+      },
+      {
         titulli: "Kartelat paguhen njëherësh",
         teksti:
           "Një kartelë nuk paguhet këst për këst: konfirmimi hap një dritare që mbledh të gjitha këstet e " +

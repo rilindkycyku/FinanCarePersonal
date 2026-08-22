@@ -105,7 +105,9 @@ sa shpenzohet, sa mbetet dhe sa po kursesh.
   e dhënë.
 - **Pagesat e Përsëritura** - qira, abonime, rroga dhe blerjet me këste. Skedulimi nuk regjistron
   vetë asgjë: kur vjen data, ju e konfirmoni dhe krijohet transaksioni (duke kapërcyer edhe rastet e
-  mbetura pas). Secila mund të thotë edhe **për cilin muaj është**, sepse paratë rrallë lëvizin në
+  mbetura pas). Konfirmimi mund të bëhet edhe **para datës**, sepse ashtu paguhet shpesh - qiraja e
+  datës 1 merret ditët e fundit të muajit paraprak: transaksioni merr ditën kur lëvizën vërtet
+  paratë, kurse muaji i mbuluar dhe hapi i skedulës mbeten ata të datës së planifikuar. Secila mund të thotë edhe **për cilin muaj është**, sepse paratë rrallë lëvizin në
   muajin që u takojnë: qiraja merret një muaj përpara, rroga vjen në fillim të muajit pasardhës për
   punën e muajit që shkoi. Kur e caktoni, transaksioni e mban muajin te përshkrimi - *Qera Obejkti -
   Mergimi · Shtator 2026* - pra dy rreshta me të njëjtin emër nuk ngatërrohen më. Për një blerje me këste mjafton numri i kësteve - data e përfundimit llogaritet vetë
