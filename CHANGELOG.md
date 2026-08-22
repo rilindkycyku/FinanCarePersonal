@@ -9,6 +9,26 @@ e fundit kur rregullohet diçka, dhe e para vetëm kur ndryshon vetë forma e pr
 herë, te `2.0.0`, kur të dhënat mësuan të dalin nga shfletuesi. Datat janë ato të commit-it që e
 ngriti versionin.
 
+## [2.14.1] - 2026-08-22
+
+### Rregulluar
+- **«Për cilin muaj është» numërohet nga data e skedulës - tani thuhet e tregohet.** Zgjedhja
+  «Muaji i ardhshëm (p.sh. qiraja e shtatorit, marrë në gusht)» fliste për ditën kur i merrni
+  paratë, kurse aplikacioni e ka numëruar gjithnjë nga *data e vetë pagesës te skedula*. Për një
+  qira me datë 1 shtator, që mbulon shtatorin por merret ditët e fundit të gushtit, të dyja
+  leximet japin përgjigje të ndryshme - dhe përshkrimi dilte «Tetor 2026» kur duhej «Shtator 2026».
+
+  Data e skedulës mbetet e vetmja pikë e qëndrueshme (e njëjta pagesë nuk mund të mbulojë dy muaj
+  të ndryshëm varësisht se sa herët u pagua, dhe një skedulë e lënë tre muaj pa u konfirmuar duhet
+  t'i shënojë të tria pagesat me muajt e vet), prandaj ndryshuan fjalët, jo llogaritja:
+  «Muajin para datës», «Muajin e vetë datës», «Muajin pas datës», secila me shembullin te e njëjta
+  datë - 1 shtator.
+
+- **Muaji i mbuluar shihet para se të shkruhet.** Te formulari i pagesës, poshtë zgjedhësit, del
+  vetë përshkrimi që do të krijohet - *Qera Obejkti - Mergimi · Shtator 2026* - dhe te dritarja e
+  konfirmimit çdo rresht e mban muajin pranë datës. Një zgjedhje një hap e gabuar dukej vetëm pasi
+  ishte shkruar te një transaksion i regjistruar tashmë.
+
 ## [2.14.0] - 2026-08-22
 
 ### Shtuar

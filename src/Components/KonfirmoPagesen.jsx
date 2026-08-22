@@ -7,7 +7,7 @@ import { makeId, STORES } from "../lib/db";
 import { emriIPlote } from "../lib/kategorite";
 import {
   convertedAmount, debtPaymentsFromTransactions, generateDueTransactions, monthBounds,
-  monthlyRecurringBreakdown, recurringProgress, scheduledOccurrences,
+  monthlyRecurringBreakdown, periudhaEMbuluar, recurringProgress, scheduledOccurrences,
 } from "../lib/finance";
 import {
   formatDate, formatMoney, formatSignedMoney, monthLabel, monthKey, plainAmount, toNumber, todayISO,
@@ -100,6 +100,10 @@ function KonfirmoPagesen({ show, rec, onHide, gjithcka = false, paraKohe = false
           datat: occ.map((o) => o.data),
           // True when this row is being settled before its date - said out loud below the total.
           paraKohe: occ[0].data > dataPageses,
+          // The month this booking will say it covers. Shown before it is written rather than
+          // discovered afterwards in the description of a transaction that is already in the
+          // ledger: the offset is set once, months earlier, and is easy to pick one step off.
+          periudha: occ.length === 1 ? periudhaEMbuluar(occ[0].data, r.periudhaZhvendosje) : null,
           tjetra: updated.dataETjetres,
           njesia,
           planifikuar: njesia * occ.length,
@@ -317,6 +321,7 @@ function KonfirmoPagesen({ show, rec, onHide, gjithcka = false, paraKohe = false
                         ? `${r.datat.length} pagesa të pakonfirmuara`
                         : formatDate(r.datat[0])}
                       {r.paraKohe && " · para kohe"}
+                      {r.periudha && ` · për ${r.periudha.etiketa}`}
                       {r.fx && ` · ${r.fx} @ ${r.kursi || "-"}`}
                       {r.borxhi && ` · zbret "${r.borxhi.emri}"`}
                     </div>

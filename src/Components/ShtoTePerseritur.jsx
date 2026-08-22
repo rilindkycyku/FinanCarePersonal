@@ -9,6 +9,7 @@ import { makeId, STORES } from "../lib/db";
 import { currencySymbol, formatMoney, toNumber, todayISO } from "../lib/format";
 import {
   ZHVENDOSJET_E_PERIUDHES, convertedAmount, currencyFields, debtProgress, lastInstallmentDate,
+  periudhaEMbuluar,
 } from "../lib/finance";
 import { FREQUENCIES } from "../lib/options";
 import { formatDate } from "../lib/format";
@@ -45,6 +46,9 @@ function ShtoTePerseritur({ show, onHide, initial }) {
     useData();
   const [rec, setRec] = useState(BLANK);
   const [error, setError] = useState("");
+
+  // What the next occurrence's description will actually say - see the hint under the picker.
+  const periudhaEPare = periudhaEMbuluar(rec.dataETjetres, rec.periudhaZhvendosje);
 
   useEffect(() => {
     if (!show) return;
@@ -248,9 +252,28 @@ function ShtoTePerseritur({ show, onHide, initial }) {
               />
               <div className="fcp-modal-hint">
                 Paratë rrallë lëvizin në muajin që u takojnë: qiraja merret një muaj përpara, rroga
-                vjen në fillim të muajit pasardhës për punën e muajit që shkoi. Kur e caktoni këtu,
-                çdo transaksion i krijuar nga kjo pagesë e mban muajin te përshkrimi - p.sh.
-                <em> Qera Obejkti - Mergimi · Shtator 2026</em>.
+                vjen në fillim të muajit pasardhës për punën e muajit që shkoi. Muaji numërohet nga
+                <em> data e vetë pagesës në skedulë</em>, jo nga dita kur i jepni paratë - pra një
+                qira me datë 1 shtator, që mbulon shtatorin, është «Muajin e vetë datës» edhe kur ju
+                e merrni javën e fundit të gushtit.
+                {/* Shown rather than described: the offset is easy to pick one step off, and the
+                    mistake is invisible until it has already been written into a transaction. */}
+                {rec.dataETjetres && (
+                  <div className="mt-1">
+                    Pagesa e <strong>{formatDate(rec.dataETjetres)}</strong>{" "}
+                    {periudhaEPare
+                      ? (
+                        <>
+                          do të shënohet{" "}
+                          <em>
+                            {(rec.emri || "Pagesa").trim()} · {periudhaEPare.etiketa}
+                          </em>
+                          .
+                        </>
+                      )
+                      : "nuk do të mbajë shënim muaji."}
+                  </div>
+                )}
               </div>
             </Form.Group>
 
