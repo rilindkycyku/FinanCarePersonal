@@ -6,8 +6,9 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
-  celesiRaportit, ekzekutoRaportinMujor, marresiIRaportit, muajiIRaportit, provoSerish, raportiAktiv,
+  celesiRaportit, ekzekutoRaportet, marresiIRaportit, muajiIRaportit, provoSerish, raportiAktiv,
 } from "./raporti";
+import { JAVOR, VJETOR } from "./raportet";
 
 const ora = (iso) => new Date(iso).getTime();
 
@@ -68,18 +69,18 @@ describe("marrësi", () => {
   });
 });
 
-describe("ekzekutoRaportinMujor", () => {
+describe("ekzekutoRaportet", () => {
   it("does nothing at all while the feature is off", async () => {
     expect(raportiAktiv({})).toBe(false);
-    await expect(ekzekutoRaportinMujor({ profile: {} })).resolves.toEqual({ gjendja: "joaktiv" });
+    await expect(ekzekutoRaportet({ profile: {} })).resolves.toEqual([{ gjendja: "joaktiv" }]);
   });
 
   it("does nothing without a project to send from", async () => {
     // No configuration is saved in the test environment, so this is the state of every device that
     // has never connected one.
-    await expect(ekzekutoRaportinMujor({ profile: { raportiMujor: true } })).resolves.toEqual({
-      gjendja: "pa-projekt",
-    });
+    await expect(ekzekutoRaportet({ profile: { raportiMujor: true } })).resolves.toEqual([
+      { gjendja: "pa-projekt" },
+    ]);
   });
 });
 
@@ -89,7 +90,7 @@ describe("ekzekutoRaportinMujor", () => {
  * three devices mailing three copies of the same month - and PostgREST's own duplicate-key error
  * is the only thing that reports it.
  */
-describe("ekzekutoRaportinMujor, me projekt", () => {
+describe("ekzekutoRaportet, me projekt", () => {
   const KONFIGURIMI = {
     url: "https://projekti.supabase.co",
     anonKey: "sb_publishable_abc",
@@ -152,9 +153,14 @@ describe("ekzekutoRaportinMujor, me projekt", () => {
 
   it("claims the month, sends it, and records the send", async () => {
     const thirrjet = stub();
-    const dalja = await ekzekutoRaportinMujor(teDhenat);
+    const [dalja] = await ekzekutoRaportet(teDhenat);
 
-    expect(dalja).toMatchObject({ gjendja: "derguar", muaji: "2026-07", marresi: "llogaria@shembull.com" });
+    expect(dalja).toMatchObject({
+      lloji: "mujor",
+      gjendja: "derguar",
+      periudha: "2026-07",
+      marresi: "llogaria@shembull.com",
+    });
 
     // The claim is written before anything is sent, never after.
     const pretendimi = thirrjet.findIndex((t) => t.metoda === "POST" && !t.url.includes("on_conflict"));
@@ -173,23 +179,23 @@ describe("ekzekutoRaportinMujor, me projekt", () => {
 
   it("steps back when another device claimed the month first", async () => {
     const thirrjet = stub({ pretendimi: { ok: false } });
-    const dalja = await ekzekutoRaportinMujor(teDhenat);
+    const [dalja] = await ekzekutoRaportet(teDhenat);
 
-    expect(dalja).toEqual({ gjendja: "asgje", muaji: "2026-07" });
+    expect(dalja).toEqual({ lloji: "mujor", gjendja: "asgje", periudha: "2026-07" });
     expect(thirrjet.some((t) => t.url.includes("/functions/v1/raporti"))).toBe(false);
   });
 
   it("sends nothing for a month already sent", async () => {
     const thirrjet = stub({ shenja: { gjendja: "derguar", kur: "2026-08-01T08:00:00Z" } });
-    const dalja = await ekzekutoRaportinMujor(teDhenat);
+    const [dalja] = await ekzekutoRaportet(teDhenat);
 
-    expect(dalja).toEqual({ gjendja: "asgje", muaji: "2026-07" });
+    expect(dalja).toEqual({ lloji: "mujor", gjendja: "asgje", periudha: "2026-07" });
     expect(thirrjet.filter((t) => t.metoda === "POST")).toHaveLength(0);
   });
 
   it("writes the reason down when the send fails, and does not claim the month as done", async () => {
     const thirrjet = stub({ dergimi: { ok: false, gabim: "You can only send testing emails to your own address" } });
-    const dalja = await ekzekutoRaportinMujor(teDhenat);
+    const [dalja] = await ekzekutoRaportet(teDhenat);
 
     expect(dalja.gjendja).toBe("deshtoi");
     expect(dalja.gabimi).toMatch(/your own address/);
@@ -199,11 +205,57 @@ describe("ekzekutoRaportinMujor, me projekt", () => {
 
   it("respects the address the user typed over the account's own", async () => {
     const thirrjet = stub();
-    await ekzekutoRaportinMujor({
+    await ekzekutoRaportet({
       ...teDhenat,
       profile: { ...teDhenat.profile, raportiMarresi: "une@shembull.com" },
     });
     const dergimi = thirrjet.find((t) => t.url.includes("/functions/v1/raporti"));
     expect(dergimi.trupi.to).toBe("une@shembull.com");
+  });
+
+  it("sends one report per kind that is switched on, shortest period first", async () => {
+    const thirrjet = stub();
+    const dalja = await ekzekutoRaportet({
+      ...teDhenat,
+      profile: { ...teDhenat.profile, raportiJavor: true, raportiVjetor: true },
+    });
+
+    expect(dalja.map((r) => r.lloji)).toEqual([JAVOR, "mujor", VJETOR]);
+    expect(dalja.every((r) => r.gjendja === "derguar")).toBe(true);
+
+    // Each kind claims its own marker row; the month keeps the un-namespaced key it always had.
+    const idet = thirrjet
+      .filter((t) => t.metoda === "POST" && t.url.includes("financare_records") && !t.url.includes("on_conflict"))
+      .map((t) => t.trupi[0].record_id);
+    expect(idet).toEqual(["raporti:javor:2026-W30", "raporti:2026-07", "raporti:vjetor:2025"]);
+
+    // Three emails, each titled after its own period.
+    const emailet = thirrjet.filter((t) => t.url.includes("/functions/v1/raporti"));
+    expect(emailet.map((t) => t.trupi.subject)).toEqual([
+      "Pasqyra e javës 20-26 korrik 2026",
+      "Pasqyra e korrikut 2026",
+      "Pasqyra e vitit 2025",
+    ]);
+  });
+
+  it("keeps going when one kind fails, rather than dropping the rest", async () => {
+    let e_para = true;
+    vi.stubGlobal("fetch", vi.fn(async (url, opts = {}) => {
+      if (String(url).includes("/functions/v1/raporti")) {
+        if (e_para) {
+          e_para = false;
+          return new Response(JSON.stringify({ gabim: "rate limited" }), { status: 502 });
+        }
+        return new Response(JSON.stringify({ ok: true, id: "re_2" }), { status: 200 });
+      }
+      if ((opts.method || "GET") === "GET") return new Response("[]", { status: 200 });
+      return new Response("", { status: 201 });
+    }));
+
+    const dalja = await ekzekutoRaportet({
+      ...teDhenat,
+      profile: { ...teDhenat.profile, raportiJavor: true },
+    });
+    expect(dalja.map((r) => r.gjendja)).toEqual(["deshtoi", "derguar"]);
   });
 });

@@ -7,6 +7,7 @@
 
 import { describe, expect, it } from "vitest";
 import { ndertoRaportin } from "./raportEmail";
+import { JAVOR, TREMUJOR, VJETOR } from "./periudhat";
 
 const kategorite = [
   { id: "k1", emri: "Ushqim", lloji: "shpenzim", ngjyra: "#ef4444" },
@@ -72,5 +73,62 @@ describe("ndertoRaportin", () => {
     const { html } = ndertimi({ categories: rrezik });
     expect(html).not.toContain("<script>");
     expect(html).toContain("&lt;script&gt;");
+  });
+});
+
+describe("të katër llojet", () => {
+  const ndertoLloj = (lloji, periudha, extra = {}) =>
+    ndertoRaportin({
+      lloji,
+      periudha,
+      profile: { emri: "Rilind", monedha: "EUR" },
+      accounts: llogarite,
+      categories: kategorite,
+      transactions: transaksionet,
+      ...extra,
+    });
+
+  it("titles each one after the period it covers", () => {
+    expect(ndertoLloj(JAVOR, "2026-W28").subject).toBe("Pasqyra e javës 6-12 korrik 2026");
+    expect(ndertoLloj(TREMUJOR, "2026-Q3").subject).toBe("Pasqyra e tremujorit të tretë 2026");
+    expect(ndertoLloj(VJETOR, "2026").subject).toBe("Pasqyra e vitit 2026");
+  });
+
+  it("gives the week its seven days and what is due next", () => {
+    const { html } = ndertoLloj(JAVOR, "2026-W28", {
+      recurring: [
+        { id: "r1", emri: "Qiraja", vlera: 300, aktiv: true, frekuenca: "mujore", dataETjetres: "2026-07-15" },
+      ],
+    });
+    expect(html).toContain("Ditë pas dite");
+    expect(html).toContain("Brenda shtatë ditësh");
+    expect(html).toContain("Qiraja");
+  });
+
+  it("gives the month its weeks and the quarter its months", () => {
+    expect(ndertimi().html).toContain("Javë pas jave");
+    const tre = ndertoLloj(TREMUJOR, "2026-Q3").html;
+    expect(tre).toContain("Tre muajt, krah për krah");
+    // The three month columns are labelled with the short month names.
+    expect(tre).toContain("Kor");
+    expect(tre).toContain("Sht");
+  });
+
+  it("gives the year its twelve months and the comparison it can make", () => {
+    const { html } = ndertoLloj(VJETOR, "2026");
+    expect(html).toContain("Dymbëdhjetë muajt");
+    expect(html).toContain("Muaji më i shtrenjtë");
+  });
+
+  it("keeps a quiet period readable whatever its length", () => {
+    const bosh = ndertoLloj(VJETOR, "2019");
+    expect(bosh.teQeta).toBe(true);
+    expect(bosh.html).toMatch(/nuk u regjistrua asnjë transaksion/i);
+  });
+
+  it("carries the same figures into the plain-text twin", () => {
+    const { text } = ndertoLloj(TREMUJOR, "2026-Q3");
+    expect(text).toContain("Pasqyra e tremujorit të tretë 2026");
+    expect(text).toContain("Ushqim");
   });
 });

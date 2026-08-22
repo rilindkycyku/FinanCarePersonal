@@ -202,6 +202,19 @@ sa shpenzohet, sa mbetet dhe sa po kursesh.
   arkivi ZIP. Çelësi *service_role* refuzohet me vetëdije: ai anashkalon rregullat e sigurisë dhe
   nuk ka pse të ndodhet kurrë në një shfletues. Hapat, forma e tabelës dhe kufizimet janë te
   seksioni [Sinkronizimi mes pajisjeve](#sinkronizimi-mes-pajisjeve).
+- **Raportet me email (opsionale)** - katër raporte, secili me çelësin e vet: **javor**, **mujor**,
+  **tremujor** dhe **vjetor**. Sa herë mbyllet një periudhë, hera e parë që hapet aplikacioni pas saj
+  dërgon me email pasqyrën e asaj periudhe - shifrat kryesore, grafikët e periudhës (ditët e javës,
+  javët e muajit, muajt e tremujorit apo të vitit), ku shkuan paratë dhe sa mbeti nga çfarë hyri.
+  Muaji, tremujori dhe viti e mbajnë të bashkëngjitur edhe pasqyrën e plotë PDF; javori mbetet i
+  shkurtër me qëllim - shtatë ditët, shpenzimi më i madh dhe pagesat që vijnë brenda javës tjetër.
+  Grafikët janë tabela me ngjyra, jo figura: asnjë imazh nuk merret nga një server i jashtëm, pra
+  emaili hapet i plotë edhe kur klienti i bllokon figurat.
+  <br />Nuk ka server tonin as këtu: emaili niset nga një funksion i vogël te **projekti juaj i
+  Supabase-it**, me çelësin tuaj të [Resend](https://resend.com). Kodi i funksionit jepet i gatshëm
+  te Cilësimet dhe instalohet një herë të vetme për të katër raportet. Cila pajisje e dërgon
+  vendoset te vetë projekti - një rresht shënjues që merret nga e para që arrin - pra tre pajisje
+  nuk dërgojnë tre kopje të së njëjtës periudhë.
 - **Udhëzuesi** - një faqe me nga një skedë për secilën faqe të aplikacionit: çfarë bën, hapat me
   radhë dhe ato pak gjëra që ia vlen të dihen para se të preket diçka (një plan nuk është buxhet;
   një borxh nuk e prek bilancin; asgjë nuk regjistrohet derisa të shtypet butoni i fundit te

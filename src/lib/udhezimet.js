@@ -732,15 +732,18 @@ export const UDHEZIMET = [
           "shtypja e gjatë mbi ikonë hap direkt «Shto transaksion».",
       },
       {
-        titulli: "Raporti mujor me email",
+        titulli: "Raportet me email",
         teksti:
-          "Në fillim të çdo muaji, hera e parë që hapet aplikacioni dërgon me email pasqyrën e muajit që " +
-          "sapo mbaroi - shifrat kryesore në trup dhe pasqyra e plotë si PDF bashkëngjitur. Emaili niset " +
-          "nga projekti juaj i Supabase-it, pra kërkon një projekt të lidhur dhe një funksion të vogël me " +
-          "çelësin tuaj të Resend; hapat e instalimit janë brenda vetë kartelës, një herë të vetme. Adresa " +
-          "lihet bosh për llogarinë me të cilën hyni te projekti, ose shkruhet një tjetër. Edhe një muaj " +
-          "pa asnjë transaksion dërgohet - pikërisht ai muaj është shenja që diçka ka mbetur pa u shënuar. " +
-          "Çelësi e ndal krejt kur nuk e doni më.",
+          "Katër raporte, secili me çelësin e vet: javor, mujor, tremujor dhe vjetor. Sa herë mbyllet një " +
+          "periudhë, hera e parë që hapet aplikacioni pas saj dërgon me email pasqyrën e asaj periudhe - " +
+          "shifrat kryesore, grafikët e periudhës dhe, për muajin, tremujorin e vitin, pasqyra e plotë si " +
+          "PDF bashkëngjitur. Javori mbetet i shkurtër dhe pa bashkëngjitje: shtatë ditët si grafik, " +
+          "shpenzimi më i madh dhe pagesat që vijnë brenda javës tjetër. Emaili niset nga projekti juaj i " +
+          "Supabase-it, pra kërkon një projekt të lidhur dhe një funksion të vogël me çelësin tuaj të " +
+          "Resend; hapat e instalimit janë brenda vetë kartelës, një herë të vetme, dhe i njëjti instalim " +
+          "u shërben të katërve. Adresa lihet bosh për llogarinë me të cilën hyni te projekti, ose " +
+          "shkruhet një tjetër. Edhe një periudhë pa asnjë transaksion dërgohet - pikërisht ajo është " +
+          "shenja që diçka ka mbetur pa u shënuar. Çelësat i ndalin një nga një kur nuk i doni më.",
       },
       {
         titulli: "Kujtesa e kategorive",
@@ -760,7 +763,7 @@ export const UDHEZIMET = [
     ],
     keshilla: [
       "Ndryshimi i monedhës ndryshon vetëm simbolin - vlerat e ruajtura nuk konvertohen.",
-      "Raporti mujor dërgohet një herë të vetme edhe kur keni disa pajisje: kush e dërgon vendoset te projekti, jo te telefoni.",
+      "Çdo raport dërgohet një herë të vetme edhe kur keni disa pajisje: kush e dërgon vendoset te projekti, jo te telefoni.",
       "«Kthe listat e parazgjedhura» shton përsëri kategoritë që mungojnë pa i fshirë të dhënat ekzistuese.",
     ],
     shihEdhe: ["te-dhena", "llogarite", "kategorite"],

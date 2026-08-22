@@ -31,7 +31,7 @@ npm run dev       # vite --host
 npm run build
 npm run preview
 npm run lint      # eslint . — must stay at 0 errors (5 pre-existing warnings)
-npm test          # vitest run — 21 files, 403 tests, all green
+npm test          # vitest run — 25 files, 475 tests, all green
 npm run test:watch
 npm run ikonat    # regenerates public/img/web/icon-*.png from Logo.svg via Playwright/Chromium
 ```
@@ -90,7 +90,12 @@ imports, so keep doing that unless you are converting deliberately.
 | `pajisja.js` | This device's id/name, stamped on pushed rows |
 | `rregullat.js` | Learned description → category memory |
 | `csv.js` | Bank statement import: guesses delimiter, columns, date and amount format |
-| `raporti.js` / `raportEmail.js` | Monthly report scheduling and the email itself |
+| `periudhat.js` | Week/month/quarter/year keys, bounds and Albanian names |
+| `raportet.js` | The four report kinds: profile flag, marker key, whether a PDF rides along |
+| `raporti.js` | Report scheduling: which period is owed, which device claims it, the send |
+| `raportFigurat.js` | The figures each kind of report is made of, composed from `finance.js` |
+| `raportGrafike.js` | Table-drawn charts for the emails (columns, share bar, meter) |
+| `raportEmail.js` | The report emails themselves - HTML and plain-text |
 | `paralajmerimet.js` / `njoftimet.js` | Crossing-based notifications |
 | `abonimet.js` | Detects repeating payments already in the history |
 | `viti.js` | Year-vs-previous-year page |
@@ -221,8 +226,9 @@ version — and note that an upgrade blocked by another open tab is surfaced thr
 
 - Vitest, no DOM environment, no jsdom setup file. Tests sit next to the code as `*.test.js`.
 - Everything tested is pure: `finance`, `csv`, `sinkronizimi`, `kategorite`, `etiketat`, `format`,
-  `options`, `calc`, `raporti`, `raportEmail`, `paralajmerimet`, `njoftimet`, `abonimet`, `viti`,
-  `skema`, `supabase`, `transferQr`, `pajisja`, `instalimi`, `udhezimet`.
+  `options`, `calc`, `periudhat`, `raportet`, `raporti`, `raportFigurat`, `raportGrafike`,
+  `raportEmail`, `paralajmerimet`, `njoftimet`, `abonimet`, `viti`, `skema`, `supabase`,
+  `transferQr`, `pajisja`, `instalimi`, `udhezimet`.
 - Follow the existing style: small factory helpers (`const tx = (id, extra = {}) => ({…})`), fixed
   dates, `"today"` passed in as an argument.
 - New logic in `lib/` is expected to arrive with tests. React components are not unit-tested —

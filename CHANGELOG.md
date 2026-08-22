@@ -9,6 +9,48 @@ e fundit kur rregullohet diçka, dhe e para vetëm kur ndryshon vetë forma e pr
 herë, te `2.0.0`, kur të dhënat mësuan të dalin nga shfletuesi. Datat janë ato të commit-it që e
 ngriti versionin.
 
+## [2.15.0] - 2026-08-22
+
+### Shtuar
+- **Tri raporte të reja me email: javor, tremujor dhe vjetor.** Deri tani ishte një i vetëm, ai
+  mujor, dhe ai është periudha e gabuar për shumicën e pyetjeve: një muaj është tepër vonë për të
+  parë se ku po shkon java, dhe tepër i shkurtër për të parë nëse një shprehi po rritet apo po bie.
+  Tani janë katër, secili me çelësin e vet te Cilësimet, dhe secili niset kur mbyllet periudha e
+  vet - hera e parë që hapet aplikacioni pas saj.
+
+  Nuk janë i njëjti raport me data të tjera. **Javori** është një shtytje e shkurtër: shtatë ditët
+  si grafik, shpenzimi më i madh i javës dhe pagesat që vijnë brenda shtatë ditëve - pa
+  bashkëngjitje, sepse një PDF çdo të hënë është një email që fiket. **Mujori** mbetet pasqyra:
+  javët e muajit si grafik, ku shkuan paratë, sa mbeti nga çfarë hyri, buxhetet që u mbushën mbi
+  80%, dhe pasqyra e plotë PDF. **Tremujori** është aty ku një shprehi bëhet e dukshme: tre muajt
+  krah për krah me hyrjet e shpenzimet, mesatarja mujore dhe kategoritë që lëvizën më shumë ndaj
+  tremujorit para. **Vjetori** është historia e vitit - dymbëdhjetë muajt si grafik, muaji më i
+  shtrenjtë dhe më i kursyeri, çfarë u rrit e çfarë u ul, dita më e shtrenjtë, dhe krahasimi me
+  vitin paraardhës; i njëjti llogaritje që tregon faqja **Viti**, pra emaili dhe ekrani nuk mund
+  të thonë dy gjëra të ndryshme.
+
+- **Grafikë brenda vetë emailit.** Shtylla ditore e javore, tre e dymbëdhjetë muaj krah për krah,
+  shiriti i ndarë sipas kategorive dhe matësi i kursimit. Të gjitha janë tabela me ngjyrë sfondi,
+  jo figura: një figurë do të thoshte ose një kërkesë te një server i jashtëm - që ky aplikacion
+  nuk e ka dhe nuk do ta ketë - ose një imazh që Gmail-i e heq. Kështu emaili hapet i plotë edhe
+  kur klienti i bllokon figurat, dhe nuk kushton asnjë kërkesë rrjeti.
+
+### Ndryshuar
+- **Një instalim për të katër raportet.** I njëjti funksion te projekti juaj, i njëjti çelës i
+  Resend, e njëjta adresë marrëse; ndryshojnë vetëm çelësat te Cilësimet. Kush e ka instaluar
+  raportin mujor nuk ka çfarë të bëjë - ndez atë që do dhe mbaron aty. Kartela u riemërua në
+  **«Raportet me Email»** dhe dërgimi me dorë tani pyet edhe llojin, jo vetëm periudhën.
+
+- **Rreshtat shënjues të muajve të dërguar mbeten ashtu siç ishin.** Muaji vazhdon të shkruhet si
+  `raporti:2026-07`, pa llojin brenda, kurse tre llojet e reja janë të emërtuara veçmas
+  (`raporti:javor:2026-W33`). Një skemë më e rregullt do t'i bënte të gjithë muajt e dërguar të
+  dukeshin të padërguar - domethënë do t'i dërgonte edhe një herë.
+
+- **Kur mbyllen disa periudha njëherësh, raportet nisen njëri pas tjetrit.** Më 1 janar një ditar
+  me të katërt të ndezur ka katër raporte për të dërguar; nisen me radhë, nga periudha më e
+  shkurtër te më e gjata, në vend që të godasin njëkohësisht një funksion të vetëm dhe kufirin e
+  një llogarie Resend.
+
 ## [2.14.1] - 2026-08-22
 
 ### Rregulluar

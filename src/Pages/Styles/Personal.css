@@ -503,6 +503,25 @@
   font-size: 0.8rem;
 }
 
+/* ── The four email reports ───────────────────────────────────
+   Four switches that share one setup, so they are rows of a single list rather than four cards.
+   The separators are borders on the rows themselves and not on the container: a rule under the
+   last row would read as the start of whatever follows the list. */
+.fcp-raportet-lista {
+  border: 1px solid var(--sp-border);
+  border-radius: var(--sp-radius-md, 12px);
+  background: var(--sp-surface-2);
+  overflow: hidden;
+}
+
+.fcp-raporti-rresht {
+  padding: 0.75rem 0.9rem;
+}
+
+.fcp-raporti-rresht + .fcp-raporti-rresht {
+  border-top: 1px solid var(--sp-border);
+}
+
 /* ── Two halves of one page ───────────────────────────────────
    Sinkronizimi and Eksporto / Importo, which used to be two menu entries. Each tab is a real link
    (the URL still says which half is open), drawn as a switch rather than as a list of links. */
