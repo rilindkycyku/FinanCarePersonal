@@ -1063,6 +1063,9 @@ export function upcomingRecurring(recurring, todayStr, days = 30) {
  * It loops rather than posting a single transaction so a schedule left untouched for months
  * catches up in full on the next visit. `maxCatchUp` stops a mis-entered start date decades in
  * the past from generating thousands of rows in one go.
+ *
+ * `paraKohe` books the next occurrence even though its date has not arrived yet - see the cut-off
+ * inside the function.
  */
 /**
  * The id an occurrence is booked under: the schedule it came from, plus the date it fell due.
@@ -1111,14 +1114,22 @@ export function periudhaEMbuluar(dataStr, zhvendosje) {
   return { celesi, etiketa: monthLabel(celesi) };
 }
 
-export function generateDueTransactions(rec, todayStr, maxCatchUp = 60) {
+export function generateDueTransactions(rec, todayStr, maxCatchUp = 60, { paraKohe = false } = {}) {
   const transactions = [];
   let updated = { ...rec };
   let guard = 0;
   // One stamp for the whole catch-up: they are all booked now, and `data` still separates them.
   const krijuar = new Date().toISOString();
 
-  while (isRecurringDue(updated, todayStr) && guard < maxCatchUp) {
+  // Money moves before its date more often than the schedule admits: the rent for the first of
+  // September is handed over in the last days of August, a card is settled a few days early. That
+  // is the same occurrence, only paid sooner - so with `paraKohe` the cut-off stretches to the next
+  // planned date and no further. Exactly one occurrence comes out, dated the day it was planned for
+  // (which keeps its id, its covered month and the schedule's step identical to what confirming on
+  // the day itself would have produced); the caller books it on the day the money actually left.
+  const kufiri = paraKohe && rec?.dataETjetres > todayStr ? rec.dataETjetres : todayStr;
+
+  while (isRecurringDue(updated, kufiri) && guard < maxCatchUp) {
     // Which month this one covers - see `periudhaEMbuluar`. Null for every schedule that has not
     // been given an offset, which is why nothing about existing schedules changes.
     const periudha = periudhaEMbuluar(updated.dataETjetres, updated.periudhaZhvendosje);

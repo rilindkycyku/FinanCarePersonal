@@ -27,14 +27,20 @@ import "./ModalForms.css";
  * each row takes a plus-or-minus adjustment. The schedules keep their planned figures unless
  * "ruaj për muajt e ardhshëm" is ticked.
  *
+ * A payment can also be confirmed before its date (`paraKohe`): the rent for the first of the month
+ * is usually handed over in the last days of the previous one. The occurrence keeps the date it was
+ * planned for - its id, its covered month and the schedule's next step are exactly what confirming
+ * on the day itself would have produced - while the transaction is booked on the day the money
+ * really moved.
+ *
  * The list itself stays read-only - a card's instalment is a fixed figure and is read, not typed.
  * The adjustment fields live in their own section behind an edit button, so on a phone they are
  * reachable without scrolling the table sideways.
  */
-function KonfirmoPagesen({ show, rec, onHide, gjithcka = false }) {
+function KonfirmoPagesen({ show, rec, onHide, gjithcka = false, paraKohe = false }) {
   const {
     saveMany, saveProfile, profile, transactions, recurring, accounts, categories, borxhet,
-    njeLlogari, monedha, money, simboli,
+    njeLlogari, monedha, money, signedMoney, simboli,
   } = useData();
   const [dataPageses, setDataPageses] = useState(todayISO());
   const [ndryshimet, setNdryshimet] = useState({});
@@ -77,7 +83,11 @@ function KonfirmoPagesen({ show, rec, onHide, gjithcka = false }) {
     return recurring
       .filter((r) => r.aktiv !== false && nGrup(r))
       .map((r) => {
-        const { transactions: occ } = generateDueTransactions(r, dataPageses);
+        // Only the schedule the user pressed is allowed to run ahead of its date; the rest of the
+        // group joins in the ordinary way, when the payment date reaches them.
+        const { transactions: occ, updated } = generateDueTransactions(r, dataPageses, 60, {
+          paraKohe: paraKohe && r.id === rec.id,
+        });
         if (occ.length === 0) return null;
         const fx = r.monedhaOrigjinale || null;
         const njesia = fx ? toNumber(r.vleraOrigjinale) : toNumber(r.vlera);
@@ -88,6 +98,9 @@ function KonfirmoPagesen({ show, rec, onHide, gjithcka = false }) {
           emri: r.emri,
           fx,
           datat: occ.map((o) => o.data),
+          // True when this row is being settled before its date - said out loud below the total.
+          paraKohe: occ[0].data > dataPageses,
+          tjetra: updated.dataETjetres,
           njesia,
           planifikuar: njesia * occ.length,
           ecuria: recurringProgress(r, transactions, occ.length),
@@ -100,7 +113,7 @@ function KonfirmoPagesen({ show, rec, onHide, gjithcka = false }) {
       .filter(Boolean)
       .sort((a, b) => (a.id === rec.id ? -1 : b.id === rec.id ? 1 : a.emri.localeCompare(b.emri)));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [show, rec, recurring, transactions, dataPageses, ndryshimet]);
+  }, [show, rec, recurring, transactions, dataPageses, ndryshimet, paraKohe]);
 
   const setField = (id, name, value) =>
     setNdryshimet((prev) => ({ ...prev, [id]: { ...prev[id], [name]: value } }));
@@ -112,7 +125,14 @@ function KonfirmoPagesen({ show, rec, onHide, gjithcka = false }) {
   const bazaE = (r) => (r.fx ? convertedAmount(paguhet(r), r.kursi) : paguhet(r));
 
   const perfshira = rreshtat.filter((r) => r.perfshi);
-  const gjithsej = perfshira.reduce((sum, r) => sum + bazaE(r), 0);
+
+  // Rent collected is a schedule too, and it is confirmed through this same dialog. Money coming
+  // *in* must not be shown as money leaving, so every figure on screen carries the direction of its
+  // own schedule - `bazaE` stays unsigned, because that is what the adjustment fields work against.
+  const drejtimi = (r) => (r.rec.lloji === "hyrje" ? 1 : -1);
+  const neto = perfshira.reduce((sum, r) => sum + drejtimi(r) * bazaE(r), 0);
+  const vetemHyrje = perfshira.length > 0 && perfshira.every((r) => r.rec.lloji === "hyrje");
+  const etiketaVleres = vetemHyrje ? "Merret" : "Paguhet";
 
   const rregullimeAktive = perfshira.filter((r) => toNumber(r.rregullim) !== 0).length;
 
@@ -134,17 +154,24 @@ function KonfirmoPagesen({ show, rec, onHide, gjithcka = false }) {
     0
   );
 
-  // What this card still owes after today's settlement: instalments falling later in the month
-  // (the payment date can be moved forward to swallow them) and any row left unticked.
+  // What this card still owes after today's settlement: every date of the month that is not among
+  // the ones being booked right now - instalments falling later (the payment date can be moved
+  // forward to swallow them) and any row left unticked. Compared date by date rather than against
+  // the payment date, because a payment made early settles a date that is still ahead of it.
   const mbetenKeteMuaj = recurring
     .filter((r) => r.aktiv !== false && nGrup(r))
     .reduce((sum, r) => {
       const rresht = rreshtat.find((x) => x.id === r.id);
       const mbetura = scheduledOccurrences(r, start, end).filter(
-        (d) => d > dataPageses || (rresht && !rresht.perfshi)
+        (d) => !(rresht?.perfshi && rresht.datat.includes(d))
       );
       return sum + mbetura.length * toNumber(r.vlera);
     }, 0);
+
+  // The row the user pressed, when it is settled ahead of its date. Spelled out below the table:
+  // which occurrence is being paid and where the schedule lands next are the two things a dialog
+  // that normally only shows what has already come due would leave the user guessing.
+  const rreshtiParaKohe = rreshtat.find((r) => r.id === rec?.id && r.paraKohe && r.perfshi);
 
   const handleSave = async (e) => {
     e.preventDefault();
@@ -168,7 +195,9 @@ function KonfirmoPagesen({ show, rec, onHide, gjithcka = false }) {
     perfshira.forEach((rresht) => {
       // Same pure helper the bulk action uses, so the schedule advances exactly as it would have;
       // only the dates, amounts and note are laid on top.
-      const { transactions: occ, updated } = generateDueTransactions(rresht.rec, dataPageses);
+      const { transactions: occ, updated } = generateDueTransactions(rresht.rec, dataPageses, 60, {
+        paraKohe: paraKohe && rresht.id === rec.id,
+      });
       const rregullim = toNumber(rresht.rregullim);
 
       occ.forEach((tx, i) => {
@@ -240,7 +269,9 @@ function KonfirmoPagesen({ show, rec, onHide, gjithcka = false }) {
               <div className="fcp-row-sub">
                 {emriGrupit} - {monthLabel(muajiKey)}
               </div>
-              <div className="fcp-confirm-total-value">{money(gjithsej)}</div>
+              <div className={`fcp-confirm-total-value ${neto < 0 ? "fcp-neg" : "fcp-pos"}`}>
+                {signedMoney(neto)}
+              </div>
               <div className="fcp-row-sub">
                 {perfshira.length} {perfshira.length === 1 ? "pagesë" : "pagesa"} në një ditë të vetme
               </div>
@@ -263,7 +294,9 @@ function KonfirmoPagesen({ show, rec, onHide, gjithcka = false }) {
                 <th>Emri</th>
                 <th>Këstet</th>
                 <th className="text-end">Planifikuar</th>
-                <th className="text-end">Paguhet ({simboli})</th>
+                <th className="text-end">
+                  {etiketaVleres} ({simboli})
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -283,6 +316,7 @@ function KonfirmoPagesen({ show, rec, onHide, gjithcka = false }) {
                       {r.datat.length > 1
                         ? `${r.datat.length} pagesa të pakonfirmuara`
                         : formatDate(r.datat[0])}
+                      {r.paraKohe && " · para kohe"}
                       {r.fx && ` · ${r.fx} @ ${r.kursi || "-"}`}
                       {r.borxhi && ` · zbret "${r.borxhi.emri}"`}
                     </div>
@@ -296,16 +330,18 @@ function KonfirmoPagesen({ show, rec, onHide, gjithcka = false }) {
                     {r.ecuria.gjithsej ? `${r.ecuria.paguar} / ${r.ecuria.gjithsej}` : "-"}
                   </td>
                   <td className="text-end fcp-cell-plan">{formatMoney(r.planifikuar, r.fx || monedha)}</td>
-                  <td className="text-end fcp-neg fcp-cell-paguhet">
-                    {r.perfshi ? plainAmount(-bazaE(r)) : "-"}
+                  <td
+                    className={`text-end fcp-cell-paguhet ${r.rec.lloji === "hyrje" ? "fcp-pos" : "fcp-neg"}`}
+                  >
+                    {r.perfshi ? plainAmount(drejtimi(r) * bazaE(r)) : "-"}
                   </td>
                 </tr>
               ))}
             </tbody>
             <tfoot>
               <tr>
-                <td colSpan={4}>Gjithsej që paguhet</td>
-                <td className="text-end fcp-neg">{plainAmount(-gjithsej)}</td>
+                <td colSpan={4}>Gjithsej që {vetemHyrje ? "merret" : "paguhet"}</td>
+                <td className={`text-end ${neto < 0 ? "fcp-neg" : "fcp-pos"}`}>{plainAmount(neto)}</td>
               </tr>
             </tfoot>
           </Table>
@@ -376,8 +412,10 @@ function KonfirmoPagesen({ show, rec, onHide, gjithcka = false }) {
                         </Form.Group>
                       )}
                       <div className="fcp-adjust-out">
-                        <span className="fcp-row-sub">Paguhet</span>
-                        <strong className="fcp-neg">{formatMoney(bazaE(r), monedha)}</strong>
+                        <span className="fcp-row-sub">{etiketaVleres}</span>
+                        <strong className={r.rec.lloji === "hyrje" ? "fcp-pos" : "fcp-neg"}>
+                          {formatMoney(bazaE(r), monedha)}
+                        </strong>
                       </div>
                     </div>
                   </div>
@@ -391,6 +429,15 @@ function KonfirmoPagesen({ show, rec, onHide, gjithcka = false }) {
               </div>
             )}
           </div>
+
+          {rreshtiParaKohe && (
+            <div className="fcp-modal-hint mb-3">
+              «{rreshtiParaKohe.emri}» ende s&apos;ka arritur datën: kjo është pagesa e{" "}
+              <strong>{formatDate(rreshtiParaKohe.datat[0])}</strong>, e regjistruar me datën{" "}
+              <strong>{formatDate(dataPageses)}</strong> - ditën kur lëvizën vërtet paratë. Pas saj, radha shkon
+              te {formatDate(rreshtiParaKohe.tjetra)}.
+            </div>
+          )}
 
           {mbetenKeteMuaj > 0.004 && (
             <div className="fcp-modal-hint mb-3">
@@ -436,7 +483,7 @@ function KonfirmoPagesen({ show, rec, onHide, gjithcka = false }) {
 
         <Modal.Footer>
           <span className="fcp-row-sub me-auto">
-            {formatDate(dataPageses)} · {money(gjithsej)}
+            {formatDate(dataPageses)} · {signedMoney(neto)}
           </span>
           <Button variant="secondary" onClick={onHide}>
             Anulo

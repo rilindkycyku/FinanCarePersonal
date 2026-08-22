@@ -9,6 +9,34 @@ e fundit kur rregullohet diçka, dhe e para vetëm kur ndryshon vetë forma e pr
 herë, te `2.0.0`, kur të dhënat mësuan të dalin nga shfletuesi. Datat janë ato të commit-it që e
 ngriti versionin.
 
+## [2.14.0] - 2026-08-22
+
+### Shtuar
+- **Një pagesë e përsëritur mund të konfirmohet edhe para se t'i vijë data.** Paratë rrallë lëvizin
+  saktësisht ditën e shënuar te skedula: qiraja e datës 1 shpesh merret ditët e fundit të muajit
+  paraprak, një këst paguhet dy ditë më herët sa për të mos u harruar. Deri tani shenja e konfirmimit
+  dilte vetëm pasi kalonte data, pra pagesa e bërë më herët nuk kishte se ku të shënohej si pagesë e
+  asaj skedule - ose shtohej si transaksion i veçantë, dhe atëherë skedula mbetej e pakonfirmuar dhe
+  e njëjta pagesë dilte dy herë, ose pritej deri më datë, dhe regjistri nuk tregonte më ditën kur
+  paratë lëvizën vërtet.
+
+  Tani çdo pagesë aktive e ka shenjën edhe përpara datës. Hapet e njëjta dritare, që thotë hapur se
+  cilës datë i takon pagesa, me çfarë date po regjistrohet dhe ku shkon radha pas saj. Transaksioni
+  merr ditën kur lëvizën vërtet paratë, kurse muaji i mbuluar te përshkrimi, identifikuesi i
+  transaksionit dhe hapi i skedulës mbeten pikërisht ata që do të ishin po ta kishit konfirmuar
+  ditën e datës - pra edhe një pajisje tjetër që sinkronizohet më vonë e njeh si të njëjtën pagesë,
+  jo si të dytë.
+
+  Konfirmimi para kohe merr vetëm pagesën e radhës, kurrë dy të ardhshmet njëherësh; një skedulë e
+  pauzuar ose e mbaruar nuk konfirmohet dot më herët.
+
+### Rregulluar
+- **Dritarja e konfirmimit i tregonte hyrjet si para që dalin.** Qiraja e marrë është skedulë si
+  çdo tjetër dhe konfirmohet po aty, por totali dilte me minus dhe kolona quhej «Paguhet», edhe pse
+  transaksioni regjistrohej saktë si hyrje. Tani çdo rresht mban drejtimin e vet - jeshile me plus
+  për hyrjet, kuqe me minus për shpenzimet - dhe titulli bëhet «Merret» kur gjithçka në dritare
+  është hyrje. Llogaritja e vlerave nuk ndryshoi; ndryshoi vetëm ajo që shfaqet.
+
 ## [2.13.0] - 2026-08-22
 
 ### Shtuar

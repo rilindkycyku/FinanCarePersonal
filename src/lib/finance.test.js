@@ -692,6 +692,45 @@ describe("recurring payments", () => {
     expect(generateDueTransactions(updated, "2026-09-10").changed).toBe(false);
   });
 
+  it("books the next occurrence early, without running past it", () => {
+    // Rent for the first of September, handed over on 22 August: one occurrence comes out, dated
+    // the day it was planned for, and the schedule steps on exactly as it would have on the day.
+    const qira = schedule("qira", { dataETjetres: "2026-09-01", vlera: 600 });
+    const { transactions, updated, changed } = generateDueTransactions(qira, "2026-08-22", 60, {
+      paraKohe: true,
+    });
+    expect(changed).toBe(true);
+    expect(transactions.map((t) => t.data)).toEqual(["2026-09-01"]);
+    expect(transactions[0].id).toBe(idIPerseritjes("qira", "2026-09-01"));
+    expect(updated.dataETjetres).toBe("2026-10-01");
+    // Without the flag the same call books nothing, which is what every other caller relies on.
+    expect(generateDueTransactions(qira, "2026-08-22").changed).toBe(false);
+  });
+
+  it("still catches up in full when an early confirmation lands on a neglected schedule", () => {
+    const rec = schedule("r", { dataETjetres: "2026-06-01" });
+    const { transactions, updated } = generateDueTransactions(rec, "2026-08-10", 60, { paraKohe: true });
+    expect(transactions.map((t) => t.data)).toEqual(["2026-06-01", "2026-07-01", "2026-08-01"]);
+    expect(updated.dataETjetres).toBe("2026-09-01");
+  });
+
+  it("refuses an early confirmation that would run past the end date or a paused schedule", () => {
+    const mbaruar = schedule("r", { dataETjetres: "2026-09-01", dataFundit: "2026-08-01" });
+    expect(generateDueTransactions(mbaruar, "2026-08-22", 60, { paraKohe: true }).changed).toBe(false);
+    const pauzuar = schedule("r", { dataETjetres: "2026-09-01", aktiv: false });
+    expect(generateDueTransactions(pauzuar, "2026-08-22", 60, { paraKohe: true }).changed).toBe(false);
+  });
+
+  it("keeps the covered month of an early payment at the occurrence it settles", () => {
+    // Paid early or on the day, September's rent is September's rent - the label follows the date
+    // the payment was planned for, not the day the money moved.
+    const qira = schedule("qira", { dataETjetres: "2026-09-01", periudhaZhvendosje: "0" });
+    const [para] = generateDueTransactions(qira, "2026-08-22", 60, { paraKohe: true }).transactions;
+    const [neKohe] = generateDueTransactions(qira, "2026-09-01").transactions;
+    expect(para.periudha).toBe(neKohe.periudha);
+    expect(para.pershkrimi).toBe(neKohe.pershkrimi);
+  });
+
   it("carries a foreign-currency schedule onto the transaction it books", () => {
     const rec = schedule("r", { monedhaOrigjinale: "USD", vleraOrigjinale: 12, kursi: 0.9, vlera: 10.8 });
     const [booked] = generateDueTransactions(rec, "2026-08-10").transactions;
