@@ -148,7 +148,7 @@ export const CATEGORY_ICONS = [
   "Bus", "HeartPulse", "Pill", "Film", "Music", "Shirt", "GraduationCap", "BookOpen",
   "Plane", "Dumbbell", "Gift", "PawPrint", "Baby", "Scissors", "Wrench", "CreditCard",
   "Briefcase", "Coins", "Laptop", "TrendingUp", "Landmark", "Banknote", "PiggyBank",
-  "Sparkles", "Shield", "Receipt", "MoreHorizontal",
+  "Sparkles", "Shield", "Receipt", "Scale", "MoreHorizontal",
 ];
 
 export const DEFAULT_CATEGORIES = [
@@ -185,6 +185,13 @@ export const DEFAULT_CATEGORIES = [
   { id: "cat_default_taksa", emri: "Taksa & Tatime", lloji: "shpenzim", ngjyra: "#64748b", ikona: "Landmark" },
   // Kept last: it is the bucket for whatever the list above still does not name.
   { id: "cat_default_tjera_shp", emri: "Shpenzime të Tjera", lloji: "shpenzim", ngjyra: "#94a3b8", ikona: "MoreHorizontal" },
+  // Nuk është shpenzim i vërtetë, është rrëfim: në fund të muajit bilanci i aplikacionit nuk përputhet
+  // me atë të llogarisë, sepse diçka mbeti pa u shënuar dhe tani nuk dihet çka ishte. Pa këtë rresht
+  // diferenca ose shkon te «Shpenzime të Tjera» - ku gënjen statistikën, sepse duket kategori e
+  // përdorur - ose nuk shënohet fare dhe gabimi bartet muaj pas muaji. Ka të njëjtin emër, ngjyrë e
+  // ikonë edhe te hyrjet, që të lexohet si një gjë e vetme edhe pse modeli kërkon dy rreshta: një
+  // kategori mban një `lloji` të vetëm.
+  { id: "cat_default_barazim_shp", emri: "Barazim i Bilancit", lloji: "shpenzim", ngjyra: "#64748b", ikona: "Scale" },
 
   // ── Nënkategoritë e parazgjedhura ───────────────────────────────────────────
   // Only the baskets that were doing too much work on their own: "Ushqim & Pije" alone answered for
@@ -347,6 +354,9 @@ export const DEFAULT_CATEGORIES = [
   { id: "cat_default_rimbursim", emri: "Rimbursim & Kthim Parash", lloji: "hyrje", ngjyra: "#14b8a6", ikona: "Receipt" },
   { id: "cat_default_shitje", emri: "Shitje (dorë e dytë)", lloji: "hyrje", ngjyra: "#06b6d4", ikona: "Banknote" },
   { id: "cat_default_tjera_hyrje", emri: "Hyrje të Tjera", lloji: "hyrje", ngjyra: "#94a3b8", ikona: "MoreHorizontal" },
+  // Ana tjetër e barazimit - kur llogaria ka më shumë se sa thotë aplikacioni. Shih shënimin te
+  // `cat_default_barazim_shp`.
+  { id: "cat_default_barazim_hyrje", emri: "Barazim i Bilancit", lloji: "hyrje", ngjyra: "#64748b", ikona: "Scale" },
 
   // Investime & Dividendë - three sources that arrive at different times and behave differently;
   // counted as one line they say only "the investments brought something in this year".

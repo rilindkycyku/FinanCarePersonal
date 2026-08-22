@@ -82,6 +82,11 @@ sa shpenzohet, sa mbetet dhe sa po kursesh.
   Statistikat i mbledhin nënkategoritë te kategoria kryesore dhe e hapin ndarjen nën të, prandaj
   pjesët vazhdojnë të mblidhen sa muaji. Kur fshihet një kategori kryesore, nënkategoritë e saj nuk
   fshihen bashkë me të - ngrihen në kategori kryesore, sepse kanë transaksionet e veta.
+  <br />Mes tyre ka edhe një kategori që nuk është shpenzim i vërtetë: **«Barazim i Bilancit»**,
+  e njëjta te hyrjet dhe te shpenzimet. Është vendi ku shkon diferenca kur në fund të muajit bilanci
+  i aplikacionit nuk përputhet me atë të llogarisë - diçka e paguar me para në dorë që mbeti pa u
+  shënuar, ose një hyrje e harruar. Pa të, ajo diferencë ose bëhet «Shpenzim tjetër» dhe e gënjen
+  statistikën, ose nuk shënohet dhe bartet në muajin pasardhës.
   <br />Një kategori që nuk përdoret më - abonimi që mbaroi, dyqani që u mbyll - **arkivohet** në
   vend që të fshihet: transaksionet e saj mbeten aty ku janë dhe statistikat e muajve të kaluar nuk
   ndryshojnë, thjesht nuk ju dilet më përpara nëpër formularë. Një kategori kryesore i merr

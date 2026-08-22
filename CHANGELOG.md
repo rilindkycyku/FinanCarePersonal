@@ -9,6 +9,28 @@ e fundit kur rregullohet diçka, dhe e para vetëm kur ndryshon vetë forma e pr
 herë, te `2.0.0`, kur të dhënat mësuan të dalin nga shfletuesi. Datat janë ato të commit-it që e
 ngriti versionin.
 
+## [2.13.0] - 2026-08-22
+
+### Shtuar
+- **«Barazim i Bilancit» - një kategori për diferencën që mbetet në fund të muajit.** Në fund të
+  muajit bilanci i aplikacionit shpesh nuk përputhet me atë të llogarisë: diçka u pagua me para në
+  dorë dhe mbeti pa u shënuar, ose hyri diçka që u harrua. Deri tani ajo diferencë nuk kishte ku të
+  shkonte. Ose futej te «Shpenzime të Tjera», ku gënjen statistikën - duket kategori e përdorur, kur
+  në të vërtetë është një gabim shënimi - ose nuk shënohej fare, dhe atëherë gabimi nuk mbetet te ai
+  muaj: bartet përpara, sepse bilanci nis muajin e ri i pasaktë.
+
+  Kategoria vjen te të dyja anët, me të njëjtin emër, ngjyrë e ikonë: te shpenzimet kur llogaria ka
+  më pak se sa thotë aplikacioni, te hyrjet kur ka më shumë. Modeli kërkon dy rreshta, sepse një
+  kategori mban një `lloji` të vetëm, por lexohen si një gjë e vetme.
+
+  Vlera hyn te bilanci si çdo transaksion tjetër - kjo është e gjithë pika, që muaji i ri të nisë me
+  shifrën e vërtetë. Nëse diferenca i takon muajit që shkoi e jo ditës së sotme, mjafton t'i vihet
+  data e atij muaji, ose të shënohet si **shpenzim mujor**, që të mos e hajë limitin e një dite të
+  vetme.
+
+### Ndryshuar
+- Ikona **Scale** (peshorja) iu shtua listës së ikonave që mund të zgjidhen për çdo kategori.
+
 ## [2.12.2] - 2026-08-19
 
 ### Rregulluar
