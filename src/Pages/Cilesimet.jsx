@@ -8,7 +8,7 @@ import PageTitle from "../Components/PageTitle";
 import PageLoading from "../Components/PageLoading";
 import ButoniUdhezimit from "../Components/ButoniUdhezimit";
 import CilesimiNjeLlogari from "../Components/CilesimiNjeLlogari";
-import RaportiMujor from "../Components/RaportiMujor";
+import Raportet from "../Components/Raportet";
 import InstaloAplikacionin from "../Components/InstaloAplikacionin";
 import { useData } from "../Context/DataContext";
 import Zgjedhesi from "../Components/Zgjedhesi";
@@ -410,7 +410,7 @@ function Cilesimet() {
             )}
           </Card>
 
-          <RaportiMujor />
+          <Raportet />
 
           <InstaloAplikacionin />
 

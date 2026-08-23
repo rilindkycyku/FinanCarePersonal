@@ -1,6 +1,10 @@
 /**
- * The monthly report: deciding when one is owed, making sure exactly one device sends it, and
- * handing it to the user's own project to put in the post.
+ * The reports: deciding when one is owed, making sure exactly one device sends it, and handing it
+ * to the user's own project to put in the post.
+ *
+ * Four kinds go out now - weekly, monthly, quarterly, yearly - and the rules below are the same
+ * for all of them, which is why they are written once and parameterised by `lloji`. What each kind
+ * *is* lives in `raportet.js`; what each kind *says* lives in `raportEmail.js`.
  *
  * ---- why the marker lives in the cloud ----
  *
@@ -18,28 +22,39 @@
  *
  * ---- what is looked at ----
  *
- * Only ever the month that has just ended. A device that has been closed since spring does not
- * arrive to five months of email; it sends the last one and offers the rest as a button. A failed
- * send leaves the marker behind with its reason, so the settings page can say what went wrong and
- * the next opening retries it rather than pretending the month never happened.
+ * Only ever the period that has just ended, one per kind. A device that has been closed since
+ * spring does not arrive to five months of email; it sends the last one and offers the rest as a
+ * button. A failed send leaves the marker behind with its reason, so the settings page can say
+ * what went wrong and the next opening retries it rather than pretending the month never happened.
+ *
+ * ---- why the kinds go out one after another ----
+ *
+ * On 1 January a ledger with everything switched on owes four reports at once. They are claimed
+ * and sent in sequence, shortest period first: four parallel calls would hit one small Edge
+ * Function - and one Resend account's rate limit - simultaneously, and a failure there would be
+ * blamed on the app rather than on the burst. In sequence the week arrives first, which is also
+ * the order somebody would want to read them in.
  */
 
-import { previousMonthKey } from "./finance";
-import { monthKey } from "./format";
 import { pajisjaKjo } from "./pajisja";
+import {
+  MUJOR, PREFIKSI_RAPORTIT, celesiShenjes, llojiRaportit, ngaCelesi, periudhaERaportit, raportetAktive,
+} from "./raportet";
+import { kufijtePeriudhes } from "./periudhat";
 import { STORI_META, TABELA } from "./skema";
 import { eshteLidhur, lexoKonfigurimin, rest, siguroSesionin, thirrFunksionin } from "./supabase";
 
-/** The `meta` rows this feature owns: `raporti:2026-07`. */
-export const PREFIKSI_RAPORTIT = "raporti:";
-export const celesiRaportit = (muaji) => `${PREFIKSI_RAPORTIT}${muaji}`;
+export { PREFIKSI_RAPORTIT };
+/** The marker id of a monthly report - kept under its old name because that is what it has always
+ * been called here. */
+export const celesiRaportit = (muaji) => celesiShenjes(MUJOR, muaji);
 
 /** The Edge Function this app expects in the user's project, and the version it was written for. */
 export const EMRI_FUNKSIONIT = "raporti";
 export const VERSIONI_FUNKSIONIT = 1;
 
 /** A send that never reported back is taken over after this long - a tab closed mid-request would
- * otherwise hold the month for ever. */
+ * otherwise hold the period for ever. */
 const KOHA_E_NGECUR = 15 * 60 * 1000;
 /** How long a failure is left alone before the next opening tries again, and how many times. */
 const PRITJA_PAS_DESHTIMIT = 6 * 60 * 60 * 1000;
@@ -47,17 +62,17 @@ const PROVAT_MAX = 5;
 
 /** The month a report would be about, if one is owed today: always the one that has just ended. */
 export function muajiIRaportit(sot = new Date()) {
-  return previousMonthKey(monthKey(sot));
+  return periudhaERaportit(MUJOR, sot);
 }
 
-/** Whether the feature is switched on for this ledger. Off until somebody turns it on, because it
- * cannot work before the function is deployed. */
-export function raportiAktiv(profile) {
-  return Boolean(profile?.raportiMujor);
+/** Whether a kind is switched on for this ledger. Off until somebody turns it on, because none of
+ * them can work before the function is deployed. */
+export function raportiAktiv(profile, lloji = MUJOR) {
+  return Boolean(profile?.[llojiRaportit(lloji)?.fusha]);
 }
 
 /**
- * Where the report goes: the address the user typed, or - when they left it alone - the account
+ * Where the reports go: the address the user typed, or - when they left it alone - the account
  * they sign into their own project with. The settings page shows which one is in force rather than
  * silently picking, since an unverified Resend account can only send to its owner's address.
  */
@@ -65,28 +80,30 @@ export function marresiIRaportit(profile, konfigurimi = lexoKonfigurimin()) {
   return String(profile?.raportiMarresi || konfigurimi?.email || "").trim();
 }
 
-/** Reads one month's marker, or null when the month has never been attempted. */
-export async function lexoShenjen(muaji) {
+/** Reads one period's marker, or null when it has never been attempted. */
+export async function lexoShenjen(lloji, periudha) {
   const rreshtat = await rest(
-    `${TABELA}?store=eq.${STORI_META}&record_id=eq.${encodeURIComponent(celesiRaportit(muaji))}&select=data&limit=1`
+    `${TABELA}?store=eq.${STORI_META}&record_id=eq.${encodeURIComponent(celesiShenjes(lloji, periudha))}&select=data&limit=1`
   );
   return rreshtat?.[0]?.data || null;
 }
 
-/** The last few markers, newest month first - what the settings card reads its status line from. */
-export async function lexoShenjat(sa = 6) {
+/** The last few markers, newest first - what the settings card reads its status lines from. Each
+ * one carries the kind it belongs to, including the monthly rows written before kinds existed. */
+export async function lexoShenjat(sa = 12) {
   const rreshtat = await rest(
     `${TABELA}?store=eq.${STORI_META}` +
       `&record_id=like.${encodeURIComponent(`${PREFIKSI_RAPORTIT}*`)}` +
       `&select=record_id,data&order=record_id.desc&limit=${sa}`
   );
-  return (rreshtat || []).map((r) => ({
-    muaji: String(r.record_id).slice(PREFIKSI_RAPORTIT.length),
-    ...(r.data || {}),
-  }));
+  return (rreshtat || []).map((r) => {
+    const { lloji, periudha } = ngaCelesi(r.record_id);
+    // `muaji` is kept alongside `periudha` so nothing that read the old shape breaks on the new one.
+    return { lloji, periudha, muaji: periudha, ...(r.data || {}) };
+  });
 }
 
-async function shkruajShenjen(muaji, data, { vetemIRi = false } = {}) {
+async function shkruajShenjen(lloji, periudha, data, { vetemIRi = false } = {}) {
   const k = await siguroSesionin();
   const pajisja = pajisjaKjo();
   await rest(vetemIRi ? TABELA : `${TABELA}?on_conflict=user_id,store,record_id`, {
@@ -98,7 +115,7 @@ async function shkruajShenjen(muaji, data, { vetemIRi = false } = {}) {
       {
         user_id: k.userId,
         store: STORI_META,
-        record_id: celesiRaportit(muaji),
+        record_id: celesiShenjes(lloji, periudha),
         deleted: false,
         data: { ...data, kur: new Date().toISOString(), pajisja: pajisja?.emri || "" },
       },
@@ -107,12 +124,12 @@ async function shkruajShenjen(muaji, data, { vetemIRi = false } = {}) {
 }
 
 /**
- * Takes the month, if it is still free. `true` means this device now owns the send; `false` means
+ * Takes the period, if it is still free. `true` means this device now owns the send; `false` means
  * another one got there first (a duplicate key, which is the whole point of writing the row first).
  */
-export async function pretendoMuajin(muaji, { prova = 1 } = {}) {
+export async function pretendoPeriudhen(lloji, periudha, { prova = 1 } = {}) {
   try {
-    await shkruajShenjen(muaji, { gjendja: "duke u derguar", prova }, { vetemIRi: true });
+    await shkruajShenjen(lloji, periudha, { gjendja: "duke u derguar", prova }, { vetemIRi: true });
     return true;
   } catch (err) {
     if (err?.kodiPg === "23505") return false;
@@ -120,7 +137,7 @@ export async function pretendoMuajin(muaji, { prova = 1 } = {}) {
   }
 }
 
-/** Whether a month whose marker already exists should be attempted again. */
+/** Whether a period whose marker already exists should be attempted again. */
 export function provoSerish(shenja, tani = Date.now()) {
   if (!shenja) return true;
   if (shenja.gjendja === "derguar") return false;
@@ -149,14 +166,13 @@ export async function gjendjaFunksionit() {
 
 /** The statement PDF as base64, or null when it could not be produced - a report that arrives
  * without its attachment is still worth having, so this never takes the email down with it. */
-async function pdfBase64({ muaji, profile, accounts, categories, transactions, recurring }) {
+async function pdfBase64({ lloji, periudha, profile, accounts, categories, transactions, recurring }) {
   try {
-    const [{ exportStatementPdf }, { monthKeyBounds }, { blobNeDataUrl }] = await Promise.all([
+    const [{ exportStatementPdf }, { blobNeDataUrl }] = await Promise.all([
       import("./exportPdf"),
-      import("./finance"),
       import("./images"),
     ]);
-    const { start, end } = monthKeyBounds(muaji);
+    const { start, end } = kufijtePeriudhes(lloji, periudha);
     const { blob, filename } = await exportStatementPdf({
       profile, accounts, categories, transactions, recurring, start, end, kthejBlob: true,
     });
@@ -168,10 +184,16 @@ async function pdfBase64({ muaji, profile, accounts, categories, transactions, r
 }
 
 /**
- * Builds one month's email and hands it to the function. Used both by the automatic path and by
- * the buttons in Cilësimet, so what a test sends is exactly what August would have sent.
+ * Builds one report and hands it to the function. Used both by the automatic path and by the
+ * buttons in Cilësimet, so what a test sends is exactly what August would have sent.
+ *
+ * `meBashkengjitje` defaults to whatever the kind asks for - the weekly email deliberately carries
+ * no PDF - and a caller may still say no, which is what the "provoje pa bashkëngjitje" path in the
+ * settings card uses when an attachment is what a send is failing on.
  */
 export async function dergoRaportin({
+  lloji = MUJOR,
+  periudha,
   muaji,
   marresi,
   profile = {},
@@ -179,13 +201,19 @@ export async function dergoRaportin({
   categories = [],
   transactions = [],
   recurring = [],
-  meBashkengjitje = true,
+  budgets = [],
+  meBashkengjitje = null,
 }) {
   if (!marresi) throw new Error("Mungon adresa e marrësit.");
+  const celesi = periudha || muaji;
   const { ndertoRaportin } = await import("./raportEmail");
-  const { subject, html, text } = ndertoRaportin({ muaji, profile, accounts, categories, transactions, recurring });
-  const bashkengjitja = meBashkengjitje
-    ? await pdfBase64({ muaji, profile, accounts, categories, transactions, recurring })
+  const { subject, html, text } = ndertoRaportin({
+    lloji, periudha: celesi, profile, accounts, categories, transactions, recurring, budgets,
+  });
+
+  const duhetPdf = meBashkengjitje === null ? Boolean(llojiRaportit(lloji)?.bashkengjitje) : meBashkengjitje;
+  const bashkengjitja = duhetPdf
+    ? await pdfBase64({ lloji, periudha: celesi, profile, accounts, categories, transactions, recurring })
     : { pdf: "", filename: "" };
 
   const pergjigja = await thirrFunksionin(EMRI_FUNKSIONIT, {
@@ -202,57 +230,74 @@ export async function dergoRaportin({
   return { id: pergjigja?.id || "", subject, marresi };
 }
 
-/** Records a month as sent by hand, so the automatic path a moment later does not send it again.
+/** Records a period as sent by hand, so the automatic path a moment later does not send it again.
  * `vetjak` is what lets the status line say a report was asked for rather than scheduled. */
-export async function shenoDerguar(muaji, { marresi = "", id = "" } = {}) {
-  await shkruajShenjen(muaji, { gjendja: "derguar", marresi, id, vetjak: true });
+export async function shenoDerguar(lloji, periudha, { marresi = "", id = "" } = {}) {
+  await shkruajShenjen(lloji, periudha, { gjendja: "derguar", marresi, id, vetjak: true });
+}
+
+/** One kind's turn: claim the closed period if it is free, send it, and write down what happened.
+ * Never throws - a report that cannot go out must not turn into an error over the ledger. */
+async function ekzekutoNje({ lloji, marresi, sot, teDhenat }) {
+  const periudha = periudhaERaportit(lloji, sot);
+  try {
+    const shenja = await lexoShenjen(lloji, periudha);
+    if (!provoSerish(shenja, sot.getTime())) return { lloji, gjendja: "asgje", periudha };
+
+    const prova = (shenja?.prova || 0) + 1;
+    // A period nobody has touched is claimed by the insert itself; one that failed or was left
+    // half-sent is taken over by overwriting its marker.
+    if (!shenja) {
+      const imi = await pretendoPeriudhen(lloji, periudha, { prova });
+      if (!imi) return { lloji, gjendja: "asgje", periudha };
+    } else {
+      await shkruajShenjen(lloji, periudha, { gjendja: "duke u derguar", prova });
+    }
+
+    const { id } = await dergoRaportin({ lloji, periudha, marresi, ...teDhenat });
+    await shkruajShenjen(lloji, periudha, { gjendja: "derguar", prova, marresi, id });
+    return { lloji, gjendja: "derguar", periudha, marresi };
+  } catch (err) {
+    const mesazhi = err?.message || "Dërgimi dështoi.";
+    try {
+      const shenja = await lexoShenjen(lloji, periudha);
+      await shkruajShenjen(lloji, periudha, { gjendja: "deshtoi", prova: shenja?.prova || 1, gabimi: mesazhi });
+    } catch {
+      /* the ledger is not worth an error over a marker that could not be written */
+    }
+    return { lloji, gjendja: "deshtoi", periudha, gabimi: mesazhi };
+  }
 }
 
 /**
- * The automatic path, run when the app opens: send last month's report unless it has been sent,
- * is being sent, or the feature is off. Never throws - a report that cannot go out must not turn
- * into an error over the ledger - and says what it did so the caller can log or show it.
+ * The automatic path, run when the app opens: for every kind that is switched on, send the period
+ * that has just ended unless it has been sent, is being sent, or nothing is owed.
+ *
+ * Returns one result per kind, so the caller can log or show what happened. A ledger with nothing
+ * switched on, no project, or no address gets a single result saying which of the three it is -
+ * those are conditions of the feature, not of one report.
  */
-export async function ekzekutoRaportinMujor({
+export async function ekzekutoRaportet({
   profile = {},
   accounts = [],
   categories = [],
   transactions = [],
   recurring = [],
+  budgets = [],
   sot = new Date(),
 } = {}) {
-  if (!raportiAktiv(profile)) return { gjendja: "joaktiv" };
-  if (!eshteLidhur()) return { gjendja: "pa-projekt" };
+  const aktivet = raportetAktive(profile);
+  if (!aktivet.length) return [{ gjendja: "joaktiv" }];
+  if (!eshteLidhur()) return [{ gjendja: "pa-projekt" }];
 
   const marresi = marresiIRaportit(profile);
-  if (!marresi) return { gjendja: "pa-marres" };
+  if (!marresi) return [{ gjendja: "pa-marres" }];
 
-  const muaji = muajiIRaportit(sot);
-  try {
-    const shenja = await lexoShenjen(muaji);
-    if (!provoSerish(shenja, sot.getTime())) return { gjendja: "asgje", muaji };
-
-    const prova = (shenja?.prova || 0) + 1;
-    // A month nobody has touched is claimed by the insert itself; one that failed or was left
-    // half-sent is taken over by overwriting its marker.
-    if (!shenja) {
-      const imi = await pretendoMuajin(muaji, { prova });
-      if (!imi) return { gjendja: "asgje", muaji };
-    } else {
-      await shkruajShenjen(muaji, { gjendja: "duke u derguar", prova });
-    }
-
-    const { id } = await dergoRaportin({ muaji, marresi, profile, accounts, categories, transactions, recurring });
-    await shkruajShenjen(muaji, { gjendja: "derguar", prova, marresi, id });
-    return { gjendja: "derguar", muaji, marresi };
-  } catch (err) {
-    const mesazhi = err?.message || "Dërgimi dështoi.";
-    try {
-      const shenja = await lexoShenjen(muaji);
-      await shkruajShenjen(muaji, { gjendja: "deshtoi", prova: shenja?.prova || 1, gabimi: mesazhi });
-    } catch {
-      /* the ledger is not worth an error over a marker that could not be written */
-    }
-    return { gjendja: "deshtoi", muaji, gabimi: mesazhi };
+  const teDhenat = { profile, accounts, categories, transactions, recurring, budgets };
+  const rezultatet = [];
+  for (const def of aktivet) {
+    // Sequential on purpose - see the header.
+    rezultatet.push(await ekzekutoNje({ lloji: def.lloji, marresi, sot, teDhenat }));
   }
+  return rezultatet;
 }

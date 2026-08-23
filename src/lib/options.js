@@ -394,3 +394,7 @@ export const MONTHS_GENITIVE = [
 ];
 
 export const DAYS_LONG = ["e diel", "e hënë", "e martë", "e mërkurë", "e enjte", "e premte", "e shtunë"];
+
+/** The same seven, short enough to label a column in a weekly chart. Sunday first, as `getDay()`
+ * counts them. */
+export const DAYS_SHORT = ["Die", "Hën", "Mar", "Mër", "Enj", "Pre", "Sht"];

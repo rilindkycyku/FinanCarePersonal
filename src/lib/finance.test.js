@@ -9,14 +9,15 @@
 
 import { describe, expect, it } from "vitest";
 import {
-  accountBalance, annualOutlook, backupStatus, balanceHistory, budgetProgress, cashflow, categoryComparison, consolidateAccounts,
+  MAX_DITE_SERIE, accountBalance, amountBuckets, annualOutlook, backupStatus, balanceHistory,
+  budgetProgress, cashflow, categoryComparison, consolidateAccounts, dailySpending,
   convertedAmount, currencyFields, dailyLimit, debtPaymentsFromTransactions, debtProgress,
   debtTotals, dueRecurring, effectiveBudgets, enteredAt, filterByRange, generateDueTransactions,
   idIPerseritjes,
   forecast, goalProgress, isRecurringDue, lastInstallmentDate, monthBounds, monthKeyBounds, monthlyTrend,
   monthlyRecurringBreakdown, nextOccurrence, overduePlans, periodBounds, planProgress,
   periudhaEMbuluar, plansForMonth, planTotals, previousMonthKey, recurringProgress, rolloverAmount,
-  scheduledOccurrences, sortByDateDesc, spendableBalance, totalBalance, totalsByAccount,
+  scheduledOccurrences, sortByDateDesc, spendableBalance, spendingByWeekday, totalBalance, totalsByAccount,
   totalsByCategory, txSignForAccount, upcomingRecurring, yearBounds,
 } from "./finance";
 
@@ -1063,5 +1064,116 @@ describe("generateDueTransactions me muajin e mbuluar", () => {
     const { transactions } = generateDueTransactions({ ...qira, periudhaZhvendosje: null }, "2026-08-05");
     expect(transactions[0].pershkrimi).toBe("Qera Obejkti - Mergimi");
     expect(transactions[0].periudha).toBeNull();
+  });
+});
+
+/**
+ * The rhythm figures behind the Statistika tabs. Two of them are easy to get subtly wrong: a
+ * weekday read from a UTC-parsed date lands a day early west of Greenwich, and a weekday ranking
+ * by total reports the calendar (five Saturdays, four Tuesdays) as a habit.
+ */
+describe("spendingByWeekday", () => {
+  // 2026-08-01 is a Saturday; the week of the 3rd runs Monday 3 → Sunday 9.
+  const rreshtat = [
+    { id: "a", data: "2026-08-03", lloji: "shpenzim", vlera: 20 },
+    { id: "b", data: "2026-08-03", lloji: "shpenzim", vlera: 10 },
+    { id: "c", data: "2026-08-08", lloji: "shpenzim", vlera: 90 },
+    { id: "d", data: "2026-08-05", lloji: "hyrje", vlera: 500 },
+  ];
+
+  it("starts the week on Monday", () => {
+    expect(spendingByWeekday(rreshtat, "2026-08-03", "2026-08-09").map((d) => d.emri)).toEqual([
+      "Hën", "Mar", "Mër", "Enj", "Pre", "Sht", "Die",
+    ]);
+  });
+
+  it("files a date on the weekday its own string names", () => {
+    const javet = spendingByWeekday(rreshtat, "2026-08-03", "2026-08-09");
+    expect(javet[0]).toMatchObject({ emri: "Hën", vlera: 30, numri: 2 });
+    expect(javet[5]).toMatchObject({ emri: "Sht", vlera: 90, numri: 1 });
+  });
+
+  it("counts only the type it was asked for", () => {
+    const javet = spendingByWeekday(rreshtat, "2026-08-03", "2026-08-09");
+    expect(javet.reduce((s, d) => s + d.vlera, 0)).toBe(120);
+    expect(spendingByWeekday(rreshtat, "2026-08-03", "2026-08-09", "hyrje")[2].vlera).toBe(500);
+  });
+
+  it("averages over how many of that weekday the period actually held", () => {
+    // August 2026 has five Saturdays and four Tuesdays: 90 € on one Saturday is 18 €/Saturday,
+    // not 90, and a ranking by total would call that a weekend habit.
+    const gushti = spendingByWeekday(rreshtat, "2026-08-01", "2026-08-31");
+    const shtune = gushti.find((d) => d.emri === "Sht");
+    expect(shtune.ditet).toBe(5);
+    expect(shtune.mesatarja).toBe(18);
+    expect(gushti.find((d) => d.emri === "Mar").ditet).toBe(4);
+  });
+
+  it("has no average to give for a range it was not told", () => {
+    expect(spendingByWeekday(rreshtat, null, null)[0].mesatarja).toBe(0);
+  });
+});
+
+describe("dailySpending", () => {
+  const rreshtat = [
+    { id: "a", data: "2026-08-01", lloji: "shpenzim", vlera: 25 },
+    { id: "b", data: "2026-08-03", lloji: "shpenzim", vlera: 75 },
+    { id: "c", data: "2026-09-01", lloji: "shpenzim", vlera: 999 },
+  ];
+
+  it("gives every day of the range a row, spent or not", () => {
+    const ditet = dailySpending(rreshtat, "2026-08-01", "2026-08-05");
+    expect(ditet).toHaveLength(5);
+    expect(ditet.map((d) => d.vlera)).toEqual([25, 0, 75, 0, 0]);
+  });
+
+  it("carries the running total, which is what the pace line is drawn from", () => {
+    expect(dailySpending(rreshtat, "2026-08-01", "2026-08-05").map((d) => d.kumulative)).toEqual([
+      25, 25, 100, 100, 100,
+    ]);
+  });
+
+  it("stops at the range it was given", () => {
+    const ditet = dailySpending(rreshtat, "2026-08-01", "2026-08-31");
+    expect(ditet).toHaveLength(31);
+    expect(ditet.at(-1).kumulative).toBe(100);
+  });
+
+  it("refuses a range it cannot walk", () => {
+    expect(dailySpending(rreshtat, null, "2026-08-05")).toEqual([]);
+    expect(dailySpending(rreshtat, "2026-08-05", "2026-08-01")).toEqual([]);
+  });
+
+  it("never returns more days than it will draw", () => {
+    expect(dailySpending(rreshtat, "2000-01-01", "2030-12-31").length).toBe(MAX_DITE_SERIE);
+  });
+});
+
+describe("amountBuckets", () => {
+  const rreshtat = [
+    { id: "a", data: "2026-08-01", lloji: "shpenzim", vlera: 4 },
+    { id: "b", data: "2026-08-02", lloji: "shpenzim", vlera: 10 },
+    { id: "c", data: "2026-08-03", lloji: "shpenzim", vlera: 50 },
+    { id: "d", data: "2026-08-04", lloji: "shpenzim", vlera: 640 },
+    { id: "e", data: "2026-08-05", lloji: "hyrje", vlera: 1200 },
+  ];
+
+  it("gives a boundary to the bucket it opens", () => {
+    const kosha = amountBuckets(rreshtat);
+    expect(kosha.map((k) => k.numri)).toEqual([1, 1, 1, 0, 1]);
+    expect(kosha[1].emri).toBe("10 - 50");
+    expect(kosha.at(-1).emri).toBe("Mbi 500");
+  });
+
+  it("counts both how much and how often, which is the whole point of it", () => {
+    const kosha = amountBuckets(rreshtat);
+    const iMadhi = kosha.at(-1);
+    // One purchase in four, but nine tenths of the money.
+    expect(Math.round(iMadhi.perqindjaNumri)).toBe(25);
+    expect(Math.round(iMadhi.perqindja)).toBe(91);
+  });
+
+  it("comes back empty-handed rather than dividing by nothing", () => {
+    expect(amountBuckets([]).every((k) => k.perqindja === 0 && k.numri === 0)).toBe(true);
   });
 });

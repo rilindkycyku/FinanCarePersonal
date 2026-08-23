@@ -7,28 +7,17 @@ import {
 import { useData } from "../Context/DataContext";
 import { useDialog } from "../Context/DialogContext";
 import { useSync } from "../Context/SyncContext";
+import Zgjedhesi from "./Zgjedhesi";
 import {
-  EMRI_FUNKSIONIT, dergoRaportin, gjendjaFunksionit, lexoShenjat, marresiIRaportit, muajiIRaportit,
-  shenoDerguar,
+  EMRI_FUNKSIONIT, dergoRaportin, gjendjaFunksionit, lexoShenjat, marresiIRaportit, shenoDerguar,
 } from "../lib/raporti";
 // The function's real source, read straight out of the repository: the code the user pastes into
 // their project and the code reviewed here are then the same text, and cannot drift apart.
 import KODI_FUNKSIONIT from "../../supabase/functions/raporti/index.ts?raw";
-import { previousMonthKey } from "../lib/finance";
-import { monthLabelGenitive } from "../lib/format";
+import { LLOJET_RAPORTIT } from "../lib/raportet";
+import { MUJOR, emriPeriudhes, etiketaPeriudhes, periudhatEFundit } from "../lib/periudhat";
 
 const SEKRETI = "RESEND_API_KEY";
-
-/** The last six closed months, newest first - what the "send by hand" picker offers. */
-function muajtEFundit(sa = 6) {
-  const lista = [];
-  let muaji = muajiIRaportit();
-  for (let i = 0; i < sa; i++) {
-    lista.push(muaji);
-    muaji = previousMonthKey(muaji);
-  }
-  return lista;
-}
 
 /** "01.08.2026, 09:14" for a marker's timestamp. */
 const koha = (iso) => {
@@ -37,17 +26,21 @@ const koha = (iso) => {
 };
 
 /**
- * The monthly report: one email, on the first opening of a new month, with the closed month's
- * statement in it.
+ * The email reports: a week, a month, a quarter and a year, each switched on by itself, each
+ * arriving the first time the app is opened after its period has closed.
  *
  * The card carries its own setup because the feature needs something the app cannot install for
  * anybody - a small function in the user's own Supabase project holding a Resend key. That is the
  * same bargain as the sync schema (the app hands over the script and then *asks the project* what
  * it has), and it is the only shape in which this feature can exist without a server of ours
  * standing between every user's figures and their inbox.
+ *
+ * One setup serves all four: the same function, the same key, the same recipient. Switching on a
+ * second kind therefore costs nothing but the switch - which is why the kinds are four rows here
+ * rather than four cards.
  */
-function RaportiMujor() {
-  const { profile, saveProfile, accounts, categories, transactions, recurring } = useData();
+function Raportet() {
+  const { profile, saveProfile, accounts, categories, transactions, recurring, budgets } = useData();
   const { lidhur, konfigurimi } = useSync();
   const dialog = useDialog();
 
@@ -57,14 +50,22 @@ function RaportiMujor() {
   const [duke, setDuke] = useState("");
   const [kopjuar, setKopjuar] = useState("");
   const [udhezimet, setUdhezimet] = useState(false);
-  const [muajiZgjedhur, setMuajiZgjedhur] = useState(() => muajiIRaportit());
+  const [llojiZgjedhur, setLlojiZgjedhur] = useState(MUJOR);
+  const [periudhaZgjedhur, setPeriudhaZgjedhur] = useState(() => periudhatEFundit(MUJOR, 1)[0]);
 
-  const aktiv = Boolean(profile.raportiMujor);
+  const ndonjeAktiv = LLOJET_RAPORTIT.some((r) => profile[r.fusha]);
   const parazgjedhur = konfigurimi?.email || "";
   const iVertete = marresiIRaportit({ ...profile, raportiMarresi: marresi }, konfigurimi);
-  const muajt = useMemo(() => muajtEFundit(), []);
+
+  // Six closed periods of the chosen kind: six weeks, six months, six quarters, six years.
+  const periudhat = useMemo(() => periudhatEFundit(llojiZgjedhur, 6), [llojiZgjedhur]);
 
   useEffect(() => setMarresi(profile.raportiMarresi || ""), [profile.raportiMarresi]);
+  // Switching the kind leaves the old period key behind - "2026-07" is not a week - so the picker
+  // falls back to the most recent closed period of whatever was just chosen.
+  useEffect(() => {
+    setPeriudhaZgjedhur((e) => (periudhat.includes(e) ? e : periudhat[0]));
+  }, [periudhat]);
 
   const lexo = useCallback(async () => {
     if (!lidhur) return;
@@ -80,9 +81,9 @@ function RaportiMujor() {
     lexo();
   }, [lexo]);
 
-  // The function is only asked about when the feature is on (so a broken setup is noticed) or when
-  // the user opens the instructions - it is a cold start of somebody's Edge Function, not a health
-  // check to run on every visit to Cilësimet.
+  // The function is only asked about when something is switched on (so a broken setup is noticed)
+  // or when the user opens the instructions - it is a cold start of somebody's Edge Function, not
+  // a health check to run on every visit to Cilësimet.
   const kontrollo = useCallback(
     async ({ heshtur = false } = {}) => {
       if (!lidhur) return null;
@@ -107,10 +108,10 @@ function RaportiMujor() {
   // cold-start somebody's Edge Function.
   const uKontrollua = useRef(false);
   useEffect(() => {
-    if (!aktiv || !lidhur || uKontrollua.current) return;
+    if (!ndonjeAktiv || !lidhur || uKontrollua.current) return;
     uKontrollua.current = true;
     kontrollo({ heshtur: true });
-  }, [aktiv, lidhur, kontrollo]);
+  }, [ndonjeAktiv, lidhur, kontrollo]);
 
   const kopjo = async (teksti, cila) => {
     try {
@@ -122,12 +123,12 @@ function RaportiMujor() {
     }
   };
 
-  const ndryshoAktivin = async (vlera) => {
+  const ndrysho = async (perkufizimi, vlera) => {
     if (!vlera) {
-      await saveProfile({ ...profile, raportiMujor: false });
+      await saveProfile({ ...profile, [perkufizimi.fusha]: false });
       return;
     }
-    // Switching it on with nothing to send from would mean a switch that silently does nothing for
+    // Switching one on with nothing to send from would mean a switch that silently does nothing for
     // a month, so the project is asked first.
     const gjendja = await kontrollo();
     if (!gjendja?.instaluar || !gjendja?.celes) {
@@ -140,7 +141,7 @@ function RaportiMujor() {
       );
       return;
     }
-    await saveProfile({ ...profile, raportiMujor: true, raportiMarresi: marresi.trim() });
+    await saveProfile({ ...profile, [perkufizimi.fusha]: true, raportiMarresi: marresi.trim() });
   };
 
   const ruajMarresin = async () => {
@@ -160,20 +161,22 @@ function RaportiMujor() {
     setDuke("dergimi");
     try {
       const { id } = await dergoRaportin({
-        muaji: muajiZgjedhur,
+        lloji: llojiZgjedhur,
+        periudha: periudhaZgjedhur,
         marresi: iVertete,
         profile,
         accounts,
         categories,
         transactions,
         recurring,
+        budgets,
       });
-      await shenoDerguar(muajiZgjedhur, { marresi: iVertete, id });
+      await shenoDerguar(llojiZgjedhur, periudhaZgjedhur, { marresi: iVertete, id });
       await lexo();
-      dialog.alert(`Raporti i ${monthLabelGenitive(muajiZgjedhur)} u dërgua te ${iVertete}.`, {
-        title: "U dërgua",
-        variant: "success",
-      });
+      dialog.alert(
+        `Raporti i ${etiketaPeriudhes(llojiZgjedhur, periudhaZgjedhur)} u dërgua te ${iVertete}.`,
+        { title: "U dërgua", variant: "success" }
+      );
     } catch (err) {
       dialog.alert(err?.message || "Dërgimi dështoi.", { title: "Nuk u dërgua", variant: "danger" });
     } finally {
@@ -181,20 +184,24 @@ function RaportiMujor() {
     }
   };
 
-  const fundit = shenjat.find((s) => s.gjendja === "derguar");
-  const problemi = shenjat.find((s) => s.gjendja === "deshtoi");
+  // One line per kind: the last one that went out, and the last one that did not. A kind nobody
+  // has switched on has nothing to say, so it says nothing.
+  const gjendjet = LLOJET_RAPORTIT.map((r) => ({
+    perkufizimi: r,
+    derguar: shenjat.find((s) => s.lloji === r.lloji && s.gjendja === "derguar"),
+    deshtoi: shenjat.find((s) => s.lloji === r.lloji && s.gjendja === "deshtoi"),
+  })).filter((g) => g.derguar || g.deshtoi);
 
   return (
     <Card className="profile-card border-0 p-4 mb-4">
       <h2 className="fcp-card-title fw-bold mb-2">
         <Mail size={18} className="me-2 text-primary" />
-        Raporti Mujor
+        Raportet me Email
       </h2>
       <p className="text-muted small mb-3">
-        Në fillim të çdo muaji, hera e parë që hapet aplikacioni dërgon me email pasqyrën e muajit
-        që sapo u mbyll - shifrat kryesore në trup dhe pasqyra e plotë si PDF bashkëngjitur. Emaili
-        niset nga projekti juaj i Supabase-it: asnjë server i këtij aplikacioni nuk i sheh të
-        dhënat tuaja.
+        Sa herë mbyllet një periudhë - një javë, një muaj, një tremujor, një vit - hera e parë që
+        hapet aplikacioni pas saj dërgon me email pasqyrën e asaj periudhe. Emaili niset nga
+        projekti juaj i Supabase-it: asnjë server i këtij aplikacioni nuk i sheh të dhënat tuaja.
       </p>
 
       {!lidhur ? (
@@ -205,15 +212,6 @@ function RaportiMujor() {
         </Alert>
       ) : (
         <>
-          <Form.Check
-            type="switch"
-            id="raporti-mujor"
-            className="mb-3"
-            label="Dërgo raportin mujor me email"
-            checked={aktiv}
-            onChange={(e) => ndryshoAktivin(e.target.checked)}
-          />
-
           <Form.Group className="mb-3" controlId="raporti-marresi">
             <Form.Label className="small fw-semibold">Adresa e marrësit</Form.Label>
             <Form.Control
@@ -226,27 +224,57 @@ function RaportiMujor() {
             />
             <div className="fcp-modal-hint">
               {marresi.trim()
-                ? `Raporti do të shkojë te ${marresi.trim()}.`
+                ? `Të gjitha raportet do të shkojnë te ${marresi.trim()}.`
                 : parazgjedhur
                   ? `Bosh do të thotë llogaria juaj: ${parazgjedhur}. Kjo është edhe e vetmja adresë që Resend e pranon derisa të verifikoni një domen tuajin.`
-                  : "Shkruani adresën ku doni t'ju vijë raporti."}
+                  : "Shkruani adresën ku doni t'ju vijnë raportet."}
             </div>
           </Form.Group>
 
+          <div className="fcp-raportet-lista mb-3">
+            {LLOJET_RAPORTIT.map((r) => (
+              <div key={r.lloji} className="fcp-raporti-rresht">
+                <Form.Check
+                  type="switch"
+                  id={`raporti-${r.lloji}`}
+                  className="mb-1"
+                  label={r.emri}
+                  checked={Boolean(profile[r.fusha])}
+                  onChange={(e) => ndrysho(r, e.target.checked)}
+                />
+                <div className="text-muted small">{r.pershkrimi}</div>
+                <div className="fcp-modal-hint">
+                  {r.kur}
+                  {r.bashkengjitje ? " · me pasqyrën PDF bashkëngjitur" : " · pa bashkëngjitje"}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <Form.Label className="small fw-semibold">Dërgo një raport me dorë</Form.Label>
           <div className="d-flex flex-wrap gap-2 align-items-center mb-3">
-            <Form.Select
-              size="sm"
-              style={{ maxWidth: 220 }}
-              value={muajiZgjedhur}
-              onChange={(e) => setMuajiZgjedhur(e.target.value)}
-              aria-label="Muaji i raportit"
-            >
-              {muajt.map((m) => (
-                <option key={m} value={m}>
-                  Raporti i {monthLabelGenitive(m)}
-                </option>
-              ))}
-            </Form.Select>
+            <div style={{ minWidth: 150 }}>
+              <Zgjedhesi
+                id="raporti-lloji"
+                size="sm"
+                value={llojiZgjedhur}
+                onChange={setLlojiZgjedhur}
+                opsionet={LLOJET_RAPORTIT.map((r) => ({ value: r.lloji, label: r.emri }))}
+                titulli="Lloji i raportit"
+                aria-label="Lloji i raportit"
+              />
+            </div>
+            <div style={{ minWidth: 210 }}>
+              <Zgjedhesi
+                id="raporti-periudha"
+                size="sm"
+                value={periudhaZgjedhur}
+                onChange={setPeriudhaZgjedhur}
+                opsionet={periudhat.map((p) => ({ value: p, label: emriPeriudhes(llojiZgjedhur, p) }))}
+                titulli="Periudha e raportit"
+                aria-label="Periudha e raportit"
+              />
+            </div>
             <Button className="btn-primary" size="sm" onClick={dergoTani} disabled={duke === "dergimi"}>
               {duke === "dergimi" ? (
                 <Spinner animation="border" size="sm" className="me-1" />
@@ -280,20 +308,25 @@ function RaportiMujor() {
             </Alert>
           )}
 
-          {(fundit || problemi) && (
+          {gjendjet.length > 0 && (
             <div className="text-muted small mb-3">
-              {fundit && (
-                <div>
-                  Raporti i {monthLabelGenitive(fundit.muaji)} u dërgua te {fundit.marresi || "adresën tuaj"} më{" "}
-                  {koha(fundit.kur)}
-                  {fundit.vetjak ? " (me kërkesë)" : ""}.
+              {gjendjet.map(({ perkufizimi, derguar, deshtoi }) => (
+                <div key={perkufizimi.lloji}>
+                  {derguar && (
+                    <div>
+                      {perkufizimi.emri} i {etiketaPeriudhes(perkufizimi.lloji, derguar.periudha)} u dërgua te{" "}
+                      {derguar.marresi || "adresën tuaj"} më {koha(derguar.kur)}
+                      {derguar.vetjak ? " (me kërkesë)" : ""}.
+                    </div>
+                  )}
+                  {deshtoi && (
+                    <div className="text-warning">
+                      {perkufizimi.emri} i {etiketaPeriudhes(perkufizimi.lloji, deshtoi.periudha)} nuk u dërgua:{" "}
+                      {deshtoi.gabimi || "arsye e panjohur"}.
+                    </div>
+                  )}
                 </div>
-              )}
-              {problemi && (
-                <div className="text-warning">
-                  Raporti i {monthLabelGenitive(problemi.muaji)} nuk u dërgua: {problemi.gabimi || "arsye e panjohur"}.
-                </div>
-              )}
+              ))}
             </div>
           )}
 
@@ -313,7 +346,7 @@ function RaportiMujor() {
                   resend.com <ExternalLink size={12} />
                 </a>{" "}
                 dhe kopjoni një <strong>API key</strong>. Pa domen tuajin, Resend dërgon vetëm te
-                adresa e llogarisë suaj - për një raport që ia dërgoni vetes kjo mjafton.
+                adresa e llogarisë suaj - për raporte që ia dërgoni vetes kjo mjafton.
               </li>
               <li>
                 Te Supabase → <strong>Edge Functions</strong> → <strong>Deploy a new function</strong>,
@@ -340,8 +373,8 @@ function RaportiMujor() {
                 </div>
               </li>
               <li>
-                Kthehuni këtu, shtypni <strong>Kontrollo funksionin</strong> dhe ndizni çelësin
-                lart. <strong>Dërgo tani</strong> e provon menjëherë.
+                Kthehuni këtu, shtypni <strong>Kontrollo funksionin</strong> dhe ndizni raportet që
+                doni. <strong>Dërgo tani</strong> e provon menjëherë njërin prej tyre.
               </li>
             </ol>
           )}
@@ -351,4 +384,4 @@ function RaportiMujor() {
   );
 }
 
-export default RaportiMujor;
+export default Raportet;

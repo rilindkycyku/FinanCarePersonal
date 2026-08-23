@@ -15,7 +15,7 @@
  */
 
 import { addDays, addMonths, addWeeks, addYears, format, parseISO } from "date-fns";
-import { debtTypeMeta, planPriorityMeta, FREQUENCIES, MONTHS_SHORT } from "./options";
+import { debtTypeMeta, planPriorityMeta, DAYS_LONG, DAYS_SHORT, FREQUENCIES, MONTHS_SHORT } from "./options";
 import { monthKey, monthLabel, toNumber } from "./format";
 import { emriIPlote, familjaSet, rrenjaE } from "./kategorite";
 
@@ -476,6 +476,154 @@ export function monthlyTrend(transactions, months = 6, reference = new Date()) {
       ...flows,
     };
   });
+}
+
+// ── Rhythm: which days, which sizes ─────────────────────────────────────────
+
+/**
+ * The weekday a date-only ISO string falls on, read as a local calendar day.
+ *
+ * `new Date("2026-08-22")` is parsed as *UTC* midnight, so west of Greenwich `getDay()` answers for
+ * the day before - and a Saturday's shopping would be filed under Friday for every user in the
+ * Americas. Built from the three numbers, it is the day the string names, everywhere.
+ */
+function ditaEJaves(dataStr) {
+  const [v, m, d] = String(dataStr).split("-").map(Number);
+  return new Date(v, (m || 1) - 1, d || 1).getDay();
+}
+
+/** How many times each weekday occurs in an inclusive ISO date range, indexed by `getDay()`. */
+function numriIDiteve(start, end) {
+  const numrat = Array(7).fill(0);
+  if (!start || !end || start > end) return numrat;
+  const [v, m, d] = start.split("-").map(Number);
+  const dita = new Date(v, m - 1, d);
+  // A range measured in years is still only a few thousand steps, and the alternative - arithmetic
+  // on the weekday of the first day - has to special-case ranges shorter than a week.
+  while (format(dita, "yyyy-MM-dd") <= end) {
+    numrat[dita.getDay()] += 1;
+    dita.setDate(dita.getDate() + 1);
+  }
+  return numrat;
+}
+
+/**
+ * What is spent on each day of the week, Monday first.
+ *
+ * `mesatarja` is the figure worth charting rather than `vlera`. A month holds five Saturdays and
+ * four Tuesdays as often as not, and a ranking by total then reports a Saturday habit that is only
+ * the calendar - the average per occurrence of that weekday is the comparison that means something.
+ * The totals are carried alongside, because "480 € on Saturdays" is what a reader recognises.
+ */
+export function spendingByWeekday(transactions, start, end, lloji = "shpenzim") {
+  const totalet = Array.from({ length: 7 }, () => ({ vlera: 0, numri: 0 }));
+  transactions
+    .filter((tx) => tx.lloji === lloji)
+    .forEach((tx) => {
+      const dita = totalet[ditaEJaves(tx.data)];
+      dita.vlera += toNumber(tx.vlera);
+      dita.numri += 1;
+    });
+
+  const ditet = numriIDiteve(start, end);
+  const gjithsej = totalet.reduce((sum, t) => sum + t.vlera, 0);
+
+  // Monday first: the week people plan and spend by starts there, and a chart that opens on Sunday
+  // splits the weekend across both ends of itself.
+  return Array.from({ length: 7 }, (_, i) => {
+    const index = (i + 1) % 7;
+    const t = totalet[index];
+    return {
+      dita: index,
+      emri: DAYS_SHORT[index],
+      emriPlote: DAYS_LONG[index],
+      vlera: t.vlera,
+      numri: t.numri,
+      ditet: ditet[index],
+      mesatarja: ditet[index] > 0 ? t.vlera / ditet[index] : 0,
+      perqindja: gjithsej > 0 ? (t.vlera / gjithsej) * 100 : 0,
+    };
+  });
+}
+
+/** A range longer than this is not drawn day by day - it is thousands of cells nobody reads, and
+ * the panels that use it say so instead. */
+export const MAX_DITE_SERIE = 800;
+
+/**
+ * One row per day of a range, with the running total beside it: the calendar grid and the pace
+ * line are both this list read differently.
+ *
+ * Every day in the range is present, spent or not. A series that skipped its empty days would draw
+ * a flat week as a steep one, because the line would have no points to stay level across.
+ */
+export function dailySpending(transactions, start, end, lloji = "shpenzim") {
+  if (!start || !end || start > end) return [];
+
+  const sipasDites = new Map();
+  transactions
+    .filter((tx) => tx.lloji === lloji && tx.data >= start && tx.data <= end)
+    .forEach((tx) => {
+      const rreshti = sipasDites.get(tx.data) || { vlera: 0, numri: 0 };
+      rreshti.vlera += toNumber(tx.vlera);
+      rreshti.numri += 1;
+      sipasDites.set(tx.data, rreshti);
+    });
+
+  const [v, m, d] = start.split("-").map(Number);
+  const dita = new Date(v, m - 1, d);
+  const ditet = [];
+  let kumulative = 0;
+  for (let i = 0; i < MAX_DITE_SERIE; i++) {
+    const data = format(dita, "yyyy-MM-dd");
+    if (data > end) break;
+    const rreshti = sipasDites.get(data) || { vlera: 0, numri: 0 };
+    kumulative += rreshti.vlera;
+    ditet.push({ data, dita: dita.getDay(), ...rreshti, kumulative });
+    dita.setDate(dita.getDate() + 1);
+  }
+  return ditet;
+}
+
+/**
+ * Where the money goes by the *size* of the purchase rather than by its category.
+ *
+ * It answers a question no category ranking can: whether a month went on one big thing or on
+ * ninety small ones. Those are different problems with different fixes, and they look identical
+ * in a list of categories.
+ *
+ * The thresholds are round numbers in whatever currency the ledger is kept in. That is coarse for
+ * a ledger in lekë and generous for one in pounds, but a scale derived from the data itself would
+ * shift under the reader every month, and a bucket that means something different in June than in
+ * July is worse than one that is merely approximate.
+ */
+export const KUFIJTE_MADHESISE = [10, 50, 100, 500];
+
+export function amountBuckets(transactions, lloji = "shpenzim") {
+  const kufijte = KUFIJTE_MADHESISE;
+  const kosha = [
+    ...kufijte.map((k, i) => ({ emri: i === 0 ? `Nën ${k}` : `${kufijte[i - 1]} - ${k}`, min: i === 0 ? 0 : kufijte[i - 1], max: k })),
+    { emri: `Mbi ${kufijte.at(-1)}`, min: kufijte.at(-1), max: Infinity },
+  ].map((k) => ({ ...k, vlera: 0, numri: 0 }));
+
+  transactions
+    .filter((tx) => tx.lloji === lloji)
+    .forEach((tx) => {
+      const vlera = toNumber(tx.vlera);
+      // `<` on the upper edge, so 50 € lands in "50 - 100" and not in "10 - 50". Every boundary
+      // belongs to the bucket it opens, which is the reading the labels imply.
+      const koshi = kosha.find((k) => vlera < k.max) || kosha.at(-1);
+      koshi.vlera += vlera;
+      koshi.numri += 1;
+    });
+
+  const gjithsej = kosha.reduce((sum, k) => sum + k.vlera, 0);
+  const numriGjithsej = kosha.reduce((sum, k) => sum + k.numri, 0);
+  return kosha.map((k) => ({
+    ...k,
+    perqindja: gjithsej > 0 ? (k.vlera / gjithsej) * 100 : 0,
+    perqindjaNumri: numriGjithsej > 0 ? (k.numri / numriGjithsej) * 100 : 0,
+  }));
 }
 
 // ── Net worth over time, and where it is heading ────────────────────────────

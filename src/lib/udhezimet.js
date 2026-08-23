@@ -587,14 +587,25 @@ export const UDHEZIMET = [
     ikona: "BarChart3",
     shtegu: "/statistikat",
     permbledhje:
-      "Ku shkojnë paratë dhe ku po shkon bilanci. Periudha zgjidhet sipër dhe çdo shifër në faqe e ndjek atë.",
+      "Ku shkojnë paratë, kur dalin dhe ku po shkon bilanci - të ndara në katër pamje. Periudha " +
+      "zgjidhet sipër dhe çdo shifër në faqe e ndjek atë.",
     hapat: [
       {
         titulli: "Zgjidhni periudhën",
         teksti:
           "Zgjedhësi te koka e faqes ndërron mes «Ky muaj», «Muaji i kaluar», «Këtë vit» dhe «Gjithçka». " +
-          "Kutitë sipër - hyrjet, shpenzimet, bilanci neto, mesatarja ditore, numri i transaksioneve, " +
-          "kategoria më e shpenzuar - rillogariten të gjitha për të.",
+          "Kutitë te pamja «Përmbledhje» - hyrjet, shpenzimet, bilanci neto, mesatarja ditore, numri i " +
+          "transaksioneve, kategoria më e shpenzuar - rillogariten të gjitha për të, dhe po ashtu çdo " +
+          "panel i pamjeve të tjera.",
+      },
+      {
+        titulli: "Katër pamje, jo një kolonë e vetme",
+        teksti:
+          "«Përmbledhje» mban shifrat kryesore, bilancin ndër muaj me parashikimin dhe drejtimin e " +
+          "gjashtë muajve. «Kategoritë» tregon ku shkuan paratë - unaza e ndarjes, renditja me " +
+          "nënkategori, etiketat dhe krahasimi me muajin e kaluar. «Ritmi» tregon kur dolën. " +
+          "«Llogaritë» tregon nga cila llogari. Pamja e hapur qëndron te adresa, prandaj butoni i " +
+          "kthimit lëviz mes tyre dhe një pamje e caktuar mund të mbahet e hapur.",
       },
       {
         titulli: "Bilanci ndër muaj dhe parashikimi",
@@ -610,24 +621,36 @@ export const UDHEZIMET = [
           "mund të mbyllet mirë e prapë të kalojë nga një e mërkurë pa para.",
       },
       {
-        titulli: "Ndarja sipas kategorive dhe llogarive",
+        titulli: "Ndarja sipas kategorive",
         teksti:
-          "Kategoritë renditen sipas shumës, me nënkategoritë e hapura nën secilën, pra pjesët vazhdojnë të " +
-          "mblidhen sa muaji. Poshtë tyre vijnë ndarja sipas llogarive dhe pesë shpenzimet më të mëdha të " +
-          "periudhës.",
+          "Unaza sipër tregon formën e periudhës me një shikim - një kategori me bisht, apo gjashtë sish " +
+          "afërsisht të barabarta. Poshtë saj kategoritë renditen sipas shumës, me nënkategoritë e hapura " +
+          "nën secilën, pra pjesët vazhdojnë të mblidhen sa muaji.",
+      },
+      {
+        titulli: "Ritmi: kur dalin paratë",
+        teksti:
+          "«Sa shpejt po shpenzohet» vë shumën e mbledhur ditë pas dite përballë të njëjtës pjesë të " +
+          "periudhës së kaluar - vija e ndërprerë është ajo e kaluara, dhe dallimi mes tyre thotë nëse " +
+          "jeni para apo pas. «Sipas ditës së javës» jep mesataren për çdo ditë të tillë, jo shumën: një " +
+          "muaj mban pesë të shtuna dhe katër të marta po aq shpesh, dhe një renditje sipas shumës do të " +
+          "tregonte kalendarin në vend të zakonit. Kalendari e ngjyros çdo ditë sipas asaj që doli, dhe " +
+          "ndarja sipas madhësisë thotë nëse paratë ikën me pak blerje të mëdha apo me shumë të vogla - " +
+          "dy probleme të ndryshme, me zgjidhje të ndryshme.",
       },
       {
         titulli: "Krahasimet",
         teksti:
           "«Hyrje kundrejt Shpenzimeve - 6 Muajt e Fundit» dhe «Bilanci Mujor» tregojnë drejtimin, jo vetëm " +
-          "muajin. Paneli «Ndryshimi ndaj muajit të kaluar» i vë kategoritë përballë njëra-tjetrës - aty " +
-          "shihet nëse një kategori po rritet apo ishte thjesht një muaj i keq. Nëse përdorni etiketa, ka " +
-          "edhe një ndarje sipas tyre.",
+          "muajin, te «Përmbledhje». Paneli «Ndryshimi ndaj muajit të kaluar», te «Kategoritë», i vë " +
+          "kategoritë përballë njëra-tjetrës - aty shihet nëse një kategori po rritet apo ishte thjesht " +
+          "një muaj i keq. Nëse përdorni etiketa, ka edhe një ndarje sipas tyre.",
       },
     ],
     keshilla: [
       "Transferet nuk numërohen as si hyrje as si shpenzim - prandaj lëvizja e parave mes llogarive tuaja nuk e fryn asnjë kolonë.",
       "«Bilanci Aktual» mat llogaritë sot, kurse «Bilanci Neto» mat vetëm periudhën e zgjedhur; të dyja janë të sakta dhe nuk përputhen.",
+      "Kalendari dhe krahasimi i ritmit kërkojnë një periudhë me fillim e fund: te «Gjithçka» ato mungojnë, sepse nuk ka periudhë të mëparshme me të cilën të krahasohen.",
     ],
     shihEdhe: ["buxhetet", "kategorite", "te-dhena"],
   },
@@ -732,15 +755,18 @@ export const UDHEZIMET = [
           "shtypja e gjatë mbi ikonë hap direkt «Shto transaksion».",
       },
       {
-        titulli: "Raporti mujor me email",
+        titulli: "Raportet me email",
         teksti:
-          "Në fillim të çdo muaji, hera e parë që hapet aplikacioni dërgon me email pasqyrën e muajit që " +
-          "sapo mbaroi - shifrat kryesore në trup dhe pasqyra e plotë si PDF bashkëngjitur. Emaili niset " +
-          "nga projekti juaj i Supabase-it, pra kërkon një projekt të lidhur dhe një funksion të vogël me " +
-          "çelësin tuaj të Resend; hapat e instalimit janë brenda vetë kartelës, një herë të vetme. Adresa " +
-          "lihet bosh për llogarinë me të cilën hyni te projekti, ose shkruhet një tjetër. Edhe një muaj " +
-          "pa asnjë transaksion dërgohet - pikërisht ai muaj është shenja që diçka ka mbetur pa u shënuar. " +
-          "Çelësi e ndal krejt kur nuk e doni më.",
+          "Katër raporte, secili me çelësin e vet: javor, mujor, tremujor dhe vjetor. Sa herë mbyllet një " +
+          "periudhë, hera e parë që hapet aplikacioni pas saj dërgon me email pasqyrën e asaj periudhe - " +
+          "shifrat kryesore, grafikët e periudhës dhe, për muajin, tremujorin e vitin, pasqyra e plotë si " +
+          "PDF bashkëngjitur. Javori mbetet i shkurtër dhe pa bashkëngjitje: shtatë ditët si grafik, " +
+          "shpenzimi më i madh dhe pagesat që vijnë brenda javës tjetër. Emaili niset nga projekti juaj i " +
+          "Supabase-it, pra kërkon një projekt të lidhur dhe një funksion të vogël me çelësin tuaj të " +
+          "Resend; hapat e instalimit janë brenda vetë kartelës, një herë të vetme, dhe i njëjti instalim " +
+          "u shërben të katërve. Adresa lihet bosh për llogarinë me të cilën hyni te projekti, ose " +
+          "shkruhet një tjetër. Edhe një periudhë pa asnjë transaksion dërgohet - pikërisht ajo është " +
+          "shenja që diçka ka mbetur pa u shënuar. Çelësat i ndalin një nga një kur nuk i doni më.",
       },
       {
         titulli: "Kujtesa e kategorive",
@@ -760,7 +786,7 @@ export const UDHEZIMET = [
     ],
     keshilla: [
       "Ndryshimi i monedhës ndryshon vetëm simbolin - vlerat e ruajtura nuk konvertohen.",
-      "Raporti mujor dërgohet një herë të vetme edhe kur keni disa pajisje: kush e dërgon vendoset te projekti, jo te telefoni.",
+      "Çdo raport dërgohet një herë të vetme edhe kur keni disa pajisje: kush e dërgon vendoset te projekti, jo te telefoni.",
       "«Kthe listat e parazgjedhura» shton përsëri kategoritë që mungojnë pa i fshirë të dhënat ekzistuese.",
     ],
     shihEdhe: ["te-dhena", "llogarite", "kategorite"],
