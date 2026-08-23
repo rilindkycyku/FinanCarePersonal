@@ -217,6 +217,11 @@ describe("ekzekutoRaportet, me projekt", () => {
     const thirrjet = stub();
     const dalja = await ekzekutoRaportet({
       ...teDhenat,
+      // The ledger has to reach back into 2025 for the yearly report to have a 2025 to report on.
+      transactions: [
+        ...teDhenat.transactions,
+        { id: "t0", data: "2025-11-02", lloji: "shpenzim", vlera: 45, kategoriaId: "k1", llogariaId: "l1" },
+      ],
       profile: { ...teDhenat.profile, raportiJavor: true, raportiVjetor: true },
     });
 
@@ -236,6 +241,41 @@ describe("ekzekutoRaportet, me projekt", () => {
       "Pasqyra e korrikut 2026",
       "Pasqyra e vitit 2025",
     ]);
+  });
+
+  it("says nothing about a period that ended before the ledger began", async () => {
+    const thirrjet = stub();
+    // July 2026 closed before this ledger's first transaction, so there is no July to report on -
+    // an empty report for it would not be the "you forgot to record something" nudge an empty
+    // recent month is.
+    const dalja = await ekzekutoRaportet({
+      ...teDhenat,
+      transactions: [
+        { id: "t1", data: "2026-08-04", lloji: "shpenzim", vlera: 30, kategoriaId: "k1", llogariaId: "l1" },
+      ],
+    });
+    expect(dalja).toEqual([{ lloji: "mujor", gjendja: "para-fillimit", periudha: "2026-07" }]);
+    expect(thirrjet.some((t) => t.url.includes("/functions/v1/raporti"))).toBe(false);
+  });
+
+  it("claims nothing for such a period, so a device that does hold the history still sends it", async () => {
+    // The bug this closes: a device whose copy of the ledger had not finished syncing could claim
+    // the month and mail an empty report from it, and the marker then silenced every other device.
+    const thirrjet = stub();
+    await ekzekutoRaportet({ ...teDhenat, transactions: [] });
+    expect(thirrjet.filter((t) => t.metoda === "POST")).toHaveLength(0);
+  });
+
+  it("still sends the month the ledger does reach back to", async () => {
+    const thirrjet = stub();
+    const [dalja] = await ekzekutoRaportet({
+      ...teDhenat,
+      transactions: [
+        { id: "t1", data: "2026-07-31", lloji: "shpenzim", vlera: 30, kategoriaId: "k1", llogariaId: "l1" },
+      ],
+    });
+    expect(dalja).toMatchObject({ gjendja: "derguar", periudha: "2026-07" });
+    expect(thirrjet.some((t) => t.url.includes("/functions/v1/raporti"))).toBe(true);
   });
 
   it("keeps going when one kind fails, rather than dropping the rest", async () => {

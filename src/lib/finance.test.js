@@ -11,6 +11,7 @@ import { describe, expect, it } from "vitest";
 import {
   MAX_DITE_SERIE, accountBalance, amountBuckets, annualOutlook, backupStatus, balanceHistory,
   budgetProgress, cashflow, categoryComparison, consolidateAccounts, dailySpending,
+  dataEParaERegjistruar,
   convertedAmount, currencyFields, dailyLimit, debtPaymentsFromTransactions, debtProgress,
   debtTotals, dueRecurring, effectiveBudgets, enteredAt, filterByRange, generateDueTransactions,
   idIPerseritjes,
@@ -1175,5 +1176,24 @@ describe("amountBuckets", () => {
 
   it("comes back empty-handed rather than dividing by nothing", () => {
     expect(amountBuckets([]).every((k) => k.perqindja === 0 && k.numri === 0)).toBe(true);
+  });
+});
+
+describe("dataEParaERegjistruar", () => {
+  it("finds the earliest day whatever order the rows arrive in", () => {
+    expect(dataEParaERegjistruar([
+      { id: "a", data: "2026-08-03" },
+      { id: "b", data: "2026-03-14" },
+      { id: "c", data: "2026-05-20" },
+    ])).toBe("2026-03-14");
+  });
+
+  it("answers with nothing for a ledger that holds nothing", () => {
+    expect(dataEParaERegjistruar([])).toBe("");
+    expect(dataEParaERegjistruar()).toBe("");
+  });
+
+  it("steps over a row with no date rather than reading it as the earliest", () => {
+    expect(dataEParaERegjistruar([{ id: "a", data: "" }, { id: "b", data: "2026-01-09" }])).toBe("2026-01-09");
   });
 });

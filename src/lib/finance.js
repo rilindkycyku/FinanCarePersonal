@@ -463,6 +463,21 @@ export function totalsByAccount(transactions, accounts) {
     .sort((a, b) => b.hyrjet + b.daljet - (a.hyrjet + a.daljet));
 }
 
+/**
+ * The earliest day anything was recorded, or "" for a ledger with nothing in it.
+ *
+ * What it is for: a ledger that starts in March 2026 has no 2020 to report on, and a period that
+ * ended before this day is not a quiet period - it is a period that predates the ledger. The two
+ * look identical to every function that only counts transactions, and they mean completely
+ * different things to the person reading the result.
+ */
+export function dataEParaERegjistruar(transactions = []) {
+  return transactions.reduce(
+    (mePara, tx) => (tx.data && (!mePara || tx.data < mePara) ? tx.data : mePara),
+    ""
+  );
+}
+
 /** Income/expense per month for the last `months` months, oldest first. */
 export function monthlyTrend(transactions, months = 6, reference = new Date()) {
   return Array.from({ length: months }, (_, i) => {

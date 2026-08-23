@@ -769,7 +769,9 @@ export const UDHEZIMET = [
           "shenja që diçka ka mbetur pa u shënuar. Çelësat i ndalin një nga një kur nuk i doni më. " +
           "Me «Dërgo tani» mund të merrni edhe periudhën që ende po rrjedh - p.sh. muajin e tanishëm: " +
           "shifrat ndalen te sot, krahasimi pritet te e njëjta pikë e periudhës së kaluar që të mos " +
-          "tregojë rënie aty ku s'ka, dhe raporti i rregullt vjen prapë kur periudha të mbyllet.",
+          "tregojë rënie aty ku s'ka, dhe raporti i rregullt vjen prapë kur periudha të mbyllet. " +
+          "Zgjedhësi ndalet te periudha ku bie transaksioni juaj i parë: periudhat para saj nuk " +
+          "ofrohen, sepse raporti për to mund të vijë vetëm bosh.",
       },
       {
         titulli: "Kujtesa e kategorive",

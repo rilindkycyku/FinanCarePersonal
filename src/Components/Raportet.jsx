@@ -16,6 +16,7 @@ import {
 import KODI_FUNKSIONIT from "../../supabase/functions/raporti/index.ts?raw";
 import { LLOJET_RAPORTIT } from "../lib/raportet";
 import { MUJOR, celesiPeriudhes, emriPeriudhes, etiketaPeriudhes, periudhatPerZgjedhje } from "../lib/periudhat";
+import { dataEParaERegjistruar } from "../lib/finance";
 
 const SEKRETI = "RESEND_API_KEY";
 
@@ -61,7 +62,13 @@ function Raportet() {
    * The period still running, then six closed ones. "How is this month going" is the question
    * somebody actually opens this card to answer; "how did July go" already arrived by email.
    */
-  const periudhat = useMemo(() => periudhatPerZgjedhje(llojiZgjedhur, 6), [llojiZgjedhur]);
+  // Where the ledger starts: periods that ended before it are not offered, because a report for
+  // them can only come back empty.
+  const fillimi = useMemo(() => dataEParaERegjistruar(transactions), [transactions]);
+  const periudhat = useMemo(
+    () => periudhatPerZgjedhje(llojiZgjedhur, 6, new Date(), { nga: fillimi }),
+    [llojiZgjedhur, fillimi]
+  );
   const eMbyllur = periudhat.find((p) => p.celesi === periudhaZgjedhur)?.mbyllur ?? true;
 
   useEffect(() => setMarresi(profile.raportiMarresi || ""), [profile.raportiMarresi]);

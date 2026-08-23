@@ -9,6 +9,26 @@ e fundit kur rregullohet diçka, dhe e para vetëm kur ndryshon vetë forma e pr
 herë, te `2.0.0`, kur të dhënat mësuan të dalin nga shfletuesi. Datat janë ato të commit-it që e
 ngriti versionin.
 
+## [2.17.1] - 2026-08-23
+
+### Rregulluar
+- **Nuk ofrohen më periudha nga koha kur ditari nuk ekzistonte.** Zgjedhësi i raportit numëronte
+  gjashtë periudha prapa pa pyetur nëse ka çka të raportojë në to, prandaj një ditar që nis në
+  qershor 2026 ofronte «Viti 2025», «Viti 2024» e kështu deri në 2020 - raporte që mund të vinin
+  vetëm bosh. Tani rreshtat ndalen te periudha ku bie transaksioni i parë; periudha ku ditari *nis*
+  mbetet, sepse ajo ka diçka brenda.
+
+- **As rruga automatike nuk dërgon për një periudhë që mbaroi para transaksionit të parë.** Një
+  periudhë bosh *brenda* një ditari në përdorim vlen një email - ajo është shenja që një javë mbeti
+  pa u shënuar. Një periudhë nga para se ditari të nisë është gjë tjetër, dhe i njëjti email për të
+  thotë diçka që nuk qëndron: ndezja e raportit javor ditën e tretë me aplikacionin nuk duhet t'ju
+  sjellë raport për javën para se ta kishit.
+
+  Për të tilla periudha nuk shkruhet asnjë shënjë. Kjo mbyll edhe një aksident që ishte i mundur më
+  parë: një pajisje ku ditari ende nuk kishte mbaruar sinkronizimin mund ta pretendonte muajin dhe
+  të niste një raport bosh prej tij, dhe shënja pastaj i heshtte të gjitha pajisjet e tjera. Tani
+  ajo pajisje hesht dhe ia lë radhën asaj që e ka historinë.
+
 ## [2.17.0] - 2026-08-23
 
 ### Shtuar

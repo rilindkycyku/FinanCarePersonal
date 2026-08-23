@@ -173,12 +173,21 @@ export function periudhatEFundit(lloji, sa = 6, sot = new Date()) {
  * `mbyllur: false` rather than left out, because everything downstream has to treat it differently:
  * the figures stop at today, the comparison is cut to the same stretch, and no marker is written
  * for it - a running month recorded as sent would silence the real report at the start of the next.
+ *
+ * `nga` is the first day the ledger has anything on; closed periods that ended before it are left
+ * out. The running one is always offered, even for an empty ledger - it is the period somebody is
+ * living in, and an empty report for it says something true.
  */
-export function periudhatPerZgjedhje(lloji, sa = 6, sot = new Date()) {
-  return [
-    { celesi: celesiPeriudhes(lloji, sot), mbyllur: false },
-    ...periudhatEFundit(lloji, sa, sot).map((celesi) => ({ celesi, mbyllur: true })),
-  ];
+export function periudhatPerZgjedhje(lloji, sa = 6, sot = new Date(), { nga = "" } = {}) {
+  const mbyllura = periudhatEFundit(lloji, sa, sot)
+    // Nothing before the ledger began. Offering "Viti 2020" to somebody whose first transaction is
+    // from 2026 promises a report that can only come back empty - and an empty report for a year
+    // that predates the ledger is not the useful "you forgot to record something" nudge an empty
+    // *recent* period is, it is just a puzzle.
+    .filter((celesi) => !nga || kufijtePeriudhes(lloji, celesi).end >= nga)
+    .map((celesi) => ({ celesi, mbyllur: true }));
+
+  return [{ celesi: celesiPeriudhes(lloji, sot), mbyllur: false }, ...mbyllura];
 }
 
 /** "10-16 gusht 2026", or "31 gusht - 6 shtator 2026" for a week that straddles two months. */

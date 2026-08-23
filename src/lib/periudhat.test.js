@@ -140,6 +140,27 @@ describe("periudhat për zgjedhje", () => {
     expect(lista.map((p) => p.mbyllur)).toEqual([false, true, true, true]);
   });
 
+  it("leaves out closed periods that ended before the ledger began", () => {
+    // A ledger whose first transaction is 14 March 2026 has no February to report on, and no 2025.
+    expect(periudhatPerZgjedhje(MUJOR, 6, sot, { nga: "2026-03-14" }).map((p) => p.celesi)).toEqual([
+      "2026-08", "2026-07", "2026-06", "2026-05", "2026-04", "2026-03",
+    ]);
+    expect(periudhatPerZgjedhje(VJETOR, 6, sot, { nga: "2026-03-14" }).map((p) => p.celesi)).toEqual(["2026"]);
+  });
+
+  it("keeps the period the ledger starts inside - that one does have something in it", () => {
+    // March survives on its last day, not its first: the cut is "ended before the ledger began".
+    expect(periudhatPerZgjedhje(MUJOR, 6, new Date("2026-04-10T09:00:00"), { nga: "2026-03-31" })
+      .map((p) => p.celesi)).toEqual(["2026-04", "2026-03"]);
+    expect(periudhatPerZgjedhje(MUJOR, 6, new Date("2026-04-10T09:00:00"), { nga: "2026-04-01" })
+      .map((p) => p.celesi)).toEqual(["2026-04"]);
+  });
+
+  it("always offers the period being lived in, even with nothing recorded at all", () => {
+    const bosh = periudhatPerZgjedhje(VJETOR, 6, sot, { nga: "" });
+    expect(bosh[0]).toEqual({ celesi: "2026", mbyllur: false });
+  });
+
   it("marks the running one for every kind, since nothing downstream may treat it as done", () => {
     [JAVOR, MUJOR, TREMUJOR, VJETOR].forEach((lloji) => {
       const [i_pari, ...tjerat] = periudhatPerZgjedhje(lloji, 2, sot);

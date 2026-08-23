@@ -31,7 +31,7 @@ npm run dev       # vite --host
 npm run build
 npm run preview
 npm run lint      # eslint . — must stay at 0 errors (5 pre-existing warnings)
-npm test          # vitest run — 25 files, 503 tests, all green
+npm test          # vitest run — 25 files, 512 tests, all green
 npm run test:watch
 npm run ikonat    # regenerates public/img/web/icon-*.png from Logo.svg via Playwright/Chromium
 ```
