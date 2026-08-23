@@ -766,7 +766,10 @@ export const UDHEZIMET = [
           "Resend; hapat e instalimit janë brenda vetë kartelës, një herë të vetme, dhe i njëjti instalim " +
           "u shërben të katërve. Adresa lihet bosh për llogarinë me të cilën hyni te projekti, ose " +
           "shkruhet një tjetër. Edhe një periudhë pa asnjë transaksion dërgohet - pikërisht ajo është " +
-          "shenja që diçka ka mbetur pa u shënuar. Çelësat i ndalin një nga një kur nuk i doni më.",
+          "shenja që diçka ka mbetur pa u shënuar. Çelësat i ndalin një nga një kur nuk i doni më. " +
+          "Me «Dërgo tani» mund të merrni edhe periudhën që ende po rrjedh - p.sh. muajin e tanishëm: " +
+          "shifrat ndalen te sot, krahasimi pritet te e njëjta pikë e periudhës së kaluar që të mos " +
+          "tregojë rënie aty ku s'ka, dhe raporti i rregullt vjen prapë kur periudha të mbyllet.",
       },
       {
         titulli: "Kujtesa e kategorive",

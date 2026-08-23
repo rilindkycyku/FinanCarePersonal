@@ -7,7 +7,8 @@
 import { describe, expect, it } from "vitest";
 import {
   JAVOR, MUJOR, TREMUJOR, VJETOR, celesiPeriudhes, emriPeriudhes, etiketaPeriudhes, intervaliShkurter,
-  javaISO, kufijtePeriudhes, periudhaEMbyllur, periudhaParaardhese, periudhatEFundit, titulliPeriudhes,
+  javaISO, kufijtePeriudhes, periudhaEMbyllur, periudhaEshteMbyllur, periudhaParaardhese,
+  periudhatEFundit, periudhatPerZgjedhje, titulliPeriudhes,
 } from "./periudhat";
 
 const dita = (iso) => new Date(`${iso}T09:00:00`);
@@ -103,5 +104,47 @@ describe("emrat", () => {
   it("titles the month and the year exactly as the PDF statement does", () => {
     expect(titulliPeriudhes(MUJOR, "2026-07")).toBe("Pasqyra e korrikut 2026");
     expect(titulliPeriudhes(VJETOR, "2026")).toBe("Pasqyra e vitit 2026");
+  });
+});
+
+describe("a ka mbaruar periudha", () => {
+  it("counts the last day of a period as still running", () => {
+    // The 31st is not over at nine in the morning, and a report sent then would miss the evening.
+    expect(periudhaEshteMbyllur(MUJOR, "2026-08", dita("2026-08-31"))).toBe(false);
+    expect(periudhaEshteMbyllur(MUJOR, "2026-08", dita("2026-09-01"))).toBe(true);
+  });
+
+  it("agrees with the period the scheduler would pick", () => {
+    const sot = dita("2026-08-31");
+    // The month still running is not the one owed, and the one owed is closed.
+    expect(periudhaEshteMbyllur(MUJOR, celesiPeriudhes(MUJOR, sot), sot)).toBe(false);
+    expect(periudhaEshteMbyllur(MUJOR, periudhaEMbyllur(MUJOR, sot), sot)).toBe(true);
+  });
+
+  it("answers for every kind", () => {
+    const sot = dita("2026-08-12");
+    expect(periudhaEshteMbyllur(JAVOR, "2026-W33", sot)).toBe(false);
+    expect(periudhaEshteMbyllur(JAVOR, "2026-W32", sot)).toBe(true);
+    expect(periudhaEshteMbyllur(TREMUJOR, "2026-Q3", sot)).toBe(false);
+    expect(periudhaEshteMbyllur(VJETOR, "2026", sot)).toBe(false);
+    expect(periudhaEshteMbyllur(VJETOR, "2025", sot)).toBe(true);
+  });
+});
+
+describe("periudhat për zgjedhje", () => {
+  const sot = dita("2026-08-12");
+
+  it("offers the running period first, then the closed ones", () => {
+    const lista = periudhatPerZgjedhje(MUJOR, 3, sot);
+    expect(lista.map((p) => p.celesi)).toEqual(["2026-08", "2026-07", "2026-06", "2026-05"]);
+    expect(lista.map((p) => p.mbyllur)).toEqual([false, true, true, true]);
+  });
+
+  it("marks the running one for every kind, since nothing downstream may treat it as done", () => {
+    [JAVOR, MUJOR, TREMUJOR, VJETOR].forEach((lloji) => {
+      const [i_pari, ...tjerat] = periudhatPerZgjedhje(lloji, 2, sot);
+      expect(i_pari).toEqual({ celesi: celesiPeriudhes(lloji, sot), mbyllur: false });
+      expect(tjerat.every((p) => p.mbyllur && periudhaEshteMbyllur(lloji, p.celesi, sot))).toBe(true);
+    });
   });
 });

@@ -45,6 +45,33 @@ export function esc(text) {
 }
 
 const dataShkurt = (iso) => String(iso || "").split("-").reverse().join(".");
+
+/**
+ * The address of the app that built this email, when it is one another device could open.
+ *
+ * The footer tells the reader where to switch the reports off, and a link is worth more there than
+ * the word "Cilësimet" - the email is read on a phone, hours after the app was last open, and
+ * nobody types a URL from memory to find a settings page.
+ *
+ * But only a *remote* origin is worth linking. An email built while the app is served from
+ * `localhost` or a private address carries a link that works on exactly one machine and is dead
+ * everywhere else, which is worse than the plain word: the reader taps it, gets a browser error,
+ * and concludes the report itself is broken. Those cases keep the sentence they had.
+ */
+export function bazaEPerdorshme(baza) {
+  const teksti = String(baza || "").trim().replace(/\/+$/, "");
+  if (!/^https?:\/\//i.test(teksti)) return "";
+  const strehuesi = teksti.replace(/^https?:\/\//i, "").split("/")[0].split(":")[0].toLowerCase();
+  const lokal =
+    strehuesi === "localhost" ||
+    strehuesi === "127.0.0.1" ||
+    strehuesi === "[::1]" ||
+    strehuesi.endsWith(".local") ||
+    /^10\./.test(strehuesi) ||
+    /^192\.168\./.test(strehuesi) ||
+    /^172\.(1[6-9]|2\d|3[01])\./.test(strehuesi);
+  return lokal ? "" : teksti;
+}
 const meShenje = (n, monedha) => `${n >= 0 ? "+" : ""}${formatMoney(n, monedha)}`;
 const perqindjeMeShenje = (p) => `${p >= 0 ? "+" : ""}${Math.round(p)}%`;
 
@@ -335,8 +362,10 @@ export function ndertoRaportin({
   recurring = [],
   budgets = [],
   sot = null,
+  baza = "",
 }) {
   const celesi = periudha || muaji;
+  const adresa = bazaEPerdorshme(baza);
   const monedha = profile.monedha || DEFAULT_CURRENCY;
   const f = figuratERaportit({
     lloji,
@@ -384,8 +413,10 @@ export function ndertoRaportin({
             </td></tr>
             <tr><td style="font-family:Arial,Helvetica,sans-serif;font-size:13px;color:${MUTED};padding-bottom:18px;">
               ${esc(profile.emri ? `${profile.emri} · ` : "")}${esc(dataShkurt(f.start))} - ${esc(
-                dataShkurt(f.end)
-              )} · ${esc(monedha)} (${esc(currencySymbol(monedha))})
+                dataShkurt(f.fundiEfektiv || f.end)
+              )} · ${esc(monedha)} (${esc(currencySymbol(monedha))})${
+                f.epjesshme ? " · ende në vazhdim" : ""
+              }
             </td></tr>
             <tr><td>
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
@@ -394,8 +425,20 @@ ${qelizaShifres("Shpenzime", formatMoney(f.daljet, monedha), RED)}
 ${qelizaShifres("Bilanci", formatMoney(f.perfundimtar, monedha), NAVY)}
               </tr></table>
             </td></tr>
+            ${
+              f.epjesshme
+                ? paragraf(
+                    `<strong>Kjo periudhë nuk ka mbaruar ende.</strong> Çdo shifër më poshtë është ` +
+                      `deri më ${esc(dataShkurt(f.fundiEfektiv))}, dhe krahasimi është ndaj së njëjtës pjesë ` +
+                      `të periudhës së kaluar - jo ndaj së tërës, që do të tregonte një rënie aty ku ` +
+                      `nuk ka.`
+                  )
+                : ""
+            }
             ${paragraf(
-              `Bilanci hapës ishte ${esc(formatMoney(f.fillestar, monedha))} dhe periudha u mbyll me ` +
+              `Bilanci hapës ishte ${esc(formatMoney(f.fillestar, monedha))} dhe ${
+                f.epjesshme ? "deri tani është" : "periudha u mbyll me"
+              } ` +
                 `${esc(formatMoney(f.perfundimtar, monedha))} - një ndryshim prej ` +
                 `<strong style="color:${f.neto >= 0 ? EMERALD : RED};">${esc(meShenje(f.neto, monedha))}</strong>.`
             )}
@@ -405,7 +448,11 @@ ${qelizaShifres("Bilanci", formatMoney(f.perfundimtar, monedha), NAVY)}
         <tr><td style="border-top:1px solid ${LINE};padding:16px 24px;font-family:Arial,Helvetica,sans-serif;font-size:11px;line-height:1.7;color:${MUTED};">
           Ky raport u përgatit nga aplikacioni juaj dhe u dërgua nga projekti juaj i Supabase-it -
           asnjë server i FinanCarePersonal nuk i sheh këto shifra. Për ta ndalur, çaktivizoni
-          raportet te Cilësimet.
+          raportet te ${
+            adresa
+              ? `<a href="${esc(adresa)}/cilesimet" style="color:${EMERALD};text-decoration:underline;">Cilësimet</a>`
+              : "Cilësimet"
+          }.
         </td></tr>
       </table>
     </td></tr>
@@ -430,7 +477,7 @@ ${qelizaShifres("Bilanci", formatMoney(f.perfundimtar, monedha), NAVY)}
 
   const text = [
     titulli,
-    `${f.start} - ${f.end}`,
+    `${f.start} - ${f.fundiEfektiv || f.end}${f.epjesshme ? " (periudha ende në vazhdim)" : ""}`,
     "",
     `Hyrje: ${formatMoney(f.hyrjet, monedha)}`,
     `Shpenzime: ${formatMoney(f.daljet, monedha)}`,
@@ -438,6 +485,7 @@ ${qelizaShifres("Bilanci", formatMoney(f.perfundimtar, monedha), NAVY)}
     ...rreshtaTekst,
     "",
     "FinanCarePersonal · dërguar nga projekti juaj i Supabase-it.",
+    ...(adresa ? [`Për ta ndalur: ${adresa}/cilesimet`] : []),
   ].join("\n");
 
   return { subject: titulli, html, text, totalet: f, figurat: f, teQeta: f.teQeta };

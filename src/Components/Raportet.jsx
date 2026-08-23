@@ -15,7 +15,7 @@ import {
 // their project and the code reviewed here are then the same text, and cannot drift apart.
 import KODI_FUNKSIONIT from "../../supabase/functions/raporti/index.ts?raw";
 import { LLOJET_RAPORTIT } from "../lib/raportet";
-import { MUJOR, emriPeriudhes, etiketaPeriudhes, periudhatEFundit } from "../lib/periudhat";
+import { MUJOR, celesiPeriudhes, emriPeriudhes, etiketaPeriudhes, periudhatPerZgjedhje } from "../lib/periudhat";
 
 const SEKRETI = "RESEND_API_KEY";
 
@@ -51,20 +51,24 @@ function Raportet() {
   const [kopjuar, setKopjuar] = useState("");
   const [udhezimet, setUdhezimet] = useState(false);
   const [llojiZgjedhur, setLlojiZgjedhur] = useState(MUJOR);
-  const [periudhaZgjedhur, setPeriudhaZgjedhur] = useState(() => periudhatEFundit(MUJOR, 1)[0]);
+  const [periudhaZgjedhur, setPeriudhaZgjedhur] = useState(() => celesiPeriudhes(MUJOR));
 
   const ndonjeAktiv = LLOJET_RAPORTIT.some((r) => profile[r.fusha]);
   const parazgjedhur = konfigurimi?.email || "";
   const iVertete = marresiIRaportit({ ...profile, raportiMarresi: marresi }, konfigurimi);
 
-  // Six closed periods of the chosen kind: six weeks, six months, six quarters, six years.
-  const periudhat = useMemo(() => periudhatEFundit(llojiZgjedhur, 6), [llojiZgjedhur]);
+  /**
+   * The period still running, then six closed ones. "How is this month going" is the question
+   * somebody actually opens this card to answer; "how did July go" already arrived by email.
+   */
+  const periudhat = useMemo(() => periudhatPerZgjedhje(llojiZgjedhur, 6), [llojiZgjedhur]);
+  const eMbyllur = periudhat.find((p) => p.celesi === periudhaZgjedhur)?.mbyllur ?? true;
 
   useEffect(() => setMarresi(profile.raportiMarresi || ""), [profile.raportiMarresi]);
   // Switching the kind leaves the old period key behind - "2026-07" is not a week - so the picker
   // falls back to the most recent closed period of whatever was just chosen.
   useEffect(() => {
-    setPeriudhaZgjedhur((e) => (periudhat.includes(e) ? e : periudhat[0]));
+    setPeriudhaZgjedhur((e) => (periudhat.some((p) => p.celesi === e) ? e : periudhat[0].celesi));
   }, [periudhat]);
 
   const lexo = useCallback(async () => {
@@ -171,10 +175,16 @@ function Raportet() {
         recurring,
         budgets,
       });
-      await shenoDerguar(llojiZgjedhur, periudhaZgjedhur, { marresi: iVertete, id });
+      // Only a period that has ended is recorded as sent. A running month written down here would
+      // be found by the automatic path at the start of the next one and taken as already done -
+      // the real report for that month would then never go out, and nothing would say why.
+      if (eMbyllur) await shenoDerguar(llojiZgjedhur, periudhaZgjedhur, { marresi: iVertete, id });
       await lexo();
       dialog.alert(
-        `Raporti i ${etiketaPeriudhes(llojiZgjedhur, periudhaZgjedhur)} u dërgua te ${iVertete}.`,
+        `Raporti i ${etiketaPeriudhes(llojiZgjedhur, periudhaZgjedhur)} u dërgua te ${iVertete}.` +
+          (eMbyllur
+            ? ""
+            : " Periudha nuk ka mbaruar ende, prandaj shifrat janë deri sot dhe raporti i rregullt do të vijë sërish kur ajo të mbyllet."),
         { title: "U dërgua", variant: "success" }
       );
     } catch (err) {
@@ -270,7 +280,11 @@ function Raportet() {
                 size="sm"
                 value={periudhaZgjedhur}
                 onChange={setPeriudhaZgjedhur}
-                opsionet={periudhat.map((p) => ({ value: p, label: emriPeriudhes(llojiZgjedhur, p) }))}
+                opsionet={periudhat.map((p) => ({
+                  value: p.celesi,
+                  label: emriPeriudhes(llojiZgjedhur, p.celesi),
+                  nen: p.mbyllur ? undefined : "Ende në vazhdim - shifrat deri sot",
+                }))}
                 titulli="Periudha e raportit"
                 aria-label="Periudha e raportit"
               />

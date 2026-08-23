@@ -209,6 +209,14 @@ export async function dergoRaportin({
   const { ndertoRaportin } = await import("./raportEmail");
   const { subject, html, text } = ndertoRaportin({
     lloji, periudha: celesi, profile, accounts, categories, transactions, recurring, budgets,
+    // Always "now", for both paths. A closed period ends before today, so this changes nothing
+    // there; a period the user asked for by hand may still be running, and this is what stops the
+    // figures at today instead of drawing the rest of the month as empty.
+    sot: new Date(),
+    // Where the reader can go to switch these off. The app knows its own address and the email
+    // does not, so it is stamped in at the moment of sending; `bazaEPerdorshme` throws away a
+    // localhost origin rather than posting a link that works on one machine.
+    baza: typeof window !== "undefined" ? window.location?.origin || "" : "",
   });
 
   const duhetPdf = meBashkengjitje === null ? Boolean(llojiRaportit(lloji)?.bashkengjitje) : meBashkengjitje;

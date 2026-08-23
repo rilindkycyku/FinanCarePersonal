@@ -95,9 +95,19 @@ function Dashboard() {
   const planifikuar = Number(profile.teArdhuratMujore) || 0;
   const objektivi = Number(profile.objektiviKursimit) || 0;
 
+  /**
+   * "E diel, 23 gusht 2026" - printed with a full stop after it, so it is a sentence and starts
+   * with a capital.
+   *
+   * The day and the month stay lower-case in the middle of it, which is what Albanian spelling
+   * asks for and the opposite of English: *e diel*, *gusht*, not *E Diel*, *Gusht*. Only the first
+   * letter of the line is raised, and it is raised here rather than in `DAYS_LONG` because the
+   * same list is used mid-sentence elsewhere.
+   */
   const dataAktuale = useMemo(() => {
     const d = new Date();
-    return `${DAYS_LONG[d.getDay()]}, ${d.getDate()} ${MONTHS_LONG[d.getMonth()].toLowerCase()} ${d.getFullYear()}`;
+    const rreshti = `${DAYS_LONG[d.getDay()]}, ${d.getDate()} ${MONTHS_LONG[d.getMonth()].toLowerCase()} ${d.getFullYear()}`;
+    return rreshti.charAt(0).toUpperCase() + rreshti.slice(1);
   }, []);
 
   const kategoriMax = stats.kategorite[0]?.vlera || 1;

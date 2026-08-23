@@ -9,6 +9,37 @@ e fundit kur rregullohet diçka, dhe e para vetëm kur ndryshon vetë forma e pr
 herë, te `2.0.0`, kur të dhënat mësuan të dalin nga shfletuesi. Datat janë ato të commit-it që e
 ngriti versionin.
 
+## [2.17.0] - 2026-08-23
+
+### Shtuar
+- **Raporti mund të dërgohet edhe për periudhën që ende po rrjedh.** Deri tani zgjedhësi ofronte
+  vetëm periudha të mbyllura, kurse pyetja që dikush hap kartelën për ta bërë është zakonisht
+  «si po shkon **ky** muaj» - ai i kaluari ka ardhur tashmë me email. Tani rreshti i parë i
+  zgjedhësit është periudha aktuale, e shënuar «Ende në vazhdim - shifrat deri sot».
+
+  Tri gjëra ndryshojnë kur periudha s'ka mbaruar. Shifrat ndalen te sot, jo te dita e fundit e
+  periudhës - një muaj i vizatuar deri më 31 kur jemi më 23 ka tetë ditë bosh në çdo grafik dhe
+  lexohet sikur shpenzimi u ndal. Krahasimi pritet te e njëjta pikë e periudhës së kaluar: 23 ditë
+  gushti kundrejt 31 ditëve korriku do të raportonte një rënie prej një të katërte në një muaj që
+  po ecën baraz - numri më ngatërrues që kjo faqe mund të nxirrte, dhe pikërisht ai mbi të cilin
+  dikush do të vepronte. Dhe emaili e thotë me fjalë, në krye, se periudha s'ka mbaruar.
+
+  **Asnjë shënjë nuk shkruhet për një periudhë që ende rrjedh.** Një muaj i shënuar si i dërguar do
+  të gjendej nga rruga automatike në fillim të muajit tjetër dhe do të merrej si i kryer - raporti i
+  vërtetë i atij muaji nuk do të vinte kurrë, dhe asgjë nuk do ta thoshte pse.
+
+- **Fundi i emailit të çon te Cilësimet.** Fjala «Cilësimet» tani është lidhje drejt aplikacionit
+  që e përgatiti raportin. Emaili lexohet në telefon, orë pas herës së fundit që u hap aplikacioni,
+  dhe askush nuk shkruan një adresë përmendsh për të gjetur një faqe cilësimesh. Lidhja vihet
+  vetëm kur adresa është e arritshme nga jashtë: një email i nisur nga `localhost` ose nga rrjeti i
+  shtëpisë e mban fjalën si më parë, sepse një lidhje që punon vetëm në një makinë është më keq se
+  asnjë - lexuesi e shtyp, merr gabim, dhe fajëson raportin.
+
+### Rregulluar
+- **Data te Paneli fillon me shkronjë të madhe.** «e diel, 23 gusht 2026.» shkruhet me pikë në
+  fund, pra është fjali dhe do shkronjë të madhe në krye: **E** diel. Dita dhe muaji brenda saj
+  mbeten të vogla, siç kërkon drejtshkrimi i shqipes dhe ndryshe nga anglishtja.
+
 ## [2.16.0] - 2026-08-22
 
 ### Shtuar
