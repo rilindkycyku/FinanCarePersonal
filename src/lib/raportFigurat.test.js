@@ -192,3 +192,61 @@ describe("vjetor", () => {
     expect(f.daljet).toBe(925);
   });
 });
+
+/**
+ * A period the user asked for by hand may not have finished. Two things then have to be true at
+ * once: the figures stop at today, and the comparison stops at the same point of the period before
+ * it. Getting only the first right produces the most misleading number this file can produce - a
+ * month running dead level reported as down a quarter.
+ */
+describe("periudha ende në vazhdim", () => {
+  const sot = new Date("2026-07-15T10:00:00");
+
+  it("stops at today instead of drawing the rest of the month empty", () => {
+    const f = figurat({ lloji: MUJOR, periudha: "2026-07", sot });
+    expect(f.epjesshme).toBe(true);
+    expect(f.fundiEfektiv).toBe("2026-07-15");
+    // The 23rd is inside July but after the 15th, so it is not counted yet.
+    expect(f.daljet).toBe(340);
+    expect(f.nrRreshtave).toBe(3);
+  });
+
+  it("cuts the comparison to the same stretch of the period before it", () => {
+    const f = figurat({ lloji: MUJOR, periudha: "2026-07", sot });
+    // June's spending was all on the 15th, so fifteen days of June is the same 200 - what matters
+    // is that the window was cut, which the bound reports.
+    expect(f.krahasimi).toMatchObject({ periudha: "2026-06", fundiEfektiv: "2026-06-15", epjesshme: true });
+  });
+
+  it("would overstate the fall if it compared against the whole previous month", () => {
+    const gjysma = figuratERaportit({
+      lloji: MUJOR,
+      periudha: "2026-07",
+      accounts: llogarite,
+      categories: kategorite,
+      transactions: [
+        ...transaksionet,
+        { id: "x1", data: "2026-06-28", lloji: "shpenzim", vlera: 500, kategoriaId: "k1", llogariaId: "l1" },
+      ],
+      sot,
+    });
+    // The 500 € booked on 28 June is outside the fifteen days being compared, so it does not turn
+    // a level month into a collapse.
+    expect(gjysma.krahasimi.shpenzimet).toBe(200);
+  });
+
+  it("leaves a closed period exactly as it was", () => {
+    const meSot = figurat({ lloji: MUJOR, periudha: "2026-07", sot: new Date("2026-09-01T10:00:00") });
+    const pa = figurat({ lloji: MUJOR, periudha: "2026-07" });
+    expect(meSot.epjesshme).toBe(false);
+    expect(meSot.fundiEfektiv).toBe("2026-07-31");
+    expect(meSot.daljet).toBe(pa.daljet);
+    expect(meSot.krahasimi.shpenzimet).toBe(pa.krahasimi.shpenzimet);
+  });
+
+  it("cuts the charts too, not just the totals", () => {
+    const f = figurat({ lloji: MUJOR, periudha: "2026-07", sot });
+    // Five week-columns for a whole July; three once it stops on the 15th.
+    expect(f.javet.map((j) => j.etiketa)).toEqual(["1-7", "8-14", "15-15"]);
+  });
+});

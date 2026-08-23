@@ -6,7 +6,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { ndertoRaportin } from "./raportEmail";
+import { bazaEPerdorshme, ndertoRaportin } from "./raportEmail";
 import { JAVOR, TREMUJOR, VJETOR } from "./periudhat";
 
 const kategorite = [
@@ -130,5 +130,53 @@ describe("të katër llojet", () => {
     const { text } = ndertoLloj(TREMUJOR, "2026-Q3");
     expect(text).toContain("Pasqyra e tremujorit të tretë 2026");
     expect(text).toContain("Ushqim");
+  });
+});
+
+/**
+ * The footer's link home. It is the one URL in the email, it is built on whatever device happened
+ * to send the report, and a wrong one turns a working report into a broken-looking one.
+ */
+describe("adresa te fundi i emailit", () => {
+  it("links to the settings page of the app that sent it", () => {
+    const { html, text } = ndertoRaportin({
+      muaji: "2026-07",
+      profile: { monedha: "EUR" },
+      accounts: llogarite,
+      categories: kategorite,
+      transactions: transaksionet,
+      baza: "https://financarepersonal.vercel.app",
+    });
+    expect(html).toContain('href="https://financarepersonal.vercel.app/cilesimet"');
+    expect(text).toContain("https://financarepersonal.vercel.app/cilesimet");
+  });
+
+  it("keeps the plain word when there is no address to link to", () => {
+    const { html, text } = ndertimi();
+    expect(html).toContain("raportet te Cilësimet.");
+    expect(html).not.toContain("<a href");
+    expect(text).not.toContain("/cilesimet");
+  });
+
+  it("refuses an address that only works on the machine that sent it", () => {
+    // A report sent from a dev server or off the home network would carry a link that is dead
+    // everywhere else - worse than no link, because the reader blames the report.
+    expect(bazaEPerdorshme("http://localhost:5173")).toBe("");
+    expect(bazaEPerdorshme("http://127.0.0.1:4173")).toBe("");
+    expect(bazaEPerdorshme("http://192.168.1.14:5173")).toBe("");
+    expect(bazaEPerdorshme("http://10.0.0.8")).toBe("");
+    expect(bazaEPerdorshme("http://macbook.local:5173")).toBe("");
+  });
+
+  it("takes a real address, and trims the trailing slash so the path is not doubled", () => {
+    expect(bazaEPerdorshme("https://shembull.com/")).toBe("https://shembull.com");
+    expect(bazaEPerdorshme("http://shembull.com")).toBe("http://shembull.com");
+  });
+
+  it("ignores anything that is not an http address at all", () => {
+    expect(bazaEPerdorshme("")).toBe("");
+    expect(bazaEPerdorshme(undefined)).toBe("");
+    expect(bazaEPerdorshme("javascript:alert(1)")).toBe("");
+    expect(bazaEPerdorshme("file:///Users/dikush/app")).toBe("");
   });
 });

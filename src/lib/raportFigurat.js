@@ -41,7 +41,9 @@ const utc = (iso) => {
   const [v, m, d] = iso.split("-").map(Number);
   return new Date(Date.UTC(v, m - 1, d));
 };
-const isoDite = (d) => d.toISOString().slice(0, 10);
+const isoDite = (d) => (typeof d === "string" ? d : d.toISOString().slice(0, 10));
+/** Whole days from one ISO day to another, both ends counted. */
+const ditetMes = (a, b) => Math.round((utc(b) - utc(a)) / DITA);
 
 /** Percentage change, or null where there is nothing to compare against - a period that held
  * nothing is not "down 100%", it is a period there is nothing to say about. */
@@ -158,12 +160,31 @@ export function figuratERaportit({
   sot = null,
 } = {}) {
   const { start, end } = kufijtePeriudhes(lloji, periudha);
-  const t = statementRows({ accounts, categories, transactions, recurring, start, end });
-  const rreshtat = filterByRange(transactions, start, end);
+  const sotStr = sot ? isoDite(sot) : null;
+
+  /**
+   * A period the user asked for by hand may not have finished yet - "how is this month going" is a
+   * live question and the picker offers it. Everything below then stops at today rather than at the
+   * period's own last day: a month reported to the 31st when it is the 23rd draws eight empty days
+   * on every chart, and reads as spending having stopped.
+   */
+  const epjesshme = Boolean(sotStr && sotStr < end);
+  const deri = epjesshme ? sotStr : end;
+
+  const t = statementRows({ accounts, categories, transactions, recurring, start, end: deri });
+  const rreshtat = filterByRange(transactions, start, deri);
 
   const paraCelesi = periudhaParaardhese(lloji, periudha);
   const para = kufijtePeriudhes(lloji, paraCelesi);
-  const rreshtatPara = filterByRange(transactions, para.start, para.end);
+  /**
+   * The comparison is cut to the same stretch. Twenty-three days of this month against thirty-one
+   * of the last one would report a fall of a quarter in a month that is running dead level - the
+   * single most misleading number this file could produce, and the one a reader would act on.
+   */
+  const paraDeri = epjesshme
+    ? isoDite(new Date(Math.min(utc(para.end).getTime(), utc(para.start).getTime() + ditetMes(start, deri) * DITA)))
+    : para.end;
+  const rreshtatPara = filterByRange(transactions, para.start, paraDeri);
   const flowsPara = cashflow(rreshtatPara);
 
   const bazë = {
@@ -172,6 +193,13 @@ export function figuratERaportit({
     start,
     end,
     ...t,
+    // What the figures actually cover, and whether that is short of the period itself.
+    //
+    // Named `fundiEfektiv` and not `deri` because `statementRows` already returns a `deri` of its
+    // own, meaning the last day anything was *booked on* rather than the last day looked at. The
+    // two are different questions and one of them was silently winning the spread.
+    fundiEfektiv: deri,
+    epjesshme,
     kategorite: t.kategorite.slice(0, SA_KATEGORI),
     teGjithaKategorite: t.kategorite,
     kursimi: normaEKursimit(t.hyrjet, t.daljet),
@@ -179,6 +207,8 @@ export function figuratERaportit({
     krahasimi: rreshtatPara.length
       ? {
           periudha: paraCelesi,
+          fundiEfektiv: paraDeri,
+          epjesshme,
           ...flowsPara,
           shpenzimetPerqindje: ndryshimiPerqind(t.daljet, flowsPara.shpenzimet),
           hyrjetPerqindje: ndryshimiPerqind(t.hyrjet, flowsPara.hyrjet),
@@ -188,12 +218,12 @@ export function figuratERaportit({
   };
 
   if (lloji === JAVOR) {
-    // The reference for "what is coming" is the day after the week closed, not today: a report for
-    // a week two months ago must still name the payments that followed *it*.
-    const nga = sot ? isoDite(sot) : isoDite(new Date(utc(end).getTime() + DITA));
+    // The reference for "what is coming" is the day after the stretch reported on, not today: a
+    // report for a week two months ago must still name the payments that followed *it*.
+    const nga = isoDite(new Date(utc(deri).getTime() + DITA));
     return {
       ...bazë,
-      ditet: ditetEPeriudhes(transactions, start, end),
+      ditet: ditetEPeriudhes(transactions, start, deri),
       pagesatQeVijne: upcomingRecurring(recurring, nga, 7).slice(0, 5),
     };
   }
@@ -201,13 +231,13 @@ export function figuratERaportit({
   if (lloji === MUJOR) {
     return {
       ...bazë,
-      javet: javetEMuajit(transactions, start, end),
+      javet: javetEMuajit(transactions, start, deri),
       buxhetet: buxhetetETejkaluara(budgets, categories, transactions, periudha),
     };
   }
 
   if (lloji === TREMUJOR) {
-    const muajt = muajtEPeriudhes(transactions, start, end);
+    const muajt = muajtEPeriudhes(transactions, start, deri);
     const meLevizje = muajt.filter((m) => m.hyrjet > 0 || m.shpenzimet > 0);
     const kategoritePara = new Map(
       totalsByCategory(rreshtatPara, categories, "shpenzim").map((k) => [k.id, k.vlera])
@@ -235,7 +265,7 @@ export function figuratERaportit({
     // fire: it is told the reference is the year after the one being reported.
     sot: new Date(Number(periudha) + 1, 0, 15),
   });
-  return { ...bazë, viti, muajt: muajtEPeriudhes(transactions, start, end) };
+  return { ...bazë, viti, muajt: muajtEPeriudhes(transactions, start, deri) };
 }
 
 export { JAVOR, MUJOR, TREMUJOR, VJETOR };

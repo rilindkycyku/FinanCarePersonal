@@ -41,6 +41,7 @@ import {
   MUJOR, PREFIKSI_RAPORTIT, celesiShenjes, llojiRaportit, ngaCelesi, periudhaERaportit, raportetAktive,
 } from "./raportet";
 import { kufijtePeriudhes } from "./periudhat";
+import { dataEParaERegjistruar } from "./finance";
 import { STORI_META, TABELA } from "./skema";
 import { eshteLidhur, lexoKonfigurimin, rest, siguroSesionin, thirrFunksionin } from "./supabase";
 
@@ -209,6 +210,14 @@ export async function dergoRaportin({
   const { ndertoRaportin } = await import("./raportEmail");
   const { subject, html, text } = ndertoRaportin({
     lloji, periudha: celesi, profile, accounts, categories, transactions, recurring, budgets,
+    // Always "now", for both paths. A closed period ends before today, so this changes nothing
+    // there; a period the user asked for by hand may still be running, and this is what stops the
+    // figures at today instead of drawing the rest of the month as empty.
+    sot: new Date(),
+    // Where the reader can go to switch these off. The app knows its own address and the email
+    // does not, so it is stamped in at the moment of sending; `bazaEPerdorshme` throws away a
+    // localhost origin rather than posting a link that works on one machine.
+    baza: typeof window !== "undefined" ? window.location?.origin || "" : "",
   });
 
   const duhetPdf = meBashkengjitje === null ? Boolean(llojiRaportit(lloji)?.bashkengjitje) : meBashkengjitje;
@@ -238,8 +247,26 @@ export async function shenoDerguar(lloji, periudha, { marresi = "", id = "" } = 
 
 /** One kind's turn: claim the closed period if it is free, send it, and write down what happened.
  * Never throws - a report that cannot go out must not turn into an error over the ledger. */
-async function ekzekutoNje({ lloji, marresi, sot, teDhenat }) {
+async function ekzekutoNje({ lloji, marresi, sot, fillimi, teDhenat }) {
   const periudha = periudhaERaportit(lloji, sot);
+
+  /**
+   * A period that ended before the ledger began is not reported on at all.
+   *
+   * An empty period *inside* a ledger in use is worth an email - it is the sign that a week went
+   * unrecorded. A period from before the first transaction is a different thing entirely, and the
+   * same email about it says something untrue. Switching the weekly report on during your third
+   * day with the app should not post you a report about the week before you had it.
+   *
+   * It is deliberately not marked as done. Nothing is claimed, so a device whose copy of the
+   * ledger has not finished syncing simply keeps quiet and lets a device that *has* the history
+   * send it - which is also the accident this closes: before, an empty local ledger could claim
+   * the month and mail an empty report from it.
+   */
+  if (!fillimi || kufijtePeriudhes(lloji, periudha).end < fillimi) {
+    return { lloji, gjendja: "para-fillimit", periudha };
+  }
+
   try {
     const shenja = await lexoShenjen(lloji, periudha);
     if (!provoSerish(shenja, sot.getTime())) return { lloji, gjendja: "asgje", periudha };
@@ -294,10 +321,11 @@ export async function ekzekutoRaportet({
   if (!marresi) return [{ gjendja: "pa-marres" }];
 
   const teDhenat = { profile, accounts, categories, transactions, recurring, budgets };
+  const fillimi = dataEParaERegjistruar(transactions);
   const rezultatet = [];
   for (const def of aktivet) {
     // Sequential on purpose - see the header.
-    rezultatet.push(await ekzekutoNje({ lloji: def.lloji, marresi, sot, teDhenat }));
+    rezultatet.push(await ekzekutoNje({ lloji: def.lloji, marresi, sot, fillimi, teDhenat }));
   }
   return rezultatet;
 }
