@@ -61,6 +61,15 @@ function ShtoPagesenBorxhit({ show, onHide, borxhi, initial }) {
       ? transactions.find((tx) => tx.id === initial.transaksioniId)
       : null;
     setLidh(Boolean(lidhur));
+    // The note's category describes the *debt*, and money coming back from a loan is income: on a
+    // "hua e dhënë" that prefill was an expense category landing on an `hyrje`, which the picker
+    // below cannot even show (it lists income categories only) and which files the return under a
+    // spending category. Anything that does not fit the transaction is dropped, so the field is
+    // empty and has to be answered - the save already refuses to go through without it.
+    const kategoriaQePershtatet = (id) => {
+      const kategoria = categories.find((c) => c.id === id);
+      return kategoria?.lloji === txLloji ? id : "";
+    };
     setEntry(
       initial
         ? {
@@ -71,15 +80,16 @@ function ShtoPagesenBorxhit({ show, onHide, borxhi, initial }) {
             // Falls back to the same preselection a new payment gets, so ticking the box on a line
             // that was note-only until now does not leave the account picker empty.
             llogariaId: lidhur?.llogariaId || (njeLlogari ? llogariaKryesore?.id : aktive[0]?.id) || "",
-            kategoriaId: lidhur?.kategoriaId || borxhi?.kategoriaId || "",
+            kategoriaId:
+              kategoriaQePershtatet(lidhur?.kategoriaId) || kategoriaQePershtatet(borxhi?.kategoriaId),
           }
         : {
             ...blank(),
             llogariaId: (njeLlogari ? llogariaKryesore?.id : aktive[0]?.id) || "",
-            kategoriaId: borxhi?.kategoriaId || "",
+            kategoriaId: kategoriaQePershtatet(borxhi?.kategoriaId),
           }
     );
-  }, [show, initial, borxhi, transactions, aktive, njeLlogari, llogariaKryesore]);
+  }, [show, initial, borxhi, transactions, categories, txLloji, aktive, njeLlogari, llogariaKryesore]);
 
   const setField = (name, value) => setEntry((prev) => ({ ...prev, [name]: value }));
 

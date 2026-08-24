@@ -1,7 +1,9 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Container, Row, Button } from "react-bootstrap";
-import { Wallet, Plus, Edit3, Trash2, Archive, ArchiveRestore, TrendingUp, TrendingDown, Receipt } from "lucide-react";
+import {
+  Wallet, Plus, Edit3, Trash2, Archive, ArchiveRestore, TrendingUp, TrendingDown, Receipt, Scale,
+} from "lucide-react";
 import NavBar from "../Components/NavBar";
 import Footer from "../Components/Footer";
 import PageTitle from "../Components/PageTitle";
@@ -10,6 +12,7 @@ import PageLoading from "../Components/PageLoading";
 import Tabela from "../Components/Tabela/Tabela";
 import ShtoLlogarine from "../Components/ShtoLlogarine";
 import CilesimiNjeLlogari from "../Components/CilesimiNjeLlogari";
+import BarazoLlogarine from "../Components/BarazoLlogarine";
 import { Kpi, Empty } from "../Components/Ui";
 import { useData } from "../Context/DataContext";
 import { useDialog } from "../Context/DialogContext";
@@ -28,6 +31,7 @@ function Llogarite() {
   const dialog = useDialog();
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState(null);
+  const [barazimi, setBarazimi] = useState(null);
 
   const stats = useMemo(() => {
     const detajet = totalsByAccount(transactions, accounts).map((a) => ({
@@ -128,6 +132,18 @@ function Llogarite() {
           <button type="button" className="fcp-icon-action edit" title="Ndrysho" onClick={() => openEdit(account)}>
             <Edit3 size={14} />
           </button>
+          {/* Offered on the main account of single-account mode too - there it is the only account
+              there is, so it is exactly where the ledger drifts away from the bank. */}
+          {!account.arkivuar && (
+            <button
+              type="button"
+              className="fcp-icon-action"
+              title="Barazo me bilancin real"
+              onClick={() => setBarazimi(account)}
+            >
+              <Scale size={14} />
+            </button>
+          )}
           {!mbrojtur && (
             <>
               <button
@@ -309,6 +325,8 @@ function Llogarite() {
           }}
           initial={editing}
         />
+
+        <BarazoLlogarine show={Boolean(barazimi)} account={barazimi} onHide={() => setBarazimi(null)} />
       </main>
 
       <Footer />

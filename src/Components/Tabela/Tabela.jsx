@@ -57,6 +57,10 @@ function Tabela({
   mosShfaqTitullin,
   mosShfaqPaginimin,
   shfaqEksporto,
+  kaZgjedhje,
+  zgjedhjet,
+  funksionZgjedhjes,
+  veprimetEZgjedhura,
 }) {
   // Unique per instance, so the filter labels point at their own controls even if a page ever grows
   // a second table.
@@ -76,7 +80,7 @@ function Tabela({
   const filteredData =
     filterField && filterValue ? data.filter((d) => cellText(d[filterField]) === filterValue) : data;
 
-  const { items, requestSort, sortConfig, currentPage, pageCount, goToPage, total } = useSortableData(
+  const { items, allItems, requestSort, sortConfig, currentPage, pageCount, goToPage, total } = useSortableData(
     filteredData,
     null,
     searchQuery,
@@ -88,6 +92,41 @@ function Tabela({
 
   const headeri = data.length > 0 ? Object.keys(data[0]) : [];
   const filteredHeaders = mosShfaqID ? headeri.filter((header) => header !== "ID") : headeri;
+
+  // ── Row selection ─────────────────────────────────────────────────────────
+  // The page owns the list of ticked ids; this only reports what was ticked. Keeping it here would
+  // mean the actions built on top of it (which live on the page) could not see the selection, and
+  // a selection that survives a delete or a filter change would go on naming rows that are gone.
+  const teZgjedhurat = new Set(kaZgjedhje ? zgjedhjet || [] : []);
+  // "All" means every row the search, the date range and the pills left standing - not just the
+  // twenty on screen. Splitting a month across two accounts is the case this is for, and a page at
+  // a time would defeat it.
+  const idetENjohura = kaZgjedhje ? allItems.map((item) => item.ID) : [];
+  const nrTeZgjedhuraNeListe = idetENjohura.filter((id) => teZgjedhurat.has(id)).length;
+  const teGjithaZgjedhura = idetENjohura.length > 0 && nrTeZgjedhuraNeListe === idetENjohura.length;
+  const disaZgjedhura = nrTeZgjedhuraNeListe > 0 && !teGjithaZgjedhura;
+
+  const kutiaEGjithcka = useRef(null);
+  useEffect(() => {
+    if (kutiaEGjithcka.current) kutiaEGjithcka.current.indeterminate = disaZgjedhura;
+  }, [disaZgjedhura]);
+
+  const ndrysho = (ids) => funksionZgjedhjes?.(ids);
+
+  const kthejeRreshtin = (id) => {
+    const tani = new Set(teZgjedhurat);
+    if (tani.has(id)) tani.delete(id);
+    else tani.add(id);
+    ndrysho([...tani]);
+  };
+
+  /** Ticks or clears every matching row at once, leaving anything picked under other filters be. */
+  const kthejiTeGjitha = () => {
+    const tani = new Set(teZgjedhurat);
+    if (teGjithaZgjedhura) idetENjohura.forEach((id) => tani.delete(id));
+    else idetENjohura.forEach((id) => tani.add(id));
+    ndrysho([...tani]);
+  };
 
   // Only what a page deliberately wrapped in `markup()` is HTML; the rest is the text the user
   // typed and is rendered as such, so a name with an "&" or a "<" in it survives the trip.
@@ -246,11 +285,37 @@ function Tabela({
             </div>
           )}
 
+          {kaZgjedhje && teZgjedhurat.size > 0 && (
+            <div className="premium-selection-bar mb-3">
+              <span className="premium-selection-count">
+                {teZgjedhurat.size} {teZgjedhurat.size === 1 ? "i zgjedhur" : "të zgjedhur"}
+              </span>
+              {veprimetEZgjedhura}
+              <Button variant="link" size="sm" className="premium-selection-clear" onClick={() => ndrysho([])}>
+                Hiq zgjedhjen
+              </Button>
+            </div>
+          )}
+
           <div className="premium-table-scroll-wrap">
             <div ref={scrollRef} className={`premium-table-container ${data.length > 0 ? "" : "d-none"}`}>
               <table className="premium-table mb-0">
                 <thead>
                   <tr>
+                    {kaZgjedhje && (
+                      <th className="premium-th premium-th-zgjedhje">
+                        <input
+                          ref={kutiaEGjithcka}
+                          type="checkbox"
+                          className="form-check-input"
+                          checked={teGjithaZgjedhura}
+                          onChange={kthejiTeGjitha}
+                          disabled={idetENjohura.length === 0}
+                          aria-label="Zgjidh të gjitha rreshtat e filtruar"
+                          title="Zgjidh të gjitha rreshtat që lanë filtrat"
+                        />
+                      </th>
+                    )}
                     {filteredHeaders.map((header) => (
                       <th
                         key={header}
@@ -280,7 +345,18 @@ function Tabela({
                 </thead>
                 <tbody>
                   {items.map((item) => (
-                    <tr key={item.ID} className="premium-tr">
+                    <tr key={item.ID} className={`premium-tr${teZgjedhurat.has(item.ID) ? " e-zgjedhur" : ""}`}>
+                      {kaZgjedhje && (
+                        <td className="premium-td premium-td-zgjedhje">
+                          <input
+                            type="checkbox"
+                            className="form-check-input"
+                            checked={teZgjedhurat.has(item.ID)}
+                            onChange={() => kthejeRreshtin(item.ID)}
+                            aria-label="Zgjidh këtë rresht"
+                          />
+                        </td>
+                      )}
                       {filteredHeaders.map((header) => (
                         <td key={`${item.ID}-${header}`} className="premium-td">
                           {header === dateField ? <span className="date-badge">{formatDate(item[header])}</span> : renderCellContent(item[header])}

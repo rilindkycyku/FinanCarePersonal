@@ -9,6 +9,85 @@ e fundit kur rregullohet diçka, dhe e para vetëm kur ndryshon vetë forma e pr
 herë, te `2.0.0`, kur të dhënat mësuan të dalin nga shfletuesi. Datat janë ato të commit-it që e
 ngriti versionin.
 
+## [2.20.0] - 2026-08-24
+
+### Shtuar
+- **Shifrat e muajit mund të numërohen sipas muajit që pagesa mbulon.** Te një pagesë e përsëritur
+  ka prej kohësh fushën «për cilin muaj është» - qiraja e shtatorit merret në fund të gushtit, rroga
+  e gushtit vjen më 1 shtator - dhe çdo transaksion i krijuar prej saj e mban atë përgjigje brenda
+  vetes. Deri tani ajo përgjigje shkonte vetëm te përshkrimi: asnjë shifër nuk e lexonte, prandaj
+  një qira shtatori e marrë më 22 gusht rrinte te hyrjet e gushtit dhe e bënte muajin të dukej 600 €
+  më i mirë se ç'ishte.
+
+  Çelësi i ri te Cilësimet e vë atë përgjigje në punë. I ndezur, hyrjet dhe shpenzimet e muajit te
+  Paneli, Statistikat dhe Viti numërohen te muaji që pagesa mbulon. I fikur - dhe kështu vjen -
+  asgjë nuk ndryshon nga më parë.
+
+  Ku *nuk* vlen është po aq e qëllimshme. Bilanci, parashikimi, limiti ditor dhe buxhetet ndjekin
+  gjithmonë ditën kur paratë lëvizën vërtet, sepse ato përgjigjen se sa para keni, jo si shkoi
+  muaji; një bilanc që rrinte «i rregullt» duke mos u pajtuar me bankën do të ishte më keq se një
+  bilanc thjesht i hershëm. Pasoja duhet ditur: me çelësin e ndezur «Kursimi i Muajit» mund të mos
+  përputhet me sa u rrit bilanci, prandaj kartelat e muajit mbajnë nënshkrimin «sipas muajit që
+  mbulojnë» që të dihet cilës pyetje i përgjigjen.
+
+  Vlen vetëm për periudha që janë muaj të plotë. Një rresht që mbulon shtatorin nuk ka ditë brenda
+  javës së 14-ës, prandaj një raport javor që do ta nderonte këtë do të gëlltiste qiranë e një muaji
+  brenda shtatë ditëve; grafikët ditorë dhe kalendari mbeten po ashtu te data reale. Pasqyra PDF dhe
+  raportet me email numërojnë sipas datës reale gjithashtu - ato janë lista lëvizjesh me bilanc në
+  ecuri, ku radha kronologjike është vetë kuptimi.
+
+## [2.19.0] - 2026-08-24
+
+### Shtuar
+- **Barazimi i një llogarie me bilancin real.** Te kartela e çdo llogarie ka tani një buton me
+  peshore: shkruani sa ka vërtet llogaria - shifrën e bankës ose paratë e numëruara në dorë - dhe
+  dritarja tregon të dyja shifrat njërën mbi tjetrën me diferencën mes tyre, pastaj e shënon atë
+  diferencë si transaksion.
+
+  Kategoria «Barazim i Bilancit» ekzistonte që në fillim me këtë punë në mendje, por asgjë nuk e
+  përdorte: diferenca duhej llogaritur me kalkulator dhe shënuar me dorë, dhe zakonisht përfundonte
+  te «Shpenzime të Tjera», ku gënjen statistikën duke u dukur kategori e përdorur. Tani zgjidhet
+  vetvetiu ana e duhur - hyrje kur llogaria ka më shumë se sa thotë aplikacioni, shpenzim kur ka më
+  pak - dhe mund të ndërrohet nëse doni tjetër.
+
+  Bilanci vazhdon të mos shkruhet kurrë drejtpërdrejt. Ai llogaritet gjithmonë nga bilanci fillestar
+  plus rreshtat, prandaj një korrigjim i fshehtë do të ishte pikërisht ajo që është vetë problemi:
+  një shifër që askush nuk e gjurmon dot. Rreshti i barazimit është i dukshëm, i datuar, i
+  kategorizuar dhe fshihet si çdo tjetër. Diferenca llogaritet në cent, që dy shifra që përputhen
+  deri te centi të dalin «s'ka çka të barazohet» e jo një korrigjim prej 0,004 €.
+
+  Dritarja e kujton edhe rendin e duhur: një pagesë borxhi e lënë vetëm si shënim, një transaksion
+  te llogaria e gabuar ose një blerje e shënuar dy herë e shpjegojnë diferencën më shpesh se paratë
+  e humbura - dhe ato ndreqen, nuk barazohen.
+
+## [2.18.0] - 2026-08-24
+
+### Shtuar
+- **Disa transaksione zhvendosen te një llogari tjetër përnjëherë.** Kur ka më shumë se një llogari,
+  te faqja Transaksionet çdo rresht merr një kutizë dhe shiriti sipër tabelës pyet vetëm se ku të
+  shkojnë. Kutiza te koka e tabelës shënon çdo rresht që lanë filtrat - jo vetëm faqen që shihet -
+  sepse rasti për të cilin u shkrua është pikërisht një muaj i tërë i regjistruar te një llogari e
+  vetme dhe pastaj i ndarë më vonë: një llogari te dyqani, një kuletë e dytë, para që nuk ishin
+  kurrë të asaj llogarie.
+
+  Ndryshon vetëm llogaria. Data, vlera, kategoria dhe çdo lidhje që mban rreshti mbeten ashtu siç
+  ishin, prandaj totalet e muajit lexohen njësoj pas zhvendosjes - thjesht të ndara mes dy
+  llogarive. Transferet mbeten ku janë me qëllim: një transfer i ka të dyja anët të shënuara, kështu
+  që zhvendosja e njërës ose nuk lëviz asgjë, ose është vendim se cila anë ishte fjala - dhe asnjëra
+  nuk merret me mend nga një kutizë e shënuar. Konfirmimi thotë sa rreshta lëvizin, për sa para, dhe
+  sa transfere u lanë jashtë.
+
+### Rregulluar
+- **Kthimi i një huaje nuk zë më një kategori shpenzimi.** Te formulari i pagesës së një borxhi
+  kategoria vinte gati nga vetë shënimi i borxhit. Për një «hua e dhënë» kjo ishte e gabuar: paraja
+  që kthehet është *hyrje*, kurse kategoria e shënimit ishte e shpenzimeve - pra transaksioni ruhej
+  nën një kategori shpenzimi që zgjedhësi poshtë saj as nuk mund ta shfaqte, sepse ai liston vetëm
+  kategori hyrjeje. Tani kategoria e gatshme merret vetëm nëse i përket llojit të transaksionit;
+  përndryshe fusha rri bosh dhe duhet përgjigjur, gjë që ruajtja e kërkonte tashmë.
+
+  Transaksionet e ruajtura më parë mbeten si janë - ndreqja bëhet duke i hapur një herë dhe duke
+  zgjedhur kategorinë e duhur.
+
 ## [2.17.1] - 2026-08-23
 
 ### Rregulluar

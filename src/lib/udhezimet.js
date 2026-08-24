@@ -204,6 +204,16 @@ export const UDHEZIMET = [
           "njëjtat të dhëna, gati për një datë të re) dhe kapësen që hap fotot e faturës për atë transaksion.",
       },
       {
+        titulli: "Zhvendosini disa te një llogari tjetër",
+        teksti:
+          "Kur keni më shumë se një llogari, para çdo rreshti del një kutizë. Shënoni sa doni - kutiza te " +
+          "koka e tabelës i shënon të gjitha ato që lanë filtrat, jo vetëm faqen që shihni - zgjidhni " +
+          "llogarinë te shiriti sipër dhe shtypni «Zhvendos». Ndryshon vetëm llogaria: data, vlera dhe " +
+          "kategoria mbeten ashtu siç ishin, prandaj totalet e muajit lexohen njësoj, thjesht të ndara " +
+          "mes dy llogarive. Transferet mbeten ku janë, sepse i kanë të dyja anët të shënuara dhe " +
+          "ndryshohen nga formulari i tyre.",
+      },
+      {
         titulli: "Nxirreni jashtë",
         teksti:
           "Butoni i eksportit te tabela ruan pikërisht atë që po shihni - me filtrat e vendosur - në një " +
@@ -215,8 +225,9 @@ export const UDHEZIMET = [
       "Pranë çdo fushe vlere ka një llogaritës: shkruani «12.90+3.50×2» dhe shtypni Apliko - e dobishme kur një faturë ka disa artikuj ose kur pagesa ndahet me dikë.",
       "Për një shpenzim të faturuar në monedhë tjetër, hapni «Monedhë tjetër» te formulari: ruhet vlera e kthyer, kurse ajo origjinale mbahet për krahasim me ekstraktin.",
       "Etiketat («pushime2026», «makina») janë një dimension i dytë krahas kategorisë dhe filtri i tyre shfaqet sapo të ekzistojë e para.",
+      "Nëse një pjesë e parave nuk është kesh - një llogari te dyqani, një kuletë e dytë - hapni një llogari për të dhe zhvendosini atje rreshtat që i takojnë: bilanci i llogarisë kryesore fillon të përputhet me atë që keni vërtet në dorë.",
     ],
-    shihEdhe: ["kategorite", "importo-csv", "veglat"],
+    shihEdhe: ["kategorite", "importo-csv", "veglat", "llogarite"],
   },
 
   {
@@ -250,6 +261,16 @@ export const UDHEZIMET = [
           "është e mundur, por ajo merr me vete edhe rreshtat.",
       },
       {
+        titulli: "Barazoni me bilancin real",
+        teksti:
+          "Butoni me peshoren te kartela pyet vetëm një gjë: sa ka vërtet ajo llogari. Shkruani shifrën që " +
+          "shihni te banka ose paratë që numëroni në dorë, dhe diferenca ndaj asaj që tregon aplikacioni " +
+          "shënohet si transaksion nën kategorinë «Barazim i Bilancit» - jo si shpenzim i vërtetë, sepse nuk " +
+          "dihet çka ishte. Kështu muaji i ri nis nga një shifër që përputhet, në vend që gabimi të bartet " +
+          "muaj pas muaji. Bilanci nuk shkruhet kurrë drejtpërdrejt: rreshti i barazimit është i dukshëm, i " +
+          "datuar dhe fshihet si çdo tjetër.",
+      },
+      {
         titulli: "Modaliteti me një llogari",
         teksti:
           "Nëse ndarja kesh/bankë nuk ju hyn në punë, çelësi në fund të faqes bashkon gjithçka në një llogari " +
@@ -261,6 +282,7 @@ export const UDHEZIMET = [
     keshilla: [
       "Borxhi i një kartele krediti nuk mbahet këtu: kartelat, kreditë dhe këstet rrinë te faqja Borxhet & Kartelat, jashtë bilancit.",
       "Tabela në fund të faqes është e njëjta listë në formë rreshtash, gati për eksport në Excel.",
+      "Para se të barazoni, shikoni te Borxhet nëse ka rreshta «vetëm shënim» dhe te Transaksionet nëse ndonjë rresht ka rënë te llogaria e gabuar - këto dy e shpjegojnë diferencën më shpesh se paratë e humbura.",
     ],
     shihEdhe: ["borxhet", "transaksionet", "cilesimet"],
   },
@@ -729,6 +751,18 @@ export const UDHEZIMET = [
           "njoftojnë vetëm kur diçka e kalon vijën - jo për çdo shpenzim pas saj - kurse pagesat që " +
           "presin kujtohen një herë në ditë. Të gjitha kërkojnë lejen e shfletuesit dhe vlejnë vetëm " +
           "për pajisjen ku e jepni atë leje.",
+      },
+      {
+        titulli: "Për cilin muaj numërohet një pagesë",
+        teksti:
+          "Te pagesat e përsëritura tregoni «për cilin muaj është»: qiraja e shtatorit merret në fund të " +
+          "gushtit, rroga e gushtit vjen më 1 shtator. Me këtë çelës të ndezur, hyrjet dhe shpenzimet e " +
+          "muajit te Paneli, Statistikat dhe Viti numërohen te muaji që pagesa mbulon, jo te dita kur " +
+          "lëvizën paratë. Bilanci, parashikimi, limiti ditor dhe buxhetet ndjekin gjithmonë ditën reale - " +
+          "ato flasin për para që i keni ose jo - prandaj me çelësin e ndezur «Kursimi i Muajit» mund të " +
+          "mos përputhet me sa u rrit bilanci, dhe kartelat e thonë me nënshkrim se cilën pyetje po " +
+          "përgjigjen. Pasqyra PDF dhe raportet me email numërojnë gjithashtu sipas datës reale: ato janë " +
+          "lista lëvizjesh.",
       },
       {
         titulli: "Cilësia e fotove të faturave",

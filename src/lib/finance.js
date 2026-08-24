@@ -15,7 +15,9 @@
  */
 
 import { addDays, addMonths, addWeeks, addYears, format, parseISO } from "date-fns";
-import { debtTypeMeta, planPriorityMeta, DAYS_LONG, DAYS_SHORT, FREQUENCIES, MONTHS_SHORT } from "./options";
+import {
+  BALANCE_ADJUSTMENT_CATEGORIES, debtTypeMeta, planPriorityMeta, DAYS_LONG, DAYS_SHORT, FREQUENCIES, MONTHS_SHORT,
+} from "./options";
 import { monthKey, monthLabel, toNumber } from "./format";
 import { emriIPlote, familjaSet, rrenjaE } from "./kategorite";
 
@@ -112,6 +114,109 @@ export function consolidateAccounts({ accounts, transactions, recurring = [], go
   };
 }
 
+/**
+ * Move a hand-picked set of transactions onto another account - the opposite of
+ * `consolidateAccounts`, and the half that was missing.
+ *
+ * Splitting one account in two after the fact is what this exists for: a month already recorded
+ * with everything in one place has to be told which rows in fact belonged to the other pocket, and
+ * doing that one row at a time is what stops anybody from ever doing it.
+ *
+ * A transfer is deliberately left where it is. It already names both ends, so moving one of them
+ * is either a no-op - it would point at itself and stop moving money at all - or a decision about
+ * *which* leg was meant, and neither is something to guess from a ticked checkbox. They are
+ * counted instead, so the confirmation can say they were skipped rather than move them quietly.
+ *
+ * Nothing but `llogariaId` changes: the amount, the date, the category and every link the row
+ * carries stay exactly as they were, so the totals for the month are the same figure afterwards -
+ * only split across two accounts.
+ */
+export function reassignAccount({ transactions = [], ids = [], targetId } = {}) {
+  const zgjedhur = new Set(ids);
+  const perfshira = transactions.filter((tx) => zgjedhur.has(tx.id));
+  const transferet = perfshira.filter((tx) => tx.lloji === "transfer");
+  const levizshme = perfshira.filter((tx) => tx.lloji !== "transfer");
+  // Rows already on the target are not rewritten: re-saving them would stamp `perditesuar` and
+  // hand the sync a change that changed nothing.
+  const ndryshuara = targetId ? levizshme.filter((tx) => tx.llogariaId !== targetId) : [];
+
+  return {
+    transactions: ndryshuara.map((tx) => ({ ...tx, llogariaId: targetId })),
+    shuma: ndryshuara.reduce((sum, tx) => sum + toNumber(tx.vlera), 0),
+    nrTeZhvendosura: ndryshuara.length,
+    nrTransfereve: transferet.length,
+    nrPaNdryshim: levizshme.length - ndryshuara.length,
+  };
+}
+
+/**
+ * What one account really holds against what the app thinks it holds - and the single row that
+ * would make the two agree.
+ *
+ * A ledger kept by hand drifts. A coffee paid in cash and never entered, a fee the bank took, a
+ * purchase entered twice: none of them announce themselves, and by the end of the month the app is
+ * out by an amount whose story is gone. The honest move then is not to hunt for it forever - it is
+ * to say so: book the difference, under a category that reads as a confession rather than as
+ * spending, and start the next month from a figure that matches the account.
+ *
+ * That is why the correction is a normal transaction and not a silent rewrite of the balance. The
+ * balance in this app is never stored, only ever derived from the opening figure and the rows
+ * (`accountBalance`); a hidden adjustment would be a number nobody could trace, which is precisely
+ * what the drift already is. This one is visible, dated, categorised and deletable.
+ *
+ * The difference is worked out in cents on purpose: two figures that agree to the cent must come
+ * out as "nothing to do", not as a 0,004 € correction that nobody can see and nothing can explain.
+ */
+export function reconciliation({
+  account,
+  transactions = [],
+  bilanciReal,
+  todayStr = format(new Date(), "yyyy-MM-dd"),
+  shenim = "",
+  makeIdFn = () => "tx_barazim",
+} = {}) {
+  if (!account) return null;
+
+  const bilanciAktual = accountBalance(account, transactions);
+  const real = toNumber(bilanciReal);
+  const diferenca = Math.round((real - bilanciAktual) * 100) / 100;
+  // More in the account than the app knows about is income that was never entered; less is money
+  // that went out unrecorded. Which way round it is decides both the type and the category.
+  const lloji = diferenca > 0 ? "hyrje" : "shpenzim";
+
+  return {
+    bilanciAktual,
+    bilanciReal: real,
+    diferenca,
+    barazon: diferenca === 0,
+    lloji: diferenca === 0 ? null : lloji,
+    kategoriaESugjeruar: diferenca === 0 ? null : BALANCE_ADJUSTMENT_CATEGORIES[lloji],
+    transaksioni:
+      diferenca === 0
+        ? null
+        : {
+            id: makeIdFn("tx"),
+            data: todayStr,
+            lloji,
+            vlera: Math.abs(diferenca),
+            llogariaId: account.id,
+            llogariaDestinacionId: null,
+            kategoriaId: BALANCE_ADJUSTMENT_CATEGORIES[lloji],
+            pershkrimi: "Barazim i bilancit",
+            shenim,
+            qellimiId: null,
+            etiketat: [],
+            perseritjaId: null,
+            borxhiId: null,
+            planiId: null,
+            krijuar: new Date().toISOString(),
+            // Never monthly: an adjustment is not a purchase being spread over the month, and
+            // charging it to the day it was noticed is the only honest date it has.
+            ritmi: null,
+          },
+  };
+}
+
 // ── Currencies ──────────────────────────────────────────────────────────────
 
 /**
@@ -170,10 +275,47 @@ export function periodBounds(value, sot = new Date()) {
   return { start: "0000-01-01", end: "9999-12-31" };
 }
 
-/** `start`/`end` are inclusive; either may be null to leave that side open. */
-export function filterByRange(transactions, start, end) {
+/**
+ * The month a transaction *belongs to*, which is not always the month it moved in.
+ *
+ * A recurring schedule can say which month its money covers (`periudhaZhvendosje` - the rent handed
+ * over in the last days of August is September's, the salary paid on the 1st is last month's work),
+ * and the booking carries that answer as a plain "YYYY-MM" key. Everything else belongs to the
+ * month it happened in, which is the vast majority of rows.
+ */
+export function muajiEfektiv(tx) {
+  return tx?.periudha || (tx?.data || "").slice(0, 7);
+}
+
+/** Whether a range is exactly whole calendar months - the only shape where `periudha` can apply. */
+function muajTePlote(start, end) {
+  if (!start || !end) return false;
+  return start.slice(8) === "01" && end === monthKeyBounds(end.slice(0, 7)).end;
+}
+
+/**
+ * `start`/`end` are inclusive; either may be null to leave that side open.
+ *
+ * With `sipasPeriudhes` the range is read by the month each row *covers* rather than by the day it
+ * moved - so September's rent, handed over on 22 August, counts as September's income. It applies
+ * only to ranges that are whole calendar months, because that is the only shape the answer has: a
+ * row covering September cannot be placed inside the week of the 14th, and a weekly report asked
+ * to honour it would swallow a whole month's rent into seven days.
+ *
+ * Balances never use this. The money really did move on the 22nd, and a balance that disagreed
+ * with the bank in order to be tidy would be worse than one that is merely early.
+ */
+export function filterByRange(transactions, start, end, { sipasPeriudhes = false } = {}) {
+  const sipasMuajit = sipasPeriudhes && muajTePlote(start, end);
+  const nga = sipasMuajit ? start.slice(0, 7) : null;
+  const deri = sipasMuajit ? end.slice(0, 7) : null;
+
   return transactions.filter((tx) => {
     if (!tx.data) return false;
+    if (sipasMuajit) {
+      const muaji = muajiEfektiv(tx);
+      return muaji >= nga && muaji <= deri;
+    }
     if (start && tx.data < start) return false;
     if (end && tx.data > end) return false;
     return true;
@@ -479,11 +621,11 @@ export function dataEParaERegjistruar(transactions = []) {
 }
 
 /** Income/expense per month for the last `months` months, oldest first. */
-export function monthlyTrend(transactions, months = 6, reference = new Date()) {
+export function monthlyTrend(transactions, months = 6, reference = new Date(), { sipasPeriudhes = false } = {}) {
   return Array.from({ length: months }, (_, i) => {
     const d = new Date(reference.getFullYear(), reference.getMonth() - (months - 1 - i), 1);
     const { start, end } = monthBounds(d);
-    const flows = cashflow(filterByRange(transactions, start, end));
+    const flows = cashflow(filterByRange(transactions, start, end, { sipasPeriudhes }));
     return {
       key: format(d, "yyyy-MM"),
       label: MONTHS_SHORT[d.getMonth()],

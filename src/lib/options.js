@@ -34,6 +34,16 @@ export const ACCOUNT_TYPES = [
   { value: "kredi", label: "Kredi / Borxh", short: "Kredi", icon: "Receipt", negativeIsNormal: true },
 ];
 
+/**
+ * The two sides of a balance adjustment, kept as a named pair because the pairing is the point:
+ * one concept that the model has to split in two, since a category carries a single `lloji`.
+ * See the comment on `cat_default_barazim_shp` in the default categories below.
+ */
+export const BALANCE_ADJUSTMENT_CATEGORIES = {
+  hyrje: "cat_default_barazim_hyrje",
+  shpenzim: "cat_default_barazim_shp",
+};
+
 /** Never returns undefined, so a record holding a type that was removed still renders. */
 export function accountTypeMeta(value) {
   return (

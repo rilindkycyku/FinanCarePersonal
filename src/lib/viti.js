@@ -37,13 +37,13 @@ export function ndryshimi(tani, para) {
 }
 
 /** The twelve months of a year, each with what came in and what went out. */
-function muajtEVitit(transactions, viti) {
+function muajtEVitit(transactions, viti, sipasPeriudhes) {
   return Array.from({ length: 12 }, (_, i) => {
     const { start, end } = monthBounds(new Date(viti, i, 1));
     return {
       key: `${viti}-${String(i + 1).padStart(2, "0")}`,
       label: MONTHS_SHORT[i],
-      ...cashflow(filterByRange(transactions, start, end)),
+      ...cashflow(filterByRange(transactions, start, end, { sipasPeriudhes })),
     };
   });
 }
@@ -64,9 +64,16 @@ function ditaMeEShtrenjte(rreshtat) {
  * `krahasimi` is null when the year before it holds nothing - the page then simply stops claiming
  * things got better or worse, rather than comparing against zero and calling every category new.
  */
-export function vitiNeNjeFaqe({ accounts = [], categories = [], transactions = [], viti, sot = new Date() } = {}) {
+export function vitiNeNjeFaqe({
+  accounts = [],
+  categories = [],
+  transactions = [],
+  viti,
+  sot = new Date(),
+  sipasPeriudhes = false,
+} = {}) {
   const { start, end } = kufijteEVitit(viti);
-  const rreshtat = filterByRange(transactions, start, end);
+  const rreshtat = filterByRange(transactions, start, end, { sipasPeriudhes });
   const flows = cashflow(rreshtat);
 
   /**
@@ -81,12 +88,14 @@ export function vitiNeNjeFaqe({ accounts = [], categories = [], transactions = [
   const pjesor = viti === sot.getFullYear();
   const muajiFundit = pjesor ? sot.getMonth() : 11;
   const fundiIKrahasimit = pjesor ? monthBounds(new Date(viti, muajiFundit, 1)).end : end;
-  const rreshtatDeriTani = pjesor ? filterByRange(transactions, start, fundiIKrahasimit) : rreshtat;
+  const rreshtatDeriTani = pjesor
+    ? filterByRange(transactions, start, fundiIKrahasimit, { sipasPeriudhes })
+    : rreshtat;
   const flowsDeriTani = pjesor ? cashflow(rreshtatDeriTani) : flows;
 
   const paraVitit = kufijteEVitit(viti - 1);
   const fundiPara = pjesor ? monthBounds(new Date(viti - 1, muajiFundit, 1)).end : paraVitit.end;
-  const rreshtatPara = filterByRange(transactions, paraVitit.start, fundiPara);
+  const rreshtatPara = filterByRange(transactions, paraVitit.start, fundiPara, { sipasPeriudhes });
   const flowsPara = cashflow(rreshtatPara);
 
   const kategorite = totalsByCategory(rreshtat, categories, "shpenzim");
@@ -105,7 +114,7 @@ export function vitiNeNjeFaqe({ accounts = [], categories = [], transactions = [
     return { ...k, para, ndryshimi: deriTani - para, perqindja: ndryshimi(deriTani, para) };
   });
 
-  const muajt = muajtEVitit(transactions, viti);
+  const muajt = muajtEVitit(transactions, viti, sipasPeriudhes);
   const meShpenzime = muajt.filter((m) => m.shpenzimet > 0);
   const meLevizje = muajt.filter((m) => m.hyrjet > 0 || m.shpenzimet > 0);
 

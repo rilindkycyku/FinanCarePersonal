@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { Container, Row, Col, Form, Button } from "react-bootstrap";
 import {
   TrendingUp, TrendingDown, Percent, Hash, Filter, X, CopyPlus, Paperclip, CalendarDays, Sun,
+  ArrowRightLeft,
 } from "lucide-react";
 import NavBar from "../Components/NavBar";
 import Footer from "../Components/Footer";
@@ -19,7 +20,7 @@ import Zgjedhesi from "../Components/Zgjedhesi";
 import { opsionetLlogarive } from "../lib/opsionet";
 import { useDialog } from "../Context/DialogContext";
 import { STORES } from "../lib/db";
-import { RITMI_MUJOR, cashflow, eshteMujore, sortByDateDesc } from "../lib/finance";
+import { RITMI_MUJOR, cashflow, eshteMujore, reassignAccount, sortByDateDesc } from "../lib/finance";
 import { etiketatE, kaEtiketen, ngjyraEtiketes, perdorimiEtiketave } from "../lib/etiketat";
 import { emriIPlote, familjaSet } from "../lib/kategorite";
 import { escapeHtml, formatMoney, formatPercent, markup, plainAmount, todayISO, toNumber } from "../lib/format";
@@ -31,14 +32,16 @@ import "./Styles/Personal.css";
 const TYPE_PILL_COLORS = { hyrje: "var(--sp-emerald)", shpenzim: "var(--sp-red-text)", transfer: "var(--sp-cyan)" };
 
 function Transaksionet() {
-  const { accounts, categories, goals, transactions, faturat, save, destroy, simboli, money, loading,
-    njeLlogari } = useData();
+  const { accounts, categories, goals, transactions, faturat, save, saveMany, destroy, simboli, money,
+    loading, njeLlogari } = useData();
   const [filtri, setFiltri] = useState({ kategoria: "", llogaria: "", etiketa: "", min: "", max: "" });
   const dialog = useDialog();
   const [searchParams, setSearchParams] = useSearchParams();
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState(null);
   const [faturaTx, setFaturaTx] = useState(null);
+  const [zgjedhjet, setZgjedhjet] = useState([]);
+  const [llogariaSynim, setLlogariaSynim] = useState("");
 
   // `?shto=1` opens the form straight away (handy as a bookmark/home-screen shortcut for logging
   // an expense), then drops the param so a refresh or back-navigation doesn't reopen it.
@@ -77,6 +80,23 @@ function Transaksionet() {
 
   const kaFiltra = Object.values(filtri).some(Boolean);
   const flows = useMemo(() => cashflow(teFiltruara), [teFiltruara]);
+
+  const llogariteAktive = useMemo(() => accounts.filter((a) => !a.arkivuar), [accounts]);
+  // Picking rows to move only means something when there is somewhere to move them to: with one
+  // account for everything, or with only one account left, the column would be a checkbox that
+  // does nothing.
+  const mundZhvendoset = !njeLlogari && llogariteAktive.length > 1;
+
+  // A selection names rows, and rows come and go - one gets deleted, a filter narrows the list.
+  // Keeping only what is still on screen is what stops "12 të zgjedhur" from meaning something
+  // the user can no longer see, and stops the move from reaching a row they had filtered away.
+  useEffect(() => {
+    setZgjedhjet((prev) => {
+      const ekzistuese = new Set(teFiltruara.map((tx) => tx.id));
+      const mbeten = prev.filter((id) => ekzistuese.has(id));
+      return mbeten.length === prev.length ? prev : mbeten;
+    });
+  }, [teFiltruara]);
 
   const numriFaturave = useMemo(
     () =>
@@ -201,6 +221,52 @@ function Transaksionet() {
       // Written out so a record marked under the old name stops disagreeing with the new one.
       jashteLimitit: null,
     });
+  };
+
+  /**
+   * Move every ticked row to another account.
+   *
+   * The case it was written for: a month recorded with one account for everything, and then the
+   * realisation that part of it was never that account's money - a shop tab, a second wallet. The
+   * alternative is opening twenty-six rows one at a time, which is the same as not doing it.
+   *
+   * Only `llogariaId` changes, so the month's totals read exactly the same afterwards - they are
+   * simply split across two accounts. `reassignAccount` decides what actually moves.
+   */
+  const zhvendosZgjedhjet = async () => {
+    const synimi = llogariteAktive.find((a) => a.id === llogariaSynim);
+    if (!synimi) return;
+
+    const plani = reassignAccount({ transactions, ids: zgjedhjet, targetId: synimi.id });
+    if (plani.nrTeZhvendosura === 0) {
+      await dialog.alert(
+        plani.nrTransfereve > 0
+          ? "Vetëm transfere janë zgjedhur - një transfer i ka të dyja llogaritë të shënuara, prandaj ndryshohet nga formulari i tij."
+          : `Të gjitha transaksionet e zgjedhura janë tashmë te "${synimi.emri}".`,
+        { title: "Asgjë për të zhvendosur" }
+      );
+      return;
+    }
+
+    const ok = await dialog.confirm(
+      [
+        `${plani.nrTeZhvendosura} ${plani.nrTeZhvendosura === 1 ? "transaksion kalon" : "transaksione kalojnë"}` +
+          ` te "${synimi.emri}" (${money(plani.shuma)}).`,
+        "Bilancet e të dyja llogarive rikalkulohen - data, vlera dhe kategoria mbeten të pandryshuara.",
+        plani.nrTransfereve > 0
+          ? `${plani.nrTransfereve} ${plani.nrTransfereve === 1 ? "transfer mbetet" : "transfere mbeten"} ku` +
+            " janë: një transfer i ka të dyja llogaritë të shënuara dhe ndryshohet nga formulari i tij."
+          : "",
+        plani.nrPaNdryshim > 0 ? `${plani.nrPaNdryshim} janë tashmë te kjo llogari.` : "",
+      ]
+        .filter(Boolean)
+        .join(" "),
+      { title: "Zhvendos te një llogari tjetër", confirmLabel: "Zhvendos" }
+    );
+    if (!ok) return;
+
+    await saveMany(plani.transactions.map((tx) => [STORES.transactions, tx]));
+    setZgjedhjet([]);
   };
 
   const onDelete = async (id) => {
@@ -371,6 +437,25 @@ function Transaksionet() {
           dateField="Data"
           filterField="Lloji"
           mosShfaqID
+          kaZgjedhje={mundZhvendoset}
+          zgjedhjet={zgjedhjet}
+          funksionZgjedhjes={setZgjedhjet}
+          veprimetEZgjedhura={
+            <div className="d-flex align-items-center gap-2 flex-wrap">
+              <Zgjedhesi
+                value={llogariaSynim}
+                onChange={setLlogariaSynim}
+                opsionet={opsionetLlogarive(llogariteAktive)}
+                placeholder="Zgjidh llogarinë"
+                titulli="Zhvendos te llogaria"
+                size="sm"
+                className="fcp-zgj-i-ngushte"
+              />
+              <Button size="sm" variant="primary" disabled={!llogariaSynim} onClick={zhvendosZgjedhjet}>
+                <ArrowRightLeft size={14} className="me-1" /> Zhvendos
+              </Button>
+            </div>
+          }
         />
 
         <ShtoTransaksionin

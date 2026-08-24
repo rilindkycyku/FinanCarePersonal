@@ -52,7 +52,7 @@ const QUICK_ACTIONS = [
 function Dashboard() {
   const { profile, accounts, categories, transactions, budgets, goals, recurring, borxhet, planet, faturat, loading,
     error,
-    money, signedMoney, njeLlogari, llogariaKryesore } = useData();
+    money, signedMoney, njeLlogari, llogariaKryesore, sipasPeriudhes } = useData();
   const [showTx, setShowTx] = useState(false);
 
   const today = todayISO();
@@ -60,7 +60,7 @@ function Dashboard() {
 
   const stats = useMemo(() => {
     const { start, end } = monthBounds();
-    const monthTx = filterByRange(transactions, start, end);
+    const monthTx = filterByRange(transactions, start, end, { sipasPeriudhes });
     return {
       bilanci: totalBalance(accounts, transactions),
       muaji: cashflow(monthTx),
@@ -88,7 +88,7 @@ function Dashboard() {
       planetTotal: planTotals(planet, muajiKey, transactions),
       planetTeMbartura: overduePlans(planet, muajiKey).length,
     };
-  }, [accounts, categories, transactions, budgets, goals, recurring, borxhet, planet, muajiKey, today]);
+  }, [accounts, categories, transactions, budgets, goals, recurring, borxhet, planet, muajiKey, today, sipasPeriudhes]);
 
   const pershendetja = profile.emri || "përdorues";
   // Both are optional targets set in Cilësimet; when unset the KPIs fall back to plain figures.
@@ -196,8 +196,11 @@ function Dashboard() {
               value={money(stats.muaji.hyrjet)}
               sub={
                 planifikuar > 0
-                  ? `${formatPercent((stats.muaji.hyrjet / planifikuar) * 100)} e ${money(planifikuar)} të planifikuara`
-                  : undefined
+                  ? `${formatPercent((stats.muaji.hyrjet / planifikuar) * 100)} e ${money(planifikuar)} të planifikuara` +
+                    (sipasPeriudhes ? " · sipas muajit që mbulojnë" : "")
+                  : sipasPeriudhes
+                    ? "Sipas muajit që mbulojnë"
+                    : undefined
               }
               icon={TrendingUp}
               color="emerald"
@@ -206,6 +209,7 @@ function Dashboard() {
             <Kpi
               label={`Shpenzimet - ${monthLabel(muajiKey)}`}
               value={money(stats.muaji.shpenzimet)}
+              sub={sipasPeriudhes ? "Sipas muajit që mbulojnë" : undefined}
               icon={TrendingDown}
               color="danger"
               lg={3}
@@ -214,9 +218,12 @@ function Dashboard() {
               label="Kursimi i Muajit"
               value={signedMoney(stats.muaji.neto)}
               sub={
-                objektivi > 0
+                // With the covered-month setting on, this figure deliberately stops matching how
+                // much the balance moved, so the card says which question it is answering.
+                (objektivi > 0
                   ? `Norma ${formatPercent(stats.muaji.normaKursimit, 1)} nga objektivi ${formatPercent(objektivi)}`
-                  : `Norma e kursimit: ${formatPercent(stats.muaji.normaKursimit, 1)}`
+                  : `Norma e kursimit: ${formatPercent(stats.muaji.normaKursimit, 1)}`) +
+                (sipasPeriudhes ? " · sipas muajit që mbulojnë" : "")
               }
               icon={Percent}
               color={

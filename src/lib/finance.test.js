@@ -10,10 +10,12 @@
 import { describe, expect, it } from "vitest";
 import {
   MAX_DITE_SERIE, accountBalance, amountBuckets, annualOutlook, backupStatus, balanceHistory,
-  budgetProgress, cashflow, categoryComparison, consolidateAccounts, dailySpending,
+  budgetProgress, cashflow, categoryComparison, consolidateAccounts, dailySpending, reassignAccount,
+  reconciliation,
   dataEParaERegjistruar,
   convertedAmount, currencyFields, dailyLimit, debtPaymentsFromTransactions, debtProgress,
   debtTotals, dueRecurring, effectiveBudgets, enteredAt, filterByRange, generateDueTransactions,
+  muajiEfektiv,
   idIPerseritjes,
   forecast, goalProgress, isRecurringDue, lastInstallmentDate, monthBounds, monthKeyBounds, monthlyTrend,
   monthlyRecurringBreakdown, nextOccurrence, overduePlans, periodBounds, planProgress,
@@ -141,6 +143,123 @@ describe("consolidateAccounts", () => {
   });
 });
 
+describe("reassignAccount", () => {
+  const transactions = [
+    tx("1", { llogariaId: "a", vlera: 20 }),
+    tx("2", { llogariaId: "a", vlera: 5.5 }),
+    tx("3", { llogariaId: "b" }),
+    tx("4", { lloji: "transfer", llogariaId: "a", llogariaDestinacionId: "b" }),
+  ];
+
+  it("repoints only the picked rows and reports the amount moved", () => {
+    const result = reassignAccount({ transactions, ids: ["1", "2"], targetId: "b" });
+
+    expect(result.transactions.map((t) => t.id)).toEqual(["1", "2"]);
+    expect(result.transactions.every((t) => t.llogariaId === "b")).toBe(true);
+    expect(result.nrTeZhvendosura).toBe(2);
+    expect(result.shuma).toBe(25.5);
+  });
+
+  it("leaves a transfer where it is and counts it", () => {
+    const result = reassignAccount({ transactions, ids: ["1", "4"], targetId: "b" });
+
+    expect(result.transactions.map((t) => t.id)).toEqual(["1"]);
+    expect(result.nrTransfereve).toBe(1);
+  });
+
+  it("does not rewrite a row that already sits on the target", () => {
+    const result = reassignAccount({ transactions, ids: ["3"], targetId: "b" });
+
+    expect(result.transactions).toEqual([]);
+    expect(result.nrPaNdryshim).toBe(1);
+  });
+
+  it("changes nothing without a target account", () => {
+    const result = reassignAccount({ transactions, ids: ["1", "2"] });
+
+    expect(result.transactions).toEqual([]);
+    expect(result.nrTeZhvendosura).toBe(0);
+  });
+
+  // Everything else on the record is left alone - the month's totals must read the same
+  // afterwards, only split across two accounts.
+  it("touches nothing but the account", () => {
+    const [moved] = reassignAccount({ transactions, ids: ["1"], targetId: "b" }).transactions;
+    const original = transactions.find((t) => t.id === "1");
+
+    expect({ ...moved, llogariaId: "a" }).toEqual(original);
+  });
+});
+
+describe("reconciliation", () => {
+  const llogaria = account("a", { emri: "Llogaria Bankare", bilanciFillestar: 0 });
+  // 1000 in, 50 out - the app says 950.
+  const transactions = [tx("1", { lloji: "hyrje", vlera: 1000 }), tx("2", { vlera: 50 })];
+  const barazo = (real, extra = {}) =>
+    reconciliation({ account: llogaria, transactions, bilanciReal: real, todayStr: "2026-08-24", ...extra });
+
+  it("books an expense when the account holds less than the app says", () => {
+    const r = barazo(900);
+
+    expect(r.bilanciAktual).toBe(950);
+    expect(r.diferenca).toBe(-50);
+    expect(r.lloji).toBe("shpenzim");
+    expect(r.transaksioni.vlera).toBe(50);
+    expect(r.transaksioni.kategoriaId).toBe("cat_default_barazim_shp");
+    expect(r.transaksioni.llogariaId).toBe("a");
+    expect(r.transaksioni.data).toBe("2026-08-24");
+  });
+
+  it("books income when the account holds more", () => {
+    const r = barazo(1000);
+
+    expect(r.diferenca).toBe(50);
+    expect(r.lloji).toBe("hyrje");
+    expect(r.transaksioni.vlera).toBe(50);
+    expect(r.transaksioni.kategoriaId).toBe("cat_default_barazim_hyrje");
+  });
+
+  // The account after the correction is what the user typed - that is the whole promise.
+  it("leaves the account on the figure that was entered", () => {
+    const r = barazo(900);
+    expect(accountBalance(llogaria, [...transactions, r.transaksioni])).toBe(900);
+  });
+
+  it("has nothing to do when the two agree", () => {
+    const r = barazo(950);
+
+    expect(r.barazon).toBe(true);
+    expect(r.transaksioni).toBeNull();
+    expect(r.lloji).toBeNull();
+  });
+
+  // Cents, not floats: a difference below half a cent is two figures agreeing, not a correction.
+  it("does not invent a correction out of rounding noise", () => {
+    expect(barazo(950.001).barazon).toBe(true);
+    expect(barazo(950.01).diferenca).toBe(0.01);
+  });
+
+  it("reads a typed amount and carries the note onto the row", () => {
+    const r = barazo("900,00", { shenim: "Pas kontrollit të ekstraktit" });
+
+    expect(r.diferenca).toBe(-50);
+    expect(r.transaksioni.shenim).toBe("Pas kontrollit të ekstraktit");
+  });
+
+  // A card or an overdraft holds less than nothing, and the field asks what the account holds.
+  it("accepts a real balance below zero", () => {
+    const r = barazo(-20);
+
+    expect(r.diferenca).toBe(-970);
+    expect(r.lloji).toBe("shpenzim");
+    expect(accountBalance(llogaria, [...transactions, r.transaksioni])).toBe(-20);
+  });
+
+  it("returns nothing without an account", () => {
+    expect(reconciliation({ transactions, bilanciReal: 900 })).toBeNull();
+  });
+});
+
 describe("currencies", () => {
   it("converts and rounds to cents", () => {
     expect(convertedAmount(9.99, 0.92)).toBe(9.19);
@@ -181,6 +300,44 @@ describe("date ranges", () => {
     expect(filterByRange(txs, "2026-08-01", "2026-08-31").map((t) => t.id)).toEqual(["2"]);
     expect(filterByRange(txs, null, "2026-08-31")).toHaveLength(2);
     expect(filterByRange([tx("3", { data: undefined })], null, null)).toHaveLength(0);
+  });
+
+  // The rent handed over on 22 August covers September, and says so on the row itself.
+  const qiraja = tx("qira", { data: "2026-08-22", lloji: "hyrje", vlera: 600, periudha: "2026-09" });
+  const gushti = tx("gusht", { data: "2026-08-10", vlera: 40 });
+
+  it("reads the month a row belongs to, falling back to the month it moved in", () => {
+    expect(muajiEfektiv(qiraja)).toBe("2026-09");
+    expect(muajiEfektiv(gushti)).toBe("2026-08");
+    expect(muajiEfektiv({})).toBe("");
+  });
+
+  it("counts a row in the month it covers when asked to", () => {
+    const txs = [qiraja, gushti];
+    const gjate = (start, end, opsionet) => filterByRange(txs, start, end, opsionet).map((t) => t.id);
+
+    expect(gjate("2026-08-01", "2026-08-31")).toEqual(["qira", "gusht"]);
+    expect(gjate("2026-08-01", "2026-08-31", { sipasPeriudhes: true })).toEqual(["gusht"]);
+    expect(gjate("2026-09-01", "2026-09-30", { sipasPeriudhes: true })).toEqual(["qira"]);
+  });
+
+  // A row covering September cannot be placed inside one week of it, so the option is ignored on
+  // any range that is not whole months - a weekly report must not swallow a month's rent.
+  it("ignores the covered month on a range that is not whole months", () => {
+    const txs = [qiraja, gushti];
+    expect(filterByRange(txs, "2026-08-17", "2026-08-23", { sipasPeriudhes: true }).map((t) => t.id)).toEqual([
+      "qira",
+    ]);
+    expect(filterByRange(txs, "2026-08-01", "2026-08-20", { sipasPeriudhes: true }).map((t) => t.id)).toEqual([
+      "gusht",
+    ]);
+  });
+
+  it("still holds over a range of several whole months", () => {
+    const txs = [qiraja, gushti];
+    expect(
+      filterByRange(txs, "2026-08-01", "2026-09-30", { sipasPeriudhes: true }).map((t) => t.id)
+    ).toEqual(["qira", "gusht"]);
   });
 
   it("orders by date, then by when the row was entered", () => {
@@ -282,6 +439,15 @@ describe("breakdowns", () => {
     const trend = monthlyTrend([tx("1", { data: "2026-07-04", vlera: 60 })], 3, new Date(2026, 7, 15));
     expect(trend.map((m) => m.key)).toEqual(["2026-06", "2026-07", "2026-08"]);
     expect(trend[1].shpenzimet).toBe(60);
+  });
+
+  it("puts a month's trend column under the month the payment covers when asked", () => {
+    const txs = [tx("1", { data: "2026-07-30", lloji: "hyrje", vlera: 600, periudha: "2026-08" })];
+    const pa = monthlyTrend(txs, 2, new Date(2026, 7, 15));
+    const me = monthlyTrend(txs, 2, new Date(2026, 7, 15), { sipasPeriudhes: true });
+
+    expect(pa.map((m) => m.hyrjet)).toEqual([600, 0]);
+    expect(me.map((m) => m.hyrjet)).toEqual([0, 600]);
   });
 
   it("compares a month with the one before it, biggest swing first", () => {

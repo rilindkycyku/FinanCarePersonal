@@ -38,6 +38,7 @@ function Cilesimet() {
   const [form, setForm] = useState({
     emri: "", monedha: DEFAULT_CURRENCY, teArdhuratMujore: "", objektiviKursimit: "", limitiDitor: "",
     njoftimeLimiti: false, njoftimeBuxheti: false, njoftimeQellimi: false, njoftimePagesa: false,
+    figuratSipasPeriudhes: false,
     cilesiaFaturave: CILESIA_PARAZGJEDHUR,
   });
   // Read once on mount and refreshed after asking: the browser answer can only change through the
@@ -51,6 +52,7 @@ function Cilesimet() {
       teArdhuratMujore: profile.teArdhuratMujore ? String(profile.teArdhuratMujore) : "",
       objektiviKursimit: profile.objektiviKursimit ? String(profile.objektiviKursimit) : "",
       limitiDitor: profile.limitiDitor ? String(profile.limitiDitor) : "",
+      figuratSipasPeriudhes: Boolean(profile.figuratSipasPeriudhes),
       njoftimeLimiti: Boolean(profile.njoftimeLimiti),
       njoftimeBuxheti: Boolean(profile.njoftimeBuxheti),
       njoftimeQellimi: Boolean(profile.njoftimeQellimi),
@@ -82,6 +84,7 @@ function Cilesimet() {
       teArdhuratMujore: toNumber(form.teArdhuratMujore),
       objektiviKursimit: toNumber(form.objektiviKursimit),
       limitiDitor: toNumber(form.limitiDitor),
+      figuratSipasPeriudhes: form.figuratSipasPeriudhes,
       njoftimeLimiti: form.njoftimeLimiti,
       njoftimeBuxheti: form.njoftimeBuxheti,
       njoftimeQellimi: form.njoftimeQellimi,
@@ -293,6 +296,27 @@ function Cilesimet() {
                     Lëreni bosh dhe limiti llogaritet vetë: bilanci që keni për të shpenzuar (pa kursimet e
                     investimet), plus hyrjet që priten këtë muaj, minus pagesat e përsëritura të pakonfirmuara dhe
                     shpenzimet e planifikuara - të ndara mbi ditët që kanë mbetur.
+                  </div>
+                </Form.Group>
+
+                <Form.Group as={Col} md={12} controlId="form-periudha">
+                  <Form.Label>Për cilin muaj numërohet një pagesë</Form.Label>
+                  <Form.Check
+                    type="switch"
+                    id="figurat-sipas-periudhes"
+                    label="Numëro sipas muajit që mbulon, jo ditës kur lëvizi"
+                    checked={form.figuratSipasPeriudhes}
+                    onChange={(e) => setField("figuratSipasPeriudhes", e.target.checked)}
+                  />
+                  <div className="fcp-row-sub mt-1">
+                    Te pagesat e përsëritura tregoni «për cilin muaj është» - qiraja e shtatorit merret në
+                    fund të gushtit, rroga e gushtit vjen më 1 shtator. Me këtë çelës të ndezur, hyrjet dhe
+                    shpenzimet e muajit te Paneli, Statistikat dhe Viti numërohen te muaji që pagesa mbulon.
+                    Bilanci, parashikimi, limiti ditor dhe buxhetet ndjekin gjithmonë ditën kur paratë
+                    lëvizën vërtet, sepse ato flasin për para që i keni ose jo - prandaj me çelësin e ndezur
+                    «kursimi i muajit» mund të mos përputhet me sa u rrit bilanci. Pasqyra PDF dhe raportet me
+                    email numërojnë gjithashtu sipas datës reale: ato janë lista lëvizjesh, jo përgjigje për
+                    muajin.
                   </div>
                 </Form.Group>
 
