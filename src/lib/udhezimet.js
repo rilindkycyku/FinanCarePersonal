@@ -753,6 +753,18 @@ export const UDHEZIMET = [
           "për pajisjen ku e jepni atë leje.",
       },
       {
+        titulli: "Për cilin muaj numërohet një pagesë",
+        teksti:
+          "Te pagesat e përsëritura tregoni «për cilin muaj është»: qiraja e shtatorit merret në fund të " +
+          "gushtit, rroga e gushtit vjen më 1 shtator. Me këtë çelës të ndezur, hyrjet dhe shpenzimet e " +
+          "muajit te Paneli, Statistikat dhe Viti numërohen te muaji që pagesa mbulon, jo te dita kur " +
+          "lëvizën paratë. Bilanci, parashikimi, limiti ditor dhe buxhetet ndjekin gjithmonë ditën reale - " +
+          "ato flasin për para që i keni ose jo - prandaj me çelësin e ndezur «Kursimi i Muajit» mund të " +
+          "mos përputhet me sa u rrit bilanci, dhe kartelat e thonë me nënshkrim se cilën pyetje po " +
+          "përgjigjen. Pasqyra PDF dhe raportet me email numërojnë gjithashtu sipas datës reale: ato janë " +
+          "lista lëvizjesh.",
+      },
+      {
         titulli: "Cilësia e fotove të faturave",
         teksti:
           "E lartë (2000px), Normale (1600px) ose Kursim hapësire (1200px). Vlen për fotot e reja; ato " +

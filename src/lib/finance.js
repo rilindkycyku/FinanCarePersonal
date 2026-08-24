@@ -275,10 +275,47 @@ export function periodBounds(value, sot = new Date()) {
   return { start: "0000-01-01", end: "9999-12-31" };
 }
 
-/** `start`/`end` are inclusive; either may be null to leave that side open. */
-export function filterByRange(transactions, start, end) {
+/**
+ * The month a transaction *belongs to*, which is not always the month it moved in.
+ *
+ * A recurring schedule can say which month its money covers (`periudhaZhvendosje` - the rent handed
+ * over in the last days of August is September's, the salary paid on the 1st is last month's work),
+ * and the booking carries that answer as a plain "YYYY-MM" key. Everything else belongs to the
+ * month it happened in, which is the vast majority of rows.
+ */
+export function muajiEfektiv(tx) {
+  return tx?.periudha || (tx?.data || "").slice(0, 7);
+}
+
+/** Whether a range is exactly whole calendar months - the only shape where `periudha` can apply. */
+function muajTePlote(start, end) {
+  if (!start || !end) return false;
+  return start.slice(8) === "01" && end === monthKeyBounds(end.slice(0, 7)).end;
+}
+
+/**
+ * `start`/`end` are inclusive; either may be null to leave that side open.
+ *
+ * With `sipasPeriudhes` the range is read by the month each row *covers* rather than by the day it
+ * moved - so September's rent, handed over on 22 August, counts as September's income. It applies
+ * only to ranges that are whole calendar months, because that is the only shape the answer has: a
+ * row covering September cannot be placed inside the week of the 14th, and a weekly report asked
+ * to honour it would swallow a whole month's rent into seven days.
+ *
+ * Balances never use this. The money really did move on the 22nd, and a balance that disagreed
+ * with the bank in order to be tidy would be worse than one that is merely early.
+ */
+export function filterByRange(transactions, start, end, { sipasPeriudhes = false } = {}) {
+  const sipasMuajit = sipasPeriudhes && muajTePlote(start, end);
+  const nga = sipasMuajit ? start.slice(0, 7) : null;
+  const deri = sipasMuajit ? end.slice(0, 7) : null;
+
   return transactions.filter((tx) => {
     if (!tx.data) return false;
+    if (sipasMuajit) {
+      const muaji = muajiEfektiv(tx);
+      return muaji >= nga && muaji <= deri;
+    }
     if (start && tx.data < start) return false;
     if (end && tx.data > end) return false;
     return true;
@@ -584,11 +621,11 @@ export function dataEParaERegjistruar(transactions = []) {
 }
 
 /** Income/expense per month for the last `months` months, oldest first. */
-export function monthlyTrend(transactions, months = 6, reference = new Date()) {
+export function monthlyTrend(transactions, months = 6, reference = new Date(), { sipasPeriudhes = false } = {}) {
   return Array.from({ length: months }, (_, i) => {
     const d = new Date(reference.getFullYear(), reference.getMonth() - (months - 1 - i), 1);
     const { start, end } = monthBounds(d);
-    const flows = cashflow(filterByRange(transactions, start, end));
+    const flows = cashflow(filterByRange(transactions, start, end, { sipasPeriudhes }));
     return {
       key: format(d, "yyyy-MM"),
       label: MONTHS_SHORT[d.getMonth()],

@@ -9,6 +9,33 @@ e fundit kur rregullohet diçka, dhe e para vetëm kur ndryshon vetë forma e pr
 herë, te `2.0.0`, kur të dhënat mësuan të dalin nga shfletuesi. Datat janë ato të commit-it që e
 ngriti versionin.
 
+## [2.20.0] - 2026-08-24
+
+### Shtuar
+- **Shifrat e muajit mund të numërohen sipas muajit që pagesa mbulon.** Te një pagesë e përsëritur
+  ka prej kohësh fushën «për cilin muaj është» - qiraja e shtatorit merret në fund të gushtit, rroga
+  e gushtit vjen më 1 shtator - dhe çdo transaksion i krijuar prej saj e mban atë përgjigje brenda
+  vetes. Deri tani ajo përgjigje shkonte vetëm te përshkrimi: asnjë shifër nuk e lexonte, prandaj
+  një qira shtatori e marrë më 22 gusht rrinte te hyrjet e gushtit dhe e bënte muajin të dukej 600 €
+  më i mirë se ç'ishte.
+
+  Çelësi i ri te Cilësimet e vë atë përgjigje në punë. I ndezur, hyrjet dhe shpenzimet e muajit te
+  Paneli, Statistikat dhe Viti numërohen te muaji që pagesa mbulon. I fikur - dhe kështu vjen -
+  asgjë nuk ndryshon nga më parë.
+
+  Ku *nuk* vlen është po aq e qëllimshme. Bilanci, parashikimi, limiti ditor dhe buxhetet ndjekin
+  gjithmonë ditën kur paratë lëvizën vërtet, sepse ato përgjigjen se sa para keni, jo si shkoi
+  muaji; një bilanc që rrinte «i rregullt» duke mos u pajtuar me bankën do të ishte më keq se një
+  bilanc thjesht i hershëm. Pasoja duhet ditur: me çelësin e ndezur «Kursimi i Muajit» mund të mos
+  përputhet me sa u rrit bilanci, prandaj kartelat e muajit mbajnë nënshkrimin «sipas muajit që
+  mbulojnë» që të dihet cilës pyetje i përgjigjen.
+
+  Vlen vetëm për periudha që janë muaj të plotë. Një rresht që mbulon shtatorin nuk ka ditë brenda
+  javës së 14-ës, prandaj një raport javor që do ta nderonte këtë do të gëlltiste qiranë e një muaji
+  brenda shtatë ditëve; grafikët ditorë dhe kalendari mbeten po ashtu te data reale. Pasqyra PDF dhe
+  raportet me email numërojnë sipas datës reale gjithashtu - ato janë lista lëvizjesh me bilanc në
+  ecuri, ku radha kronologjike është vetë kuptimi.
+
 ## [2.19.0] - 2026-08-24
 
 ### Shtuar

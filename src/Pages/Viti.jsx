@@ -50,7 +50,7 @@ function Krahasimi({ perqindja, viti, miraRritja = true, derim = null }) {
  * that made it what it was.
  */
 function Viti() {
-  const { accounts, categories, transactions, loading, money, signedMoney } = useData();
+  const { accounts, categories, transactions, loading, money, signedMoney, sipasPeriudhes } = useData();
 
   const vitet = useMemo(() => vitetMeTeDhena(transactions), [transactions]);
   // The most recent year with anything in it - which on 3 January is last year, and that is
@@ -59,8 +59,8 @@ function Viti() {
   const zgjedhur = viti ?? vitet[0] ?? new Date().getFullYear();
 
   const v = useMemo(
-    () => vitiNeNjeFaqe({ accounts, categories, transactions, viti: zgjedhur }),
-    [accounts, categories, transactions, zgjedhur]
+    () => vitiNeNjeFaqe({ accounts, categories, transactions, viti: zgjedhur, sipasPeriudhes }),
+    [accounts, categories, transactions, zgjedhur, sipasPeriudhes]
   );
 
   const maxMuaj = Math.max(...v.muajt.map((m) => Math.max(m.hyrjet, m.shpenzimet)), 1);

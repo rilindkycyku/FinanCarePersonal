@@ -99,7 +99,7 @@ const ditetMes = (start, end) => Math.max(1, (new Date(end) - new Date(start)) /
 
 function Statistika() {
   const { accounts, categories, transactions, recurring, planet, loading, money, signedMoney,
-    njeLlogari } = useData();
+    njeLlogari, sipasPeriudhes } = useData();
   const [params, setParams] = useSearchParams();
 
   const period = PERIODS.some((p) => p.value === params.get("periudha"))
@@ -159,7 +159,7 @@ function Statistika() {
 
   const stats = useMemo(() => {
     const { start, end } = periodBounds(period);
-    const periudha = filterByRange(transactions, start, end);
+    const periudha = filterByRange(transactions, start, end, { sipasPeriudhes });
     return {
       periudha,
       flows: cashflow(periudha),
@@ -167,14 +167,14 @@ function Statistika() {
       hyrjet: totalsByCategory(periudha, categories, "hyrje"),
       etiketat: totalsByTag(periudha, "shpenzim"),
       llogarite: totalsByAccount(periudha, accounts.filter((a) => !a.arkivuar)),
-      trendi: monthlyTrend(transactions, 6),
+      trendi: monthlyTrend(transactions, 6, new Date(), { sipasPeriudhes }),
       meTeMadhat: periudha
         .filter((tx) => tx.lloji === "shpenzim")
         .sort((a, b) => Number(b.vlera) - Number(a.vlera))
         .slice(0, 5),
       transferet: periudha.filter((tx) => tx.lloji === "transfer"),
     };
-  }, [transactions, categories, accounts, period]);
+  }, [transactions, categories, accounts, period, sipasPeriudhes]);
 
   /** The rhythm half: which weekdays, which days, and in what sizes the money left. */
   const ritmi = useMemo(() => {
@@ -192,9 +192,9 @@ function Statistika() {
       // spending having stopped.
       ecuria: dailySpending(transactions, derTani.start, derTani.end),
       ecuriaPara: para ? dailySpending(transactions, para.start, para.end) : [],
-      kosha: amountBuckets(filterByRange(transactions, kufijte.start, kufijte.end)),
+      kosha: amountBuckets(filterByRange(transactions, kufijte.start, kufijte.end, { sipasPeriudhes })),
     };
-  }, [transactions, period, kufijte, derTani]);
+  }, [transactions, period, kufijte, derTani, sipasPeriudhes]);
 
   /**
    * The one view that ignores the period picker: where the balance has been and where what is

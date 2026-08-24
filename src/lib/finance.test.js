@@ -15,6 +15,7 @@ import {
   dataEParaERegjistruar,
   convertedAmount, currencyFields, dailyLimit, debtPaymentsFromTransactions, debtProgress,
   debtTotals, dueRecurring, effectiveBudgets, enteredAt, filterByRange, generateDueTransactions,
+  muajiEfektiv,
   idIPerseritjes,
   forecast, goalProgress, isRecurringDue, lastInstallmentDate, monthBounds, monthKeyBounds, monthlyTrend,
   monthlyRecurringBreakdown, nextOccurrence, overduePlans, periodBounds, planProgress,
@@ -301,6 +302,44 @@ describe("date ranges", () => {
     expect(filterByRange([tx("3", { data: undefined })], null, null)).toHaveLength(0);
   });
 
+  // The rent handed over on 22 August covers September, and says so on the row itself.
+  const qiraja = tx("qira", { data: "2026-08-22", lloji: "hyrje", vlera: 600, periudha: "2026-09" });
+  const gushti = tx("gusht", { data: "2026-08-10", vlera: 40 });
+
+  it("reads the month a row belongs to, falling back to the month it moved in", () => {
+    expect(muajiEfektiv(qiraja)).toBe("2026-09");
+    expect(muajiEfektiv(gushti)).toBe("2026-08");
+    expect(muajiEfektiv({})).toBe("");
+  });
+
+  it("counts a row in the month it covers when asked to", () => {
+    const txs = [qiraja, gushti];
+    const gjate = (start, end, opsionet) => filterByRange(txs, start, end, opsionet).map((t) => t.id);
+
+    expect(gjate("2026-08-01", "2026-08-31")).toEqual(["qira", "gusht"]);
+    expect(gjate("2026-08-01", "2026-08-31", { sipasPeriudhes: true })).toEqual(["gusht"]);
+    expect(gjate("2026-09-01", "2026-09-30", { sipasPeriudhes: true })).toEqual(["qira"]);
+  });
+
+  // A row covering September cannot be placed inside one week of it, so the option is ignored on
+  // any range that is not whole months - a weekly report must not swallow a month's rent.
+  it("ignores the covered month on a range that is not whole months", () => {
+    const txs = [qiraja, gushti];
+    expect(filterByRange(txs, "2026-08-17", "2026-08-23", { sipasPeriudhes: true }).map((t) => t.id)).toEqual([
+      "qira",
+    ]);
+    expect(filterByRange(txs, "2026-08-01", "2026-08-20", { sipasPeriudhes: true }).map((t) => t.id)).toEqual([
+      "gusht",
+    ]);
+  });
+
+  it("still holds over a range of several whole months", () => {
+    const txs = [qiraja, gushti];
+    expect(
+      filterByRange(txs, "2026-08-01", "2026-09-30", { sipasPeriudhes: true }).map((t) => t.id)
+    ).toEqual(["qira", "gusht"]);
+  });
+
   it("orders by date, then by when the row was entered", () => {
     const older = { id: "tx_a", data: "2026-08-10", krijuar: "2026-08-10T08:00:00.000Z" };
     const newer = { id: "tx_b", data: "2026-08-10", krijuar: "2026-08-10T20:00:00.000Z" };
@@ -400,6 +439,15 @@ describe("breakdowns", () => {
     const trend = monthlyTrend([tx("1", { data: "2026-07-04", vlera: 60 })], 3, new Date(2026, 7, 15));
     expect(trend.map((m) => m.key)).toEqual(["2026-06", "2026-07", "2026-08"]);
     expect(trend[1].shpenzimet).toBe(60);
+  });
+
+  it("puts a month's trend column under the month the payment covers when asked", () => {
+    const txs = [tx("1", { data: "2026-07-30", lloji: "hyrje", vlera: 600, periudha: "2026-08" })];
+    const pa = monthlyTrend(txs, 2, new Date(2026, 7, 15));
+    const me = monthlyTrend(txs, 2, new Date(2026, 7, 15), { sipasPeriudhes: true });
+
+    expect(pa.map((m) => m.hyrjet)).toEqual([600, 0]);
+    expect(me.map((m) => m.hyrjet)).toEqual([0, 600]);
   });
 
   it("compares a month with the one before it, biggest swing first", () => {

@@ -140,6 +140,10 @@ export function DataProvider({ children }) {
     data.accounts[0] ||
     null;
 
+  // Whether the monthly figures count a booking in the month it *covers* rather than the month it
+  // moved in - see `filterByRange`. Read here so every page asks the same question the same way.
+  const sipasPeriudhes = Boolean(data.profile?.figuratSipasPeriudhes);
+
   const value = useMemo(
     () => ({
       ...data,
@@ -154,6 +158,7 @@ export function DataProvider({ children }) {
       saveProfile,
       njeLlogari,
       llogariaKryesore,
+      sipasPeriudhes,
       monedha,
       simboli: currencySymbol(monedha),
       money: (v) => formatMoney(v, monedha),
@@ -161,7 +166,7 @@ export function DataProvider({ children }) {
     }),
     [
       data, loading, error, bllokuar, reload, save, saveMany, destroy, destroyMany, saveProfile,
-      njeLlogari, llogariaKryesore, monedha,
+      njeLlogari, llogariaKryesore, sipasPeriudhes, monedha,
     ]
   );
 

@@ -114,7 +114,10 @@ sa shpenzohet, sa mbetet dhe sa po kursesh.
   paratë, kurse muaji i mbuluar dhe hapi i skedulës mbeten ata të datës së planifikuar. Secila mund të thotë edhe **për cilin muaj është**, sepse paratë rrallë lëvizin në
   muajin që u takojnë: qiraja merret një muaj përpara, rroga vjen në fillim të muajit pasardhës për
   punën e muajit që shkoi. Kur e caktoni, transaksioni e mban muajin te përshkrimi - *Qera Obejkti -
-  Mergimi · Shtator 2026* - pra dy rreshta me të njëjtin emër nuk ngatërrohen më. Për një blerje me këste mjafton numri i kësteve - data e përfundimit llogaritet vetë
+  Mergimi · Shtator 2026* - pra dy rreshta me të njëjtin emër nuk ngatërrohen më, dhe një çelës te
+  Cilësimet (i fikur si parazgjedhje) i vë ato muaj në punë: hyrjet dhe shpenzimet e muajit te
+  Paneli, Statistikat dhe Viti numërohen te muaji që pagesa mbulon. Bilanci, parashikimi, limiti
+  ditor dhe buxhetet ndjekin gjithmonë ditën reale, sepse ato flasin për para që i keni ose jo. Për një blerje me këste mjafton numri i kësteve - data e përfundimit llogaritet vetë
   dhe pagesa ndalet pas kësti të fundit. Një kartelë paguhet një herë në muaj, jo këst për këst:
   konfirmimi hap një dritare që mbledh të gjitha këstet e asaj kartele që kanë arritur datën, i
   regjistron të gjitha me një datë të vetme pagese (zgjeroni datën për të përfshirë edhe këstet që
