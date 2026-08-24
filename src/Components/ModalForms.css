@@ -135,6 +135,27 @@
   margin-top: 0.35rem;
 }
 
+/* The two figures being compared, above the field that asks for the second one - a difference is
+   only readable next to what it is a difference between. */
+.fcp-barazim-panel {
+  background: var(--sp-surface-2);
+  border: 1px solid var(--sp-border);
+  border-radius: 12px;
+  padding: 0.7rem 0.9rem;
+  margin-bottom: 1rem;
+}
+.fcp-barazim-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.8rem;
+  color: var(--sp-text-muted);
+  padding: 0.2rem 0;
+}
+.fcp-barazim-row + .fcp-barazim-row { border-top: 1px solid var(--sp-border); }
+.fcp-barazim-row strong { color: var(--sp-text); font-weight: 800; }
+
 /* ── Category picker ──────────────────────────────────────────
    The field itself is a button dressed as the select it replaced, so a form that has one next to a
    real `<Form.Select>` still reads as one row of identical inputs. Everything below it lives in the

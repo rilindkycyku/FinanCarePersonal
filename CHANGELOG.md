@@ -9,6 +9,30 @@ e fundit kur rregullohet diçka, dhe e para vetëm kur ndryshon vetë forma e pr
 herë, te `2.0.0`, kur të dhënat mësuan të dalin nga shfletuesi. Datat janë ato të commit-it që e
 ngriti versionin.
 
+## [2.19.0] - 2026-08-24
+
+### Shtuar
+- **Barazimi i një llogarie me bilancin real.** Te kartela e çdo llogarie ka tani një buton me
+  peshore: shkruani sa ka vërtet llogaria - shifrën e bankës ose paratë e numëruara në dorë - dhe
+  dritarja tregon të dyja shifrat njërën mbi tjetrën me diferencën mes tyre, pastaj e shënon atë
+  diferencë si transaksion.
+
+  Kategoria «Barazim i Bilancit» ekzistonte që në fillim me këtë punë në mendje, por asgjë nuk e
+  përdorte: diferenca duhej llogaritur me kalkulator dhe shënuar me dorë, dhe zakonisht përfundonte
+  te «Shpenzime të Tjera», ku gënjen statistikën duke u dukur kategori e përdorur. Tani zgjidhet
+  vetvetiu ana e duhur - hyrje kur llogaria ka më shumë se sa thotë aplikacioni, shpenzim kur ka më
+  pak - dhe mund të ndërrohet nëse doni tjetër.
+
+  Bilanci vazhdon të mos shkruhet kurrë drejtpërdrejt. Ai llogaritet gjithmonë nga bilanci fillestar
+  plus rreshtat, prandaj një korrigjim i fshehtë do të ishte pikërisht ajo që është vetë problemi:
+  një shifër që askush nuk e gjurmon dot. Rreshti i barazimit është i dukshëm, i datuar, i
+  kategorizuar dhe fshihet si çdo tjetër. Diferenca llogaritet në cent, që dy shifra që përputhen
+  deri te centi të dalin «s'ka çka të barazohet» e jo një korrigjim prej 0,004 €.
+
+  Dritarja e kujton edhe rendin e duhur: një pagesë borxhi e lënë vetëm si shënim, një transaksion
+  te llogaria e gabuar ose një blerje e shënuar dy herë e shpjegojnë diferencën më shpesh se paratë
+  e humbura - dhe ato ndreqen, nuk barazohen.
+
 ## [2.18.0] - 2026-08-24
 
 ### Shtuar

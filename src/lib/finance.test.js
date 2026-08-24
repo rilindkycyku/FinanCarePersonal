@@ -11,6 +11,7 @@ import { describe, expect, it } from "vitest";
 import {
   MAX_DITE_SERIE, accountBalance, amountBuckets, annualOutlook, backupStatus, balanceHistory,
   budgetProgress, cashflow, categoryComparison, consolidateAccounts, dailySpending, reassignAccount,
+  reconciliation,
   dataEParaERegjistruar,
   convertedAmount, currencyFields, dailyLimit, debtPaymentsFromTransactions, debtProgress,
   debtTotals, dueRecurring, effectiveBudgets, enteredAt, filterByRange, generateDueTransactions,
@@ -186,6 +187,75 @@ describe("reassignAccount", () => {
     const original = transactions.find((t) => t.id === "1");
 
     expect({ ...moved, llogariaId: "a" }).toEqual(original);
+  });
+});
+
+describe("reconciliation", () => {
+  const llogaria = account("a", { emri: "Llogaria Bankare", bilanciFillestar: 0 });
+  // 1000 in, 50 out - the app says 950.
+  const transactions = [tx("1", { lloji: "hyrje", vlera: 1000 }), tx("2", { vlera: 50 })];
+  const barazo = (real, extra = {}) =>
+    reconciliation({ account: llogaria, transactions, bilanciReal: real, todayStr: "2026-08-24", ...extra });
+
+  it("books an expense when the account holds less than the app says", () => {
+    const r = barazo(900);
+
+    expect(r.bilanciAktual).toBe(950);
+    expect(r.diferenca).toBe(-50);
+    expect(r.lloji).toBe("shpenzim");
+    expect(r.transaksioni.vlera).toBe(50);
+    expect(r.transaksioni.kategoriaId).toBe("cat_default_barazim_shp");
+    expect(r.transaksioni.llogariaId).toBe("a");
+    expect(r.transaksioni.data).toBe("2026-08-24");
+  });
+
+  it("books income when the account holds more", () => {
+    const r = barazo(1000);
+
+    expect(r.diferenca).toBe(50);
+    expect(r.lloji).toBe("hyrje");
+    expect(r.transaksioni.vlera).toBe(50);
+    expect(r.transaksioni.kategoriaId).toBe("cat_default_barazim_hyrje");
+  });
+
+  // The account after the correction is what the user typed - that is the whole promise.
+  it("leaves the account on the figure that was entered", () => {
+    const r = barazo(900);
+    expect(accountBalance(llogaria, [...transactions, r.transaksioni])).toBe(900);
+  });
+
+  it("has nothing to do when the two agree", () => {
+    const r = barazo(950);
+
+    expect(r.barazon).toBe(true);
+    expect(r.transaksioni).toBeNull();
+    expect(r.lloji).toBeNull();
+  });
+
+  // Cents, not floats: a difference below half a cent is two figures agreeing, not a correction.
+  it("does not invent a correction out of rounding noise", () => {
+    expect(barazo(950.001).barazon).toBe(true);
+    expect(barazo(950.01).diferenca).toBe(0.01);
+  });
+
+  it("reads a typed amount and carries the note onto the row", () => {
+    const r = barazo("900,00", { shenim: "Pas kontrollit të ekstraktit" });
+
+    expect(r.diferenca).toBe(-50);
+    expect(r.transaksioni.shenim).toBe("Pas kontrollit të ekstraktit");
+  });
+
+  // A card or an overdraft holds less than nothing, and the field asks what the account holds.
+  it("accepts a real balance below zero", () => {
+    const r = barazo(-20);
+
+    expect(r.diferenca).toBe(-970);
+    expect(r.lloji).toBe("shpenzim");
+    expect(accountBalance(llogaria, [...transactions, r.transaksioni])).toBe(-20);
+  });
+
+  it("returns nothing without an account", () => {
+    expect(reconciliation({ transactions, bilanciReal: 900 })).toBeNull();
   });
 });
 

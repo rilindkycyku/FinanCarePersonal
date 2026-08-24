@@ -45,7 +45,9 @@ sa shpenzohet, sa mbetet dhe sa po kursesh.
   rezulton të mos ketë qenë kurrë e llogarisë ku u regjistrua.
 - **Llogaritë** - kesh, llogari bankare, kartela krediti, kursime, investime, kredi. Bilanci
   llogaritet gjithmonë nga bilanci fillestar plus transaksionet, kurse llogaritë e vjetra
-  arkivohen pa u fshirë historiku.
+  arkivohen pa u fshirë historiku. Butoni i barazimit pyet sa ka vërtet llogaria dhe e shënon
+  diferencën si transaksion nën kategorinë *«Barazim i Bilancit»* - bilanci nuk shkruhet kurrë
+  drejtpërdrejt, prandaj çdo korrigjim mbetet i dukshëm dhe i gjurmueshëm.
 - **Modaliteti me një llogari** (Cilësimet → Llogaritë, ose vetë faqja Llogaritë) - nëse nuk doni
   kesh e bankë veç e veç, aktivizoni çelësin dhe gjithçka shkon te një llogari e vetme kryesore:
   llogaritë ekzistuese bashkohen në të (bilancet fillestare mblidhen, transaksionet, pagesat e

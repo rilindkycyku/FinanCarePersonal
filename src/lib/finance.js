@@ -15,7 +15,9 @@
  */
 
 import { addDays, addMonths, addWeeks, addYears, format, parseISO } from "date-fns";
-import { debtTypeMeta, planPriorityMeta, DAYS_LONG, DAYS_SHORT, FREQUENCIES, MONTHS_SHORT } from "./options";
+import {
+  BALANCE_ADJUSTMENT_CATEGORIES, debtTypeMeta, planPriorityMeta, DAYS_LONG, DAYS_SHORT, FREQUENCIES, MONTHS_SHORT,
+} from "./options";
 import { monthKey, monthLabel, toNumber } from "./format";
 import { emriIPlote, familjaSet, rrenjaE } from "./kategorite";
 
@@ -144,6 +146,74 @@ export function reassignAccount({ transactions = [], ids = [], targetId } = {}) 
     nrTeZhvendosura: ndryshuara.length,
     nrTransfereve: transferet.length,
     nrPaNdryshim: levizshme.length - ndryshuara.length,
+  };
+}
+
+/**
+ * What one account really holds against what the app thinks it holds - and the single row that
+ * would make the two agree.
+ *
+ * A ledger kept by hand drifts. A coffee paid in cash and never entered, a fee the bank took, a
+ * purchase entered twice: none of them announce themselves, and by the end of the month the app is
+ * out by an amount whose story is gone. The honest move then is not to hunt for it forever - it is
+ * to say so: book the difference, under a category that reads as a confession rather than as
+ * spending, and start the next month from a figure that matches the account.
+ *
+ * That is why the correction is a normal transaction and not a silent rewrite of the balance. The
+ * balance in this app is never stored, only ever derived from the opening figure and the rows
+ * (`accountBalance`); a hidden adjustment would be a number nobody could trace, which is precisely
+ * what the drift already is. This one is visible, dated, categorised and deletable.
+ *
+ * The difference is worked out in cents on purpose: two figures that agree to the cent must come
+ * out as "nothing to do", not as a 0,004 € correction that nobody can see and nothing can explain.
+ */
+export function reconciliation({
+  account,
+  transactions = [],
+  bilanciReal,
+  todayStr = format(new Date(), "yyyy-MM-dd"),
+  shenim = "",
+  makeIdFn = () => "tx_barazim",
+} = {}) {
+  if (!account) return null;
+
+  const bilanciAktual = accountBalance(account, transactions);
+  const real = toNumber(bilanciReal);
+  const diferenca = Math.round((real - bilanciAktual) * 100) / 100;
+  // More in the account than the app knows about is income that was never entered; less is money
+  // that went out unrecorded. Which way round it is decides both the type and the category.
+  const lloji = diferenca > 0 ? "hyrje" : "shpenzim";
+
+  return {
+    bilanciAktual,
+    bilanciReal: real,
+    diferenca,
+    barazon: diferenca === 0,
+    lloji: diferenca === 0 ? null : lloji,
+    kategoriaESugjeruar: diferenca === 0 ? null : BALANCE_ADJUSTMENT_CATEGORIES[lloji],
+    transaksioni:
+      diferenca === 0
+        ? null
+        : {
+            id: makeIdFn("tx"),
+            data: todayStr,
+            lloji,
+            vlera: Math.abs(diferenca),
+            llogariaId: account.id,
+            llogariaDestinacionId: null,
+            kategoriaId: BALANCE_ADJUSTMENT_CATEGORIES[lloji],
+            pershkrimi: "Barazim i bilancit",
+            shenim,
+            qellimiId: null,
+            etiketat: [],
+            perseritjaId: null,
+            borxhiId: null,
+            planiId: null,
+            krijuar: new Date().toISOString(),
+            // Never monthly: an adjustment is not a purchase being spread over the month, and
+            // charging it to the day it was noticed is the only honest date it has.
+            ritmi: null,
+          },
   };
 }
 

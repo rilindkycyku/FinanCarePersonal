@@ -261,6 +261,16 @@ export const UDHEZIMET = [
           "është e mundur, por ajo merr me vete edhe rreshtat.",
       },
       {
+        titulli: "Barazoni me bilancin real",
+        teksti:
+          "Butoni me peshoren te kartela pyet vetëm një gjë: sa ka vërtet ajo llogari. Shkruani shifrën që " +
+          "shihni te banka ose paratë që numëroni në dorë, dhe diferenca ndaj asaj që tregon aplikacioni " +
+          "shënohet si transaksion nën kategorinë «Barazim i Bilancit» - jo si shpenzim i vërtetë, sepse nuk " +
+          "dihet çka ishte. Kështu muaji i ri nis nga një shifër që përputhet, në vend që gabimi të bartet " +
+          "muaj pas muaji. Bilanci nuk shkruhet kurrë drejtpërdrejt: rreshti i barazimit është i dukshëm, i " +
+          "datuar dhe fshihet si çdo tjetër.",
+      },
+      {
         titulli: "Modaliteti me një llogari",
         teksti:
           "Nëse ndarja kesh/bankë nuk ju hyn në punë, çelësi në fund të faqes bashkon gjithçka në një llogari " +
@@ -272,6 +282,7 @@ export const UDHEZIMET = [
     keshilla: [
       "Borxhi i një kartele krediti nuk mbahet këtu: kartelat, kreditë dhe këstet rrinë te faqja Borxhet & Kartelat, jashtë bilancit.",
       "Tabela në fund të faqes është e njëjta listë në formë rreshtash, gati për eksport në Excel.",
+      "Para se të barazoni, shikoni te Borxhet nëse ka rreshta «vetëm shënim» dhe te Transaksionet nëse ndonjë rresht ka rënë te llogaria e gabuar - këto dy e shpjegojnë diferencën më shpesh se paratë e humbura.",
     ],
     shihEdhe: ["borxhet", "transaksionet", "cilesimet"],
   },
