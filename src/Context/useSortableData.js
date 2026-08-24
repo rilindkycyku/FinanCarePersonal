@@ -92,6 +92,10 @@ const useSortableData = (items, config = null, search = "", itemsPerPage = 10, d
     goToPage,
     // How many rows survived the search/filter - what the "nga N rezultate" line has to count.
     total: processed.length,
+    // Every row that survived, not just the page being shown. Only "select all" needs it: ticking
+    // the header box has to mean every row the filters left, or splitting a month across two
+    // accounts turns into twenty rows at a time.
+    allItems: processed,
   };
 };
 

@@ -112,6 +112,41 @@ export function consolidateAccounts({ accounts, transactions, recurring = [], go
   };
 }
 
+/**
+ * Move a hand-picked set of transactions onto another account - the opposite of
+ * `consolidateAccounts`, and the half that was missing.
+ *
+ * Splitting one account in two after the fact is what this exists for: a month already recorded
+ * with everything in one place has to be told which rows in fact belonged to the other pocket, and
+ * doing that one row at a time is what stops anybody from ever doing it.
+ *
+ * A transfer is deliberately left where it is. It already names both ends, so moving one of them
+ * is either a no-op - it would point at itself and stop moving money at all - or a decision about
+ * *which* leg was meant, and neither is something to guess from a ticked checkbox. They are
+ * counted instead, so the confirmation can say they were skipped rather than move them quietly.
+ *
+ * Nothing but `llogariaId` changes: the amount, the date, the category and every link the row
+ * carries stay exactly as they were, so the totals for the month are the same figure afterwards -
+ * only split across two accounts.
+ */
+export function reassignAccount({ transactions = [], ids = [], targetId } = {}) {
+  const zgjedhur = new Set(ids);
+  const perfshira = transactions.filter((tx) => zgjedhur.has(tx.id));
+  const transferet = perfshira.filter((tx) => tx.lloji === "transfer");
+  const levizshme = perfshira.filter((tx) => tx.lloji !== "transfer");
+  // Rows already on the target are not rewritten: re-saving them would stamp `perditesuar` and
+  // hand the sync a change that changed nothing.
+  const ndryshuara = targetId ? levizshme.filter((tx) => tx.llogariaId !== targetId) : [];
+
+  return {
+    transactions: ndryshuara.map((tx) => ({ ...tx, llogariaId: targetId })),
+    shuma: ndryshuara.reduce((sum, tx) => sum + toNumber(tx.vlera), 0),
+    nrTeZhvendosura: ndryshuara.length,
+    nrTransfereve: transferet.length,
+    nrPaNdryshim: levizshme.length - ndryshuara.length,
+  };
+}
+
 // ── Currencies ──────────────────────────────────────────────────────────────
 
 /**

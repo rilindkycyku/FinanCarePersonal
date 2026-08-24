@@ -10,7 +10,7 @@
 import { describe, expect, it } from "vitest";
 import {
   MAX_DITE_SERIE, accountBalance, amountBuckets, annualOutlook, backupStatus, balanceHistory,
-  budgetProgress, cashflow, categoryComparison, consolidateAccounts, dailySpending,
+  budgetProgress, cashflow, categoryComparison, consolidateAccounts, dailySpending, reassignAccount,
   dataEParaERegjistruar,
   convertedAmount, currencyFields, dailyLimit, debtPaymentsFromTransactions, debtProgress,
   debtTotals, dueRecurring, effectiveBudgets, enteredAt, filterByRange, generateDueTransactions,
@@ -138,6 +138,54 @@ describe("consolidateAccounts", () => {
 
   it("returns null when the target account does not exist", () => {
     expect(consolidateAccounts({ accounts, transactions, targetId: "zzz" })).toBeNull();
+  });
+});
+
+describe("reassignAccount", () => {
+  const transactions = [
+    tx("1", { llogariaId: "a", vlera: 20 }),
+    tx("2", { llogariaId: "a", vlera: 5.5 }),
+    tx("3", { llogariaId: "b" }),
+    tx("4", { lloji: "transfer", llogariaId: "a", llogariaDestinacionId: "b" }),
+  ];
+
+  it("repoints only the picked rows and reports the amount moved", () => {
+    const result = reassignAccount({ transactions, ids: ["1", "2"], targetId: "b" });
+
+    expect(result.transactions.map((t) => t.id)).toEqual(["1", "2"]);
+    expect(result.transactions.every((t) => t.llogariaId === "b")).toBe(true);
+    expect(result.nrTeZhvendosura).toBe(2);
+    expect(result.shuma).toBe(25.5);
+  });
+
+  it("leaves a transfer where it is and counts it", () => {
+    const result = reassignAccount({ transactions, ids: ["1", "4"], targetId: "b" });
+
+    expect(result.transactions.map((t) => t.id)).toEqual(["1"]);
+    expect(result.nrTransfereve).toBe(1);
+  });
+
+  it("does not rewrite a row that already sits on the target", () => {
+    const result = reassignAccount({ transactions, ids: ["3"], targetId: "b" });
+
+    expect(result.transactions).toEqual([]);
+    expect(result.nrPaNdryshim).toBe(1);
+  });
+
+  it("changes nothing without a target account", () => {
+    const result = reassignAccount({ transactions, ids: ["1", "2"] });
+
+    expect(result.transactions).toEqual([]);
+    expect(result.nrTeZhvendosura).toBe(0);
+  });
+
+  // Everything else on the record is left alone - the month's totals must read the same
+  // afterwards, only split across two accounts.
+  it("touches nothing but the account", () => {
+    const [moved] = reassignAccount({ transactions, ids: ["1"], targetId: "b" }).transactions;
+    const original = transactions.find((t) => t.id === "1");
+
+    expect({ ...moved, llogariaId: "a" }).toEqual(original);
   });
 });
 

@@ -147,6 +147,31 @@
 }
 .premium-pagination .page-item.active .page-link { background: var(--sp-emerald) !important; color: white !important; border-color: var(--sp-emerald) !important; box-shadow: 0 5px 15px var(--sp-emerald-glow); }
 .premium-pagination .page-item .page-link:hover:not(.active) { background: var(--sp-surface-3) !important; color: var(--sp-text) !important; border-color: var(--sp-emerald) !important; }
+/* Row selection - only the pages that have a bulk action switch it on. The bar sits above the
+   table rather than floating over it: on a phone a floating bar covers the rows being picked. */
+.premium-selection-bar {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 0.6rem;
+  background: var(--sp-surface-2); border: 1px solid var(--sp-emerald);
+  border-radius: 12px; padding: 0.6rem 0.85rem;
+}
+.premium-selection-count { font-size: 0.78rem; font-weight: 800; color: var(--sp-emerald); }
+.premium-selection-clear {
+  margin-left: auto; font-size: 0.75rem; font-weight: 700;
+  color: var(--sp-text-muted) !important; text-decoration: none !important;
+}
+.premium-selection-clear:hover { color: var(--sp-red) !important; }
+/* Not a sort control, so it keeps the plain cursor the rest of the header does not. */
+.premium-th-zgjedhje, .premium-td-zgjedhje { width: 1%; text-align: center; }
+.premium-th-zgjedhje { cursor: default; }
+.premium-th-zgjedhje .form-check-input, .premium-td-zgjedhje .form-check-input {
+  margin: 0; cursor: pointer; background-color: var(--sp-surface-3); border-color: var(--sp-border);
+}
+.premium-th-zgjedhje .form-check-input:checked, .premium-td-zgjedhje .form-check-input:checked,
+.premium-th-zgjedhje .form-check-input:indeterminate {
+  background-color: var(--sp-emerald); border-color: var(--sp-emerald);
+}
+.premium-tr.e-zgjedhur .premium-td { background: var(--sp-surface-3) !important; }
+
 /* Phones run a smaller root (index.css), so these rem values are already a step down on
    what they draw elsewhere; the labels near the floor are pinned up a notch and the
    padding gives up the room instead - a table is mostly padding at this width. */

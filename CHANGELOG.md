@@ -9,6 +9,34 @@ e fundit kur rregullohet diçka, dhe e para vetëm kur ndryshon vetë forma e pr
 herë, te `2.0.0`, kur të dhënat mësuan të dalin nga shfletuesi. Datat janë ato të commit-it që e
 ngriti versionin.
 
+## [2.18.0] - 2026-08-24
+
+### Shtuar
+- **Disa transaksione zhvendosen te një llogari tjetër përnjëherë.** Kur ka më shumë se një llogari,
+  te faqja Transaksionet çdo rresht merr një kutizë dhe shiriti sipër tabelës pyet vetëm se ku të
+  shkojnë. Kutiza te koka e tabelës shënon çdo rresht që lanë filtrat - jo vetëm faqen që shihet -
+  sepse rasti për të cilin u shkrua është pikërisht një muaj i tërë i regjistruar te një llogari e
+  vetme dhe pastaj i ndarë më vonë: një llogari te dyqani, një kuletë e dytë, para që nuk ishin
+  kurrë të asaj llogarie.
+
+  Ndryshon vetëm llogaria. Data, vlera, kategoria dhe çdo lidhje që mban rreshti mbeten ashtu siç
+  ishin, prandaj totalet e muajit lexohen njësoj pas zhvendosjes - thjesht të ndara mes dy
+  llogarive. Transferet mbeten ku janë me qëllim: një transfer i ka të dyja anët të shënuara, kështu
+  që zhvendosja e njërës ose nuk lëviz asgjë, ose është vendim se cila anë ishte fjala - dhe asnjëra
+  nuk merret me mend nga një kutizë e shënuar. Konfirmimi thotë sa rreshta lëvizin, për sa para, dhe
+  sa transfere u lanë jashtë.
+
+### Rregulluar
+- **Kthimi i një huaje nuk zë më një kategori shpenzimi.** Te formulari i pagesës së një borxhi
+  kategoria vinte gati nga vetë shënimi i borxhit. Për një «hua e dhënë» kjo ishte e gabuar: paraja
+  që kthehet është *hyrje*, kurse kategoria e shënimit ishte e shpenzimeve - pra transaksioni ruhej
+  nën një kategori shpenzimi që zgjedhësi poshtë saj as nuk mund ta shfaqte, sepse ai liston vetëm
+  kategori hyrjeje. Tani kategoria e gatshme merret vetëm nëse i përket llojit të transaksionit;
+  përndryshe fusha rri bosh dhe duhet përgjigjur, gjë që ruajtja e kërkonte tashmë.
+
+  Transaksionet e ruajtura më parë mbeten si janë - ndreqja bëhet duke i hapur një herë dhe duke
+  zgjedhur kategorinë e duhur.
+
 ## [2.17.1] - 2026-08-23
 
 ### Rregulluar

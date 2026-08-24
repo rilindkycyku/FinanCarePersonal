@@ -40,7 +40,9 @@ sa shpenzohet, sa mbetet dhe sa po kursesh.
   vetëm llogaritësin.
 - **Transaksionet** - hyrje, shpenzime dhe transfere, me kërkim, renditje, filtrim sipas datës e
   llojit, paginim dhe eksport në Excel. Një transfer lëviz para mes llogarive tuaja, pra nuk
-  llogaritet as si hyrje as si shpenzim.
+  llogaritet as si hyrje as si shpenzim. Me më shumë se një llogari, rreshtat mund të shënohen me
+  kutizë dhe të zhvendosen përnjëherë te një llogari tjetër - e dobishme kur një pjesë e muajit
+  rezulton të mos ketë qenë kurrë e llogarisë ku u regjistrua.
 - **Llogaritë** - kesh, llogari bankare, kartela krediti, kursime, investime, kredi. Bilanci
   llogaritet gjithmonë nga bilanci fillestar plus transaksionet, kurse llogaritë e vjetra
   arkivohen pa u fshirë historiku.

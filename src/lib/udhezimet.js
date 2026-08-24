@@ -204,6 +204,16 @@ export const UDHEZIMET = [
           "njëjtat të dhëna, gati për një datë të re) dhe kapësen që hap fotot e faturës për atë transaksion.",
       },
       {
+        titulli: "Zhvendosini disa te një llogari tjetër",
+        teksti:
+          "Kur keni më shumë se një llogari, para çdo rreshti del një kutizë. Shënoni sa doni - kutiza te " +
+          "koka e tabelës i shënon të gjitha ato që lanë filtrat, jo vetëm faqen që shihni - zgjidhni " +
+          "llogarinë te shiriti sipër dhe shtypni «Zhvendos». Ndryshon vetëm llogaria: data, vlera dhe " +
+          "kategoria mbeten ashtu siç ishin, prandaj totalet e muajit lexohen njësoj, thjesht të ndara " +
+          "mes dy llogarive. Transferet mbeten ku janë, sepse i kanë të dyja anët të shënuara dhe " +
+          "ndryshohen nga formulari i tyre.",
+      },
+      {
         titulli: "Nxirreni jashtë",
         teksti:
           "Butoni i eksportit te tabela ruan pikërisht atë që po shihni - me filtrat e vendosur - në një " +
@@ -215,8 +225,9 @@ export const UDHEZIMET = [
       "Pranë çdo fushe vlere ka një llogaritës: shkruani «12.90+3.50×2» dhe shtypni Apliko - e dobishme kur një faturë ka disa artikuj ose kur pagesa ndahet me dikë.",
       "Për një shpenzim të faturuar në monedhë tjetër, hapni «Monedhë tjetër» te formulari: ruhet vlera e kthyer, kurse ajo origjinale mbahet për krahasim me ekstraktin.",
       "Etiketat («pushime2026», «makina») janë një dimension i dytë krahas kategorisë dhe filtri i tyre shfaqet sapo të ekzistojë e para.",
+      "Nëse një pjesë e parave nuk është kesh - një llogari te dyqani, një kuletë e dytë - hapni një llogari për të dhe zhvendosini atje rreshtat që i takojnë: bilanci i llogarisë kryesore fillon të përputhet me atë që keni vërtet në dorë.",
     ],
-    shihEdhe: ["kategorite", "importo-csv", "veglat"],
+    shihEdhe: ["kategorite", "importo-csv", "veglat", "llogarite"],
   },
 
   {
