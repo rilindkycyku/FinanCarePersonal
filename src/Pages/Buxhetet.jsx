@@ -1,8 +1,10 @@
 import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { Container, Row, Button } from "react-bootstrap";
 import { addMonths, format, parseISO } from "date-fns";
 import {
   PiggyBank, Plus, Edit3, Trash2, ChevronLeft, ChevronRight, TrendingDown, Wallet, AlertTriangle,
+  BarChart3,
 } from "lucide-react";
 import NavBar from "../Components/NavBar";
 import Footer from "../Components/Footer";
@@ -15,7 +17,8 @@ import { Kpi, ProgressBar, Empty } from "../Components/Ui";
 import { useData } from "../Context/DataContext";
 import { useDialog } from "../Context/DialogContext";
 import { STORES } from "../lib/db";
-import { budgetProgress, effectiveBudgets, monthKeyBounds } from "../lib/finance";
+import { budgetProgress, effectiveBudgets, monthKeyBounds, previousMonthKey } from "../lib/finance";
+import { lidhjaEZerit, zeriIKategorise } from "../lib/zerat";
 import { formatPercent, markup, monthKey, monthLabel, plainAmount, todayISO, toNumber } from "../lib/format";
 import { emriIPlote, eshteArkivuar, familjaSet, kategoriTeHapura, rrenjaE } from "../lib/kategorite";
 import { getIcon } from "../lib/icons";
@@ -216,6 +219,21 @@ function Buxhetet() {
                 // still lands there, and the row says so rather than leaving a limit on a category
                 // no form offers any more.
                 const kategoriaArkivuar = eshteArkivuar(categories, b.kategoriaId);
+                /**
+                 * Where the budget's own month can be shown. The statistics page offers "this
+                 * month" and "last month", not an arbitrary one, so a budget being read for March
+                 * has nowhere honest to link to - it stays without the button rather than opening
+                 * August's figures under March's heading. A category deleted since the budget was
+                 * set has nothing to open at all.
+                 */
+                const periudha =
+                  b.kategoriaId && categories.some((c) => c.id === b.kategoriaId)
+                    ? muaji === monthKey()
+                      ? "muaji"
+                      : muaji === previousMonthKey(monthKey())
+                        ? "kaluar"
+                        : null
+                    : null;
                 return (
                   <div className={`fcp-tracked${b.tepruar ? " over" : ""}`} key={b.id}>
                     <div className="fcp-tracked-head">
@@ -234,6 +252,21 @@ function Buxhetet() {
                         </div>
                       </div>
                       <div className="fcp-tracked-actions">
+                        {/* "The food budget is at 97%" and "on what" are one question asked twice;
+                            this is the second half of it. Read-only, so it goes before the two
+                            actions that change something. */}
+                        {periudha && (
+                          <Link
+                            className="fcp-icon-action"
+                            title={`Detajet e "${b.emri}"`}
+                            to={lidhjaEZerit(zeriIKategorise({ id: b.kategoriaId }), {
+                              periudha,
+                              pamja: "kategorite",
+                            })}
+                          >
+                            <BarChart3 size={14} />
+                          </Link>
+                        )}
                         <button
                           type="button"
                           className="fcp-icon-action edit"

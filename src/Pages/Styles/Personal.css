@@ -349,6 +349,30 @@ a.fcp-row-klikues:hover {
   text-decoration: none;
 }
 
+/* A budget block on the dashboard, made into a link. It is a stack of three lines rather than a
+   row, so it takes the padding itself instead of borrowing `.fcp-row`'s. */
+.fcp-buxhet-lidhje {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+  padding: 0.35rem 0.5rem;
+  margin-left: -0.5rem;
+  margin-right: -0.5rem;
+  border-radius: 10px;
+  transition: background 0.15s ease;
+}
+
+.fcp-buxhet-lidhje:hover,
+.fcp-buxhet-lidhje:focus-visible {
+  background: var(--sp-surface-3);
+  color: inherit;
+}
+
+.fcp-buxhet-lidhje:focus-visible {
+  outline: 2px solid var(--sp-emerald);
+  outline-offset: 1px;
+}
+
 .fcp-row-shigjeta {
   flex-shrink: 0;
   color: var(--sp-text-muted);

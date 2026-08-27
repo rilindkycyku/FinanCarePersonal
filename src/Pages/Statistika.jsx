@@ -875,6 +875,14 @@ function Statistika() {
                       );
                     })
                   )}
+                  {/* The same invitation the category ranking carries, worded for what actually
+                      opens here: an account gives a statement, not a breakdown of spending. */}
+                  {stats.llogarite.length > 0 && (
+                    <div className="fcp-row-sub mt-2">
+                      Prekni një llogari për pasqyrën e saj - ditët një nga një, me bilancin që
+                      mbylli secila.
+                    </div>
+                  )}
                 </Panel>
               </Col>
 

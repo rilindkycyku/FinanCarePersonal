@@ -35,6 +35,23 @@ export function celesiIZerit(zeri) {
   return `${zeri.tipi}:${zeri.lloji}:${zeri.tipi === "etikete" ? zeri.celesi : zeri.id}`;
 }
 
+/**
+ * The address that opens a subject on the statistics page.
+ *
+ * Four pages link here now - the dashboard's ranking, the year, the accounts page and the budgets -
+ * and each of them was building the same query string by hand, which is three chances to spell
+ * `zeri` differently. `periudha` and `pamja` are optional: a caller passes them where it knows
+ * which period and which view the subject belongs to, and leaves them off where the page's own
+ * defaults are right.
+ */
+export function lidhjaEZerit(zeri, { periudha, pamja } = {}) {
+  const params = new URLSearchParams();
+  if (periudha) params.set("periudha", periudha);
+  if (pamja) params.set("pamja", pamja);
+  params.set("zeri", celesiIZerit(zeri));
+  return `/statistikat?${params}`;
+}
+
 /** The subject a category ranking row stands for. */
 export function zeriIKategorise(kategoria, lloji = "shpenzim") {
   return { tipi: "kategori", lloji, id: kategoria.id, emri: kategoria.emri, ngjyra: kategoria.ngjyra, ikona: kategoria.ikona };

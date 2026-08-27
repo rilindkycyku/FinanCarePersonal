@@ -674,7 +674,10 @@ export const UDHEZIMET = [
           "diçka është zakon apo ishte një muaj i vetëm nuk mund të thuhet duke parë vetëm atë muaj. " +
           "Butoni «Hapi te transaksionet» i çon po ato rreshta te lista ku mund të ndryshohen. " +
           "Detaji qëndron te adresa, prandaj butoni i kthimit e mbyll. Të njëjtat rreshta hapen " +
-          "edhe te unaza e ndarjes, te paneli i shpenzimeve në ballinë dhe te renditja e vitit.",
+          "edhe te unaza e ndarjes, te paneli i shpenzimeve dhe te rreshtat e buxheteve në ballinë, " +
+          "te renditja e faqes së Vitit dhe te kartat e buxheteve. Aty ku periudha nuk mund të " +
+          "thuhet - një buxhet i një muaji të largët, ose një vit i shkuar - rreshti mbetet i " +
+          "thjeshtë në vend të një lidhjeje që do të hapte shifra të muajit të gabuar.",
       },
       {
         titulli: "Një llogari hapet ndryshe: si pasqyrë",
@@ -686,7 +689,7 @@ export const UDHEZIMET = [
           "plotësisht, ndonëse në çdo shifër tjetër të aplikacionit nuk numërohen: ato janë pikërisht " +
           "çka e lëvizi këtë llogari, dhe një pasqyrë që i fshihte nuk do të përputhej me bilancin " +
           "përbri. «Ndarja» tregon për çka u paguan me të, dhe «Ecuria» ku ka qenë bilanci i saj gjashtë " +
-          "muajt e fundit.",
+          "muajt e fundit. Pasqyra hapet edhe nga butoni te çdo kartë e faqes së Llogarive.",
       },
       {
         titulli: "Krahasimet",

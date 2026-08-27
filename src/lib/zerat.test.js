@@ -7,7 +7,9 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { celesiIZerit, zeriIEtiketes, zeriIKategorise, zeriILlogarise, zeriNgaCelesi } from "./zerat";
+import {
+  celesiIZerit, lidhjaEZerit, zeriIEtiketes, zeriIKategorise, zeriILlogarise, zeriNgaCelesi,
+} from "./zerat";
 import { PA_KATEGORI } from "./finance";
 
 const categories = [
@@ -23,6 +25,24 @@ const transactions = [
   { id: "b", data: "2026-08-02", lloji: "shpenzim", vlera: 20, kategoriaId: "cat_market", etiketat: ["besa një sh.p.k."] },
   { id: "c", data: "2026-08-03", lloji: "shpenzim", vlera: 30, kategoriaId: "cat_fshire" },
 ];
+
+describe("lidhjaEZerit", () => {
+  it("names the subject, and the period and view when the caller knows them", () => {
+    expect(lidhjaEZerit(zeriIKategorise(categories[0]), { periudha: "viti", pamja: "kategorite" }))
+      .toBe("/statistikat?periudha=viti&pamja=kategorite&zeri=kategori%3Ashpenzim%3Acat_ushqim");
+  });
+
+  it("leaves the page's own defaults alone when it does not", () => {
+    expect(lidhjaEZerit(zeriILlogarise(accounts[0])))
+      .toBe("/statistikat?zeri=llogari%3Agjithcka%3Aacc_1");
+  });
+
+  it("escapes a tag that would otherwise break the query", () => {
+    const lidhja = lidhjaEZerit(zeriIEtiketes({ celesi: "besa & co", emri: "Besa & Co" }));
+    expect(lidhja).toBe("/statistikat?zeri=etikete%3Ashpenzim%3Abesa+%26+co");
+    expect(new URLSearchParams(lidhja.split("?")[1]).get("zeri")).toBe("etikete:shpenzim:besa & co");
+  });
+});
 
 describe("celesiIZerit / zeriNgaCelesi", () => {
   it("round-trips a category, resolving its name from the ledger", () => {

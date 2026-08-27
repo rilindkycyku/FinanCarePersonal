@@ -158,14 +158,17 @@ sa shpenzohet, sa mbetet dhe sa po kursesh.
   kaluar, ditët e javës, gjashtë muajt e fundit të atij zëri - i vetmi panel që nuk e ndjek
   periudhën). «Hapi te transaksionet» i çon po ato rreshta te lista ku mund të ndryshohen. Zëri i
   hapur rri te adresa, prandaj butoni i kthimit e mbyll dhe një ndarje e caktuar mund të dërgohet
-  si lidhje. Të njëjtat rreshta hapen edhe nga unaza e ndarjes, nga paneli i shpenzimeve në ballinë
-  dhe nga renditja e faqes së Vitit.
+  si lidhje. Të njëjtat rreshta hapen edhe nga unaza e ndarjes, nga paneli i shpenzimeve dhe nga
+  rreshtat e buxheteve në ballinë, nga renditja e faqes së Vitit dhe nga kartat e buxheteve - por
+  vetëm aty ku periudha mund të thuhet me ndershmëri (një buxhet i një muaji të largët ose një vit i
+  shkuar mbetet rresht i thjeshtë).
 - **Pasqyra e një llogarie** - rreshtat te Statistikat › Llogaritë hapen si pasqyrë e jo si ndarje
   shpenzimesh: bilanci i hapjes (aty ku e la periudha e kaluar), hyrjet, daljet, ndryshimi, dhe
   ditët një nga një me bilancin që mbylli secila, ku çdo ditë hapet te lëvizjet e veta me shenjë.
   Transferet numërohen këtu plotësisht - ato janë çka e lëvizi llogarinë, edhe pse për ditarin nuk
   janë as hyrje as shpenzim. Pastaj për çka u paguan me të, çka hyri, etiketat, transferet veçmas,
-  dhe ku ka qenë bilanci i saj gjashtë muajt e fundit.
+  dhe ku ka qenë bilanci i saj gjashtë muajt e fundit. Hapet edhe nga butoni te çdo kartë e faqes
+  së Llogarive.
 - **Bilanci ndër muaj dhe parashikimi** - një vijë e vetme: muajt e kaluar me vijë të plotë, muajt
   që vijnë me vijë të ndërprerë. Parashikimi nuk supozon asgjë nga mesatarja e së kaluarës - ecën
   ditë për ditë mbi atë që dihet tashmë (transaksionet me datë të ardhshme, këstet e pagesat e

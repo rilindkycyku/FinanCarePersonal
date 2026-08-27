@@ -49,11 +49,17 @@ ngriti versionin.
   «Ecuria» - ku ka qenë bilanci i saj gjashtë muajt e fundit.
 
 - **I njëjti rresht hapet nga kudo ku shfaqet.** Unaza e ndarjes te Statistikat (te legjenda, e cila
-  është pjesa me emër dhe që punon me tastierë), paneli «Shpenzimet sipas Kategorisë» në ballinë dhe
-  renditja e kategorive te faqja e Vitit çojnë të gjitha te po ai detaj. Te faqja e Vitit vetëm për
-  vitin e tanishëm: zgjedhësi i periudhës te Statistikat njeh «këtë vit» e jo një vit çfarëdo,
-  prandaj një lidhje nga 2024 do të hapte shifrat e 2026 nën titullin e 2024, dhe një vit i shkuar
-  mbetet rresht i thjeshtë në vend të një lidhjeje që gënjen.
+  është pjesa me emër dhe që punon me tastierë), paneli «Shpenzimet sipas Kategorisë» dhe rreshtat e
+  buxheteve në ballinë, renditja e kategorive te faqja e Vitit, kartat e buxheteve dhe kartat e
+  llogarive - të gjitha çojnë te po ai detaj. «Buxheti i ushqimit është në 97%» dhe «për çka» janë
+  një pyetje e vetme e bërë dy herë.
+
+  Aty ku periudha nuk mund të thuhet me ndershmëri, lidhja nuk vihet fare. Zgjedhësi i periudhës te
+  Statistikat njeh «këtë muaj», «muajin e kaluar», «këtë vit» dhe «gjithçka» - jo një muaj a vit
+  çfarëdo - prandaj një buxhet që po lexohet për marsin, ose një vit i shkuar te faqja e Vitit,
+  mbetet rresht i thjeshtë në vend të një lidhjeje që do të hapte shifrat e gushtit nën titullin e
+  marsit. Po ashtu një buxhet kategoria e të cilit është fshirë: buxheti i mbijeton kategorisë, por
+  nuk ka çka të hapë.
 
   Çdo shifër del nga të njëjtat funksione që nxjerrin faqen, mbi një nënbashkësi të zgjedhur
   njësoj si rreshti - prandaj totali në kokë është pikërisht numri që u prek. Një kategori kryesore

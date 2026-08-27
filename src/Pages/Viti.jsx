@@ -14,7 +14,7 @@ import Zgjedhesi from "../Components/Zgjedhesi";
 import { Kpi, Panel, ProgressBar, Empty } from "../Components/Ui";
 import { useData } from "../Context/DataContext";
 import { getIcon } from "../lib/icons";
-import { celesiIZerit, zeriIKategorise } from "../lib/zerat";
+import { lidhjaEZerit, zeriIKategorise } from "../lib/zerat";
 import { formatDate, formatPercent, monthLabel } from "../lib/format";
 import { vitetMeTeDhena, vitiNeNjeFaqe } from "../lib/viti";
 import "./Styles/PremiumTheme.css";
@@ -271,9 +271,7 @@ function Viti() {
                          */
                         const lidhja =
                           zgjedhur === new Date().getFullYear()
-                            ? `/statistikat?periudha=viti&pamja=kategorite&zeri=${encodeURIComponent(
-                                celesiIZerit(zeriIKategorise(k))
-                              )}`
+                            ? lidhjaEZerit(zeriIKategorise(k), { periudha: "viti", pamja: "kategorite" })
                             : null;
                         const Rreshti = lidhja ? Link : "div";
                         const propsRreshti = lidhja
