@@ -17,13 +17,24 @@ ngriti versionin.
   gjithmonë e njëjta, dhe e vetmja mënyrë për ta bërë ishte faqja e transaksioneve me një filtër,
   ku humbet periudha, forma e muajit dhe çdo shifër që Statistikat sapo kishin nxjerrë.
 
-  Tani një prekje mbi një kategori, nënkategori ose etiketë hap detajin e saj: gjithsej, mesatarja
-  ditore, mesatarja për herë dhe dita më e rëndë; kalendari i muajit i ngjyrosur vetëm nga ai zë;
-  ditët një nga një, secila e hapshme te blerjet që e bënë, me përshkrimin, llogarinë dhe etiketat
-  e secilës; pastaj ndarja sipas nënkategorive - ose sipas kategorive, kur hapet një etiketë -
-  sipas llogarive, sipas ditës së javës dhe sipas madhësisë së blerjes. Në fund vijnë gjashtë
-  muajt e fundit të atij zëri, i vetmi panel që nuk e ndjek periudhën: nëse diçka është zakon apo
-  ishte thjesht një muaj i vetëm nuk mund të thuhet duke parë vetëm atë muaj.
+  Tani një prekje mbi një kategori, nënkategori ose etiketë hap detajin e saj. Sipër rrinë shifrat -
+  gjithsej, mesatarja ditore, mesatarja për herë, dita më e rëndë - dhe poshtë tyre dy rreshta
+  konteksti që një renditje nuk mund t'i mbajë: sa ishte i njëjti zë periudhën e kaluar dhe sa
+  ndryshoi, e - kur periudha është një muaj dhe kategoria ka buxhet - sa prej tij është shpenzuar.
+  742 € për ushqim është një shifër; 742 € nga 700 € është një vendim.
+
+  Pjesa tjetër ndahet në tri pamje, sepse e gjitha në një kolonë do të ishte më shumë rrëshqitje se
+  faqja prej së cilës u hap. «Ditët» mban kalendarin e muajit të ngjyrosur vetëm nga ai zë dhe ditët
+  një nga një, ku secila hapet te blerjet që e bënë - me përshkrimin, llogarinë dhe etiketat - ose
+  të gjitha njëherësh me një buton. «Ndarja» mban nënkategoritë (ose kategoritë, kur hapet një
+  etiketë), etiketat, llogaritë dhe madhësinë e blerjeve. «Ritmi» mban ecurinë ditë pas dite
+  përballë periudhës së kaluar, ditët e javës dhe gjashtë muajt e fundit të atij zëri - i vetmi
+  panel që nuk e ndjek periudhën: nëse diçka është zakon apo ishte thjesht një muaj i vetëm nuk mund
+  të thuhet duke parë vetëm atë muaj.
+
+  Butoni «Hapi te transaksionet» i çon po ato rreshta te lista, ku mund të ndryshohen. Faqja e
+  transaksioneve i lexon tani filtrat edhe nga adresa (`?kategoria=`, `?etiketa=`, `?llogaria=`) e
+  pastaj i heq prej saj, sepse filtrat janë të vetat dhe mbeten të ndryshueshme.
 
   Çdo shifër del nga të njëjtat funksione që nxjerrin faqen, mbi një nënbashkësi të zgjedhur
   njësoj si rreshti - prandaj totali në kokë është pikërisht numri që u prek. Një kategori kryesore

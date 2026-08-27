@@ -804,17 +804,19 @@ export function dailyEntries(transactions = [], start, end, lloji = "shpenzim") 
  */
 export function filterByItem(transactions = [], zeri, categories = []) {
   if (!zeri) return [];
-  const perkatese = transactions.filter((tx) => tx.lloji === (zeri.lloji || "shpenzim"));
+  const lloji = zeri.lloji || "shpenzim";
 
-  if (zeri.tipi === "etikete") return perkatese.filter((tx) => kaEtiketen(tx, zeri.celesi));
+  if (zeri.tipi === "etikete") {
+    return transactions.filter((tx) => tx.lloji === lloji && kaEtiketen(tx, zeri.celesi));
+  }
 
   if (zeri.id === PA_KATEGORI) {
     const njohura = new Set(categories.map((c) => c.id));
-    return perkatese.filter((tx) => !njohura.has(tx.kategoriaId));
+    return transactions.filter((tx) => tx.lloji === lloji && !njohura.has(tx.kategoriaId));
   }
 
   const familja = familjaSet(categories, zeri.id);
-  return perkatese.filter((tx) => familja.has(tx.kategoriaId));
+  return transactions.filter((tx) => tx.lloji === lloji && familja.has(tx.kategoriaId));
 }
 
 /**
@@ -1103,6 +1105,24 @@ export function budgetProgress(budgets, categories, transactions, key) {
       };
     })
     .sort((a, b) => b.perqindja - a.perqindja);
+}
+
+/**
+ * The budget that governs one category this month, if any - what a drill-down needs to say whether
+ * the figure it is showing is fine or is the reason a budget is about to go over.
+ *
+ * A subcategory has no budget of its own by design: budgets are set on the family, and
+ * `budgetProgress` already counts every child into the parent's row. So the lookup is by family
+ * rather than by id, and opening "Ushqim & Pije › Market" finds the limit set on "Ushqim & Pije" -
+ * which is the limit that purchase is actually spending against.
+ */
+export function budgetForCategory(budgets = [], categories = [], transactions = [], key, kategoriaId) {
+  if (!kategoriaId || !key) return null;
+  return (
+    budgetProgress(budgets, categories, transactions, key).find((b) =>
+      familjaSet(categories, b.kategoriaId).has(kategoriaId)
+    ) || null
+  );
 }
 
 // ── Savings goals ───────────────────────────────────────────────────────────

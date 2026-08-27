@@ -9,7 +9,8 @@
 
 import { describe, expect, it } from "vitest";
 import {
-  celesiEtiketes, etiketatE, GJATESIA_MAX, kaEtiketen, ndajEtiketat, ngjyraEtiketes, NUMRI_MAX,
+  celesiEtiketes, emriIEtiketes, etiketatE, GJATESIA_MAX, kaEtiketen, ndajEtiketat, ngjyraEtiketes,
+  NUMRI_MAX,
   normalizoEtiketen, pastroEtiketat, perdorimiEtiketave, totalsByTag,
 } from "./etiketat";
 
@@ -69,6 +70,34 @@ describe("etiketatE", () => {
 describe("ndajEtiketat", () => {
   it("splits a pasted line on commas, semicolons and newlines", () => {
     expect(ndajEtiketat("kafe, pushime;makina\nkafe")).toEqual(["kafe", "pushime", "makina"]);
+  });
+});
+
+describe("emriIEtiketes", () => {
+  const rreshtat = [
+    tx({ id: "a", etiketat: ["besa"] }),
+    tx({ id: "b", etiketat: ["Besa", "pushime"] }),
+    tx({ id: "c", etiketat: ["Besa"] }),
+  ];
+
+  it("gives the spelling used most often, whatever the link carried", () => {
+    expect(emriIEtiketes(rreshtat, "BESA")).toBe("Besa");
+  });
+
+  it("agrees with the full usage list it is a shortcut for", () => {
+    const plote = perdorimiEtiketave(rreshtat).find((e) => e.celesi === "besa");
+    expect(emriIEtiketes(rreshtat, "besa")).toBe(plote.emri);
+  });
+
+  it("keeps the first spelling seen when two are used equally often", () => {
+    expect(emriIEtiketes([tx({ etiketat: ["Pushime"] }), tx({ etiketat: ["pushime"] })], "pushime"))
+      .toBe("Pushime");
+  });
+
+  it("gives back nothing for a tag nothing carries", () => {
+    expect(emriIEtiketes(rreshtat, "makina")).toBe("");
+    expect(emriIEtiketes(rreshtat, "")).toBe("");
+    expect(emriIEtiketes([], "besa")).toBe("");
   });
 });
 

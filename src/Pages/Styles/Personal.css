@@ -423,18 +423,77 @@
   font-style: italic;
 }
 
+/* Inside a modal the panels supply the frame, so the body would otherwise draw a card on a card. */
+.fcp-detaje-modal .fcp-panel {
+  background: transparent;
+  border-color: var(--sp-border);
+}
+
+/* The comparison and the budget: context for the figures above them, so they sit tight under the
+   tiles rather than in a panel of their own. */
+.fcp-detaje-konteksti {
+  padding: 0 0.15rem;
+  border: 1px solid var(--sp-border);
+  border-radius: 14px;
+  padding-left: 0.85rem;
+  padding-right: 0.85rem;
+}
+
+.fcp-detaje-konteksti .fcp-row-main .fcp-progress {
+  margin-top: 0.3rem;
+}
+
+/* The strip takes the surfaces one step in from the modal's own, or it and the active tab both
+   land on the modal background - in dark mode and in light. */
+.fcp-detaje-tabs {
+  margin: 1rem 0;
+  background: var(--sp-surface-3);
+}
+
+.fcp-detaje-tabs .fcp-faqe-tab.active {
+  background: var(--sp-surface-2);
+}
+
+body.light-mode .fcp-detaje-tabs .fcp-faqe-tab.active {
+  background: #fff;
+}
+
+/* Above the day list: how many days there are, and one switch for all of them. */
+.fcp-detaje-veprimet {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid var(--sp-border);
+}
+
+.fcp-detaje-veprim,
 .fcp-detaje-me-shume {
-  padding: 0.4rem 0;
-  font-size: 0.76rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0;
+  font-size: 0.74rem;
   font-weight: 800;
   color: var(--sp-emerald);
   text-decoration: none;
 }
 
-/* Inside a modal the panels supply the frame, so the body would otherwise draw a card on a card. */
-.fcp-detaje-modal .fcp-panel {
-  background: transparent;
-  border-color: var(--sp-border);
+.fcp-detaje-me-shume {
+  padding: 0.45rem 0;
+}
+
+.fcp-detaje-fundi {
+  gap: 0.5rem;
+}
+
+.fcp-detaje-lidhja {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.82rem;
+  font-weight: 800;
 }
 
 /* ── Amount colours (also used inside table cells) ────────── */

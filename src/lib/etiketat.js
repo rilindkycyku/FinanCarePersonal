@@ -99,6 +99,39 @@ export function perdorimiEtiketave(transactions = []) {
     .sort((a, b) => b.numri - a.numri || a.emri.localeCompare(b.emri, "sq"));
 }
 
+/**
+ * The spelling one tag is written with most often - what a drill-down opened from a link has to
+ * show as its title.
+ *
+ * `perdorimiEtiketave` answers the same question, but it answers it for every tag in the ledger and
+ * sorts the lot; asking it about one tag means building and ranking a list to read a single row of
+ * it. This walks the transactions once and counts only the spellings that matter.
+ *
+ * Ties keep the first spelling seen, exactly as the full usage list does.
+ */
+export function emriIEtiketes(transactions = [], celesi) {
+  const kerkuar = celesiEtiketes(celesi);
+  if (!kerkuar) return "";
+
+  const shkrimet = new Map();
+  transactions.forEach((tx) => {
+    etiketatE(tx).forEach((emri) => {
+      if (celesiEtiketes(emri) !== kerkuar) return;
+      shkrimet.set(emri, (shkrimet.get(emri) || 0) + 1);
+    });
+  });
+
+  let fituesi = "";
+  let numri = 0;
+  shkrimet.forEach((n, emri) => {
+    if (n > numri) {
+      numri = n;
+      fituesi = emri;
+    }
+  });
+  return fituesi;
+}
+
 /** Whether a record carries a given tag, compared the same way everywhere (`celesiEtiketes`). */
 export function kaEtiketen(record, celesi) {
   if (!celesi) return true;

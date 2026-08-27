@@ -919,9 +919,15 @@ function Statistika() {
         zeri={zeri}
         kufijte={kufijte}
         derTani={derTani}
+        // The same period before this one, for the comparison and the pace line - null under
+        // "Gjithçka", which has nothing behind it, exactly as the page's own pace panel has.
+        para={previousBounds(period)}
         ditetEPeriudhes={ditetEPeriudhes}
         titulliPeriudhes={periodLabel(period)}
+        titulliPara={previousLabel(period)}
         meKalendar={meKalendar}
+        // A budget belongs to a month, so it is offered only where the period is one.
+        muajiKey={krahasimiKey}
       />
 
       <Footer />

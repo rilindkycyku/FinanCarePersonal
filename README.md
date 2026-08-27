@@ -150,12 +150,15 @@ sa shpenzohet, sa mbetet dhe sa po kursesh.
   mëdha. **Llogaritë** (kur ka më shumë se një): aktiviteti dhe transferet. Pamja e hapur qëndron
   te adresa.
 - **Detajet e një zëri** - çdo kategori, nënkategori ose etiketë te Statistikat hapet me një
-  prekje: gjithsej dhe mesatarja ditore, kalendari i muajit i ngjyrosur vetëm nga ai zë, ditët një
-  nga një - dhe çdo ditë hapet më tej te blerjet që e bënë, me përshkrimin, llogarinë dhe etiketat
-  e secilës. Poshtë vjen ndarja sipas nënkategorive (ose sipas kategorive, kur hapet një etiketë),
-  sipas llogarive, sipas ditës së javës e sipas madhësisë, dhe gjashtë muajt e fundit të atij zëri
-  - i vetmi panel që nuk e ndjek periudhën. Zëri i hapur rri te adresa, prandaj butoni i kthimit e
-  mbyll dhe një ndarje e caktuar mund të dërgohet si lidhje.
+  prekje. Sipër: gjithsej, mesatarja ditore, sa ishte i njëjti zë periudhën e kaluar, dhe - kur
+  periudha është një muaj dhe kategoria ka buxhet - sa prej tij është shpenzuar. Pastaj tri pamje:
+  **Ditët** (kalendari i muajit i ngjyrosur vetëm nga ai zë dhe ditët një nga një, ku secila hapet
+  te blerjet që e bënë, me përshkrimin, llogarinë dhe etiketat), **Ndarja** (nënkategoritë ose
+  kategoritë, etiketat, llogaritë, madhësia e blerjeve) dhe **Ritmi** (ecuria përballë periudhës së
+  kaluar, ditët e javës, gjashtë muajt e fundit të atij zëri - i vetmi panel që nuk e ndjek
+  periudhën). «Hapi te transaksionet» i çon po ato rreshta te lista ku mund të ndryshohen. Zëri i
+  hapur rri te adresa, prandaj butoni i kthimit e mbyll dhe një ndarje e caktuar mund të dërgohet
+  si lidhje.
 - **Bilanci ndër muaj dhe parashikimi** - një vijë e vetme: muajt e kaluar me vijë të plotë, muajt
   që vijnë me vijë të ndërprerë. Parashikimi nuk supozon asgjë nga mesatarja e së kaluarës - ecën
   ditë për ditë mbi atë që dihet tashmë (transaksionet me datë të ardhshme, këstet e pagesat e

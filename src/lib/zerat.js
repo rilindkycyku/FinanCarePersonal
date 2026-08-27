@@ -13,7 +13,7 @@
  */
 
 import { PA_KATEGORI } from "./finance";
-import { celesiEtiketes, ngjyraEtiketes, perdorimiEtiketave } from "./etiketat";
+import { celesiEtiketes, emriIEtiketes, ngjyraEtiketes } from "./etiketat";
 import { emriIPlote } from "./kategorite";
 
 /** The two directions a ranking can be showing. Anything else in a link is not a subject. */
@@ -53,9 +53,11 @@ export function zeriNgaCelesi(vlera, categories = [], transactions = []) {
   if (!celesi || !LLOJET.includes(lloji)) return null;
 
   if (tipi === "etikete") {
-    const perdorimi = perdorimiEtiketave(transactions).find((e) => e.celesi === celesiEtiketes(celesi));
-    if (!perdorimi) return null;
-    return zeriIEtiketes({ ...perdorimi, ngjyra: ngjyraEtiketes(perdorimi.celesi) }, lloji);
+    const celesiPastruar = celesiEtiketes(celesi);
+    const emri = emriIEtiketes(transactions, celesiPastruar);
+    // A tag exists only as long as something carries it, so nothing carrying it means no subject.
+    if (!emri) return null;
+    return zeriIEtiketes({ celesi: celesiPastruar, emri, ngjyra: ngjyraEtiketes(celesiPastruar) }, lloji);
   }
 
   if (tipi !== "kategori") return null;

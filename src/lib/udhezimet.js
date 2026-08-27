@@ -663,13 +663,16 @@ export const UDHEZIMET = [
       {
         titulli: "Hapni një rresht: detajet ditë pas dite",
         teksti:
-          "Çdo kategori, nënkategori ose etiketë te «Kategoritë» hapet me një prekje. Brenda gjeni të " +
-          "njëjtat pamje si te «Ritmi», por vetëm për atë zë: gjithsej dhe mesatarja ditore, kalendari " +
-          "i muajit, ditët një nga një - dhe çdo ditë hapet më tej te blerjet që e bënë, me përshkrimin, " +
-          "llogarinë dhe etiketat e secilës. Poshtë tyre vjen ndarja sipas nënkategorive (ose sipas " +
-          "kategorive, kur hapni një etiketë), sipas llogarive, sipas ditës së javës e sipas madhësisë, " +
-          "dhe gjashtë muajt e fundit të atij zëri - i vetmi panel që nuk e ndjek periudhën, sepse nëse " +
+          "Çdo kategori, nënkategori ose etiketë te «Kategoritë» hapet me një prekje. Sipër rrinë " +
+          "shifrat e atij zëri, sa ishte i njëjti zë periudhën e kaluar, dhe - kur periudha është një " +
+          "muaj dhe kategoria ka buxhet - sa prej tij është shpenzuar. Poshtë tyre ndahet në tri pamje: " +
+          "«Ditët» mban kalendarin dhe ditët një nga një, ku çdo ditë hapet më tej te blerjet që e bënë, " +
+          "me përshkrimin, llogarinë dhe etiketat e secilës («Hap të gjitha» i hap të gjitha njëherësh); " +
+          "«Ndarja» mban nënkategoritë (ose kategoritë, kur hapni një etiketë), etiketat, llogaritë dhe " +
+          "madhësinë e blerjeve; «Ritmi» mban ecurinë përballë periudhës së kaluar, ditët e javës dhe " +
+          "gjashtë muajt e fundit të atij zëri - i vetmi panel që nuk e ndjek periudhën, sepse nëse " +
           "diçka është zakon apo ishte një muaj i vetëm nuk mund të thuhet duke parë vetëm atë muaj. " +
+          "Butoni «Hapi te transaksionet» i çon po ato rreshta te lista ku mund të ndryshohen. " +
           "Detaji qëndron te adresa, prandaj butoni i kthimit e mbyll.",
       },
       {

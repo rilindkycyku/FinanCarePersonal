@@ -10,7 +10,8 @@
 import { describe, expect, it } from "vitest";
 import {
   MAX_DITE_SERIE, accountBalance, amountBuckets, annualOutlook, backupStatus, balanceHistory,
-  budgetProgress, cashflow, categoryComparison, consolidateAccounts, dailyEntries, dailySpending,
+  budgetForCategory, budgetProgress, cashflow, categoryComparison, consolidateAccounts,
+  dailyEntries, dailySpending,
   filterByItem, PA_KATEGORI, reassignAccount,
   reconciliation,
   dataEParaERegjistruar,
@@ -1365,6 +1366,37 @@ describe("dailyEntries", () => {
     const kopja = rreshtat.map((r) => ({ ...r }));
     dailyEntries(rreshtat, "2026-08-01", "2026-08-31");
     expect(rreshtat).toEqual(kopja);
+  });
+});
+
+describe("budgetForCategory", () => {
+  const kategorite = [
+    { id: "ushqim", emri: "Ushqim & Pije", lloji: "shpenzim" },
+    { id: "market", emri: "Market", lloji: "shpenzim", prindi: "ushqim" },
+    { id: "karburant", emri: "Karburant", lloji: "shpenzim" },
+  ];
+  const buxhetet = [{ id: "b1", kategoriaId: "ushqim", vlera: 500, muaji: null }];
+  const rreshtat = [
+    { id: "a", data: "2026-08-02", lloji: "shpenzim", vlera: 120, kategoriaId: "market" },
+    { id: "b", data: "2026-08-03", lloji: "shpenzim", vlera: 80, kategoriaId: "ushqim" },
+  ];
+
+  it("finds the budget set on the category itself", () => {
+    const b = budgetForCategory(buxhetet, kategorite, rreshtat, "2026-08", "ushqim");
+    expect(b).toMatchObject({ kategoriaId: "ushqim", buxheti: 500, shpenzuar: 200 });
+  });
+
+  it("finds the family's budget when a subcategory is opened", () => {
+    // The subcategory has no budget of its own, but its purchases spend the parent's.
+    expect(budgetForCategory(buxhetet, kategorite, rreshtat, "2026-08", "market")).toMatchObject({
+      kategoriaId: "ushqim",
+    });
+  });
+
+  it("gives back nothing where no budget covers the category", () => {
+    expect(budgetForCategory(buxhetet, kategorite, rreshtat, "2026-08", "karburant")).toBeNull();
+    expect(budgetForCategory(buxhetet, kategorite, rreshtat, "2026-08", null)).toBeNull();
+    expect(budgetForCategory(buxhetet, kategorite, rreshtat, null, "ushqim")).toBeNull();
   });
 });
 
