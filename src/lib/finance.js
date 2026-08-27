@@ -20,6 +20,7 @@ import {
 } from "./options";
 import { monthKey, monthLabel, toNumber } from "./format";
 import { emriIPlote, familjaSet, rrenjaE } from "./kategorite";
+import { kaEtiketen } from "./etiketat";
 
 // ── Accounts ────────────────────────────────────────────────────────────────
 
@@ -525,6 +526,9 @@ export function categoryComparison(transactions, categories, key, lloji = "shpen
     .sort((a, b) => Math.abs(b.ndryshimi) - Math.abs(a.ndryshimi));
 }
 
+/** Where a transaction whose category was deleted is ranked, and the id that row carries. */
+export const PA_KATEGORI = "__pa_kategori__";
+
 /**
  * Category totals for one direction ("shpenzim" or "hyrje"), largest first. Transactions whose
  * category was deleted are grouped under "Pa kategori" instead of being dropped.
@@ -542,7 +546,7 @@ export function totalsByCategory(transactions, categories, lloji = "shpenzim") {
   transactions
     .filter((tx) => tx.lloji === lloji)
     .forEach((tx) => {
-      const key = byId.has(tx.kategoriaId) ? tx.kategoriaId : "__pa_kategori__";
+      const key = byId.has(tx.kategoriaId) ? tx.kategoriaId : PA_KATEGORI;
       const prev = totals.get(key) || { vlera: 0, numri: 0 };
       totals.set(key, { vlera: prev.vlera + toNumber(tx.vlera), numri: prev.numri + 1 });
     });
@@ -567,7 +571,7 @@ export function totalsByCategory(transactions, categories, lloji = "shpenzim") {
   // never booked to directly still gets a row when its subcategories were.
   const sipasRrenjes = new Map();
   totals.forEach((t, id) => {
-    const rrenja = id === "__pa_kategori__" ? id : rrenjaE(categories, id);
+    const rrenja = id === PA_KATEGORI ? id : rrenjaE(categories, id);
     const grupi = sipasRrenjes.get(rrenja) || { vlera: 0, numri: 0, femijet: [] };
     grupi.vlera += t.vlera;
     grupi.numri += t.numri;
@@ -740,6 +744,170 @@ export function dailySpending(transactions, start, end, lloji = "shpenzim") {
     dita.setDate(dita.getDate() + 1);
   }
   return ditet;
+}
+
+/**
+ * The days a set of transactions actually moved on, newest first, each carrying the transactions
+ * that made it up.
+ *
+ * `dailySpending` is the same question asked for a chart - every day of the range, empty ones
+ * included, because a line needs points to stay level across. This one is asked by a reader: "the
+ * 19th cost 243 €, on what?". Empty days are dead rows in that reading, and newest first is the
+ * order somebody checking a month scrolls in.
+ *
+ * Within a day the largest purchase comes first. A day is opened to find where it went, and that
+ * answer is usually the top line; the entry order is already available on the transactions page.
+ */
+export function dailyEntries(transactions = [], start, end, lloji = "shpenzim") {
+  const sipasDites = new Map();
+
+  transactions
+    .filter(
+      (tx) =>
+        tx.lloji === lloji &&
+        tx.data &&
+        (!start || tx.data >= start) &&
+        (!end || tx.data <= end)
+    )
+    .forEach((tx) => {
+      const rreshti = sipasDites.get(tx.data) || { data: tx.data, vlera: 0, numri: 0, transaksionet: [] };
+      rreshti.vlera += toNumber(tx.vlera);
+      rreshti.numri += 1;
+      rreshti.transaksionet.push(tx);
+      sipasDites.set(tx.data, rreshti);
+    });
+
+  const ditet = [...sipasDites.values()].sort((a, b) => (a.data < b.data ? 1 : -1));
+  const maxi = ditet.reduce((max, d) => Math.max(max, d.vlera), 0);
+
+  return ditet.map((d) => ({
+    ...d,
+    dita: ditaEJaves(d.data),
+    // The share of the busiest day, so a list of days can be shaded the way the calendar grid is
+    // without every caller working the maximum out again.
+    pjesaEMaksimumit: maxi > 0 ? (d.vlera / maxi) * 100 : 0,
+    transaksionet: d.transaksionet.slice().sort((a, b) => toNumber(b.vlera) - toNumber(a.vlera)),
+  }));
+}
+
+/**
+ * One account's period read as a statement: what moved on each day, and what the balance stood at
+ * when that day closed.
+ *
+ * A category is a question about spending, so `dailyEntries` answers it with one direction and one
+ * total. An account is not: money comes in, goes out, and arrives from the user's own other
+ * accounts, and the figure that matters at the end of each day is the balance - the number the bank
+ * app would show. So the two are different functions rather than one with a flag, and this one
+ * carries the sign per row (`shenja`, `efekti`) instead of assuming it.
+ *
+ * The opening balance counts everything *before* the range, so the first day of a month opens on
+ * the number the last day of the previous one closed at rather than on the account's initial
+ * balance. Days come back newest first - the order a statement is read in - but the running balance
+ * is carried oldest first, which is the only order it can be computed in.
+ *
+ * Transfers between two of the user's own accounts count here, in full, on both sides. They are
+ * neither income nor expense for the ledger as a whole, but they are exactly what moved this
+ * account, and a statement that hid them would not reconcile with anything.
+ */
+export function accountStatement(account, transactions = [], start = null, end = null) {
+  const bosh = { hapja: 0, mbyllja: 0, hyrjet: 0, daljet: 0, neto: 0, numri: 0, ditet: [] };
+  if (!account) return bosh;
+
+  const perkatese = transactions.filter((tx) => tx.data && txSignForAccount(tx, account.id) !== 0);
+  const efekti = (tx) => txSignForAccount(tx, account.id) * toNumber(tx.vlera);
+
+  const hapja = perkatese
+    .filter((tx) => start && tx.data < start)
+    .reduce((sum, tx) => sum + efekti(tx), toNumber(account.bilanciFillestar));
+
+  const brenda = perkatese.filter((tx) => (!start || tx.data >= start) && (!end || tx.data <= end));
+
+  const sipasDites = new Map();
+  brenda.forEach((tx) => {
+    const shenja = txSignForAccount(tx, account.id);
+    const vlera = toNumber(tx.vlera);
+    const rreshti = sipasDites.get(tx.data) || {
+      data: tx.data,
+      hyrje: 0,
+      dalje: 0,
+      numri: 0,
+      transaksionet: [],
+    };
+    if (shenja > 0) rreshti.hyrje += vlera;
+    else rreshti.dalje += vlera;
+    rreshti.numri += 1;
+    rreshti.transaksionet.push({ ...tx, shenja, efekti: shenja * vlera });
+    sipasDites.set(tx.data, rreshti);
+  });
+
+  let bilanci = hapja;
+  let maxi = 0;
+  const ditet = [...sipasDites.values()]
+    .sort((a, b) => (a.data < b.data ? -1 : 1))
+    .map((d) => {
+      const neto = d.hyrje - d.dalje;
+      bilanci += neto;
+      maxi = Math.max(maxi, Math.abs(neto));
+      return {
+        ...d,
+        neto,
+        bilanci,
+        dita: ditaEJaves(d.data),
+        // Biggest movement first, in either direction: a day is opened to find what moved it, and
+        // a 400 € payment out weighs the same as a 400 € payment in.
+        transaksionet: d.transaksionet.slice().sort((a, b) => Math.abs(b.efekti) - Math.abs(a.efekti)),
+      };
+    });
+
+  const hyrjet = ditet.reduce((sum, d) => sum + d.hyrje, 0);
+  const daljet = ditet.reduce((sum, d) => sum + d.dalje, 0);
+
+  return {
+    hapja,
+    mbyllja: bilanci,
+    hyrjet,
+    daljet,
+    neto: hyrjet - daljet,
+    numri: brenda.length,
+    ditet: ditet
+      .map((d) => ({ ...d, pjesaEMaksimumit: maxi > 0 ? (Math.abs(d.neto) / maxi) * 100 : 0 }))
+      .reverse(),
+  };
+}
+
+/**
+ * The transactions behind one row of a statistics ranking - what a drill-down reads.
+ *
+ * A category takes its whole family with it: "Ushqim & Pije" was ranked as the group total, so the
+ * detail has to count the market runs filed under "Ushqim & Pije › Market" too, or it would
+ * contradict the figure it was opened from. A subcategory is a family of one, so the same call
+ * serves both. A tag is matched the way tags are compared everywhere else - case folded - so
+ * "Besa" and "besa" open as one subject.
+ *
+ * Transactions whose category no longer exists are ranked under "Pa kategori"; `__pa_kategori__`
+ * is that row's id and it opens on exactly the same set.
+ */
+export function filterByItem(transactions = [], zeri, categories = []) {
+  if (!zeri) return [];
+  const lloji = zeri.lloji || "shpenzim";
+
+  // An account has no direction of its own - income, spending and transfers all move it, and a
+  // statement that showed one of the three would not reconcile with the balance beside it.
+  if (zeri.tipi === "llogari") {
+    return transactions.filter((tx) => txSignForAccount(tx, zeri.id) !== 0);
+  }
+
+  if (zeri.tipi === "etikete") {
+    return transactions.filter((tx) => tx.lloji === lloji && kaEtiketen(tx, zeri.celesi));
+  }
+
+  if (zeri.id === PA_KATEGORI) {
+    const njohura = new Set(categories.map((c) => c.id));
+    return transactions.filter((tx) => tx.lloji === lloji && !njohura.has(tx.kategoriaId));
+  }
+
+  const familja = familjaSet(categories, zeri.id);
+  return transactions.filter((tx) => tx.lloji === lloji && familja.has(tx.kategoriaId));
 }
 
 /**
@@ -1028,6 +1196,24 @@ export function budgetProgress(budgets, categories, transactions, key) {
       };
     })
     .sort((a, b) => b.perqindja - a.perqindja);
+}
+
+/**
+ * The budget that governs one category this month, if any - what a drill-down needs to say whether
+ * the figure it is showing is fine or is the reason a budget is about to go over.
+ *
+ * A subcategory has no budget of its own by design: budgets are set on the family, and
+ * `budgetProgress` already counts every child into the parent's row. So the lookup is by family
+ * rather than by id, and opening "Ushqim & Pije › Market" finds the limit set on "Ushqim & Pije" -
+ * which is the limit that purchase is actually spending against.
+ */
+export function budgetForCategory(budgets = [], categories = [], transactions = [], key, kategoriaId) {
+  if (!kategoriaId || !key) return null;
+  return (
+    budgetProgress(budgets, categories, transactions, key).find((b) =>
+      familjaSet(categories, b.kategoriaId).has(kategoriaId)
+    ) || null
+  );
 }
 
 // ── Savings goals ───────────────────────────────────────────────────────────

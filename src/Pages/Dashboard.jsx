@@ -5,6 +5,7 @@ import {
   LayoutDashboard, Wallet, TrendingUp, TrendingDown, PiggyBank, Percent, PlusCircle,
   ArrowRightLeft, Tags, Target, Repeat, BarChart3, Settings, DatabaseBackup, CalendarClock,
   Receipt, ClipboardList, LineChart, TriangleAlert, FileSpreadsheet, Paperclip, BookOpen,
+  ChevronRight,
 } from "lucide-react";
 import NavBar from "../Components/NavBar";
 import PageTitle from "../Components/PageTitle";
@@ -20,6 +21,7 @@ import { Kpi, Panel, ProgressBar, Empty } from "../Components/Ui";
 import { useData } from "../Context/DataContext";
 import { emriIPlote } from "../lib/kategorite";
 import { getIcon } from "../lib/icons";
+import { lidhjaEZerit, zeriIKategorise } from "../lib/zerat";
 import {
   accountsWithBalances, budgetProgress, cashflow, debtProgress, debtTotals, dueRecurring,
   filterByRange, forecast, goalProgress, monthBounds, overduePlans, planTotals, plansForMonth,
@@ -57,6 +59,9 @@ function Dashboard() {
 
   const today = todayISO();
   const muajiKey = monthKey();
+
+  /** Which of the budgets on screen still have a category behind them to open. */
+  const kategoriEkziston = useMemo(() => new Set(categories.map((c) => c.id)), [categories]);
 
   const stats = useMemo(() => {
     const { start, end } = monthBounds();
@@ -405,8 +410,20 @@ function Dashboard() {
                     Nuk ka buxhete. <Link to="/buxhetet">Caktoni një kufi mujor</Link> për kategoritë tuaja.
                   </Empty>
                 ) : (
-                  stats.buxhetet.map((b) => (
-                    <div className="mb-3" key={b.id}>
+                  stats.buxhetet.map((b) => {
+                    // "Over budget on food" and "on what" are the same question asked twice, so the
+                    // row is the way to the second half of it. A budget outlives the category it
+                    // was set on, though, and that one has nothing to open - it stays a plain row
+                    // rather than a link to a subject the statistics page would resolve to nothing.
+                    const lidhja = kategoriEkziston.has(b.kategoriaId)
+                      ? lidhjaEZerit(zeriIKategorise({ id: b.kategoriaId }), { pamja: "kategorite" })
+                      : null;
+                    const Rreshti = lidhja ? Link : "div";
+                    const propsRreshti = lidhja
+                      ? { to: lidhja, className: "mb-3 fcp-buxhet-lidhje", title: `Detajet e "${b.emri}"` }
+                      : { className: "mb-3" };
+                    return (
+                    <Rreshti key={b.id} {...propsRreshti}>
                       <div className="d-flex justify-content-between align-items-center mb-1">
                         <span className="fcp-row-title">{b.emri}</span>
                         <span className={`fcp-row-sub ${b.tepruar ? "fcp-neg" : ""}`}>
@@ -419,8 +436,9 @@ function Dashboard() {
                           ? `Tepruar me ${money(Math.abs(b.mbetur))}`
                           : `Mbeten ${money(b.mbetur)} · ${formatPercent(b.perqindja)}`}
                       </div>
-                    </div>
-                  ))
+                    </Rreshti>
+                    );
+                  })
                 )}
               </Panel>
             </Col>
@@ -438,7 +456,15 @@ function Dashboard() {
                   stats.kategorite.map((k) => {
                     const Icon = getIcon(k.ikona);
                     return (
-                      <div className="fcp-row" key={k.id}>
+                      // Straight to the same row's detail on the statistics page, opened on this
+                      // month - the panel is the top of that ranking, so it should be a way into it
+                      // and not a picture of it.
+                      <Link
+                        className="fcp-row fcp-row-klikues"
+                        key={k.id}
+                        to={lidhjaEZerit(zeriIKategorise(k), { pamja: "kategorite" })}
+                        title={`Detajet e "${k.emri}"`}
+                      >
                         <div className="fcp-row-icon" style={{ color: k.ngjyra }}>
                           <Icon size={16} />
                         </div>
@@ -452,7 +478,8 @@ function Dashboard() {
                           <ProgressBar value={(k.vlera / kategoriMax) * 100} color={k.ngjyra} small />
                         </div>
                         <div className="fcp-row-value fcp-neg">{money(k.vlera)}</div>
-                      </div>
+                        <ChevronRight size={15} className="fcp-row-shigjeta" aria-hidden="true" />
+                      </Link>
                     );
                   })
                 )}

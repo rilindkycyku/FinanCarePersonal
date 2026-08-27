@@ -43,16 +43,37 @@ function Transaksionet() {
   const [zgjedhjet, setZgjedhjet] = useState([]);
   const [llogariaSynim, setLlogariaSynim] = useState("");
 
-  // `?shto=1` opens the form straight away (handy as a bookmark/home-screen shortcut for logging
-  // an expense), then drops the param so a refresh or back-navigation doesn't reopen it.
+  /**
+   * Params that set the page up and then get out of the way.
+   *
+   * `?shto=1` opens the form straight away (handy as a bookmark or home-screen shortcut for logging
+   * an expense). `?kategoria=` / `?etiketa=` / `?llogaria=` prefill the filters, which is how the
+   * statistics drill-down hands over: "these 8 purchases" becomes the same 8 rows here, where they
+   * can be edited.
+   *
+   * All of them are dropped again once applied. The filters are the page's own state and stay
+   * editable, so leaving the params in the address would have them disagree with the boxes the
+   * moment anything is changed - and a refresh would then undo the change.
+   */
   useEffect(() => {
-    if (searchParams.get("shto") === "1") {
+    const shto = searchParams.get("shto") === "1";
+    const nga = {
+      kategoria: searchParams.get("kategoria") || "",
+      etiketa: searchParams.get("etiketa") || "",
+      llogaria: searchParams.get("llogaria") || "",
+    };
+    const kaFiltra = Object.values(nga).some(Boolean);
+    if (!shto && !kaFiltra) return;
+
+    if (shto) {
       setEditing(null);
       setShowModal(true);
-      const next = new URLSearchParams(searchParams);
-      next.delete("shto");
-      setSearchParams(next, { replace: true });
     }
+    if (kaFiltra) setFiltri((f) => ({ ...f, ...nga }));
+
+    const next = new URLSearchParams(searchParams);
+    ["shto", "kategoria", "etiketa", "llogaria"].forEach((celesi) => next.delete(celesi));
+    setSearchParams(next, { replace: true });
   }, [searchParams, setSearchParams]);
 
   /** The page's own filters, on top of the table's search and date range: which category, which

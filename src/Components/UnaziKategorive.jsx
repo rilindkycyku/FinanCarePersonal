@@ -20,7 +20,7 @@ import "../Pages/Styles/Personal.css";
  */
 const NGJYRA_TJERA = "#64748b";
 
-function UnaziKategorive({ kategorite = [], gjithsej = 0, money, sa = 5 }) {
+function UnaziKategorive({ kategorite = [], gjithsej = 0, money, sa = 5, onZgjedh }) {
   const unaza = useMemo(() => {
     const total = kategorite.reduce((sum, k) => sum + k.vlera, 0);
     if (total <= 0) return null;
@@ -28,7 +28,9 @@ function UnaziKategorive({ kategorite = [], gjithsej = 0, money, sa = 5 }) {
     const kryesoret = kategorite.slice(0, sa).filter((k) => (k.vlera / total) * 100 >= 1);
     const mbetja = total - kryesoret.reduce((sum, k) => sum + k.vlera, 0);
     const pjeset = [
-      ...kryesoret.map((k) => ({ id: k.id, emri: k.emri, vlera: k.vlera, ngjyra: k.ngjyra })),
+      // The whole category is carried through, not just what the ring needs to draw: the legend row
+      // is a way into that category's detail, and it cannot open a slice it only knows the size of.
+      ...kryesoret.map((k) => ({ id: k.id, emri: k.emri, vlera: k.vlera, ngjyra: k.ngjyra, kategoria: k })),
       ...(mbetja > 0.005
         ? [{ id: "__tjera", emri: "Të tjera", vlera: mbetja, ngjyra: NGJYRA_TJERA }]
         : []),
@@ -64,14 +66,33 @@ function UnaziKategorive({ kategorite = [], gjithsej = 0, money, sa = 5 }) {
         </div>
       </div>
 
+      {/* The legend, and where the ring is opened from.
+          The slices themselves are one `conic-gradient` on one element - there is no per-slice node
+          to click, and giving each one a real element would mean the path arithmetic this component
+          exists to avoid. The legend row is the honest target anyway: it is the part with a name on
+          it, it works with a keyboard, and on a phone it is a full-width row rather than a wedge.
+          "Të tjera" is not a category, so it stays a plain row. */}
       <ul className="fcp-unaz-legjenda">
-        {unaza.pjeset.map((p) => (
-          <li key={p.id}>
-            <span className="fcp-legend-swatch" style={{ background: p.ngjyra }} />
-            <span className="fcp-unaz-emri">{p.emri}</span>
-            <span className="fcp-unaz-perqind">{p.perqindja}%</span>
-          </li>
-        ))}
+        {unaza.pjeset.map((p) => {
+          const klikues = Boolean(onZgjedh && p.kategoria);
+          return (
+            <li key={p.id} className={klikues ? "fcp-unaz-klikues" : undefined}>
+              {klikues ? (
+                <button type="button" onClick={() => onZgjedh(p.kategoria)} title={`Detajet e "${p.emri}"`}>
+                  <span className="fcp-legend-swatch" style={{ background: p.ngjyra }} />
+                  <span className="fcp-unaz-emri">{p.emri}</span>
+                  <span className="fcp-unaz-perqind">{p.perqindja}%</span>
+                </button>
+              ) : (
+                <>
+                  <span className="fcp-legend-swatch" style={{ background: p.ngjyra }} />
+                  <span className="fcp-unaz-emri">{p.emri}</span>
+                  <span className="fcp-unaz-perqind">{p.perqindja}%</span>
+                </>
+              )}
+            </li>
+          );
+        })}
       </ul>
     </div>
   );

@@ -314,6 +314,221 @@
   margin-top: 0.05rem;
 }
 
+/* ── A ranking row that opens ─────────────────────────────
+   The statistics rankings are buttons now: every category, subcategory and tag opens on its own
+   day-by-day detail. The affordance has to survive a touch screen, where there is no hover to
+   discover it with, so the row carries a permanent chevron and hover only lifts the background. */
+.fcp-row-klikues {
+  width: 100%;
+  cursor: pointer;
+  border-radius: 10px;
+  padding-left: 0.4rem;
+  padding-right: 0.4rem;
+  margin-left: -0.4rem;
+  margin-right: -0.4rem;
+  transition: background 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.fcp-row-klikues:hover,
+.fcp-row-klikues:focus-visible {
+  background: var(--sp-surface-3);
+}
+
+.fcp-row-klikues:focus-visible {
+  outline: 2px solid var(--sp-emerald);
+  outline-offset: 2px;
+}
+
+/* Some of these rows are links (the dashboard's ranking, the year's) rather than buttons - they
+   cross to another page instead of opening a modal on this one. Without this they arrive underlined
+   and in the link colour, which is the one thing a table row must not look like. */
+a.fcp-row-klikues,
+a.fcp-row-klikues:hover {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* A budget block on the dashboard, made into a link. It is a stack of three lines rather than a
+   row, so it takes the padding itself instead of borrowing `.fcp-row`'s. */
+.fcp-buxhet-lidhje {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+  padding: 0.35rem 0.5rem;
+  margin-left: -0.5rem;
+  margin-right: -0.5rem;
+  border-radius: 10px;
+  transition: background 0.15s ease;
+}
+
+.fcp-buxhet-lidhje:hover,
+.fcp-buxhet-lidhje:focus-visible {
+  background: var(--sp-surface-3);
+  color: inherit;
+}
+
+.fcp-buxhet-lidhje:focus-visible {
+  outline: 2px solid var(--sp-emerald);
+  outline-offset: 1px;
+}
+
+.fcp-row-shigjeta {
+  flex-shrink: 0;
+  color: var(--sp-text-muted);
+  opacity: 0.65;
+}
+
+.fcp-nen-rresht.fcp-row-klikues {
+  padding: 0.15rem 0.4rem;
+  margin-left: -0.4rem;
+}
+
+/* ── The drill-down ───────────────────────────────────────
+   Panels inside a modal: the same cards the page draws, so the detail reads as the page narrowed
+   rather than as a second design. Only the header and the day list are new here. */
+.fcp-detaje-koka {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-width: 0;
+}
+
+.fcp-detaje-koka-tekst {
+  display: grid;
+  min-width: 0;
+}
+
+.fcp-detaje-emri {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--sp-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Points down when the day is open, right when it is shut - the one part of the row that says it
+   expands rather than navigates. */
+.fcp-detaje-shigjeta {
+  flex-shrink: 0;
+  display: flex;
+  color: var(--sp-text-muted);
+  transform: rotate(-90deg);
+  transition: transform 0.15s ease;
+}
+
+.fcp-detaje-shigjeta.hapur {
+  transform: rotate(0deg);
+}
+
+.fcp-detaje-tx {
+  margin-top: 0.1rem;
+  padding-top: 0.15rem;
+}
+
+.fcp-detaje-tx-rresht {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 0.25rem 0;
+}
+
+.fcp-detaje-tx-main {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.fcp-detaje-tx-emri {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--sp-text);
+  overflow-wrap: anywhere;
+}
+
+/* A note is the one field that can be a paragraph, and it is worth two lines at most here - the
+   whole of it is on the transactions page. */
+.fcp-detaje-tx-shenim {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-style: italic;
+}
+
+/* Inside a modal the panels supply the frame, so the body would otherwise draw a card on a card. */
+.fcp-detaje-modal .fcp-panel {
+  background: transparent;
+  border-color: var(--sp-border);
+}
+
+/* The comparison and the budget: context for the figures above them, so they sit tight under the
+   tiles rather than in a panel of their own. */
+.fcp-detaje-konteksti {
+  padding: 0 0.15rem;
+  border: 1px solid var(--sp-border);
+  border-radius: 14px;
+  padding-left: 0.85rem;
+  padding-right: 0.85rem;
+}
+
+.fcp-detaje-konteksti .fcp-row-main .fcp-progress {
+  margin-top: 0.3rem;
+}
+
+/* The strip takes the surfaces one step in from the modal's own, or it and the active tab both
+   land on the modal background - in dark mode and in light. */
+.fcp-detaje-tabs {
+  margin: 1rem 0;
+  background: var(--sp-surface-3);
+}
+
+.fcp-detaje-tabs .fcp-faqe-tab.active {
+  background: var(--sp-surface-2);
+}
+
+body.light-mode .fcp-detaje-tabs .fcp-faqe-tab.active {
+  background: #fff;
+}
+
+/* Above the day list: how many days there are, and one switch for all of them. */
+.fcp-detaje-veprimet {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid var(--sp-border);
+}
+
+.fcp-detaje-veprim,
+.fcp-detaje-me-shume {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0;
+  font-size: 0.74rem;
+  font-weight: 800;
+  color: var(--sp-emerald);
+  text-decoration: none;
+}
+
+.fcp-detaje-me-shume {
+  padding: 0.45rem 0;
+}
+
+.fcp-detaje-fundi {
+  gap: 0.5rem;
+}
+
+.fcp-detaje-lidhja {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
 /* ── Amount colours (also used inside table cells) ────────── */
 .fcp-pos { color: var(--sp-emerald) !important; }
 .fcp-neg { color: var(--sp-red-text) !important; }
@@ -732,6 +947,40 @@
   padding: 0.22rem 0;
   font-size: 0.78rem;
   color: var(--sp-text-soft);
+}
+
+/* A legend row that opens its category. The row is already a flex line, so the button takes the
+   whole of it and the padding moves onto the button - otherwise the hit area is the text only. */
+.fcp-unaz-legjenda li.fcp-unaz-klikues {
+  padding: 0;
+}
+
+.fcp-unaz-legjenda li.fcp-unaz-klikues > button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.22rem 0.35rem;
+  margin: 0 -0.35rem;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.fcp-unaz-legjenda li.fcp-unaz-klikues > button:hover,
+.fcp-unaz-legjenda li.fcp-unaz-klikues > button:focus-visible {
+  background: var(--sp-surface-3);
+}
+
+.fcp-unaz-legjenda li.fcp-unaz-klikues > button:focus-visible {
+  outline: 2px solid var(--sp-emerald);
+  outline-offset: 1px;
 }
 
 .fcp-unaz-emri {

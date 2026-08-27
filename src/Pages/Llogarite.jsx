@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Container, Row, Button } from "react-bootstrap";
 import {
   Wallet, Plus, Edit3, Trash2, Archive, ArchiveRestore, TrendingUp, TrendingDown, Receipt, Scale,
+  LineChart,
 } from "lucide-react";
 import NavBar from "../Components/NavBar";
 import Footer from "../Components/Footer";
@@ -18,6 +19,7 @@ import { useData } from "../Context/DataContext";
 import { useDialog } from "../Context/DialogContext";
 import { STORES } from "../lib/db";
 import { accountBalance, debtTotals, totalBalance, totalsByAccount, txSignForAccount } from "../lib/finance";
+import { lidhjaEZerit, zeriILlogarise } from "../lib/zerat";
 import { markup, plainAmount } from "../lib/format";
 import { accountTypeMeta } from "../lib/options";
 import { getIcon } from "../lib/icons";
@@ -129,6 +131,15 @@ function Llogarite() {
         {account.shenim && <div className="fcp-row-sub mt-1">{account.shenim}</div>}
 
         <div className="fcp-card-actions">
+          {/* The card says what the account holds; this says what went through it. It sits first
+              because it is the one action that only reads - everything after it changes something. */}
+          <Link
+            className="fcp-icon-action"
+            title="Pasqyra e llogarisë"
+            to={lidhjaEZerit(zeriILlogarise(account), { pamja: "llogarite" })}
+          >
+            <LineChart size={14} />
+          </Link>
           <button type="button" className="fcp-icon-action edit" title="Ndrysho" onClick={() => openEdit(account)}>
             <Edit3 size={14} />
           </button>

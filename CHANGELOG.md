@@ -9,6 +9,67 @@ e fundit kur rregullohet diçka, dhe e para vetëm kur ndryshon vetë forma e pr
 herë, te `2.0.0`, kur të dhënat mësuan të dalin nga shfletuesi. Datat janë ato të commit-it që e
 ngriti versionin.
 
+## [2.21.0] - 2026-08-27
+
+### Shtuar
+- **Çdo rresht i Statistikave hapet.** Renditja e kategorive dhe ajo e etiketave thoshin sa, e
+  aty mbaronin: «Ushqim & Pije - 742,77 €» nuk thotë as kur, as për çka. Pyetja tjetër ishte
+  gjithmonë e njëjta, dhe e vetmja mënyrë për ta bërë ishte faqja e transaksioneve me një filtër,
+  ku humbet periudha, forma e muajit dhe çdo shifër që Statistikat sapo kishin nxjerrë.
+
+  Tani një prekje mbi një kategori, nënkategori ose etiketë hap detajin e saj. Sipër rrinë shifrat -
+  gjithsej, mesatarja ditore, mesatarja për herë, dita më e rëndë - dhe poshtë tyre dy rreshta
+  konteksti që një renditje nuk mund t'i mbajë: sa ishte i njëjti zë periudhën e kaluar dhe sa
+  ndryshoi, e - kur periudha është një muaj dhe kategoria ka buxhet - sa prej tij është shpenzuar.
+  742 € për ushqim është një shifër; 742 € nga 700 € është një vendim.
+
+  Pjesa tjetër ndahet në tri pamje, sepse e gjitha në një kolonë do të ishte më shumë rrëshqitje se
+  faqja prej së cilës u hap. «Ditët» mban kalendarin e muajit të ngjyrosur vetëm nga ai zë dhe ditët
+  një nga një, ku secila hapet te blerjet që e bënë - me përshkrimin, llogarinë dhe etiketat - ose
+  të gjitha njëherësh me një buton. «Ndarja» mban nënkategoritë (ose kategoritë, kur hapet një
+  etiketë), etiketat, llogaritë dhe madhësinë e blerjeve. «Ritmi» mban ecurinë ditë pas dite
+  përballë periudhës së kaluar, ditët e javës dhe gjashtë muajt e fundit të atij zëri - i vetmi
+  panel që nuk e ndjek periudhën: nëse diçka është zakon apo ishte thjesht një muaj i vetëm nuk mund
+  të thuhet duke parë vetëm atë muaj.
+
+  Butoni «Hapi te transaksionet» i çon po ato rreshta te lista, ku mund të ndryshohen. Faqja e
+  transaksioneve i lexon tani filtrat edhe nga adresa (`?kategoria=`, `?etiketa=`, `?llogaria=`) e
+  pastaj i heq prej saj, sepse filtrat janë të vetat dhe mbeten të ndryshueshme.
+
+- **Një llogari hapet si pasqyrë.** Rreshtat te «Llogaritë» hapen po ashtu, por jo si ndarje
+  shpenzimesh. Një llogari nuk pyetet «ku shkuan paratë» - pyetet «çka lëvizi këtu dhe ku qëndron» -
+  prandaj brenda është një pasqyrë: bilanci i hapjes (aty ku e la periudha e kaluar, jo bilanci
+  fillestar i llogarisë), hyrjet, daljet, ndryshimi, dhe ditët një nga një me bilancin që mbylli
+  secila. Çdo ditë hapet te lëvizjet e veta, me shenjë.
+
+  Transferet numërohen këtu plotësisht, ndonëse asnjë shifër tjetër e aplikacionit nuk i numëron:
+  ato nuk janë as hyrje as shpenzim për ditarin, por janë pikërisht çka e lëvizi këtë llogari, dhe
+  një pasqyrë që i fshihte nuk do të përputhej me bilancin përbri. Te «Ndarja» - për çka u paguan me
+  të, çka hyri, cilat etiketa, dhe transferet veçmas, sepse ato lëvizin para pa blerë asgjë. Te
+  «Ecuria» - ku ka qenë bilanci i saj gjashtë muajt e fundit.
+
+- **I njëjti rresht hapet nga kudo ku shfaqet.** Unaza e ndarjes te Statistikat (te legjenda, e cila
+  është pjesa me emër dhe që punon me tastierë), paneli «Shpenzimet sipas Kategorisë» dhe rreshtat e
+  buxheteve në ballinë, renditja e kategorive te faqja e Vitit, kartat e buxheteve dhe kartat e
+  llogarive - të gjitha çojnë te po ai detaj. «Buxheti i ushqimit është në 97%» dhe «për çka» janë
+  një pyetje e vetme e bërë dy herë.
+
+  Aty ku periudha nuk mund të thuhet me ndershmëri, lidhja nuk vihet fare. Zgjedhësi i periudhës te
+  Statistikat njeh «këtë muaj», «muajin e kaluar», «këtë vit» dhe «gjithçka» - jo një muaj a vit
+  çfarëdo - prandaj një buxhet që po lexohet për marsin, ose një vit i shkuar te faqja e Vitit,
+  mbetet rresht i thjeshtë në vend të një lidhjeje që do të hapte shifrat e gushtit nën titullin e
+  marsit. Po ashtu një buxhet kategoria e të cilit është fshirë: buxheti i mbijeton kategorisë, por
+  nuk ka çka të hapë.
+
+  Çdo shifër del nga të njëjtat funksione që nxjerrin faqen, mbi një nënbashkësi të zgjedhur
+  njësoj si rreshti - prandaj totali në kokë është pikërisht numri që u prek. Një kategori kryesore
+  merr me vete gjithë familjen, sepse ashtu ishte renditur; një nënkategori merr vetëm veten.
+
+  Zëri i hapur rri te adresa (`?zeri=…`), pra butoni i kthimit e mbyll, rifreskimi e rihap dhe një
+  ndarje e caktuar mund të dërgohet si lidhje. Emri, ngjyra dhe ikona lexohen nga vetë të dhënat e
+  jo nga lidhja, kështu që një kategori e riemërtuar hapet me emrin e ri dhe një e fshirë nuk hapet
+  fare.
+
 ## [2.20.0] - 2026-08-24
 
 ### Shtuar

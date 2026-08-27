@@ -661,6 +661,37 @@ export const UDHEZIMET = [
           "dy probleme të ndryshme, me zgjidhje të ndryshme.",
       },
       {
+        titulli: "Hapni një rresht: detajet ditë pas dite",
+        teksti:
+          "Çdo kategori, nënkategori ose etiketë te «Kategoritë» hapet me një prekje. Sipër rrinë " +
+          "shifrat e atij zëri, sa ishte i njëjti zë periudhën e kaluar, dhe - kur periudha është një " +
+          "muaj dhe kategoria ka buxhet - sa prej tij është shpenzuar. Poshtë tyre ndahet në tri pamje: " +
+          "«Ditët» mban kalendarin dhe ditët një nga një, ku çdo ditë hapet më tej te blerjet që e bënë, " +
+          "me përshkrimin, llogarinë dhe etiketat e secilës («Hap të gjitha» i hap të gjitha njëherësh); " +
+          "«Ndarja» mban nënkategoritë (ose kategoritë, kur hapni një etiketë), etiketat, llogaritë dhe " +
+          "madhësinë e blerjeve; «Ritmi» mban ecurinë përballë periudhës së kaluar, ditët e javës dhe " +
+          "gjashtë muajt e fundit të atij zëri - i vetmi panel që nuk e ndjek periudhën, sepse nëse " +
+          "diçka është zakon apo ishte një muaj i vetëm nuk mund të thuhet duke parë vetëm atë muaj. " +
+          "Butoni «Hapi te transaksionet» i çon po ato rreshta te lista ku mund të ndryshohen. " +
+          "Detaji qëndron te adresa, prandaj butoni i kthimit e mbyll. Të njëjtat rreshta hapen " +
+          "edhe te unaza e ndarjes, te paneli i shpenzimeve dhe te rreshtat e buxheteve në ballinë, " +
+          "te renditja e faqes së Vitit dhe te kartat e buxheteve. Aty ku periudha nuk mund të " +
+          "thuhet - një buxhet i një muaji të largët, ose një vit i shkuar - rreshti mbetet i " +
+          "thjeshtë në vend të një lidhjeje që do të hapte shifra të muajit të gabuar.",
+      },
+      {
+        titulli: "Një llogari hapet ndryshe: si pasqyrë",
+        teksti:
+          "Rreshtat te «Llogaritë» hapen po ashtu, por jo si ndarje shpenzimesh - një llogari nuk " +
+          "pyetet «ku shkuan», por «çka lëvizi këtu dhe ku qëndron». Prandaj brenda gjeni një pasqyrë: " +
+          "bilancin e hapjes, hyrjet, daljet dhe ndryshimin, e pastaj ditët një nga një me bilancin që " +
+          "mbylli secila - dhe çdo ditë hapet te lëvizjet e saj, me shenjë. Transferet numërohen këtu " +
+          "plotësisht, ndonëse në çdo shifër tjetër të aplikacionit nuk numërohen: ato janë pikërisht " +
+          "çka e lëvizi këtë llogari, dhe një pasqyrë që i fshihte nuk do të përputhej me bilancin " +
+          "përbri. «Ndarja» tregon për çka u paguan me të, dhe «Ecuria» ku ka qenë bilanci i saj gjashtë " +
+          "muajt e fundit. Pasqyra hapet edhe nga butoni te çdo kartë e faqes së Llogarive.",
+      },
+      {
         titulli: "Krahasimet",
         teksti:
           "«Hyrje kundrejt Shpenzimeve - 6 Muajt e Fundit» dhe «Bilanci Mujor» tregojnë drejtimin, jo vetëm " +
@@ -673,6 +704,7 @@ export const UDHEZIMET = [
       "Transferet nuk numërohen as si hyrje as si shpenzim - prandaj lëvizja e parave mes llogarive tuaja nuk e fryn asnjë kolonë.",
       "«Bilanci Aktual» mat llogaritë sot, kurse «Bilanci Neto» mat vetëm periudhën e zgjedhur; të dyja janë të sakta dhe nuk përputhen.",
       "Kalendari dhe krahasimi i ritmit kërkojnë një periudhë me fillim e fund: te «Gjithçka» ato mungojnë, sepse nuk ka periudhë të mëparshme me të cilën të krahasohen.",
+      "Hapja e një rreshti numëron gjithë familjen e tij: një kategori kryesore merr me vete edhe nënkategoritë, njësoj si shifra që u prek.",
     ],
     shihEdhe: ["buxhetet", "kategorite", "te-dhena"],
   },

@@ -9,8 +9,11 @@
 
 import { describe, expect, it } from "vitest";
 import {
-  MAX_DITE_SERIE, accountBalance, amountBuckets, annualOutlook, backupStatus, balanceHistory,
-  budgetProgress, cashflow, categoryComparison, consolidateAccounts, dailySpending, reassignAccount,
+  MAX_DITE_SERIE, accountBalance, accountStatement, amountBuckets, annualOutlook, backupStatus,
+  balanceHistory,
+  budgetForCategory, budgetProgress, cashflow, categoryComparison, consolidateAccounts,
+  dailyEntries, dailySpending,
+  filterByItem, PA_KATEGORI, reassignAccount,
   reconciliation,
   dataEParaERegjistruar,
   convertedAmount, currencyFields, dailyLimit, debtPaymentsFromTransactions, debtProgress,
@@ -1313,6 +1316,193 @@ describe("dailySpending", () => {
 
   it("never returns more days than it will draw", () => {
     expect(dailySpending(rreshtat, "2000-01-01", "2030-12-31").length).toBe(MAX_DITE_SERIE);
+  });
+});
+
+describe("dailyEntries", () => {
+  const rreshtat = [
+    { id: "a", data: "2026-08-19", lloji: "shpenzim", vlera: 12 },
+    { id: "b", data: "2026-08-19", lloji: "shpenzim", vlera: 231 },
+    { id: "c", data: "2026-08-04", lloji: "shpenzim", vlera: 40 },
+    { id: "d", data: "2026-08-04", lloji: "hyrje", vlera: 900 },
+    { id: "e", data: "2026-09-02", lloji: "shpenzim", vlera: 5 },
+  ];
+
+  it("keeps only the days something happened, newest first", () => {
+    expect(dailyEntries(rreshtat, "2026-08-01", "2026-08-31").map((d) => d.data)).toEqual([
+      "2026-08-19",
+      "2026-08-04",
+    ]);
+  });
+
+  it("sums the day and carries the transactions that made it up, largest first", () => {
+    const [dita] = dailyEntries(rreshtat, "2026-08-01", "2026-08-31");
+    expect(dita.vlera).toBe(243);
+    expect(dita.numri).toBe(2);
+    expect(dita.transaksionet.map((t) => t.id)).toEqual(["b", "a"]);
+  });
+
+  it("shades each day against the busiest one of the set", () => {
+    const ditet = dailyEntries(rreshtat, "2026-08-01", "2026-08-31");
+    expect(ditet[0].pjesaEMaksimumit).toBe(100);
+    expect(Math.round(ditet[1].pjesaEMaksimumit)).toBe(16);
+  });
+
+  it("counts one direction only, and stays inside the range", () => {
+    const ditet = dailyEntries(rreshtat, "2026-08-01", "2026-08-31");
+    expect(ditet.find((d) => d.data === "2026-08-04").vlera).toBe(40);
+    expect(ditet.some((d) => d.data === "2026-09-02")).toBe(false);
+    expect(dailyEntries(rreshtat, "2026-08-01", "2026-08-31", "hyrje").map((d) => d.vlera)).toEqual([900]);
+  });
+
+  it("takes an open range as the whole history", () => {
+    expect(dailyEntries(rreshtat).map((d) => d.data)).toEqual([
+      "2026-09-02",
+      "2026-08-19",
+      "2026-08-04",
+    ]);
+  });
+
+  it("does not mutate the transactions it was given", () => {
+    const kopja = rreshtat.map((r) => ({ ...r }));
+    dailyEntries(rreshtat, "2026-08-01", "2026-08-31");
+    expect(rreshtat).toEqual(kopja);
+  });
+});
+
+describe("budgetForCategory", () => {
+  const kategorite = [
+    { id: "ushqim", emri: "Ushqim & Pije", lloji: "shpenzim" },
+    { id: "market", emri: "Market", lloji: "shpenzim", prindi: "ushqim" },
+    { id: "karburant", emri: "Karburant", lloji: "shpenzim" },
+  ];
+  const buxhetet = [{ id: "b1", kategoriaId: "ushqim", vlera: 500, muaji: null }];
+  const rreshtat = [
+    { id: "a", data: "2026-08-02", lloji: "shpenzim", vlera: 120, kategoriaId: "market" },
+    { id: "b", data: "2026-08-03", lloji: "shpenzim", vlera: 80, kategoriaId: "ushqim" },
+  ];
+
+  it("finds the budget set on the category itself", () => {
+    const b = budgetForCategory(buxhetet, kategorite, rreshtat, "2026-08", "ushqim");
+    expect(b).toMatchObject({ kategoriaId: "ushqim", buxheti: 500, shpenzuar: 200 });
+  });
+
+  it("finds the family's budget when a subcategory is opened", () => {
+    // The subcategory has no budget of its own, but its purchases spend the parent's.
+    expect(budgetForCategory(buxhetet, kategorite, rreshtat, "2026-08", "market")).toMatchObject({
+      kategoriaId: "ushqim",
+    });
+  });
+
+  it("gives back nothing where no budget covers the category", () => {
+    expect(budgetForCategory(buxhetet, kategorite, rreshtat, "2026-08", "karburant")).toBeNull();
+    expect(budgetForCategory(buxhetet, kategorite, rreshtat, "2026-08", null)).toBeNull();
+    expect(budgetForCategory(buxhetet, kategorite, rreshtat, null, "ushqim")).toBeNull();
+  });
+});
+
+describe("accountStatement", () => {
+  const llogaria = account("acc_1", { bilanciFillestar: 1000 });
+  const rreshtat = [
+    // Before the range: it does not appear, but the range opens on the balance it left behind.
+    { id: "para", data: "2026-07-20", lloji: "shpenzim", vlera: 100, llogariaId: "acc_1" },
+    { id: "a", data: "2026-08-03", lloji: "hyrje", vlera: 500, llogariaId: "acc_1" },
+    { id: "b", data: "2026-08-03", lloji: "shpenzim", vlera: 40, llogariaId: "acc_1" },
+    { id: "c", data: "2026-08-11", lloji: "shpenzim", vlera: 260, llogariaId: "acc_1" },
+    // Out of this account and into another one: a movement here, and nothing for the ledger.
+    { id: "t", data: "2026-08-11", lloji: "transfer", vlera: 75, llogariaId: "acc_1", llogariaDestinacionId: "acc_2" },
+    // Somebody else's account entirely.
+    { id: "x", data: "2026-08-12", lloji: "shpenzim", vlera: 999, llogariaId: "acc_2" },
+    { id: "pas", data: "2026-09-02", lloji: "shpenzim", vlera: 10, llogariaId: "acc_1" },
+  ];
+
+  const s = accountStatement(llogaria, rreshtat, "2026-08-01", "2026-08-31");
+
+  it("opens on where the previous period left it, not on the initial balance", () => {
+    expect(s.hapja).toBe(900);
+  });
+
+  it("counts every direction that moved the account, transfers included", () => {
+    expect(s.hyrjet).toBe(500);
+    expect(s.daljet).toBe(375);
+    expect(s.neto).toBe(125);
+    expect(s.numri).toBe(4);
+  });
+
+  it("carries the balance each day closed at", () => {
+    // Newest first: the 11th, then the 3rd.
+    expect(s.ditet.map((d) => d.data)).toEqual(["2026-08-11", "2026-08-03"]);
+    expect(s.ditet.map((d) => d.bilanci)).toEqual([1025, 1360]);
+    expect(s.mbyllja).toBe(1025);
+  });
+
+  it("signs each row and puts the biggest movement of the day first", () => {
+    const dita = s.ditet.at(-1);
+    expect(dita.transaksionet.map((t) => [t.id, t.shenja, t.efekti])).toEqual([
+      ["a", 1, 500],
+      ["b", -1, -40],
+    ]);
+  });
+
+  it("leaves out what belongs to another account or another period", () => {
+    const idet = s.ditet.flatMap((d) => d.transaksionet.map((t) => t.id));
+    expect(idet).not.toContain("x");
+    expect(idet).not.toContain("para");
+    expect(idet).not.toContain("pas");
+  });
+
+  it("takes an open range as the whole history, from the initial balance", () => {
+    const gjithcka = accountStatement(llogaria, rreshtat);
+    expect(gjithcka.hapja).toBe(1000);
+    expect(gjithcka.mbyllja).toBe(accountBalance(llogaria, rreshtat));
+  });
+
+  it("has nothing to say about an account that is not there", () => {
+    expect(accountStatement(null, rreshtat)).toMatchObject({ numri: 0, ditet: [] });
+  });
+});
+
+describe("filterByItem", () => {
+  const kategorite = [
+    { id: "ushqim", emri: "Ushqim & Pije", lloji: "shpenzim" },
+    { id: "market", emri: "Market", lloji: "shpenzim", prindi: "ushqim" },
+    { id: "karburant", emri: "Karburant", lloji: "shpenzim" },
+  ];
+  const rreshtat = [
+    { id: "a", data: "2026-08-01", lloji: "shpenzim", vlera: 10, kategoriaId: "ushqim", etiketat: ["Besa"] },
+    { id: "b", data: "2026-08-02", lloji: "shpenzim", vlera: 20, kategoriaId: "market" },
+    { id: "c", data: "2026-08-03", lloji: "shpenzim", vlera: 30, kategoriaId: "karburant", etiketat: ["besa"] },
+    { id: "d", data: "2026-08-04", lloji: "hyrje", vlera: 40, kategoriaId: "ushqim" },
+    { id: "e", data: "2026-08-05", lloji: "shpenzim", vlera: 50, kategoriaId: "e_fshire" },
+  ];
+
+  it("takes the whole family when a parent category is opened", () => {
+    const dalja = filterByItem(rreshtat, { tipi: "kategori", id: "ushqim" }, kategorite);
+    expect(dalja.map((t) => t.id)).toEqual(["a", "b"]);
+  });
+
+  it("takes only itself when a subcategory is opened", () => {
+    expect(filterByItem(rreshtat, { tipi: "kategori", id: "market" }, kategorite).map((t) => t.id))
+      .toEqual(["b"]);
+  });
+
+  it("follows the direction the ranking was showing", () => {
+    const dalja = filterByItem(rreshtat, { tipi: "kategori", id: "ushqim", lloji: "hyrje" }, kategorite);
+    expect(dalja.map((t) => t.id)).toEqual(["d"]);
+  });
+
+  it("matches a tag the way tags are compared, case folded", () => {
+    expect(filterByItem(rreshtat, { tipi: "etikete", celesi: "besa" }).map((t) => t.id))
+      .toEqual(["a", "c"]);
+  });
+
+  it("opens the 'Pa kategori' row on exactly what it ranked", () => {
+    expect(filterByItem(rreshtat, { tipi: "kategori", id: PA_KATEGORI }, kategorite).map((t) => t.id))
+      .toEqual(["e"]);
+  });
+
+  it("has nothing to show without a subject", () => {
+    expect(filterByItem(rreshtat, null, kategorite)).toEqual([]);
   });
 });
 
