@@ -1,8 +1,9 @@
 import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { Container, Row, Col } from "react-bootstrap";
 import {
-  ArrowDownRight, ArrowUpRight, BarChart3, CalendarRange, Flame, Minus, PiggyBank, Sparkles,
-  TrendingDown, TrendingUp, Wallet,
+  ArrowDownRight, ArrowUpRight, BarChart3, CalendarRange, ChevronRight, Flame, Minus, PiggyBank,
+  Sparkles, TrendingDown, TrendingUp, Wallet,
 } from "lucide-react";
 import NavBar from "../Components/NavBar";
 import Footer from "../Components/Footer";
@@ -13,6 +14,7 @@ import Zgjedhesi from "../Components/Zgjedhesi";
 import { Kpi, Panel, ProgressBar, Empty } from "../Components/Ui";
 import { useData } from "../Context/DataContext";
 import { getIcon } from "../lib/icons";
+import { celesiIZerit, zeriIKategorise } from "../lib/zerat";
 import { formatDate, formatPercent, monthLabel } from "../lib/format";
 import { vitetMeTeDhena, vitiNeNjeFaqe } from "../lib/viti";
 import "./Styles/PremiumTheme.css";
@@ -260,8 +262,25 @@ function Viti() {
                     ) : (
                       v.kategorite.map((k) => {
                         const Icon = getIcon(k.ikona);
+                        /**
+                         * The row opens the same category's detail on the statistics page - but
+                         * only for the current year. The period selector there offers "this year"
+                         * and not an arbitrary one, so a link from 2024 would open 2026's figures
+                         * under 2024's heading. A past year stays a plain row rather than a link
+                         * that lies.
+                         */
+                        const lidhja =
+                          zgjedhur === new Date().getFullYear()
+                            ? `/statistikat?periudha=viti&pamja=kategorite&zeri=${encodeURIComponent(
+                                celesiIZerit(zeriIKategorise(k))
+                              )}`
+                            : null;
+                        const Rreshti = lidhja ? Link : "div";
+                        const propsRreshti = lidhja
+                          ? { to: lidhja, className: "fcp-row fcp-row-klikues", title: `Detajet e "${k.emri}"` }
+                          : { className: "fcp-row" };
                         return (
-                          <div className="fcp-row" key={k.id}>
+                          <Rreshti key={k.id} {...propsRreshti}>
                             <div className="fcp-row-icon" style={{ color: k.ngjyra }}>
                               <Icon size={16} />
                             </div>
@@ -283,7 +302,8 @@ function Viti() {
                               </div>
                             </div>
                             <div className="fcp-row-value">{money(k.vlera)}</div>
-                          </div>
+                            {lidhja && <ChevronRight size={15} className="fcp-row-shigjeta" aria-hidden="true" />}
+                          </Rreshti>
                         );
                       })
                     )}

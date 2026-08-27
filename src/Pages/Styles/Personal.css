@@ -340,6 +340,15 @@
   outline-offset: 2px;
 }
 
+/* Some of these rows are links (the dashboard's ranking, the year's) rather than buttons - they
+   cross to another page instead of opening a modal on this one. Without this they arrive underlined
+   and in the link colour, which is the one thing a table row must not look like. */
+a.fcp-row-klikues,
+a.fcp-row-klikues:hover {
+  color: inherit;
+  text-decoration: none;
+}
+
 .fcp-row-shigjeta {
   flex-shrink: 0;
   color: var(--sp-text-muted);
@@ -914,6 +923,40 @@ body.light-mode .fcp-detaje-tabs .fcp-faqe-tab.active {
   padding: 0.22rem 0;
   font-size: 0.78rem;
   color: var(--sp-text-soft);
+}
+
+/* A legend row that opens its category. The row is already a flex line, so the button takes the
+   whole of it and the padding moves onto the button - otherwise the hit area is the text only. */
+.fcp-unaz-legjenda li.fcp-unaz-klikues {
+  padding: 0;
+}
+
+.fcp-unaz-legjenda li.fcp-unaz-klikues > button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.22rem 0.35rem;
+  margin: 0 -0.35rem;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.fcp-unaz-legjenda li.fcp-unaz-klikues > button:hover,
+.fcp-unaz-legjenda li.fcp-unaz-klikues > button:focus-visible {
+  background: var(--sp-surface-3);
+}
+
+.fcp-unaz-legjenda li.fcp-unaz-klikues > button:focus-visible {
+  outline: 2px solid var(--sp-emerald);
+  outline-offset: 1px;
 }
 
 .fcp-unaz-emri {

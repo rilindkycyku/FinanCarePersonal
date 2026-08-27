@@ -673,7 +673,20 @@ export const UDHEZIMET = [
           "gjashtë muajt e fundit të atij zëri - i vetmi panel që nuk e ndjek periudhën, sepse nëse " +
           "diçka është zakon apo ishte një muaj i vetëm nuk mund të thuhet duke parë vetëm atë muaj. " +
           "Butoni «Hapi te transaksionet» i çon po ato rreshta te lista ku mund të ndryshohen. " +
-          "Detaji qëndron te adresa, prandaj butoni i kthimit e mbyll.",
+          "Detaji qëndron te adresa, prandaj butoni i kthimit e mbyll. Të njëjtat rreshta hapen " +
+          "edhe te unaza e ndarjes, te paneli i shpenzimeve në ballinë dhe te renditja e vitit.",
+      },
+      {
+        titulli: "Një llogari hapet ndryshe: si pasqyrë",
+        teksti:
+          "Rreshtat te «Llogaritë» hapen po ashtu, por jo si ndarje shpenzimesh - një llogari nuk " +
+          "pyetet «ku shkuan», por «çka lëvizi këtu dhe ku qëndron». Prandaj brenda gjeni një pasqyrë: " +
+          "bilancin e hapjes, hyrjet, daljet dhe ndryshimin, e pastaj ditët një nga një me bilancin që " +
+          "mbylli secila - dhe çdo ditë hapet te lëvizjet e saj, me shenjë. Transferet numërohen këtu " +
+          "plotësisht, ndonëse në çdo shifër tjetër të aplikacionit nuk numërohen: ato janë pikërisht " +
+          "çka e lëvizi këtë llogari, dhe një pasqyrë që i fshihte nuk do të përputhej me bilancin " +
+          "përbri. «Ndarja» tregon për çka u paguan me të, dhe «Ecuria» ku ka qenë bilanci i saj gjashtë " +
+          "muajt e fundit.",
       },
       {
         titulli: "Krahasimet",

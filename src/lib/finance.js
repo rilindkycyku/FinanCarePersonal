@@ -791,6 +791,91 @@ export function dailyEntries(transactions = [], start, end, lloji = "shpenzim") 
 }
 
 /**
+ * One account's period read as a statement: what moved on each day, and what the balance stood at
+ * when that day closed.
+ *
+ * A category is a question about spending, so `dailyEntries` answers it with one direction and one
+ * total. An account is not: money comes in, goes out, and arrives from the user's own other
+ * accounts, and the figure that matters at the end of each day is the balance - the number the bank
+ * app would show. So the two are different functions rather than one with a flag, and this one
+ * carries the sign per row (`shenja`, `efekti`) instead of assuming it.
+ *
+ * The opening balance counts everything *before* the range, so the first day of a month opens on
+ * the number the last day of the previous one closed at rather than on the account's initial
+ * balance. Days come back newest first - the order a statement is read in - but the running balance
+ * is carried oldest first, which is the only order it can be computed in.
+ *
+ * Transfers between two of the user's own accounts count here, in full, on both sides. They are
+ * neither income nor expense for the ledger as a whole, but they are exactly what moved this
+ * account, and a statement that hid them would not reconcile with anything.
+ */
+export function accountStatement(account, transactions = [], start = null, end = null) {
+  const bosh = { hapja: 0, mbyllja: 0, hyrjet: 0, daljet: 0, neto: 0, numri: 0, ditet: [] };
+  if (!account) return bosh;
+
+  const perkatese = transactions.filter((tx) => tx.data && txSignForAccount(tx, account.id) !== 0);
+  const efekti = (tx) => txSignForAccount(tx, account.id) * toNumber(tx.vlera);
+
+  const hapja = perkatese
+    .filter((tx) => start && tx.data < start)
+    .reduce((sum, tx) => sum + efekti(tx), toNumber(account.bilanciFillestar));
+
+  const brenda = perkatese.filter((tx) => (!start || tx.data >= start) && (!end || tx.data <= end));
+
+  const sipasDites = new Map();
+  brenda.forEach((tx) => {
+    const shenja = txSignForAccount(tx, account.id);
+    const vlera = toNumber(tx.vlera);
+    const rreshti = sipasDites.get(tx.data) || {
+      data: tx.data,
+      hyrje: 0,
+      dalje: 0,
+      numri: 0,
+      transaksionet: [],
+    };
+    if (shenja > 0) rreshti.hyrje += vlera;
+    else rreshti.dalje += vlera;
+    rreshti.numri += 1;
+    rreshti.transaksionet.push({ ...tx, shenja, efekti: shenja * vlera });
+    sipasDites.set(tx.data, rreshti);
+  });
+
+  let bilanci = hapja;
+  let maxi = 0;
+  const ditet = [...sipasDites.values()]
+    .sort((a, b) => (a.data < b.data ? -1 : 1))
+    .map((d) => {
+      const neto = d.hyrje - d.dalje;
+      bilanci += neto;
+      maxi = Math.max(maxi, Math.abs(neto));
+      return {
+        ...d,
+        neto,
+        bilanci,
+        dita: ditaEJaves(d.data),
+        // Biggest movement first, in either direction: a day is opened to find what moved it, and
+        // a 400 € payment out weighs the same as a 400 € payment in.
+        transaksionet: d.transaksionet.slice().sort((a, b) => Math.abs(b.efekti) - Math.abs(a.efekti)),
+      };
+    });
+
+  const hyrjet = ditet.reduce((sum, d) => sum + d.hyrje, 0);
+  const daljet = ditet.reduce((sum, d) => sum + d.dalje, 0);
+
+  return {
+    hapja,
+    mbyllja: bilanci,
+    hyrjet,
+    daljet,
+    neto: hyrjet - daljet,
+    numri: brenda.length,
+    ditet: ditet
+      .map((d) => ({ ...d, pjesaEMaksimumit: maxi > 0 ? (Math.abs(d.neto) / maxi) * 100 : 0 }))
+      .reverse(),
+  };
+}
+
+/**
  * The transactions behind one row of a statistics ranking - what a drill-down reads.
  *
  * A category takes its whole family with it: "Ushqim & Pije" was ranked as the group total, so the
@@ -805,6 +890,12 @@ export function dailyEntries(transactions = [], start, end, lloji = "shpenzim") 
 export function filterByItem(transactions = [], zeri, categories = []) {
   if (!zeri) return [];
   const lloji = zeri.lloji || "shpenzim";
+
+  // An account has no direction of its own - income, spending and transfers all move it, and a
+  // statement that showed one of the three would not reconcile with the balance beside it.
+  if (zeri.tipi === "llogari") {
+    return transactions.filter((tx) => txSignForAccount(tx, zeri.id) !== 0);
+  }
 
   if (zeri.tipi === "etikete") {
     return transactions.filter((tx) => tx.lloji === lloji && kaEtiketen(tx, zeri.celesi));

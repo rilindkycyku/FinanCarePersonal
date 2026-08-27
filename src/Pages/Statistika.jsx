@@ -17,7 +17,7 @@ import GrafikuBilancit from "../Components/GrafikuBilancit";
 import GrafikuRitmit from "../Components/GrafikuRitmit";
 import KalendariShpenzimeve from "../Components/KalendariShpenzimeve";
 import UnaziKategorive from "../Components/UnaziKategorive";
-import DetajetEZerit from "../Components/DetajetEZerit";
+import Detajet from "../Components/Detajet/Detajet";
 import { useData } from "../Context/DataContext";
 import Zgjedhesi from "../Components/Zgjedhesi";
 import { opsionetEThjeshta } from "../lib/opsionet";
@@ -27,7 +27,7 @@ import {
   totalsByAccount, totalsByCategory, yearBounds,
 } from "../lib/finance";
 import { totalsByTag } from "../lib/etiketat";
-import { celesiIZerit, zeriIEtiketes, zeriIKategorise, zeriNgaCelesi } from "../lib/zerat";
+import { celesiIZerit, zeriIEtiketes, zeriIKategorise, zeriILlogarise, zeriNgaCelesi } from "../lib/zerat";
 import { formatDate, formatPercent, monthKey, monthLabel, todayISO } from "../lib/format";
 import { accountTypeMeta } from "../lib/options";
 import { emriIPlote } from "../lib/kategorite";
@@ -143,8 +143,8 @@ function Statistika() {
    * stack into a pair of steps back out of one drill-down.
    */
   const zeri = useMemo(
-    () => zeriNgaCelesi(params.get("zeri"), categories, transactions),
-    [params, categories, transactions]
+    () => zeriNgaCelesi(params.get("zeri"), categories, transactions, accounts),
+    [params, categories, transactions, accounts]
   );
 
   const mbyllZerin = () => {
@@ -605,6 +605,10 @@ function Statistika() {
                       kategorite={stats.shpenzimet}
                       gjithsej={stats.flows.shpenzimet}
                       money={money}
+                      // The ring is the ranking underneath it drawn round, so a slice has to open
+                      // what its row opens - otherwise the same figure is a button in one place and
+                      // decoration in the other.
+                      onZgjedh={(k) => vendos("zeri", celesiIZerit(zeriIKategorise(k)))}
                     />
                   </Panel>
                 </Col>
@@ -854,7 +858,7 @@ function Statistika() {
                     stats.llogarite.map((a) => {
                       const Icon = getIcon(accountTypeMeta(a.lloji).icon);
                       return (
-                        <div className="fcp-row" key={a.id}>
+                        <div key={a.id} {...propsKlikimi(zeriILlogarise(a))}>
                           <div className="fcp-row-icon" style={{ color: a.ngjyra }}>
                             <Icon size={16} />
                           </div>
@@ -866,6 +870,7 @@ function Statistika() {
                             </div>
                           </div>
                           <div className="fcp-row-value">{money(accountBalance(a, transactions))}</div>
+                          <ChevronRight size={15} className="fcp-row-shigjeta" aria-hidden="true" />
                         </div>
                       );
                     })
@@ -913,7 +918,7 @@ function Statistika() {
         </Container>
       </main>
 
-      <DetajetEZerit
+      <Detajet
         show={Boolean(zeri)}
         onHide={mbyllZerin}
         zeri={zeri}

@@ -36,6 +36,25 @@ ngriti versionin.
   transaksioneve i lexon tani filtrat edhe nga adresa (`?kategoria=`, `?etiketa=`, `?llogaria=`) e
   pastaj i heq prej saj, sepse filtrat janë të vetat dhe mbeten të ndryshueshme.
 
+- **Një llogari hapet si pasqyrë.** Rreshtat te «Llogaritë» hapen po ashtu, por jo si ndarje
+  shpenzimesh. Një llogari nuk pyetet «ku shkuan paratë» - pyetet «çka lëvizi këtu dhe ku qëndron» -
+  prandaj brenda është një pasqyrë: bilanci i hapjes (aty ku e la periudha e kaluar, jo bilanci
+  fillestar i llogarisë), hyrjet, daljet, ndryshimi, dhe ditët një nga një me bilancin që mbylli
+  secila. Çdo ditë hapet te lëvizjet e veta, me shenjë.
+
+  Transferet numërohen këtu plotësisht, ndonëse asnjë shifër tjetër e aplikacionit nuk i numëron:
+  ato nuk janë as hyrje as shpenzim për ditarin, por janë pikërisht çka e lëvizi këtë llogari, dhe
+  një pasqyrë që i fshihte nuk do të përputhej me bilancin përbri. Te «Ndarja» - për çka u paguan me
+  të, çka hyri, cilat etiketa, dhe transferet veçmas, sepse ato lëvizin para pa blerë asgjë. Te
+  «Ecuria» - ku ka qenë bilanci i saj gjashtë muajt e fundit.
+
+- **I njëjti rresht hapet nga kudo ku shfaqet.** Unaza e ndarjes te Statistikat (te legjenda, e cila
+  është pjesa me emër dhe që punon me tastierë), paneli «Shpenzimet sipas Kategorisë» në ballinë dhe
+  renditja e kategorive te faqja e Vitit çojnë të gjitha te po ai detaj. Te faqja e Vitit vetëm për
+  vitin e tanishëm: zgjedhësi i periudhës te Statistikat njeh «këtë vit» e jo një vit çfarëdo,
+  prandaj një lidhje nga 2024 do të hapte shifrat e 2026 nën titullin e 2024, dhe një vit i shkuar
+  mbetet rresht i thjeshtë në vend të një lidhjeje që gënjen.
+
   Çdo shifër del nga të njëjtat funksione që nxjerrin faqen, mbi një nënbashkësi të zgjedhur
   njësoj si rreshti - prandaj totali në kokë është pikërisht numri që u prek. Një kategori kryesore
   merr me vete gjithë familjen, sepse ashtu ishte renditur; një nënkategori merr vetëm veten.

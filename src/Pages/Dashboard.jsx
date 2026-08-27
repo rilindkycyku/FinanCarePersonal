@@ -5,6 +5,7 @@ import {
   LayoutDashboard, Wallet, TrendingUp, TrendingDown, PiggyBank, Percent, PlusCircle,
   ArrowRightLeft, Tags, Target, Repeat, BarChart3, Settings, DatabaseBackup, CalendarClock,
   Receipt, ClipboardList, LineChart, TriangleAlert, FileSpreadsheet, Paperclip, BookOpen,
+  ChevronRight,
 } from "lucide-react";
 import NavBar from "../Components/NavBar";
 import PageTitle from "../Components/PageTitle";
@@ -20,6 +21,7 @@ import { Kpi, Panel, ProgressBar, Empty } from "../Components/Ui";
 import { useData } from "../Context/DataContext";
 import { emriIPlote } from "../lib/kategorite";
 import { getIcon } from "../lib/icons";
+import { celesiIZerit, zeriIKategorise } from "../lib/zerat";
 import {
   accountsWithBalances, budgetProgress, cashflow, debtProgress, debtTotals, dueRecurring,
   filterByRange, forecast, goalProgress, monthBounds, overduePlans, planTotals, plansForMonth,
@@ -438,7 +440,15 @@ function Dashboard() {
                   stats.kategorite.map((k) => {
                     const Icon = getIcon(k.ikona);
                     return (
-                      <div className="fcp-row" key={k.id}>
+                      // Straight to the same row's detail on the statistics page, opened on this
+                      // month - the panel is the top of that ranking, so it should be a way into it
+                      // and not a picture of it.
+                      <Link
+                        className="fcp-row fcp-row-klikues"
+                        key={k.id}
+                        to={`/statistikat?pamja=kategorite&zeri=${encodeURIComponent(celesiIZerit(zeriIKategorise(k)))}`}
+                        title={`Detajet e "${k.emri}"`}
+                      >
                         <div className="fcp-row-icon" style={{ color: k.ngjyra }}>
                           <Icon size={16} />
                         </div>
@@ -452,7 +462,8 @@ function Dashboard() {
                           <ProgressBar value={(k.vlera / kategoriMax) * 100} color={k.ngjyra} small />
                         </div>
                         <div className="fcp-row-value fcp-neg">{money(k.vlera)}</div>
-                      </div>
+                        <ChevronRight size={15} className="fcp-row-shigjeta" aria-hidden="true" />
+                      </Link>
                     );
                   })
                 )}

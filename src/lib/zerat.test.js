@@ -7,7 +7,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { celesiIZerit, zeriIEtiketes, zeriIKategorise, zeriNgaCelesi } from "./zerat";
+import { celesiIZerit, zeriIEtiketes, zeriIKategorise, zeriILlogarise, zeriNgaCelesi } from "./zerat";
 import { PA_KATEGORI } from "./finance";
 
 const categories = [
@@ -15,6 +15,8 @@ const categories = [
   { id: "cat_market", emri: "Market", lloji: "shpenzim", prindi: "cat_ushqim", ngjyra: "#0f0", ikona: "ShoppingCart" },
   { id: "cat_paga", emri: "Paga", lloji: "hyrje", ngjyra: "#00f", ikona: "Wallet" },
 ];
+
+const accounts = [{ id: "acc_1", emri: "Banka", lloji: "bank", ngjyra: "#0ff" }];
 
 const transactions = [
   { id: "a", data: "2026-08-01", lloji: "shpenzim", vlera: 10, kategoriaId: "cat_ushqim", etiketat: ["Besa Një SH.P.K."] },
@@ -65,10 +67,27 @@ describe("celesiIZerit / zeriNgaCelesi", () => {
     expect(zeriNgaCelesi("etikete:shpenzim:pushime", categories, transactions)).toBeNull();
   });
 
+  it("round-trips an account, which has no direction of its own", () => {
+    const celesi = celesiIZerit(zeriILlogarise(accounts[0]));
+    expect(celesi).toBe("llogari:gjithcka:acc_1");
+    expect(zeriNgaCelesi(celesi, categories, transactions, accounts)).toMatchObject({
+      tipi: "llogari",
+      lloji: "gjithcka",
+      id: "acc_1",
+      emri: "Banka",
+      llojiLlogarise: "bank",
+    });
+  });
+
+  it("gives back nothing for an account that is gone, or one asked for by direction", () => {
+    expect(zeriNgaCelesi("llogari:gjithcka:acc_9", categories, transactions, accounts)).toBeNull();
+    expect(zeriNgaCelesi("llogari:shpenzim:acc_1", categories, transactions, accounts)).toBeNull();
+  });
+
   it("refuses anything that is not a subject", () => {
     expect(zeriNgaCelesi("", categories, transactions)).toBeNull();
     expect(zeriNgaCelesi("kategori", categories, transactions)).toBeNull();
-    expect(zeriNgaCelesi("llogari:shpenzim:acc_1", categories, transactions)).toBeNull();
+    expect(zeriNgaCelesi("llogari:shpenzim:acc_1", categories, transactions, accounts)).toBeNull();
     expect(zeriNgaCelesi("kategori:transfer:cat_ushqim", categories, transactions)).toBeNull();
   });
 });

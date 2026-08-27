@@ -1,6 +1,6 @@
 /**
- * A "zë" is one row of a statistics ranking taken as a subject in its own right: a category, a
- * subcategory or a tag, in one direction. It is what the drill-down opens on.
+ * A "zë" is one row of a ranking taken as a subject in its own right: a category, a subcategory, a
+ * tag or an account. It is what the drill-down opens on.
  *
  * The point of the module is the address. The open drill-down lives in the query string next to
  * the view and the period (`?zeri=kategori:shpenzim:cat_…`), so the back button closes it, a
@@ -15,9 +15,15 @@
 import { PA_KATEGORI } from "./finance";
 import { celesiEtiketes, emriIEtiketes, ngjyraEtiketes } from "./etiketat";
 import { emriIPlote } from "./kategorite";
+import { accountTypeMeta } from "./options";
 
-/** The two directions a ranking can be showing. Anything else in a link is not a subject. */
+/**
+ * What a ranking can be showing. A category or a tag is always one direction; an account is all
+ * three at once - income, spending and the transfers between the user's own accounts all move it,
+ * and a statement showing one of them would not reconcile with the balance beside it.
+ */
 const LLOJET = ["shpenzim", "hyrje"];
+export const GJITHCKA = "gjithcka";
 
 /**
  * The subject as one string. Category ids never contain a colon, so the first two segments are
@@ -39,18 +45,39 @@ export function zeriIEtiketes(etiketa, lloji = "shpenzim") {
   return { tipi: "etikete", lloji, celesi: etiketa.celesi, emri: etiketa.emri, ngjyra: etiketa.ngjyra, ikona: "Tag" };
 }
 
+/** The subject an account row stands for. */
+export function zeriILlogarise(llogaria) {
+  return {
+    tipi: "llogari",
+    lloji: GJITHCKA,
+    id: llogaria.id,
+    emri: llogaria.emri,
+    ngjyra: llogaria.ngjyra || "#94a3b8",
+    ikona: accountTypeMeta(llogaria.lloji).icon,
+    llojiLlogarise: llogaria.lloji,
+  };
+}
+
 /**
  * The subject back out of that string, with its name, colour and icon looked up in the ledger.
  * Returns null for anything that does not name something that exists - a stale link, a hand-typed
  * query, a tag whose last transaction has since been deleted - so the caller simply shows nothing.
  */
-export function zeriNgaCelesi(vlera, categories = [], transactions = []) {
+export function zeriNgaCelesi(vlera, categories = [], transactions = [], accounts = []) {
   if (!vlera) return null;
   const pjeset = String(vlera).split(":");
   const tipi = pjeset.shift();
   const lloji = pjeset.shift();
   const celesi = pjeset.join(":");
-  if (!celesi || !LLOJET.includes(lloji)) return null;
+  if (!celesi) return null;
+
+  if (tipi === "llogari") {
+    if (lloji !== GJITHCKA) return null;
+    const llogaria = accounts.find((a) => a.id === celesi);
+    return llogaria ? zeriILlogarise(llogaria) : null;
+  }
+
+  if (!LLOJET.includes(lloji)) return null;
 
   if (tipi === "etikete") {
     const celesiPastruar = celesiEtiketes(celesi);
