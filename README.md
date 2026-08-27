@@ -149,6 +149,13 @@ sa shpenzohet, sa mbetet dhe sa po kursesh.
   muajit i ngjyrosur sipas asaj që doli, ndarja sipas madhësisë së blerjes dhe 5 shpenzimet më të
   mëdha. **Llogaritë** (kur ka më shumë se një): aktiviteti dhe transferet. Pamja e hapur qëndron
   te adresa.
+- **Detajet e një zëri** - çdo kategori, nënkategori ose etiketë te Statistikat hapet me një
+  prekje: gjithsej dhe mesatarja ditore, kalendari i muajit i ngjyrosur vetëm nga ai zë, ditët një
+  nga një - dhe çdo ditë hapet më tej te blerjet që e bënë, me përshkrimin, llogarinë dhe etiketat
+  e secilës. Poshtë vjen ndarja sipas nënkategorive (ose sipas kategorive, kur hapet një etiketë),
+  sipas llogarive, sipas ditës së javës e sipas madhësisë, dhe gjashtë muajt e fundit të atij zëri
+  - i vetmi panel që nuk e ndjek periudhën. Zëri i hapur rri te adresa, prandaj butoni i kthimit e
+  mbyll dhe një ndarje e caktuar mund të dërgohet si lidhje.
 - **Bilanci ndër muaj dhe parashikimi** - një vijë e vetme: muajt e kaluar me vijë të plotë, muajt
   që vijnë me vijë të ndërprerë. Parashikimi nuk supozon asgjë nga mesatarja e së kaluarës - ecën
   ditë për ditë mbi atë që dihet tashmë (transaksionet me datë të ardhshme, këstet e pagesat e

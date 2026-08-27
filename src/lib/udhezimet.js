@@ -661,6 +661,18 @@ export const UDHEZIMET = [
           "dy probleme të ndryshme, me zgjidhje të ndryshme.",
       },
       {
+        titulli: "Hapni një rresht: detajet ditë pas dite",
+        teksti:
+          "Çdo kategori, nënkategori ose etiketë te «Kategoritë» hapet me një prekje. Brenda gjeni të " +
+          "njëjtat pamje si te «Ritmi», por vetëm për atë zë: gjithsej dhe mesatarja ditore, kalendari " +
+          "i muajit, ditët një nga një - dhe çdo ditë hapet më tej te blerjet që e bënë, me përshkrimin, " +
+          "llogarinë dhe etiketat e secilës. Poshtë tyre vjen ndarja sipas nënkategorive (ose sipas " +
+          "kategorive, kur hapni një etiketë), sipas llogarive, sipas ditës së javës e sipas madhësisë, " +
+          "dhe gjashtë muajt e fundit të atij zëri - i vetmi panel që nuk e ndjek periudhën, sepse nëse " +
+          "diçka është zakon apo ishte një muaj i vetëm nuk mund të thuhet duke parë vetëm atë muaj. " +
+          "Detaji qëndron te adresa, prandaj butoni i kthimit e mbyll.",
+      },
+      {
         titulli: "Krahasimet",
         teksti:
           "«Hyrje kundrejt Shpenzimeve - 6 Muajt e Fundit» dhe «Bilanci Mujor» tregojnë drejtimin, jo vetëm " +
@@ -673,6 +685,7 @@ export const UDHEZIMET = [
       "Transferet nuk numërohen as si hyrje as si shpenzim - prandaj lëvizja e parave mes llogarive tuaja nuk e fryn asnjë kolonë.",
       "«Bilanci Aktual» mat llogaritë sot, kurse «Bilanci Neto» mat vetëm periudhën e zgjedhur; të dyja janë të sakta dhe nuk përputhen.",
       "Kalendari dhe krahasimi i ritmit kërkojnë një periudhë me fillim e fund: te «Gjithçka» ato mungojnë, sepse nuk ka periudhë të mëparshme me të cilën të krahasohen.",
+      "Hapja e një rreshti numëron gjithë familjen e tij: një kategori kryesore merr me vete edhe nënkategoritë, njësoj si shifra që u prek.",
     ],
     shihEdhe: ["buxhetet", "kategorite", "te-dhena"],
   },

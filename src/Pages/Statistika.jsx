@@ -5,7 +5,7 @@ import { subMonths } from "date-fns";
 import {
   BarChart3, TrendingUp, TrendingDown, Percent, Wallet, Tag, Tags, ArrowRightLeft, CalendarRange,
   Hash, GitCompareArrows, LineChart, TriangleAlert, LayoutGrid, CalendarDays, Coins, PieChart,
-  Gauge,
+  Gauge, ChevronRight,
 } from "lucide-react";
 import NavBar from "../Components/NavBar";
 import Footer from "../Components/Footer";
@@ -17,6 +17,7 @@ import GrafikuBilancit from "../Components/GrafikuBilancit";
 import GrafikuRitmit from "../Components/GrafikuRitmit";
 import KalendariShpenzimeve from "../Components/KalendariShpenzimeve";
 import UnaziKategorive from "../Components/UnaziKategorive";
+import DetajetEZerit from "../Components/DetajetEZerit";
 import { useData } from "../Context/DataContext";
 import Zgjedhesi from "../Components/Zgjedhesi";
 import { opsionetEThjeshta } from "../lib/opsionet";
@@ -26,6 +27,7 @@ import {
   totalsByAccount, totalsByCategory, yearBounds,
 } from "../lib/finance";
 import { totalsByTag } from "../lib/etiketat";
+import { celesiIZerit, zeriIEtiketes, zeriIKategorise, zeriNgaCelesi } from "../lib/zerat";
 import { formatDate, formatPercent, monthKey, monthLabel, todayISO } from "../lib/format";
 import { accountTypeMeta } from "../lib/options";
 import { emriIPlote } from "../lib/kategorite";
@@ -125,12 +127,52 @@ function Statistika() {
     ? params.get("pamja")
     : "permbledhje";
 
-  /** Both selectors live in the address, and neither may drop the other on its way there. */
+  /** Every selector lives in the address, and none may drop the others on its way there. */
   const vendos = (celesi, vlera) => {
     const tjera = new URLSearchParams(params);
     tjera.set(celesi, vlera);
     setParams(tjera, { replace: celesi === "periudha" });
   };
+
+  /**
+   * The ranking row currently opened up, if any.
+   *
+   * It is pushed onto the history rather than replaced, so the phone's back gesture closes the
+   * detail instead of leaving the statistics page - which is the gesture people reach for once a
+   * modal is the fourth thing they have opened. Closing it replaces instead, so the two do not
+   * stack into a pair of steps back out of one drill-down.
+   */
+  const zeri = useMemo(
+    () => zeriNgaCelesi(params.get("zeri"), categories, transactions),
+    [params, categories, transactions]
+  );
+
+  const mbyllZerin = () => {
+    const tjera = new URLSearchParams(params);
+    tjera.delete("zeri");
+    setParams(tjera, { replace: true });
+  };
+
+  /**
+   * What turns a ranking row into a button. It is a `div` with a button role rather than a real
+   * `<button>`: the rows already hold a progress bar and a two-line amount, which are block
+   * elements a button may not contain, and rebuilding them as spans would fork the markup of every
+   * ranking on the page for one attribute.
+   */
+  const propsKlikimi = (z) => ({
+    className: "fcp-row fcp-row-klikues",
+    role: "button",
+    tabIndex: 0,
+    title: `Detajet e "${z.emri}"`,
+    "aria-label": `Detajet e ${z.emri}`,
+    onClick: () => vendos("zeri", celesiIZerit(z)),
+    onKeyDown: (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        vendos("zeri", celesiIZerit(z));
+      }
+    },
+  });
 
   /**
    * The period as two concrete days, whatever was picked. "Gjithçka" has no bounds of its own, so
@@ -264,7 +306,7 @@ function Statistika() {
    * market run or thirty small ones. The parent's own share is listed there too when it has one, so
    * the sub-rows always add up to the line above them.
    */
-  const rankedRows = (list, max, klasa, mePerDite) =>
+  const rankedRows = (list, max, klasa, mePerDite, lloji = "shpenzim") =>
     list.length === 0 ? (
       <Empty>Nuk ka të dhëna për këtë periudhë.</Empty>
     ) : (
@@ -273,7 +315,10 @@ function Statistika() {
         const ndarja =
           k.nenkategorite?.length > 0
             ? [
-                ...k.nenkategorite,
+                // A subcategory is a category like any other, so its row opens on itself. The
+                // parent's own share is not: it is the leftover of a group, with no record behind
+                // it to open, so that one line stays a plain figure.
+                ...k.nenkategorite.map((n) => ({ ...n, klikues: true })),
                 ...(k.vleraVetjake > 0
                   ? [{ id: `${k.id}__vetjake`, emri: "Pa nënkategori", vlera: k.vleraVetjake, numri: k.numriVetjak }]
                   : []),
@@ -281,7 +326,7 @@ function Statistika() {
             : [];
         return (
           <div className="fcp-rreshtat-grup" key={k.id}>
-            <div className="fcp-row">
+            <div {...propsKlikimi(zeriIKategorise(k, lloji))}>
               <div className="fcp-row-icon" style={{ color: k.ngjyra }}>
                 <Icon size={16} />
               </div>
@@ -299,16 +344,22 @@ function Statistika() {
               ) : (
                 <div className={`fcp-row-value ${klasa}`}>{money(k.vlera)}</div>
               )}
+              <ChevronRight size={15} className="fcp-row-shigjeta" aria-hidden="true" />
             </div>
             {ndarja.length > 0 && (
               <div className="fcp-nen-lista">
-                {ndarja.map((n) => (
-                  <div className="fcp-nen-rresht" key={n.id}>
-                    <span className="fcp-nen-emri">{n.emri}</span>
-                    <span className="fcp-row-sub">{n.numri} ×</span>
-                    <span className={`fcp-nen-vlera ${klasa}`}>{money(n.vlera)}</span>
-                  </div>
-                ))}
+                {ndarja.map((n) => {
+                  const props = n.klikues
+                    ? { ...propsKlikimi(zeriIKategorise(n, lloji)), className: "fcp-nen-rresht fcp-row-klikues" }
+                    : { className: "fcp-nen-rresht" };
+                  return (
+                    <div key={n.id} {...props}>
+                      <span className="fcp-nen-emri">{n.emri}</span>
+                      <span className="fcp-row-sub">{n.numri} ×</span>
+                      <span className={`fcp-nen-vlera ${klasa}`}>{money(n.vlera)}</span>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -562,12 +613,20 @@ function Statistika() {
               <Col xl={6}>
                 <Panel title="Shpenzimet sipas Kategorisë" icon={TrendingDown}>
                   {rankedRows(stats.shpenzimet, maxShpenzim, "fcp-neg", true)}
+                  {/* Said once, on the panel most people open first: without it the rows look like
+                      a list and nobody discovers that every one of them opens. */}
+                  {stats.shpenzimet.length > 0 && (
+                    <div className="fcp-row-sub mt-2">
+                      Prekni një kategori, nënkategori ose etiketë për ta parë ditë pas dite - çdo
+                      ditë hapet te blerjet që e bënë.
+                    </div>
+                  )}
                 </Panel>
               </Col>
 
               <Col xl={6}>
                 <Panel title="Hyrjet sipas Kategorisë" icon={TrendingUp}>
-                  {rankedRows(stats.hyrjet, maxHyrje, "fcp-pos")}
+                  {rankedRows(stats.hyrjet, maxHyrje, "fcp-pos", false, "hyrje")}
                 </Panel>
               </Col>
 
@@ -578,7 +637,7 @@ function Statistika() {
                 <Col xl={6}>
                   <Panel title="Shpenzimet sipas Etiketave" icon={Tag}>
                     {stats.etiketat.map((et) => (
-                      <div className="fcp-row" key={et.celesi}>
+                      <div key={et.celesi} {...propsKlikimi(zeriIEtiketes(et))}>
                         <div className="fcp-row-icon" style={{ color: et.ngjyra }}>
                           <Tag size={16} />
                         </div>
@@ -592,6 +651,7 @@ function Statistika() {
                           <ProgressBar value={(et.vlera / maxEtiketa) * 100} color={et.ngjyra} small />
                         </div>
                         {vleraMePerDite(et.vlera, "fcp-neg")}
+                        <ChevronRight size={15} className="fcp-row-shigjeta" aria-hidden="true" />
                       </div>
                     ))}
                   </Panel>
@@ -608,7 +668,7 @@ function Statistika() {
                         const Icon = getIcon(k.ikona);
                         const rritje = k.ndryshimi > 0;
                         return (
-                          <div className="fcp-row" key={k.id}>
+                          <div key={k.id} {...propsKlikimi(zeriIKategorise(k))}>
                             <div className="fcp-row-icon" style={{ color: k.ngjyra }}>
                               <Icon size={16} />
                             </div>
@@ -627,6 +687,7 @@ function Statistika() {
                               {rritje ? "+" : "-"}
                               {money(Math.abs(k.ndryshimi))}
                             </div>
+                            <ChevronRight size={15} className="fcp-row-shigjeta" aria-hidden="true" />
                           </div>
                         );
                       })
@@ -851,6 +912,17 @@ function Statistika() {
           )}
         </Container>
       </main>
+
+      <DetajetEZerit
+        show={Boolean(zeri)}
+        onHide={mbyllZerin}
+        zeri={zeri}
+        kufijte={kufijte}
+        derTani={derTani}
+        ditetEPeriudhes={ditetEPeriudhes}
+        titulliPeriudhes={periodLabel(period)}
+        meKalendar={meKalendar}
+      />
 
       <Footer />
     </div>

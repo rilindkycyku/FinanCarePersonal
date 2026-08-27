@@ -20,6 +20,7 @@ import {
 } from "./options";
 import { monthKey, monthLabel, toNumber } from "./format";
 import { emriIPlote, familjaSet, rrenjaE } from "./kategorite";
+import { kaEtiketen } from "./etiketat";
 
 // ── Accounts ────────────────────────────────────────────────────────────────
 
@@ -525,6 +526,9 @@ export function categoryComparison(transactions, categories, key, lloji = "shpen
     .sort((a, b) => Math.abs(b.ndryshimi) - Math.abs(a.ndryshimi));
 }
 
+/** Where a transaction whose category was deleted is ranked, and the id that row carries. */
+export const PA_KATEGORI = "__pa_kategori__";
+
 /**
  * Category totals for one direction ("shpenzim" or "hyrje"), largest first. Transactions whose
  * category was deleted are grouped under "Pa kategori" instead of being dropped.
@@ -542,7 +546,7 @@ export function totalsByCategory(transactions, categories, lloji = "shpenzim") {
   transactions
     .filter((tx) => tx.lloji === lloji)
     .forEach((tx) => {
-      const key = byId.has(tx.kategoriaId) ? tx.kategoriaId : "__pa_kategori__";
+      const key = byId.has(tx.kategoriaId) ? tx.kategoriaId : PA_KATEGORI;
       const prev = totals.get(key) || { vlera: 0, numri: 0 };
       totals.set(key, { vlera: prev.vlera + toNumber(tx.vlera), numri: prev.numri + 1 });
     });
@@ -567,7 +571,7 @@ export function totalsByCategory(transactions, categories, lloji = "shpenzim") {
   // never booked to directly still gets a row when its subcategories were.
   const sipasRrenjes = new Map();
   totals.forEach((t, id) => {
-    const rrenja = id === "__pa_kategori__" ? id : rrenjaE(categories, id);
+    const rrenja = id === PA_KATEGORI ? id : rrenjaE(categories, id);
     const grupi = sipasRrenjes.get(rrenja) || { vlera: 0, numri: 0, femijet: [] };
     grupi.vlera += t.vlera;
     grupi.numri += t.numri;
@@ -740,6 +744,77 @@ export function dailySpending(transactions, start, end, lloji = "shpenzim") {
     dita.setDate(dita.getDate() + 1);
   }
   return ditet;
+}
+
+/**
+ * The days a set of transactions actually moved on, newest first, each carrying the transactions
+ * that made it up.
+ *
+ * `dailySpending` is the same question asked for a chart - every day of the range, empty ones
+ * included, because a line needs points to stay level across. This one is asked by a reader: "the
+ * 19th cost 243 €, on what?". Empty days are dead rows in that reading, and newest first is the
+ * order somebody checking a month scrolls in.
+ *
+ * Within a day the largest purchase comes first. A day is opened to find where it went, and that
+ * answer is usually the top line; the entry order is already available on the transactions page.
+ */
+export function dailyEntries(transactions = [], start, end, lloji = "shpenzim") {
+  const sipasDites = new Map();
+
+  transactions
+    .filter(
+      (tx) =>
+        tx.lloji === lloji &&
+        tx.data &&
+        (!start || tx.data >= start) &&
+        (!end || tx.data <= end)
+    )
+    .forEach((tx) => {
+      const rreshti = sipasDites.get(tx.data) || { data: tx.data, vlera: 0, numri: 0, transaksionet: [] };
+      rreshti.vlera += toNumber(tx.vlera);
+      rreshti.numri += 1;
+      rreshti.transaksionet.push(tx);
+      sipasDites.set(tx.data, rreshti);
+    });
+
+  const ditet = [...sipasDites.values()].sort((a, b) => (a.data < b.data ? 1 : -1));
+  const maxi = ditet.reduce((max, d) => Math.max(max, d.vlera), 0);
+
+  return ditet.map((d) => ({
+    ...d,
+    dita: ditaEJaves(d.data),
+    // The share of the busiest day, so a list of days can be shaded the way the calendar grid is
+    // without every caller working the maximum out again.
+    pjesaEMaksimumit: maxi > 0 ? (d.vlera / maxi) * 100 : 0,
+    transaksionet: d.transaksionet.slice().sort((a, b) => toNumber(b.vlera) - toNumber(a.vlera)),
+  }));
+}
+
+/**
+ * The transactions behind one row of a statistics ranking - what a drill-down reads.
+ *
+ * A category takes its whole family with it: "Ushqim & Pije" was ranked as the group total, so the
+ * detail has to count the market runs filed under "Ushqim & Pije › Market" too, or it would
+ * contradict the figure it was opened from. A subcategory is a family of one, so the same call
+ * serves both. A tag is matched the way tags are compared everywhere else - case folded - so
+ * "Besa" and "besa" open as one subject.
+ *
+ * Transactions whose category no longer exists are ranked under "Pa kategori"; `__pa_kategori__`
+ * is that row's id and it opens on exactly the same set.
+ */
+export function filterByItem(transactions = [], zeri, categories = []) {
+  if (!zeri) return [];
+  const perkatese = transactions.filter((tx) => tx.lloji === (zeri.lloji || "shpenzim"));
+
+  if (zeri.tipi === "etikete") return perkatese.filter((tx) => kaEtiketen(tx, zeri.celesi));
+
+  if (zeri.id === PA_KATEGORI) {
+    const njohura = new Set(categories.map((c) => c.id));
+    return perkatese.filter((tx) => !njohura.has(tx.kategoriaId));
+  }
+
+  const familja = familjaSet(categories, zeri.id);
+  return perkatese.filter((tx) => familja.has(tx.kategoriaId));
 }
 
 /**

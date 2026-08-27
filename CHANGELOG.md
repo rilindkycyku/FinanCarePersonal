@@ -9,6 +9,31 @@ e fundit kur rregullohet diçka, dhe e para vetëm kur ndryshon vetë forma e pr
 herë, te `2.0.0`, kur të dhënat mësuan të dalin nga shfletuesi. Datat janë ato të commit-it që e
 ngriti versionin.
 
+## [2.21.0] - 2026-08-27
+
+### Shtuar
+- **Çdo rresht i Statistikave hapet.** Renditja e kategorive dhe ajo e etiketave thoshin sa, e
+  aty mbaronin: «Ushqim & Pije - 742,77 €» nuk thotë as kur, as për çka. Pyetja tjetër ishte
+  gjithmonë e njëjta, dhe e vetmja mënyrë për ta bërë ishte faqja e transaksioneve me një filtër,
+  ku humbet periudha, forma e muajit dhe çdo shifër që Statistikat sapo kishin nxjerrë.
+
+  Tani një prekje mbi një kategori, nënkategori ose etiketë hap detajin e saj: gjithsej, mesatarja
+  ditore, mesatarja për herë dhe dita më e rëndë; kalendari i muajit i ngjyrosur vetëm nga ai zë;
+  ditët një nga një, secila e hapshme te blerjet që e bënë, me përshkrimin, llogarinë dhe etiketat
+  e secilës; pastaj ndarja sipas nënkategorive - ose sipas kategorive, kur hapet një etiketë -
+  sipas llogarive, sipas ditës së javës dhe sipas madhësisë së blerjes. Në fund vijnë gjashtë
+  muajt e fundit të atij zëri, i vetmi panel që nuk e ndjek periudhën: nëse diçka është zakon apo
+  ishte thjesht një muaj i vetëm nuk mund të thuhet duke parë vetëm atë muaj.
+
+  Çdo shifër del nga të njëjtat funksione që nxjerrin faqen, mbi një nënbashkësi të zgjedhur
+  njësoj si rreshti - prandaj totali në kokë është pikërisht numri që u prek. Një kategori kryesore
+  merr me vete gjithë familjen, sepse ashtu ishte renditur; një nënkategori merr vetëm veten.
+
+  Zëri i hapur rri te adresa (`?zeri=…`), pra butoni i kthimit e mbyll, rifreskimi e rihap dhe një
+  ndarje e caktuar mund të dërgohet si lidhje. Emri, ngjyra dhe ikona lexohen nga vetë të dhënat e
+  jo nga lidhja, kështu që një kategori e riemërtuar hapet me emrin e ri dhe një e fshirë nuk hapet
+  fare.
+
 ## [2.20.0] - 2026-08-24
 
 ### Shtuar

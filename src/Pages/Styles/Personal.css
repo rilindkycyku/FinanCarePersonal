@@ -314,6 +314,129 @@
   margin-top: 0.05rem;
 }
 
+/* ── A ranking row that opens ─────────────────────────────
+   The statistics rankings are buttons now: every category, subcategory and tag opens on its own
+   day-by-day detail. The affordance has to survive a touch screen, where there is no hover to
+   discover it with, so the row carries a permanent chevron and hover only lifts the background. */
+.fcp-row-klikues {
+  width: 100%;
+  cursor: pointer;
+  border-radius: 10px;
+  padding-left: 0.4rem;
+  padding-right: 0.4rem;
+  margin-left: -0.4rem;
+  margin-right: -0.4rem;
+  transition: background 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.fcp-row-klikues:hover,
+.fcp-row-klikues:focus-visible {
+  background: var(--sp-surface-3);
+}
+
+.fcp-row-klikues:focus-visible {
+  outline: 2px solid var(--sp-emerald);
+  outline-offset: 2px;
+}
+
+.fcp-row-shigjeta {
+  flex-shrink: 0;
+  color: var(--sp-text-muted);
+  opacity: 0.65;
+}
+
+.fcp-nen-rresht.fcp-row-klikues {
+  padding: 0.15rem 0.4rem;
+  margin-left: -0.4rem;
+}
+
+/* ── The drill-down ───────────────────────────────────────
+   Panels inside a modal: the same cards the page draws, so the detail reads as the page narrowed
+   rather than as a second design. Only the header and the day list are new here. */
+.fcp-detaje-koka {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-width: 0;
+}
+
+.fcp-detaje-koka-tekst {
+  display: grid;
+  min-width: 0;
+}
+
+.fcp-detaje-emri {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--sp-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Points down when the day is open, right when it is shut - the one part of the row that says it
+   expands rather than navigates. */
+.fcp-detaje-shigjeta {
+  flex-shrink: 0;
+  display: flex;
+  color: var(--sp-text-muted);
+  transform: rotate(-90deg);
+  transition: transform 0.15s ease;
+}
+
+.fcp-detaje-shigjeta.hapur {
+  transform: rotate(0deg);
+}
+
+.fcp-detaje-tx {
+  margin-top: 0.1rem;
+  padding-top: 0.15rem;
+}
+
+.fcp-detaje-tx-rresht {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 0.25rem 0;
+}
+
+.fcp-detaje-tx-main {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.fcp-detaje-tx-emri {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--sp-text);
+  overflow-wrap: anywhere;
+}
+
+/* A note is the one field that can be a paragraph, and it is worth two lines at most here - the
+   whole of it is on the transactions page. */
+.fcp-detaje-tx-shenim {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-style: italic;
+}
+
+.fcp-detaje-me-shume {
+  padding: 0.4rem 0;
+  font-size: 0.76rem;
+  font-weight: 800;
+  color: var(--sp-emerald);
+  text-decoration: none;
+}
+
+/* Inside a modal the panels supply the frame, so the body would otherwise draw a card on a card. */
+.fcp-detaje-modal .fcp-panel {
+  background: transparent;
+  border-color: var(--sp-border);
+}
+
 /* ── Amount colours (also used inside table cells) ────────── */
 .fcp-pos { color: var(--sp-emerald) !important; }
 .fcp-neg { color: var(--sp-red-text) !important; }
