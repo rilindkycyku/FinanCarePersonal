@@ -272,6 +272,7 @@ td code { background: transparent; padding: 0; color: var(--petrol); }
 .kuponi .rresht { display: flex; justify-content: space-between; gap: 14px; }
 .kuponi .rresht span:last-child { font-variant-numeric: tabular-nums; }
 .kuponi .theks { color: var(--kritike); font-weight: 600; }
+.kuponi small { color: var(--bojë3); font-size: .92em; }
 .kuponi .fund { color: var(--bojë3); font-size: .72rem; text-align: center; margin-top: 12px; }
 figcaption { font-size: .84rem; color: var(--bojë3); margin-top: 18px; max-width: 52ch; }
 
@@ -314,43 +315,60 @@ figcaption { font-size: .84rem; color: var(--bojë3); margin-top: 18px; max-widt
 @media (prefers-reduced-motion: reduce) {
   * { animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
+
+/* ── Pozicioni ─────────────────────────────────────────── */
+.kuponi .pozitiv { color: var(--pozitive); }
+.kuponi .total { border-top: 1px solid var(--vijaFortë); margin-top: 8px; padding-top: 8px; font-weight: 600; }
+.kuponi.pa-dhëmbë::after { display: none; }
+
+/* ── Teza ──────────────────────────────────────────────── */
+.teza {
+  font-family: var(--f-display); font-size: clamp(1.3rem, 3vw, 1.72rem);
+  line-height: 1.32; letter-spacing: -.012em; color: var(--bojë);
+  border-left: 3px solid var(--tunxh); padding: 4px 0 4px 22px;
+  margin: 4px 0 22px; text-wrap: balance; font-weight: 400;
+}
+.teza b { font-weight: 600; color: var(--petrol); }
+
+.rrjedha { font-size: .9rem; }
+.rrjedha .sa { font-family: var(--f-mono); font-size: .72rem; color: var(--bojë3); white-space: nowrap; }
 </style>
+
 
 <div class="faqja">
 
   <header class="koka">
-    <div class="markë"><span>Propozim teknik</span><span>FinanCarePersonal → Business</span><span>v1 · gusht 2026</span></div>
-    <h1>FinanCare<em>Business</em></h1>
+    <div class="markë"><span>Propozim teknik</span><span>FinanCarePersonal → Business</span><span>v2 · gusht 2026</span></div>
+    <h1>Ku shkoi <em>keshi</em></h1>
     <p class="nenTitulli">
-      Regjistri i parave për markete: arka që barazohet në fund të çdo ndërrimi, defteri i borxheve
-      të klientëve, detyrimet ndaj furnitorëve dhe xhiroja — mbi të njëjtën logjikë të provuar të
-      FinanCarePersonal.
+      FinanCareBusiness — regjistri i parave të marketit: arka që barazohet çdo mbrëmje, lista e
+      borxheve me pagesat, faturat blerëse me afatet. Një aplikacion i vetëm, për menaxherin,
+      i ndërtuar mbi logjikën e provuar të FinanCarePersonal.
     </p>
     <div class="metaKoka">
-      <span>Për: <b>klientin</b></span>
-      <span>Baza: <b>FinanCarePersonal v2.21</b></span>
-      <span>Kohëzgjatja: <b>14–17 javë</b></span>
-      <span>Në market pas: <b>javës 9</b></span>
+      <span>Përdoruesi: <b>vetëm menaxheri</b></span>
+      <span>Modulet: <b>4 + paneli</b></span>
+      <span>Kohëzgjatja: <b>11–13 javë</b></span>
+      <span>Arka barazon pas: <b>javës 5</b></span>
     </div>
   </header>
 
   <details class="permbajtjaMobile">
-    <summary>Përmbajtja · 14 seksione</summary>
+    <summary>Përmbajtja · 13 seksione</summary>
     <ol>
-      <li><a href="#permbledhja">Përmbledhje</a></li>
-      <li><a href="#konteksti">Si punon marketi sot</a></li>
+      <li><a href="#problemi">Problemi</a></li>
+      <li><a href="#rrjedhja">Ku shkon keshi</a></li>
       <li><a href="#kufijte">Çka është dhe çka jo</a></li>
-      <li><a href="#vendimet">Vendimet arkitekturore</a></li>
+      <li><a href="#vendimet">Katër vendime</a></li>
       <li><a href="#modulet">Modulet</a></li>
       <li><a href="#barazimi">Barazimi i arkës</a></li>
-      <li><a href="#defteri">Defteri i borxheve</a></li>
-      <li><a href="#modeli">Modeli i të dhënave</a></li>
-      <li><a href="#llogaritjet">Rregullat e llogaritjes</a></li>
+      <li><a href="#borxhet">Lista e borxheve</a></li>
+      <li><a href="#faturat">Faturat blerëse</a></li>
+      <li><a href="#paneli">Ku janë paratë</a></li>
+      <li><a href="#modeli">Të dhënat dhe llogaritjet</a></li>
       <li><a href="#trashegimia">Çka merret gati</a></li>
       <li><a href="#plani">Plani i punës</a></li>
-      <li><a href="#kalimi">Kalimi nga letra</a></li>
-      <li><a href="#rreziqet">Rreziqet</a></li>
-      <li><a href="#nevojat">Çka na duhet nga ju</a></li>
+      <li><a href="#kalimi">Kalimi, rreziqet, nevojat</a></li>
     </ol>
   </details>
 
@@ -359,93 +377,97 @@ figcaption { font-size: .84rem; color: var(--bojë3); margin-top: 18px; max-widt
     <nav class="permbajtja" aria-label="Përmbajtja">
       <h2>Përmbajtja</h2>
       <ol>
-        <li><a href="#permbledhja"><i>01</i>Përmbledhje</a></li>
-        <li><a href="#konteksti"><i>02</i>Si punon marketi sot</a></li>
+        <li><a href="#problemi"><i>01</i>Problemi</a></li>
+        <li><a href="#rrjedhja"><i>02</i>Ku shkon keshi</a></li>
         <li><a href="#kufijte"><i>03</i>Çka është dhe çka jo</a></li>
-        <li><a href="#vendimet"><i>04</i>Vendimet arkitekturore</a></li>
+        <li><a href="#vendimet"><i>04</i>Katër vendime</a></li>
         <li><a href="#modulet"><i>05</i>Modulet</a></li>
         <li><a href="#barazimi"><i>06</i>Barazimi i arkës</a></li>
-        <li><a href="#defteri"><i>07</i>Defteri i borxheve</a></li>
-        <li><a href="#modeli"><i>08</i>Modeli i të dhënave</a></li>
-        <li><a href="#llogaritjet"><i>09</i>Rregullat e llogaritjes</a></li>
-        <li><a href="#trashegimia"><i>10</i>Çka merret gati</a></li>
-        <li><a href="#plani"><i>11</i>Plani i punës</a></li>
-        <li><a href="#kalimi"><i>12</i>Kalimi nga letra</a></li>
-        <li><a href="#rreziqet"><i>13</i>Rreziqet</a></li>
-        <li><a href="#nevojat"><i>14</i>Çka na duhet nga ju</a></li>
+        <li><a href="#borxhet"><i>07</i>Lista e borxheve</a></li>
+        <li><a href="#faturat"><i>08</i>Faturat blerëse</a></li>
+        <li><a href="#paneli"><i>09</i>Ku janë paratë</a></li>
+        <li><a href="#modeli"><i>10</i>Të dhënat dhe llogaritjet</a></li>
+        <li><a href="#trashegimia"><i>11</i>Çka merret gati</a></li>
+        <li><a href="#plani"><i>12</i>Plani i punës</a></li>
+        <li><a href="#kalimi"><i>13</i>Kalimi, rreziqet, nevojat</a></li>
       </ol>
     </nav>
 
     <main class="lenda">
 
       <!-- 01 ─────────────────────────────────────────── -->
-      <section id="permbledhja">
-        <div class="kokaSeksionit"><span class="numri">01</span><h2 class="tituj">Përmbledhje</h2></div>
-        <p class="hyrëse">
-          FinanCareBusiness është i njëjti aplikacion si FinanCarePersonal, i kthyer nga «paratë e mia»
-          te «paratë e dyqanit». Ruhet e njëjta arkitekturë — punon offline në shfletues, të dhënat
-          janë tuajat, sinkronizimi kalon nëpër një projekt Supabase që e zotëroni ju — por tri gjëra
-          ndryshojnë nga themeli: <strong>arka barazohet dhe mbyllet</strong>, <strong>puna bëhet nga
-          disa persona me role të ndryshme</strong>, dhe <strong>një ditë e mbyllur nuk ndryshohet më</strong>.
+      <section id="problemi">
+        <div class="kokaSeksionit"><span class="numri">01</span><h2 class="tituj">Problemi</h2></div>
+
+        <p class="teza">
+          «Duhet t’i kem 30 mijë» dhe «arka është bosh» janë të dyja të vërteta.
+          <b>Shifra në kokë nuk është e gabuar — është e paplotë:</b> mbledh gjithçka që hyri
+          dhe zbret vetëm atë që ju kujtohet se doli.
+        </p>
+
+        <p>
+          Keshi nuk zhduket përnjëherë. Del në copa prej 40 € dhe 120 €, tridhjetë herë brenda dy
+          muajve, dhe çdo copë ishte shumë e vogël sa për t’u shkruar diku. Furnitori që erdhi te dera
+          dhe u pagua në dorë. Malli që doli me borxh se «e paguan të hënën». Fatura e transportit.
+          Paratë e marra për diçka personale me mendimin «i kthej nesër». Depozita në bankë, që nuk
+          është shpenzim por prapë e boshatis sirtarin.
         </p>
         <p>
-          Marketi nuk ka nevojë për një program kontabiliteti. Ka nevojë t’u përgjigjet katër pyetjeve
-          çdo mbrëmje, dhe sot u përgjigjet me fletore:
+          Asnjëra prej tyre nuk është vjedhje, dhe pikërisht kjo e bën problemin të pazgjidhshëm me
+          numërim. Ju nuk keni një humbje prej 30 mijë eurosh; keni <strong>gjashtëdhjetë dalje të
+          pashkruara</strong>. Numërimi ju thotë sa mungon. Nuk ju thotë kurrë ku shkoi.
         </p>
-        <ul>
-          <li><strong>A del arka?</strong> Sa duhet të ketë kesh sipas shitjeve dhe sa ka vërtet në sirtar.</li>
-          <li><strong>Kush më ka borxh?</strong> Sa, prej kur, dhe kush e ka kaluar limitin.</li>
-          <li><strong>Kujt i kam borxh?</strong> Cilat fatura të furnitorëve skadojnë këtë javë.</li>
-          <li><strong>Sa bëri dyqani?</strong> Xhiroja e ditës, e ndarë kesh / kartelë / borxh.</li>
-        </ul>
+
+        <h3>Pse numërimi një herë në muaj nuk e gjen kurrë</h3>
         <p>
-          Plani më poshtë i mbulon të katërta, thotë hapur çka nuk e bën aplikacioni, dhe e ndan punën
-          në faza ku <strong>pas javës së nëntë aplikacioni është tashmë i përdorshëm në një market</strong>
-          — arka, barazimi dhe defteri i borxheve — kurse pjesa tjetër vjen mbi diçka që tashmë punon.
+          Nëse arka numërohet një herë në muaj dhe rezulton 800 € më pak, ai numër nuk ka formë:
+          mbulon tridhjetë ditë, dhe asnjë ditë nuk mbahet mend. Nëse numërohet <em>çdo mbrëmje</em>,
+          po ajo mungesë shfaqet si diçka që mund t’i vihet gishti — 40 € të martën, 0 € të mërkurën,
+          260 € të enjten. Të enjten erdhi furnitori.
         </p>
+        <p>
+          Kjo është e gjithë ideja e aplikacionit, dhe arsyeja pse §06 është zemra e tij:
+          <strong>një diferencë e madhe është e pazgjidhshme, njëzet diferenca të vogla janë një listë</strong>.
+        </p>
+
+        <h3>Tri gjëra që ju duhen, dhe asgjë më shumë</h3>
+        <ol class="list">
+          <li><strong>Çdo dalje kesh të jetë një rresht.</strong> Nëse shkruhet, ka mbaruar puna — mungesa bëhet e shpjegueshme automatikisht.</li>
+          <li><strong>Arka të barazohet çdo mbrëmje.</strong> Pritja përballë numërimit, me arsye për diferencën.</li>
+          <li><strong>Paratë jashtë arkës të jenë të dukshme.</strong> Borxhet e klientëve dhe faturat e papaguara nuk janë kesh, por janë paraja juaj — dhe janë pikërisht ajo që e krijon shifrën «30 mijë».</li>
+        </ol>
       </section>
 
       <!-- 02 ─────────────────────────────────────────── -->
-      <section id="konteksti">
-        <div class="kokaSeksionit"><span class="numri">02</span><h2 class="tituj">Si punon marketi sot</h2></div>
+      <section id="rrjedhja">
+        <div class="kokaSeksionit"><span class="numri">02</span><h2 class="tituj">Ku shkon keshi</h2></div>
         <p>
-          Kjo pjesë nuk është teori: është ajo që zëvendëson aplikacioni, dhe secila rresht më poshtë
-          bëhet një ekran në §05. Nëse diçka këtu nuk përputhet me realitetin tuaj, ajo është pyetja e
-          parë që duam ta dëgjojmë.
+          Tetë rrugë. Shtatë prej tyre janë të ligjshme dhe të zakonshme; e teta merret parasysh
+          vetëm pasi të tjerat janë eliminuar. Aplikacioni nuk «zbulon» asgjë — thjesht i bën të
+          gjitha të dukshme, dhe ajo që mbetet pa shpjegim është përgjigjja.
         </p>
-        <div class="kartat dy">
-          <div class="karta moduli">
-            <div class="titulliModulit"><i>SOT</i>Sirtari i arkës</div>
-            <p>
-              Ndërrimi nis me një fond fillestar. Gjatë ditës hyn kesh nga shitjet, dalin para për
-              furnitorin që solli bukën, për një faturë të rrymës, për avancin e punëtorit. Në fund
-              numërohet sirtari dhe krahasohet me Z-raportin e arkës fiskale. Diferenca — kur vërehet —
-              mbahet mend, nuk shkruhet.
-            </p>
-          </div>
-          <div class="karta moduli">
-            <div class="titulliModulit"><i>SOT</i>Defteri</div>
-            <p>
-              Një fletore me emra. «Blerta — 12.40», «Nderi i shtëpisë — 8». Rreshtat shkruhen me
-              stilolaps, mblidhen me kalkulator, dhe kur klienti thotë «unë e kam pagu atë», fjala
-              e njërit peshon sa e tjetrit. Askush nuk di sa është totali i borxheve në treg.
-            </p>
-          </div>
-          <div class="karta moduli">
-            <div class="titulliModulit"><i>SOT</i>Furnitorët</div>
-            <p>
-              Fletëdërgesat mbahen në një kunj ose në një dosje. Afati i pagesës është 15 ose 30 ditë,
-              por kush skadon nesër dihet vetëm kur telefonon furnitori. Pagesat pjesore nuk lidhen
-              me faturën përkatëse.
-            </p>
-          </div>
-          <div class="karta moduli">
-            <div class="titulliModulit"><i>SOT</i>Pronari</div>
-            <p>
-              Nuk është në dyqan. Pyet me telefon «si shkoi sot», dhe përgjigjja është një shifër që
-              nuk mund ta kontrollojë. Me dy ose tri njësi, krahasimi mes tyre nuk ekziston fare.
-            </p>
-          </div>
+        <div class="tabela rrjedha">
+          <table>
+            <thead><tr><th>Rruga</th><th>Sa peshon</th><th>Si e kap aplikacioni</th></tr></thead>
+            <tbody>
+              <tr><td>Malli që del me borxh</td><td class="sa">shpesh · e madhe</td><td>Shitje me mënyrë «borxh»: rrit xhiron, nuk prek arkën, hyn te lista e klientit (§07).</td></tr>
+              <tr><td>Furnitori i paguar kesh te dera</td><td class="sa">shpesh · e madhe</td><td>Pagesë e lidhur me faturën blerëse; nëse fatura nuk ekziston, shpenzim me furnitor dhe foto (§08).</td></tr>
+              <tr><td>Tërheqje personale</td><td class="sa">shpesh · e mesme</td><td>Lloj i vetin, i ndarë nga shpenzimet e dyqanit — që të mos duket si kosto e biznesit.</td></tr>
+              <tr><td>Shpenzime të vogla</td><td class="sa">çdo ditë · e vogël</td><td>Kategori me futje në tre prekje; totali mujor tregohet i bashkuar, se aty peshon.</td></tr>
+              <tr><td>Depozita në bankë</td><td class="sa">javore · e madhe</td><td>Transfer, jo shpenzim: zbret nga arka, mbetet te pozicioni (§09).</td></tr>
+              <tr><td>Mall i blerë kesh pa faturë</td><td class="sa">herë pas here</td><td>Blerje pa faturë, e shënuar si e tillë — që të dallohet nga një faturë e humbur.</td></tr>
+              <tr><td>Kusuri dhe gabimet e llogaritjes</td><td class="sa">çdo ditë · e vogël</td><td>Del si diferencë e vogël dhe e paqëndrueshme te mbyllja — zhurmë, jo shenjë.</td></tr>
+              <tr><td>Marrje pa dijeni</td><td class="sa">e rrallë</td><td>Nuk ka mjet që e kap drejtpërdrejt. E kap forma: diferenca që kthehet në të njëjtat ditë, pasi shtatë të parat janë të mbuluara.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="kutiaTheksit" style="margin-top:20px">
+          <p>
+            Vini re dallimin mes rreshtit të pestë dhe të tretë: <strong>depozita në bankë e boshatis
+            arkën pa e zvogëluar pasurinë tuaj</strong>, ndërsa tërheqja personale e zvogëlon. Fletorja
+            i trajton njësoj — të dyja «dolën para» — dhe pikërisht kjo përzierje e bën të pamundur
+            përgjigjen «a po humbas para apo thjesht po i lëviz».
+          </p>
         </div>
       </section>
 
@@ -453,98 +475,94 @@ figcaption { font-size: .84rem; color: var(--bojë3); margin-top: 18px; max-widt
       <section id="kufijte">
         <div class="kokaSeksionit"><span class="numri">03</span><h2 class="tituj">Çka është dhe çka nuk është</h2></div>
         <p>
-          Kufiri vendoset këtu, në faqen e tretë, sepse është vendi ku projektet e këtij lloji dështojnë:
-          klienti pret një arkë fiskale dhe merr një regjistër. FinanCareBusiness është
-          <strong>regjistri i parave të dyqanit</strong> — rri pranë arkës fiskale, nuk e zëvendëson atë.
+          Një aplikacion i vetëm, i përdorur nga <strong>një person — menaxheri</strong>. Pa arkatarë,
+          pa role, pa fjalëkalime për stafin. Kjo është zgjedhje e juaja dhe e thjeshton produktin
+          shumë më tepër sesa duket: bie e gjithë pjesa e lejeve, e ndërrimeve dhe e kontrollit të
+          ndërsjellë, dhe mbetet vetëm regjistri.
         </p>
         <h4>Çka nuk e bën</h4>
         <ul class="jo">
-          <li><b>Nuk është arkë fiskale.</b> Nuk lëshon kupon fiskal, nuk komunikon me ATK-në dhe nuk zëvendëson pajisjen e certifikuar. Xhiroja hyn si shifër e marrë nga Z-raporti i arkës suaj, ose rresht për rresht nëse dëshironi.</li>
-          <li><b>Nuk është program kontabiliteti.</b> Nuk mban libra sipas standardeve, nuk llogarit TVSH-në për deklaratë dhe nuk nxjerr bilanc për kontabilistin. Ai që i mban librat merr prej këtu një Excel të pastër, jo një deklaratë.</li>
-          <li><b>Nuk mban stok në fazën e parë.</b> Pa barkodë, pa inventar, pa çmime për artikull. Kjo është një lëndë e tërë më vete dhe e kemi shënuar si fazë të dytë (§11) — jo si diçka që «shtohet lehtë».</li>
-          <li><b>Nuk dërgon SMS vetë.</b> Kujtesa për borxhin përgatitet si tekst gati dhe hapet te WhatsApp ose te SMS-i i telefonit tuaj. Një shërbim i jashtëm dërgues do të prishte premtimin që të dhënat nuk dalin askund pa dijeninë tuaj.</li>
+          <li><b>Nuk është arkë fiskale.</b> Nuk lëshon kupon, nuk komunikon me ATK-në, nuk zëvendëson pajisjen e certifikuar. Xhiroja hyn si shifër nga Z-raporti i arkës suaj.</li>
+          <li><b>Nuk është program kontabiliteti.</b> Nuk mban libra sipas standardeve dhe nuk llogarit TVSH për deklaratë. Kontabilisti merr prej këtu një Excel të pastër.</li>
+          <li><b>Nuk mban stok.</b> Pa barkodë, pa inventar, pa çmim për artikull. Fatura blerëse hyn me totalin e vet, jo rresht për rresht. Kjo është faza e dytë (§12), e shënuar si e tillë me qëllim.</li>
+          <li><b>Nuk e kap vjedhjen vetë.</b> E bën të dukshme çdo dalje të ligjshme; ajo që mbetet pa shpjegim, dhe forma që merr në kohë, është e vetmja provë që një regjistër mund të japë.</li>
+          <li><b>Nuk dërgon SMS.</b> Kujtesa për borxhin përgatitet si tekst dhe hapet te WhatsApp-i juaj — pa shërbim të jashtëm në mes.</li>
         </ul>
         <h4>Çka e bën</h4>
         <ul class="jo po">
-          <li><b>Punon pa internet.</b> Arka duhet të mbyllet edhe kur linja bie. Aplikacioni shkruan në pajisje dhe sinkronizohet vetë kur lidhja kthehet.</li>
-          <li><b>Është i juaji.</b> Baza e të dhënave rri në një projekt Supabase të hapur me llogarinë tuaj. Ne nuk kemi server, nuk kemi kopje dhe nuk kemi qasje.</li>
-          <li><b>Instalohet si aplikacion.</b> Në tablet, telefon ose kompjuter, nga shfletuesi, pa dyqan aplikacionesh.</li>
-          <li><b>Mban gjurmë.</b> Çdo rresht e di kush e shkroi, kur, dhe nga cila pajisje.</li>
+          <li><b>Punon pa internet.</b> Shkruan në pajisje; sinkronizohet vetë kur lidhja kthehet.</li>
+          <li><b>Rri në telefon dhe në kompjuter njëkohësisht.</b> Të njëjtat të dhëna, përmes një projekti Supabase që e zotëroni ju. Ne nuk kemi server dhe nuk kemi qasje.</li>
+          <li><b>Instalohet si aplikacion</b> nga shfletuesi, pa dyqan aplikacionesh.</li>
+          <li><b>Nxjerr gjithçka jashtë.</b> Excel, PDF dhe kopje ZIP në çdo moment — të dhënat nuk janë peng i askujt.</li>
         </ul>
       </section>
 
       <!-- 04 ─────────────────────────────────────────── -->
       <section id="vendimet">
-        <div class="kokaSeksionit"><span class="numri">04</span><h2 class="tituj">Pesë vendime arkitekturore</h2></div>
+        <div class="kokaSeksionit"><span class="numri">04</span><h2 class="tituj">Katër vendime</h2></div>
         <p>
-          FinanCarePersonal është shkruar për një person me telefonin dhe laptopin e vet. Marketi ka
-          dy arkatarë, një menaxher dhe një pronar që s’është aty. Pesë rregulla ndryshojnë — dhe secili
-          ka një çmim që po e themi paraprakisht.
+          Pa role dhe me një përdorues të vetëm, tri të pestat e ndërlikimeve të një sistemi për
+          markete bien vetvetiu. Këto katër mbeten, dhe secili ka një çmim që po e themi paraprakisht.
         </p>
 
         <div class="vendim">
           <div class="kodi">Vendimi 1</div>
-          <h3>Sinkronizimi bëhet i detyrueshëm, jo opsional</h3>
+          <h3>Çdo dalje kesh është një rresht — pa përjashtim</h3>
           <dl>
             <dt>Vendimi</dt>
-            <dd>Projekti Supabase krijohet në ditën e parë. Pa të nuk ka aplikacion: tableti i arkës, telefoni i menaxherit dhe pronari duhet të shohin të njëjtën ditë.</dd>
+            <dd>Nuk ka kategori «të tjera» ku fshihet pakujdesia. Çdo euro që del nga sirtari ka një lloj, një shumë dhe një datë; nëse nuk dihet ku shkoi, shkruhet «e panjohur» — që është përgjigje e vlefshme dhe e numërueshme.</dd>
             <dt>Pse</dt>
-            <dd>Te personali sinkronizimi është rehati. Këtu është vetë produkti — një defter që e sheh vetëm tableti është prapë një defter.</dd>
+            <dd>Nëse një dalje mund të mos shkruhet, do të mos shkruhet — dhe një regjistër me vrima nuk i përgjigjet dot pyetjes për të cilën u ndërtua.</dd>
             <dt>Çmimi</dt>
-            <dd>Një hap konfigurimi në fillim (i automatizuar me butonin «Rregullo projektin», i njëjti mekanizëm i <code>skema.js</code>) dhe një llogari Supabase e klientit. <strong>Kostoja mujore: 0 € për një deri tri markete</strong>, brenda planit falas.</dd>
+            <dd>Disiplinë e përditshme. Prandaj futja e një lëvizjeje është ndërtuar për <strong>nën dhjetë sekonda</strong>: shumë, lloj, gati — me llogaritësin e <code>calc.js</code> te fusha e vlerës, sepse fatura ka disa artikuj.</dd>
           </dl>
         </div>
 
         <div class="vendim">
           <div class="kodi">Vendimi 2</div>
-          <h3>Rregulli «fiton pajisja e fundit» bie. Ditët e mbyllura ngrijnë.</h3>
+          <h3>Barazimi është ditor, kurrë mujor</h3>
           <dl>
             <dt>Vendimi</dt>
-            <dd>Kur një ndërrim mbyllet me barazim, të gjitha lëvizjet e tij <strong>kyçen</strong>. Nuk fshihen dhe nuk ndryshohen më. Një gabim i vërejtur nesër korrigjohet me një rresht të ri kundërshtues (storno), me arsye dhe me autor.</dd>
+            <dd>Mbyllja e ditës është veprimi qendror i aplikacionit, jo një raport. Paneli e kujton nëse dita e djeshme mbeti e pambyllur, dhe historiku i diferencave është ekran më vete.</dd>
             <dt>Pse</dt>
-            <dd>Te ledgeri personal, mbishkrimi i heshtur i një transaksioni nga pajisja tjetër është i padëmshëm. Te marketi, ai është mënyra se si zhduket një mungesë prej 40 €. Numri që barazoi mbrëmë duhet të barazojë edhe pas gjashtë muajsh.</dd>
+            <dd>Sipas §01: një diferencë mujore prej 800 € nuk ka shpjegim; njëzet diferenca ditore kanë datë, dhe data ka kujtesë.</dd>
             <dt>Çmimi</dt>
-            <dd>Arkatari nuk mund ta «rregullojë» vetë një gabim të djeshëm — i duhet menaxheri. Kjo është veçori, jo pengesë, por duhet thënë stafit që në trajnim.</dd>
+            <dd>Dy minuta çdo mbrëmje. Numëruesi i prerjeve e bën numërimin më të shpejtë sesa me kalkulator, prandaj në praktikë kjo është kohë e kursyer, jo e shtuar.</dd>
           </dl>
         </div>
 
         <div class="vendim">
           <div class="kodi">Vendimi 3</div>
-          <h3>Tre role, të zbatuara në bazën e të dhënave</h3>
+          <h3>Bilancet llogariten, kurrë nuk ruhen</h3>
           <dl>
             <dt>Vendimi</dt>
-            <dd><strong>Arkatari</strong> sheh dhe shkruan vetëm ndërrimin e vet të hapur. <strong>Menaxheri</strong> sheh njësinë e vet, hap dhe mbyll ditë, bën storno. <strong>Pronari</strong> sheh gjithçka, të gjitha njësitë, dhe vetëm ai i sheh pagat dhe marzhat.</dd>
+            <dd>Gjendja e arkës, borxhi i një klienti dhe detyrimi ndaj një furnitori nuk janë fusha në bazë. Janë shuma të rreshtave, të llogaritura sa herë shfaqen — pikërisht si <code>accountBalance</code> te FinanCarePersonal.</dd>
             <dt>Pse</dt>
-            <dd>Lejet e vendosura vetëm në ndërfaqe janë dekor: kush hap konzolën e shfletuesit i kalon. Prandaj rregullat shkruhen si politika <em>row-level security</em> në Supabase — baza vetë refuzon të kthejë atë që roli nuk e ka.</dd>
+            <dd>Një bilanc i ruajtur mund të bëhet gabim dhe të mbetet gabim përgjithmonë, pa lënë gjurmë. Një bilanc i llogaritur ose përputhet me rreshtat, ose rreshtat janë të gabuar — dhe ata i shihni.</dd>
             <dt>Çmimi</dt>
-            <dd>Migrimet e skemës bëhen më të gjata dhe kërkojnë testim serioz. E kemi llogaritur brenda Fazës 1.</dd>
+            <dd>Llogaritje në çdo hapje ekrani. Për një market me ~200 lëvizje në ditë kjo është e pandjeshme, dhe muajt e mbyllur mbajnë shifra përmbledhëse kur historiku rritet.</dd>
           </dl>
         </div>
 
         <div class="vendim">
           <div class="kodi">Vendimi 4</div>
-          <h3>Disa njësi nga një llogari e vetme</h3>
+          <h3>Dita e mbyllur kyçet — dhe shkyçja lë shenjë</h3>
           <dl>
             <dt>Vendimi</dt>
-            <dd>Çdo rresht mban <code>njesiaId</code>. Aplikacioni hapet gjithmonë brenda një njësie; pronari e ndërron nga një zgjedhës lart dhe ka një pamje «të gjitha njësitë» për krahasim.</dd>
+            <dd>Pas mbylljes, lëvizjet e asaj dite nuk ndryshohen. Kur duhet vërtet, dita shkyçet nga ju me një arsye, dhe mbyllja e vjetër ruhet krahas së resë.</dd>
             <dt>Pse</dt>
-            <dd>Shtimi i njësisë së dytë pas nisjes do të thoshte prekja e çdo funksioni llogaritës. Fusha kushton asgjë tani dhe do të kushtonte një rishkrim më vonë — edhe nëse sot keni vetëm një market.</dd>
+            <dd>Jo për mosbesim — jeni i vetmi përdorues. Për vlerën e provës: numri që barazoi të martën duhet të thotë të njëjtën gjë edhe pas gjashtë muajsh, përndryshe historiku i diferencave, i cili është i gjithë instrumenti diagnostikues, nuk mban peshë.</dd>
             <dt>Çmimi</dt>
-            <dd>Asnjë i dukshëm. Me një njësi të vetme, zgjedhësi thjesht nuk shfaqet — siç bëhet te «modaliteti me një llogari» i personalit.</dd>
+            <dd>Një klikim shtesë kur korrigjoni diçka të djeshme. Brenda ditës aktuale, gjithçka ndryshohet lirshëm.</dd>
           </dl>
         </div>
 
-        <div class="vendim">
-          <div class="kodi">Vendimi 5</div>
-          <h3>Bilancet nuk ruhen kurrë — llogariten</h3>
-          <dl>
-            <dt>Vendimi</dt>
-            <dd>Gjendja e arkës, borxhi i një klienti dhe detyrimi ndaj një furnitori nuk janë fusha në bazë. Janë shuma të rreshtave, të llogaritura sa herë shfaqen — pikërisht siç bën <code>accountBalance</code> te FinanCarePersonal.</dd>
-            <dt>Pse</dt>
-            <dd>Një bilanc i ruajtur është një numër që dikush mund ta ndryshojë pa lënë gjurmë, dhe që një sinkronizim i ndërprerë mund ta lërë gabim përgjithmonë. Një bilanc i llogaritur ose përputhet me rreshtat, ose rreshtat janë të gabuar — dhe ata i sheh.</dd>
-            <dt>Çmimi</dt>
-            <dd>Llogaritje në çdo hapje ekrani. Për një market me ~200 lëvizje në ditë kjo mbetet e pandjeshme; kur historiku rritet, mbyllja e ditës ruan një shifër përmbledhëse për periudhat e vjetra, jo bilancin aktual.</dd>
-          </dl>
+        <div class="kutiaTheksit">
+          <p>
+            <strong>Çka nuk është në listë.</strong> Rolet, lejet, hyrja e stafit dhe ndërrimet për arkatar
+            nuk ekzistojnë në këtë version. Nëse një ditë ju duhen, shtohen mbi këtë bazë pa e prishur atë —
+            çdo rresht mban tashmë datën, kohën dhe pajisjen që e shkroi.
+          </p>
         </div>
       </section>
 
@@ -552,107 +570,57 @@ figcaption { font-size: .84rem; color: var(--bojë3); margin-top: 18px; max-widt
       <section id="modulet">
         <div class="kokaSeksionit"><span class="numri">05</span><h2 class="tituj">Modulet</h2></div>
         <p>
-          Nëntë module, secili një zë në meny. Radha nuk është e rastit: është radha në të cilën
-          ndërtohen (§11) dhe radha në të cilën i ndeshni gjatë ditës.
+          Katër module dhe një panel. Jo më. Çdo gjë tjetër që mund të shtohej — stoku, pagat,
+          klientët besnikë — do t’i shtonte punë futjes së të dhënave pa i shtuar asgjë pyetjes së §01.
         </p>
 
         <div class="kartat">
           <div class="karta moduli">
-            <div class="titulliModulit"><i>M1</i>Ndërrimet</div>
+            <div class="titulliModulit"><i>M1</i>Arka</div>
             <p>
-              Dita e arkatarit ka fillim dhe fund. Hapja e ndërrimit shënon kush, në cilën njësi dhe
-              me sa fond fillestar; mbyllja kërkon barazimin. Dy ndërrime nuk mund të jenë të hapura
-              njëkohësisht në të njëjtën arkë, dhe një ndërrim i harruar hapur nga dje shfaqet si
-              paralajmërim, jo si gabim i heshtur.
+              Ledgeri. Çdo lëvizje parash është një rresht me <strong>llojin</strong> (shitje, arkëtim
+              borxhi, pagesë furnitori, shpenzim, tërheqje personale, depozitë në bankë, blerje pa faturë,
+              e panjohur) dhe <strong>mënyrën</strong> (kesh, kartelë, borxh, bankë). Mënyra është fusha e
+              vetme që i ndan «sa bëri dyqani» nga «sa ka në sirtar», dhe pa të asnjë barazim nuk del.
             </p>
-            <div class="rreshtat"><b>Ekranet:</b> Hap ndërrimin · Ndërrimi i hapur · Historiku i ndërrimeve</div>
+            <div class="rreshtat"><b>Ekranet:</b> Arka e ditës · Shto lëvizje · Kërkim e filtrim · Eksport në Excel</div>
           </div>
 
           <div class="karta moduli">
-            <div class="titulliModulit"><i>M2</i>Arka dhe lëvizjet</div>
+            <div class="titulliModulit"><i>M2</i>Barazimi i arkës</div>
             <p>
-              Zemra e aplikacionit. Çdo lëvizje parash është një rresht: shitje, arkëtim borxhi, pagesë
-              furnitori, shpenzim, depozitë në bankë, tërheqje e pronarit, kthim malli. Secila mban
-              <em>mënyrën</em> — kesh, kartelë, borxh, transfer — dhe kjo fushë e vetme është ajo që i
-              ndan «sa bëri dyqani» nga «sa ka në sirtar». Futja e shpejtë: shumë, mënyrë, kategori,
-              gati; me llogaritësin e <code>calc.js</code> te çdo fushë vlere, sepse fatura ka disa artikuj.
+              Mbyllja e ditës: numërimi sipas prerjeve, pritja e llogaritur, diferenca me arsye, kyçja.
+              Plus historiku i diferencave — ekrani ku një rrjedhje merr formë. Trajtuar i plotë te
+              <a href="#barazimi">§06</a>.
             </p>
-            <div class="rreshtat"><b>Ekranet:</b> Arka e ditës · Shto lëvizje · Kërkim dhe filtrim · Eksport në Excel</div>
+            <div class="rreshtat"><b>Ekranet:</b> Mbyll ditën · Numëruesi i prerjeve · Historiku i diferencave</div>
           </div>
 
           <div class="karta moduli">
-            <div class="titulliModulit"><i>M3</i>Barazimi</div>
+            <div class="titulliModulit"><i>M3</i>Lista e borxheve</div>
             <p>
-              Numërimi sipas prerjeve, pritja e llogaritur, diferenca dhe arsyeja. I trajtuar plotësisht
-              te <a href="#barazimi">§06</a> — është veçoria për të cilën ekziston ky produkt.
+              Klientët që marrin mall me borxh, me pagesat e tyre, limitin, plakjen dhe pasqyrën që i
+              tregohet klientit. Trajtuar te <a href="#borxhet">§07</a>.
             </p>
-            <div class="rreshtat"><b>Ekranet:</b> Mbyll ndërrimin · Numëruesi i prerjeve · Historiku i barazimeve</div>
+            <div class="rreshtat"><b>Ekranet:</b> Lista e klientëve · Pasqyra e klientit · Shto borxh · Shto pagesë · Plakja</div>
           </div>
 
           <div class="karta moduli">
-            <div class="titulliModulit"><i>M4</i>Klientët dhe borxhet</div>
+            <div class="titulliModulit"><i>M4</i>Faturat blerëse</div>
             <p>
-              Defteri dixhital: klienti, telefoni, limiti, dhe pasqyra e tij rresht për rresht. I trajtuar
-              te <a href="#defteri">§07</a>.
+              Fatura që keni blerë: furnitori, numri, data, vlera, afati, fotoja e fletëdërgesës dhe
+              pagesat — të plota ose pjesore. Trajtuar te <a href="#faturat">§08</a>.
             </p>
-            <div class="rreshtat"><b>Ekranet:</b> Lista e klientëve · Pasqyra e klientit · Shto blerje me borxh · Arkëto · Plakja e borxheve</div>
+            <div class="rreshtat"><b>Ekranet:</b> Faturat blerëse · Shto faturë · Shto pagesë · Skadojnë së shpejti · Furnitorët</div>
           </div>
 
           <div class="karta moduli">
-            <div class="titulliModulit"><i>M5</i>Furnitorët dhe detyrimet</div>
+            <div class="titulliModulit"><i>P</i>Paneli «Ku janë paratë»</div>
             <p>
-              Furnitori me afatin e vet të pagesës. Fletëdërgesa hyn si faturë me numër, datë, vlerë dhe
-              afat; pagesat — të plota ose pjesore — janë lëvizje të lidhura me të. Ekrani kryesor nuk
-              është lista e faturave, por <strong>«çka skadon këtë javë»</strong>, sepse ajo është pyetja.
-              Fotoja e fletëdërgesës bashkëngjitet me kamerën, me të njëjtin mekanizëm ripërpunimi që ka
-              tashmë <code>images.js</code>.
+              Ekrani i parë që hapet: keshi tani, çka pret të mbyllet, sa është jashtë te klientët, sa
+              u detyroheni furnitorëve, dhe pozicioni neto. Trajtuar te <a href="#paneli">§09</a>.
             </p>
-            <div class="rreshtat"><b>Ekranet:</b> Furnitorët · Faturat e pranuara · Skadojnë së shpejti · Pasqyra e furnitorit</div>
-          </div>
-
-          <div class="karta moduli">
-            <div class="titulliModulit"><i>M6</i>Xhiroja</div>
-            <p>
-              Sa bëri dyqani — për ndërrim, për ditë, për javë — i ndarë sipas mënyrës së pagesës dhe i
-              krahasuar me të njëjtën periudhë të kaluar. Nëse regjistrohet edhe çmimi i blerjes së mallit,
-              shfaqet edhe marzha; nëse jo, moduli punon njësoj pa të. Grafikët janë ata të
-              <code>raportGrafike.js</code>, të cilët vizatohen me tabela dhe punojnë edhe brenda email-it.
-            </p>
-            <div class="rreshtat"><b>Ekranet:</b> Xhiroja e ditës · Java · Krahasimi mes njësive</div>
-          </div>
-
-          <div class="karta moduli">
-            <div class="titulliModulit"><i>M7</i>Shpenzimet</div>
-            <p>
-              Qiraja, rryma, uji, transporti, mirëmbajtja, licencat. Kategori me ngjyrë e ikonë si te
-              personali, dhe <strong>shpenzime të përsëritura</strong> që e dinë vetë kur u erdhi radha —
-              i njëjti mekanizëm <code>recurring</code>, me të njëjtin rregull që një pagesë e konfirmuar
-              zbret nga vlera reale, jo nga ajo e planifikuar.
-            </p>
-            <div class="rreshtat"><b>Ekranet:</b> Shpenzimet · Kategoritë · Pagesat e përsëritura</div>
-          </div>
-
-          <div class="karta moduli">
-            <div class="titulliModulit"><i>M8</i>Punëtorët</div>
-            <p>
-              Kush punon, në cilat ndërrime, me çfarë page. <strong>Avanci</strong> është rasti i vërtetë:
-              paratë dalin nga arka sot dhe zbriten nga paga në fund të muajit — pra është njëkohësisht
-              lëvizje e arkës dhe zë i llogarisë së punëtorit, dhe trajtohet me të njëjtin çift rreshtash
-              si pagesa e borxhit te personali. I dukshëm vetëm për pronarin.
-            </p>
-            <div class="rreshtat"><b>Ekranet:</b> Punëtorët · Avancat · Pagat e muajit</div>
-          </div>
-
-          <div class="karta moduli">
-            <div class="titulliModulit"><i>M9</i>Paneli dhe raportet</div>
-            <p>
-              Paneli i pronarit: arka tani, xhiroja sot përballë javës së kaluar, borxhet e klientëve në
-              total dhe sa prej tyre janë mbi 60 ditë, faturat që skadojnë, ndërrimet e hapura, diferencat
-              e fundit të arkës. <strong>Raporti i mbrëmjes</strong> vjen me email — po ai Edge Function
-              i FinanCarePersonal, i cili mban vetëm çelësin e dërgimit dhe përcjell një email të gatshëm —
-              plus raporti javor dhe mujor me PDF bashkëngjitur.
-            </p>
-            <div class="rreshtat"><b>Ekranet:</b> Paneli · Raporti i ditës · Arkivi i raporteve · Gjurma e veprimeve</div>
+            <div class="rreshtat"><b>Ekranet:</b> Paneli · Raporti i ditës me email · Raporti javor e mujor</div>
           </div>
         </div>
       </section>
@@ -661,255 +629,279 @@ figcaption { font-size: .84rem; color: var(--bojë3); margin-top: 18px; max-widt
       <section id="barazimi">
         <div class="kokaSeksionit"><span class="numri">06</span><h2 class="tituj">Barazimi i arkës</h2></div>
         <p>
-          FinanCarePersonal e ka tashmë gjysmën e kësaj: funksioni <code>reconciliation</code> pyet sa ka
-          vërtet llogaria, e llogarit diferencën <em>në cent</em> që dy shifra të barabarta të mos prodhojnë
-          një korrigjim prej 0,004 €, dhe e shënon si transaksion të dukshëm nën kategorinë «Barazim i
-          Bilancit» — sepse një rregullim i heshtur i bilancit është pikërisht ajo që problemi tashmë është.
+          FinanCarePersonal e ka tashmë gjysmën e kësaj. Funksioni <code>reconciliation</code> pyet sa ka
+          vërtet llogaria, e llogarit diferencën <em>në cent</em> — që dy shifra të barabarta të mos
+          prodhojnë një korrigjim prej 0,004 € — dhe e shënon si rresht të dukshëm e të gjurmueshëm, sepse
+          një rregullim i heshtur i bilancit është pikërisht ajo që problemi tashmë është.
         </p>
-        <p>
-          Te marketi ai koncept ngrihet në ngjarje më vete. Barazimi nuk është korrigjim; është
-          <strong>mbyllja e ndërrimit</strong>, dhe ka katër dallime:
-        </p>
+        <p>Te marketi ai koncept ngrihet në veprim të përditshëm, me katër dallime:</p>
         <ol class="list">
-          <li><strong>Numërohet sipas prerjeve.</strong> Nuk shkruhet një shifër e vetme; shtypen sa kartëmonedha 50, sa 20, sa 10, sa monedha. Totali del vetë. Kjo e kap gabimin e mbledhjes, që është burimi më i shpeshtë i një «mungese».</li>
-          <li><strong>Pritja llogaritet, nuk shkruhet.</strong> Fondi fillestar + kesh që hyri − kesh që doli. Shitjet me kartelë dhe ato me borxh nuk hyjnë fare në pritje: janë xhiro, por nuk janë para në sirtar. Ky është gabimi numër një i çdo defteri.</li>
-          <li><strong>Diferenca kërkon arsye.</strong> Mbi një prag që e caktoni ju (p.sh. 2 €), mbyllja nuk vazhdon pa një shënim. «Kusuri i një klienti», «faturë e humbur», «nuk dihet» — të treja janë përgjigje të pranueshme; boshi jo.</li>
-          <li><strong>Pas mbylljes, ngrin.</strong> Sipas Vendimit 2, rreshtat e ndërrimit kyçen. Barazimi ruhet i plotë: pritja, numërimi, prerjet, diferenca, arsyeja, kush e mbylli dhe në ç’orë.</li>
+          <li><strong>Numërohet sipas prerjeve.</strong> Nuk shkruhet një shifër e vetme; shtypen sa kartëmonedha 50, sa 20, sa 10, sa monedha. Totali del vetë — dhe kjo e heq nga loja gabimin e mbledhjes, që është burimi më i shpeshtë i një «mungese» që nuk ekziston fare.</li>
+          <li><strong>Pritja llogaritet.</strong> Fondi i mëngjesit + kesh që hyri − kesh që doli. Shitjet me kartelë dhe ato me borxh <em>nuk hyjnë</em>: janë xhiro, por nuk janë para në sirtar. Ky është gabimi numër një i çdo fletoreje.</li>
+          <li><strong>Diferenca kërkon arsye.</strong> Mbi një prag që e caktoni ju — 2 €, 5 €, sa të doni — mbyllja nuk vazhdon pa një shënim. «Kusur», «faturë e humbur», «nuk dihet»: të treja janë përgjigje; boshi jo.</li>
+          <li><strong>Historiku i diferencave është ekran, jo arkiv.</strong> Njëzet ditë me diferencat e tyre, njëra pas tjetrës. Aty duket dallimi mes zhurmës — ±3 € pa rregull — dhe një shenje: gjithmonë të enjten, gjithmonë e njëjta madhësi, gjithmonë pas ditës kur vjen furnitori.</li>
         </ol>
 
         <figure style="margin:0">
-          <div class="kuponi" role="img" aria-label="Shembull i barazimit të ndërrimit: pritej 1.284,50 €, u numëruan 1.276,00 €, mungesë 8,50 €">
-            <div class="krye">Barazim i ndërrimit</div>
-            <div class="krye">Njësia 1 · 27.08.2026 · 14:02–22:11</div>
+          <div class="kuponi" role="img" aria-label="Shembull i mbylljes së ditës: pritej 1.284,50 €, u numëruan 1.276,00 €, mungesë 8,50 €">
+            <div class="krye">Mbyllja e ditës</div>
+            <div class="krye">27.08.2026 · 07:30–22:11</div>
             <hr>
-            <div class="rresht"><span>Fondi fillestar</span><span>200,00</span></div>
+            <div class="rresht"><span>Fondi i mëngjesit</span><span>200,00</span></div>
             <div class="rresht"><span>Shitje kesh</span><span>1.412,30</span></div>
             <div class="rresht"><span>Arkëtim borxhesh</span><span>85,00</span></div>
-            <div class="rresht"><span>Pagesë furnitori</span><span>−340,80</span></div>
-            <div class="rresht"><span>Shpenzim (transport)</span><span>−22,00</span></div>
-            <div class="rresht"><span>Avanc punëtori</span><span>−50,00</span></div>
+            <div class="rresht"><span>Pagesë furnitori (Fat. 4412)</span><span>−340,80</span></div>
+            <div class="rresht"><span>Shpenzim · transport</span><span>−22,00</span></div>
+            <div class="rresht"><span>Tërheqje personale</span><span>−50,00</span></div>
             <hr>
             <div class="rresht"><b>Pritet në arkë</b><span><b>1.284,50</b></span></div>
-            <div class="rresht"><span>Numëruar (2×50, 41×20, 12×10, …)</span><span>1.276,00</span></div>
+            <div class="rresht"><span>Numëruar · 2×50, 41×20, 12×10, …</span><span>1.276,00</span></div>
             <div class="rresht theks"><span>MUNGESË</span><span>−8,50</span></div>
             <hr>
             <div class="rresht"><span>Shitje me kartelë</span><span>318,90</span></div>
-            <div class="rresht"><span>Shitje me borxh</span><span>64,20</span></div>
-            <div class="rresht"><b>Xhiroja e ndërrimit</b><span><b>1.795,40</b></span></div>
+            <div class="rresht"><span>Mall dhënë me borxh</span><span>64,20</span></div>
+            <div class="rresht"><b>Xhiroja e ditës</b><span><b>1.795,40</b></span></div>
             <hr>
             <div class="rresht"><span>Arsyeja</span><span>kusur i pasaktë</span></div>
-            <div class="rresht"><span>Mbylli</span><span>A. Krasniqi</span></div>
-            <div class="fund">i kyçur · 22:11:38 · tablet-arka-1</div>
+            <div class="fund">e kyçur · 22:11:38 · telefoni</div>
           </div>
           <figcaption>
-            Vini re dy rreshtat e fundit të xhiros: 318,90 € me kartelë dhe 64,20 € me borxh hyjnë te
-            xhiroja prej 1.795,40 €, por jo te pritja prej 1.284,50 €. Fletorja i përzien; aplikacioni jo.
+            Dy rreshtat mbi total: 318,90 € me kartelë dhe 64,20 € me borxh hyjnë te xhiroja prej
+            1.795,40 €, por jo te pritja prej 1.284,50 €. Fletorja i përzien — dhe pastaj arka «nuk del».
           </figcaption>
         </figure>
+
+        <h3>Ç’bëhet me diferencën</h3>
+        <p>
+          Asgjë automatike. Diferenca <strong>nuk</strong> shndërrohet vetvetiu në një shpenzim që e
+          fsheh problemin; mbetet një rresht i mbylljes, me arsyen e vet, dhe hyn te historiku. Vetëm ju
+          vendosni nëse një mungesë e sqaruar më vonë — një faturë që u gjet — regjistrohet si shpenzim
+          i asaj dite; atëherë dita shkyçet, rreshti shtohet, dhe të dyja mbylljet ruhen.
+        </p>
       </section>
 
       <!-- 07 ─────────────────────────────────────────── -->
-      <section id="defteri">
-        <div class="kokaSeksionit"><span class="numri">07</span><h2 class="tituj">Defteri i borxheve</h2></div>
+      <section id="borxhet">
+        <div class="kokaSeksionit"><span class="numri">07</span><h2 class="tituj">Lista e borxheve</h2></div>
         <p>
-          Te FinanCarePersonal, borxhet janë <em>vetëm shënim</em>: një kartelë me 900 € të pashlyera nuk e
-          nxin bilancin. Te marketi rregulli përmbyset — borxhi i klientit është malli që ka dalë nga rafti
-          dhe paraja që nuk ka hyrë në arkë, pra <strong>është pjesë e xhiros dhe pjesë e pasurisë së dyqanit</strong>,
-          thjesht jo pjesë e keshit. Kjo është arsyeja pse borxhi nuk mbahet si listë e veçantë, por si
-          <em>mënyrë pagese</em> e një shitjeje.
+          Te FinanCarePersonal borxhet janë <em>vetëm shënim</em> dhe nuk e prekin bilancin: një kartelë
+          me 900 € të pashlyera nuk duhet ta nxijë llogarinë tuaj. Te marketi rregulli përmbyset. Borxhi i
+          klientit është malli që ka dalë nga rafti dhe paraja që nuk ka hyrë në sirtar — pra
+          <strong>është pasuria juaj, thjesht jo keshi juaj</strong>. Prandaj nuk mbahet si listë e ndarë
+          nga arka, por si <em>mënyrë pagese</em> e një shitjeje.
         </p>
 
-        <h4>Si funksionon</h4>
-        <ul>
-          <li>Shitja me borxh është një lëvizje me <code>menyra: "borxh"</code> dhe një <code>klientiId</code>. Rrit xhiron, nuk prek arkën, rrit borxhin e klientit.</li>
-          <li>Arkëtimi është lëvizje me <code>menyra: "kesh"</code> dhe po ai <code>klientiId</code>. Rrit arkën, <strong>nuk</strong> rrit xhiron — paratë u fituan atëherë kur doli malli, jo sot.</li>
-          <li>Borxhi i klientit është ndryshimi mes të dyjave. Nuk ruhet askund; llogaritet nga rreshtat (Vendimi 5).</li>
-        </ul>
-
-        <h4>Çka shton përtej fletores</h4>
-        <ul>
-          <li><strong>Limiti.</strong> Çdo klient ka një tavan opsional. Kur arrihet, shitja me borxh kërkon miratimin e menaxherit — nuk bllokohet, sepse dyqani është edhe marrëdhënie, por regjistrohet kush e lejoi.</li>
-          <li><strong>Plakja.</strong> Borxhet ndahen 0–30, 31–60, 61–90 dhe mbi 90 ditë. Një total prej 3.200 € është shifër; 3.200 € prej të cilave 1.900 € janë mbi tre muaj është një vendim.</li>
-          <li><strong>Pasqyra e klientit.</strong> Një PDF ose foto e ekranit që i tregohet klientit: çdo blerje me datë, çdo pagesë, gjendja. Debati mbaron aty, dhe pikërisht kjo e bën defterin dixhital të pranohet nga stafi.</li>
-          <li><strong>Kujtesa.</strong> Teksti gati për WhatsApp ose SMS, i hapur nga pajisja juaj. Nuk kalon nëpër asnjë shërbim të jashtëm.</li>
-          <li><strong>Fshirja e defterit.</strong> Kur borxhi arkëtohet plotësisht, klienti nuk fshihet — arkivohet, si te kategoritë e personalit. Historiku nuk ndryshon kurrë.</li>
-        </ul>
-
-        <div class="kutiaTheksit">
-          <p><strong>Pyetja që duhet vendosur së bashku:</strong> a lejohet arkatari ta fshijë një rresht borxhi para se ndërrimi të mbyllet? Rekomandimi ynë është <em>po, brenda ndërrimit të vet</em> — sepse gabimet e shtypjes ndodhin çdo ditë dhe ndalimi i plotë do të thotë staf që s’e përdor fare aplikacionin. Pas mbylljes, jo. Nëse preferoni rregull më të rreptë, është një ndryshim i vogël në leje, jo në arkitekturë.</p>
-        </div>
-      </section>
-
-      <!-- 08 ─────────────────────────────────────────── -->
-      <section id="modeli">
-        <div class="kokaSeksionit"><span class="numri">08</span><h2 class="tituj">Modeli i të dhënave</h2></div>
-        <p>
-          Njëmbëdhjetë depo në IndexedDB, me të njëjtin emërtim shqip dhe të njëjtat rregulla shkrimi si
-          te <code>db.js</code>: çdo rresht i sinkronizuar mban <code>perditesuar</code> dhe
-          <code>sinkPezull</code>, fshirjet lënë gurë varri te <code>fshirjet</code>, dhe format nuk i
-          shkruajnë kurrë vetë ato fusha.
-        </p>
+        <h4>Tre veprimet</h4>
         <div class="tabela">
           <table>
-            <thead>
-              <tr><th>Depoja</th><th>Fushat kryesore</th><th>Shënim</th></tr>
-            </thead>
+            <thead><tr><th>Veprimi</th><th>Arka</th><th>Xhiroja</th><th>Borxhi i klientit</th></tr></thead>
             <tbody>
-              <tr>
-                <td><code>biznesi</code></td>
-                <td>emri, monedha, njesiaKryesoreId, praguArsyes, fondiParazgjedhur, njoftimet*</td>
-                <td>Një rresht i vetëm, si <code>profile</code>.</td>
-              </tr>
-              <tr>
-                <td><code>njesite</code></td>
-                <td>emri, adresa, telefoni, arkivuar</td>
-                <td>Pikat e shitjes. Çdo rresht tjetër mban <code>njesiaId</code>.</td>
-              </tr>
-              <tr>
-                <td><code>perdoruesit</code></td>
-                <td>emri, roli, pin, njesite[], aktiv</td>
-                <td>Roli zbatohet edhe në RLS, jo vetëm në ndërfaqe.</td>
-              </tr>
-              <tr>
-                <td><code>nderrimet</code></td>
-                <td>njesiaId, perdoruesiId, filloi, mbaroi, fondiFillestar, statusi</td>
-                <td>Statusi <code>hapur</code> ose <code>mbyllur</code>; mbyllja kërkon barazim.</td>
-              </tr>
-              <tr>
-                <td><code>levizjet</code></td>
-                <td>data, njesiaId, nderrimiId, lloji, nenlloji, vlera, menyra, kategoriaId, klientiId, furnitoriId, faturaId, pershkrimi, etiketat[], krijuar, perdoruesiId, kyçur</td>
-                <td>Ledgeri. Zëvendëson <code>transactions</code>; <code>menyra</code> është fusha vendimtare.</td>
-              </tr>
-              <tr>
-                <td><code>barazimet</code></td>
-                <td>nderrimiId, data, pritur, numeruar, prerjet{}, diferenca, arsyeja, perdoruesiId, koha</td>
-                <td>Ngjarje më vete, jo transaksion korrigjues.</td>
-              </tr>
-              <tr>
-                <td><code>klientet</code></td>
-                <td>emri, telefoni, limiti, shenim, arkivuar</td>
-                <td>Borxhi <em>nuk</em> është fushë këtu — llogaritet nga <code>levizjet</code>.</td>
-              </tr>
-              <tr>
-                <td><code>furnitoret</code></td>
-                <td>emri, kontakti, telefoni, afatiDitë, shenim, arkivuar</td>
-                <td>Afati mbush automatikisht datën e skadimit të faturës.</td>
-              </tr>
-              <tr>
-                <td><code>faturat</code></td>
-                <td>furnitoriId, numri, data, dataAfatit, vlera, statusi, fotoId</td>
-                <td>Fletëdërgesat e pranuara. Pagesat lidhen nga <code>levizjet</code>.</td>
-              </tr>
-              <tr>
-                <td><code>kategorite</code></td>
-                <td>emri, lloji, prindi, ngjyra, ikona, arkivuar</td>
-                <td>Merret pothuajse e paprekur nga personali, me listë tjetër fillestare.</td>
-              </tr>
-              <tr>
-                <td><code>punetoret</code></td>
-                <td>emri, roli, paga, dataFillimit, aktiv</td>
-                <td>Avancat janë lëvizje, jo fusha këtu.</td>
-              </tr>
-              <tr>
-                <td><code>gjurma</code></td>
-                <td>koha, perdoruesiId, veprimi, depoja, rreshtiId, para, pas</td>
-                <td>E re. Nuk sinkronizohet për t’u lexuar nga arkatari — vetëm pronari.</td>
-              </tr>
-              <tr>
-                <td><code>fotot</code> / <code>fotoSkedaret</code></td>
-                <td>metadata + miniaturë / <code>Blob</code> i plotë</td>
-                <td>I njëjti ndarje si te personali; fotot nuk sinkronizohen (ZIP-i i bart).</td>
-              </tr>
+              <tr><td>Mall me borxh</td><td class="num">—</td><td class="num">+</td><td class="num">+</td></tr>
+              <tr><td>Pagesë e klientit (kesh)</td><td class="num">+</td><td class="num">—</td><td class="num">−</td></tr>
+              <tr><td>Kthim malli</td><td class="num">—</td><td class="num">−</td><td class="num">−</td></tr>
             </tbody>
           </table>
         </div>
-        <p style="margin-top:16px">
-          Ashtu si te personali, rreshtat në renë kompjuterike rrinë në <strong>një tabelë të vetme</strong>
-          <code>(user_id, njesia, store, record_id, updated_at, deleted, data jsonb)</code>. Kjo do të thotë
-          se shtimi i një fushe — ose i një depoje të tërë — në një version të ardhshëm nuk kërkon migrim në
-          projektin tuaj. Migrimet mbeten të numëruara, idempotente dhe vetëm shtuese, si te
-          <code>skema.js</code>.
+        <p style="margin-top:14px">
+          Rreshti i dytë është ai që fletorja e ngatërron gjithmonë: <strong>pagesa e një borxhi nuk është
+          xhiro.</strong> Ato para u fituan atë ditë kur doli malli. Nëse numërohen sërish sot, muaji del
+          më i mirë sesa ishte, dhe pastaj arka nuk përputhet me asgjë.
+        </p>
+
+        <h4>Çka shton përtej fletores</h4>
+        <ul>
+          <li><strong>Pagesat rresht për rresht.</strong> Çdo klient ka pasqyrën e vet: blerje, pagesë, blerje, pagesë, me datë dhe orë. Pagesa pjesore është normale — nuk kërkohet të mbyllet borxhi i tërë.</li>
+          <li><strong>Gjendja llogaritet.</strong> Nuk ka fushë «borxhi total» që dikush e rishkruan. Është shuma e rreshtave, gjithmonë (Vendimi 3).</li>
+          <li><strong>Limiti.</strong> Tavan opsional për klient. Kur arrihet, aplikacioni paralajmëron — nuk bllokon, sepse dyqani është edhe marrëdhënie, por e shënon që u tejkalua.</li>
+          <li><strong>Plakja.</strong> 0–30, 31–60, 61–90 dhe mbi 90 ditë. Një total prej 3.200 € është shifër; 3.200 € prej të cilave 1.900 € janë mbi tre muaj është një vendim.</li>
+          <li><strong>Pasqyra për klientin.</strong> Një PDF ose një ekran që i tregohet: çdo blerje, çdo pagesë, gjendja. Debati mbaron aty — dhe kjo është arsyeja e vërtetë pse defteri dixhital pranohet.</li>
+          <li><strong>Kujtesa.</strong> Teksti gati për WhatsApp ose SMS, i hapur nga telefoni juaj, pa shërbim të jashtëm në mes.</li>
+          <li><strong>Arkivimi, jo fshirja.</strong> Klienti që e mbylli borxhin arkivohet; historiku nuk ndryshon kurrë.</li>
+        </ul>
+      </section>
+
+      <!-- 08 ─────────────────────────────────────────── -->
+      <section id="faturat">
+        <div class="kokaSeksionit"><span class="numri">08</span><h2 class="tituj">Faturat blerëse</h2></div>
+        <p>
+          Fatura që keni blerë hyn me gjashtë fusha: <strong>furnitori, numri, data, vlera, afati,
+          fotoja</strong>. Asgjë për artikull, asgjë për stok — totali është ai që prek paratë, dhe paratë
+          janë pyetja. Afati mbushet vetvetiu nga afati i furnitorit (15 ose 30 ditë), pra në praktikë
+          shtypen katër fusha dhe bëhet një fotografi.
+        </p>
+
+        <h4>Pagesat</h4>
+        <ul>
+          <li>Një pagesë është lëvizje e arkës e <strong>lidhur me faturën</strong>, jo një shënim mbi të. Kështu, pagesa e furnitorit te dera zbret nga arka dhe njëkohësisht e mbyll faturën — një veprim, jo dy.</li>
+          <li>Pagesat pjesore janë normë: fatura mbetet e hapur me mbetjen e vet derisa të mbulohet.</li>
+          <li>Nëse fatura mungon — furnitori solli mall dhe u pagua kesh pa dokument — regjistrohet si <em>blerje pa faturë</em>, me furnitorin dhe një foto nëse ka. Kjo është kategori e veçantë me qëllim: sasia e saj në fund të muajit është një shifër që ia vlen ta shihni.</li>
+        </ul>
+
+        <h4>Ekrani që përdoret vërtet</h4>
+        <p>
+          Nuk është lista e faturave. Është <strong>«çka skadon këtë javë»</strong>: faturat e renditura
+          sipas afatit, me sa mbetet për t’u paguar dhe sa kesh keni. Lista e plotë rri prapa saj, me
+          kërkim sipas furnitorit dhe numrit — për ditën kur furnitori telefonon dhe thotë se një faturë
+          e marsit nuk është paguar.
+        </p>
+        <p>
+          Fotoja e fletëdërgesës përdor të njëjtin mekanizëm si te FinanCarePersonal: <code>images.js</code>
+          e ripërpunon në pajisje para se ta ruajë, dhe miniatura rri veçmas nga skedari i plotë, që
+          aplikacioni të mbetet i shpejtë edhe me qindra fotografi.
         </p>
       </section>
 
       <!-- 09 ─────────────────────────────────────────── -->
-      <section id="llogaritjet">
-        <div class="kokaSeksionit"><span class="numri">09</span><h2 class="tituj">Rregullat e llogaritjes</h2></div>
+      <section id="paneli">
+        <div class="kokaSeksionit"><span class="numri">09</span><h2 class="tituj">Ku janë paratë</h2></div>
         <p>
-          I njëjti rregull i hekurt si te FinanCarePersonal: <strong>çdo shifër del nga një funksion i pastër</strong>
-          në <code>lib/biznes.js</code> — pa qasje në bazë, pa React, pa <code>new Date()</code> brenda llogaritjes
-          (dita jepet gjithmonë si argument). Kjo është arsyeja pse paneli dhe raporti i mbrëmjes nuk mund të
-          kundërshtojnë njëri-tjetrin, dhe pse gjithçka provohet me teste pa shfletues.
+          Ekrani i parë. Një përgjigje e vetme për pyetjen e §01, e ndarë në pjesët që e prodhojnë —
+          sepse «30 mijë» dhe «arka bosh» janë dy pjesë të së njëjtës shumë, të parë veç e veç.
+        </p>
+
+        <figure style="margin:0">
+          <div class="kuponi pa-dhëmbë" role="img" aria-label="Pozicioni: kesh 1.840, bankë 6.200, te klientët 3.150, faturat e papaguara −9.400, pozicioni neto 1.790">
+            <div class="krye">Pozicioni · 27.08.2026</div>
+            <hr>
+            <div class="rresht"><span>Kesh në arkë <small>(numëruar mbrëmë)</small></span><span>1.840,00</span></div>
+            <div class="rresht"><span>Në bankë</span><span>6.200,00</span></div>
+            <div class="rresht pozitiv"><span>Te klientët, të paarkëtuara</span><span>3.150,00</span></div>
+            <div class="rresht theks"><span>Faturat e papaguara</span><span>−9.400,00</span></div>
+            <div class="rresht total"><span>Pozicioni neto</span><span>1.790,00</span></div>
+            <hr>
+            <div class="rresht"><span>Xhiroja 30 ditë</span><span>42.310,00</span></div>
+            <div class="fund">xhiroja nuk është para juaja — është qarkullim</div>
+          </div>
+          <figcaption>
+            Këtu qëndron e gjithë çështja. Shifra prej 42 mijë eurosh është reale dhe e prekshme çdo ditë;
+            paraja që ju takon vërtet është 1.790 €. Të dyja janë të vërteta njëkohësisht, dhe fletorja
+            nuk mund t’i tregojë kurrë bashkë.
+          </figcaption>
+        </figure>
+
+        <h4>Çka tjetër rri në panel</h4>
+        <ul>
+          <li><strong>Dita e pambyllur.</strong> Nëse dje nuk u barazua, kjo është gjëja e parë që shihni.</li>
+          <li><strong>Diferencat e shtatë ditëve të fundit</strong> si një rresht i vogël shifrash — forma, jo detaji.</li>
+          <li><strong>Ku shkoi keshi këtë muaj</strong> — daljet e ndara sipas llojit të §02, me atë të parën lart. Ky është raporti që i përgjigjet pyetjes së titullit.</li>
+          <li><strong>Skadon këtë javë</strong> — faturat, me totalin përballë keshit që keni.</li>
+          <li><strong>Mbi 60 ditë</strong> — klientët të cilëve u ka ikur koha.</li>
+        </ul>
+        <p>
+          <strong>Raporti i mbrëmjes</strong> vjen me email dhe përmban po këto: mbyllja e ditës, diferenca,
+          xhiroja dhe çka skadon nesër. Përdoret i njëjti Edge Function i FinanCarePersonal, i cili mban
+          vetëm çelësin e dërgimit dhe përcjell një email tashmë të ndërtuar në pajisjen tuaj.
+        </p>
+      </section>
+
+      <!-- 10 ────────────────────────────────────────── -->
+      <section id="modeli">
+        <div class="kokaSeksionit"><span class="numri">10</span><h2 class="tituj">Të dhënat dhe llogaritjet</h2></div>
+        <p>
+          Nëntë depo në IndexedDB — pesë më pak sesa do të kërkonte një sistem me role — me të njëjtin
+          emërtim shqip dhe të njëjtat rregulla shkrimi si te <code>db.js</code>: çdo rresht i sinkronizuar
+          mban <code>perditesuar</code> dhe <code>sinkPezull</code>, fshirjet lënë gurë varri te
+          <code>fshirjet</code>, dhe format nuk i shkruajnë kurrë vetë ato fusha.
+        </p>
+        <div class="tabela">
+          <table>
+            <thead><tr><th>Depoja</th><th>Fushat kryesore</th><th>Shënim</th></tr></thead>
+            <tbody>
+              <tr><td><code>biznesi</code></td><td>emri, monedha, praguArsyes, fondiParazgjedhur, njoftimet*</td><td>Një rresht i vetëm, si <code>profile</code>.</td></tr>
+              <tr><td><code>levizjet</code></td><td>data, lloji, nenlloji, vlera, menyra, kategoriaId, klientiId, furnitoriId, faturaId, pershkrimi, shenim, krijuar, kyçur</td><td>Ledgeri. <code>menyra</code> është fusha nga e cila varet çdo barazim.</td></tr>
+              <tr><td><code>mbylljet</code></td><td>data, nga, deri, fondi, pritur, numeruar, prerjet{}, diferenca, arsyeja, koha, shkyçjet[]</td><td>Një ose më shumë për ditë; shkyçja ruan mbylljen e vjetër.</td></tr>
+              <tr><td><code>klientet</code></td><td>emri, telefoni, limiti, shenim, arkivuar</td><td>Borxhi <em>nuk</em> është fushë — llogaritet nga <code>levizjet</code>.</td></tr>
+              <tr><td><code>furnitoret</code></td><td>emri, kontakti, telefoni, afatiDitë, shenim, arkivuar</td><td>Afati mbush automatikisht datën e skadimit.</td></tr>
+              <tr><td><code>faturat</code></td><td>furnitoriId, numri, data, dataAfatit, vlera, shenim, fotoId</td><td>Faturat blerëse. Pagesat lidhen nga <code>levizjet</code>.</td></tr>
+              <tr><td><code>kategorite</code></td><td>emri, lloji, prindi, ngjyra, ikona, arkivuar</td><td>Merret pothuajse e paprekur, me listë tjetër fillestare.</td></tr>
+              <tr><td><code>fotot</code> / <code>fotoSkedaret</code></td><td>metadata + miniaturë / <code>Blob</code> i plotë</td><td>E njëjta ndarje si te personali; fotot nuk sinkronizohen (ZIP-i i bart).</td></tr>
+              <tr><td><code>fshirjet</code></td><td><code>depoja:id</code>, koha</td><td>Gurët e varrit, që një fshirje të udhëtojë mes pajisjeve.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p style="margin-top:16px">
+          Në renë kompjuterike rreshtat rrinë në <strong>një tabelë të vetme</strong>
+          <code>(user_id, store, record_id, updated_at, deleted, data jsonb)</code> — pra shtimi i një fushe
+          ose i një depoje të tërë nesër nuk kërkon migrim në projektin tuaj. Meqë përdoruesi është një,
+          rregulli i konfliktit i FinanCarePersonal mbetet ashtu siç është dhe punon: telefoni dhe
+          kompjuteri juaj nuk e ndryshojnë të njëjtin rresht në të njëjtin minut.
+        </p>
+
+        <h3>Rregullat e llogaritjes</h3>
+        <p>
+          I njëjti rregull i hekurt: çdo shifër del nga një <strong>funksion i pastër</strong> në
+          <code>lib/biznes.js</code> — pa qasje në bazë, pa React, pa <code>new Date()</code> brenda
+          llogaritjes, sepse dita jepet gjithmonë si argument. Kjo është arsyeja pse paneli dhe raporti i
+          mbrëmjes nuk mund të kundërshtojnë njëri-tjetrin, dhe pse gjithçka provohet me teste pa shfletues.
         </p>
         <div class="tabela">
           <table>
             <thead><tr><th>Funksioni</th><th>Përgjigjet</th></tr></thead>
             <tbody>
-              <tr><td><code>gjendjaArkes</code></td><td>Sa kesh ka tani në një arkë: fondi + hyrjet kesh − daljet kesh.</td></tr>
-              <tr><td><code>pritjaBarazimit</code></td><td>Sa duhet të ketë sirtari në fund të ndërrimit. Përjashton kartelën dhe borxhin.</td></tr>
+              <tr><td><code>gjendjaArkes</code></td><td>Sa kesh ka tani: fondi + hyrjet kesh − daljet kesh.</td></tr>
+              <tr><td><code>pritjaMbylljes</code></td><td>Sa duhet të ketë sirtari sonte. Përjashton kartelën dhe borxhin.</td></tr>
               <tr><td><code>totaliPrerjeve</code></td><td>Numërimin sipas prerjeve në një shifër.</td></tr>
-              <tr><td><code>diferencaBarazimit</code></td><td>Mungesë apo tepricë, e rrumbullakuar në cent.</td></tr>
-              <tr><td><code>xhiroja</code></td><td>Shitjet e një periudhe, të ndara sipas mënyrës së pagesës.</td></tr>
+              <tr><td><code>diferencaMbylljes</code></td><td>Mungesë apo tepricë, e rrumbullakuar në cent.</td></tr>
+              <tr><td><code>serieDiferencash</code></td><td>Formën e diferencave në kohë — zhurmë apo shenjë.</td></tr>
+              <tr><td><code>ndarjaEDaljeve</code></td><td><strong>Ku shkoi keshi</strong> në një periudhë, sipas tetë rrugëve të §02.</td></tr>
+              <tr><td><code>pozicioni</code></td><td>Kesh + bankë + te klientët − faturat e papaguara.</td></tr>
+              <tr><td><code>xhiroja</code></td><td>Shitjet e periudhës, të ndara sipas mënyrës së pagesës.</td></tr>
               <tr><td><code>bilanciKlientit</code></td><td>Sa ka borxh një klient, nga rreshtat e tij.</td></tr>
               <tr><td><code>plakjaEBorxheve</code></td><td>Ndarjen 0–30 / 31–60 / 61–90 / 90+ ditë.</td></tr>
               <tr><td><code>klientetMbiLimit</code></td><td>Kush e ka kaluar tavanin e vet.</td></tr>
-              <tr><td><code>detyrimetFurnitoreve</code></td><td>Sa i mbetet për t’u paguar secilit furnitor.</td></tr>
+              <tr><td><code>detyrimetFurnitoreve</code></td><td>Sa mbetet për t’u paguar për secilën faturë dhe furnitor.</td></tr>
               <tr><td><code>faturatQeSkadojne</code></td><td>Cilat fatura kanë afat brenda N ditësh.</td></tr>
-              <tr><td><code>marzha</code></td><td>Dallimin shitje−blerje, vetëm kur çmimi i blerjes është regjistruar.</td></tr>
-              <tr><td><code>krahasimiPeriudhave</code></td><td>Këtë javë përballë javës së kaluar, këtë njësi përballë tjetrës.</td></tr>
-              <tr><td><code>parashikimiArkes</code></td><td>Sa kesh do të mbetet pas pagesave që skadojnë — i përshtatur nga <code>forecast</code>.</td></tr>
-              <tr><td><code>llogariaEPunetorit</code></td><td>Paga e muajit minus avancat e marra.</td></tr>
+              <tr><td><code>parashikimiArkes</code></td><td>Sa kesh mbetet pas faturave që skadojnë — i përshtatur nga <code>forecast</code>.</td></tr>
             </tbody>
           </table>
         </div>
         <p style="margin-top:16px">
-          Numri i testeve i FinanCarePersonal sot: <strong>512 teste në 25 skedarë</strong>. Për
-          FinanCareBusiness parashikojmë të njëjtën mbulesë për çdo funksion të mësipërm — një veçori
-          financiare pa test nuk hyn në degën kryesore.
+          FinanCarePersonal ka sot <strong>512 teste në 25 skedarë</strong>. Për secilin funksion të
+          mësipërm pritet e njëjta mbulesë: një veçori financiare pa test nuk hyn në degën kryesore.
         </p>
       </section>
 
-      <!-- 10 ────────────────────────────────────────── -->
+      <!-- 11 ────────────────────────────────────────── -->
       <section id="trashegimia">
-        <div class="kokaSeksionit"><span class="numri">10</span><h2 class="tituj">Çka merret gati nga FinanCarePersonal</h2></div>
+        <div class="kokaSeksionit"><span class="numri">11</span><h2 class="tituj">Çka merret gati</h2></div>
         <p>
-          Arsyeja pse ky projekt zgjat katër muaj e jo një vit: rreth <strong>40% e kodit merret ashtu siç është</strong>,
-          <strong>35% përshtatet</strong> dhe vetëm <strong>25% shkruhet nga e para</strong>. Të gjitha janë tashmë
-          të provuara në përdorim real.
+          Arsyeja pse ky projekt zgjat tre muaj e jo një vit: rreth <strong>gjysma e kodit merret ashtu siç
+          është</strong>, një e treta përshtatet, dhe vetëm një e pesta shkruhet nga e para. Gjithçka e
+          trashëguar është tashmë në përdorim real.
         </p>
         <div class="tabela">
           <table>
             <thead><tr><th>Pjesa</th><th>Statusi</th><th>Shënim</th></tr></thead>
             <tbody>
-              <tr><td>Llogaritësi, formatimi, periudhat, ikonat</td><td><span class="etiketë gati">gati</span></td><td><code>calc.js</code>, <code>format.js</code>, <code>periudhat.js</code>, <code>icons.js</code> — pa asnjë ndryshim.</td></tr>
-              <tr><td>Eksportet Excel / PDF / ZIP</td><td><span class="etiketë gati">gati</span></td><td>Ndryshojnë vetëm kolonat; motori i pasqyrës bankare vlen njësoj për arkën.</td></tr>
-              <tr><td>Fotot dhe ripërpunimi</td><td><span class="etiketë gati">gati</span></td><td><code>images.js</code> + ndarja miniaturë/blob — pikërisht ajo që duhet për fletëdërgesat.</td></tr>
+              <tr><td>Llogaritësi, formatimi, periudhat, ikonat</td><td><span class="etiketë gati">gati</span></td><td><code>calc.js</code>, <code>format.js</code>, <code>periudhat.js</code>, <code>icons.js</code> — pa ndryshim.</td></tr>
+              <tr><td>Sinkronizimi dhe skema</td><td><span class="etiketë gati">gati</span></td><td>Pa role, modeli i FinanCarePersonal vlen ashtu siç është. <strong>Ky është kursimi më i madh i vendimit tuaj.</strong></td></tr>
+              <tr><td>Eksportet Excel / PDF / ZIP</td><td><span class="etiketë gati">gati</span></td><td>Ndryshojnë vetëm kolonat; motori i pasqyrës bankare vlen njësoj për arkën dhe për pasqyrën e klientit.</td></tr>
+              <tr><td>Fotot dhe ripërpunimi</td><td><span class="etiketë gati">gati</span></td><td>Pikërisht ajo që duhet për fletëdërgesat.</td></tr>
               <tr><td>Tabela, Ui.jsx, Zgjedhësi, VleraInput, Pickers</td><td><span class="etiketë gati">gati</span></td><td>E gjithë ndërfaqja bazë, me temën e errët dhe të ndritur.</td></tr>
               <tr><td>PWA, offline, instalimi</td><td><span class="etiketë gati">gati</span></td><td>Service worker-i dhe kapja e <code>beforeinstallprompt</code>.</td></tr>
               <tr><td>Importi CSV</td><td><span class="etiketë gati">gati</span></td><td>Merr pasqyrën bankare të dyqanit me të njëjtin gjetës kolonash e formatesh.</td></tr>
-              <tr><td>Udhëzuesi brenda aplikacionit</td><td><span class="etiketë gati">gati</span></td><td>Struktura e <code>udhezimet.js</code>; teksti shkruhet i ri — dhe është ai që përdoret në trajnim.</td></tr>
-              <tr><td>Sinkronizimi</td><td><span class="etiketë perth">përshtatet</span></td><td>Gjysma e pastër e bashkimit mbetet; shtohen rolet, kyçja e ditëve dhe zgjidhja e konflikteve në server.</td></tr>
-              <tr><td>Skema dhe klienti Supabase</td><td><span class="etiketë perth">përshtatet</span></td><td>Migrime të reja me RLS sipas rolit dhe njësisë; ftesa e përdoruesve.</td></tr>
-              <tr><td>Finance → Biznes</td><td><span class="etiketë perth">përshtatet</span></td><td><code>reconciliation</code>, <code>forecast</code>, <code>recurring</code> dhe kategoritë kalojnë; pjesa tjetër shkruhet sipas §09.</td></tr>
-              <tr><td>Konteksti i të dhënave, NavBar, Paneli</td><td><span class="etiketë perth">përshtatet</span></td><td>Ngarkimi një herë mbetet, por i kufizuar sipas njësisë dhe rolit.</td></tr>
+              <tr><td>Struktura e udhëzuesit</td><td><span class="etiketë gati">gati</span></td><td>Teksti shkruhet i ri — dhe është ai që përdoret në trajnim.</td></tr>
+              <tr><td>Barazimi</td><td><span class="etiketë perth">përshtatet</span></td><td><code>reconciliation</code> ekziston; shtohen prerjet, pragu i arsyes, kyçja dhe historiku.</td></tr>
+              <tr><td>Finance → Biznes</td><td><span class="etiketë perth">përshtatet</span></td><td><code>forecast</code>, kategoritë dhe pagesat e përsëritura kalojnë; pjesa tjetër sipas §10.</td></tr>
+              <tr><td>Paneli, NavBar, konteksti i të dhënave</td><td><span class="etiketë perth">përshtatet</span></td><td>Ngarkimi një herë në memorie mbetet i njëjti.</td></tr>
               <tr><td>Raportet me email</td><td><span class="etiketë perth">përshtatet</span></td><td>I njëjti Edge Function; përmbajtja rishkruhet për ditën e dyqanit.</td></tr>
-              <tr><td>Ndërrimet, arka, barazimi me prerje</td><td><span class="etiketë re">e re</span></td><td>Zemra e produktit.</td></tr>
-              <tr><td>Klientët, defteri, plakja, pasqyra</td><td><span class="etiketë re">e re</span></td><td>Përfshirë kujtesat dhe limitin.</td></tr>
-              <tr><td>Furnitorët dhe faturat me afat</td><td><span class="etiketë re">e re</span></td><td>—</td></tr>
-              <tr><td>Rolet, lejet, gjurma, kyçja e ditës</td><td><span class="etiketë re">e re</span></td><td>Pjesa më delikate; e planifikuar herët me qëllim.</td></tr>
+              <tr><td>Arka: llojet e daljeve dhe futja e shpejtë</td><td><span class="etiketë re">e re</span></td><td>Tetë llojet e §02 dhe forma nën dhjetë sekonda.</td></tr>
+              <tr><td>Lista e borxheve me pagesa</td><td><span class="etiketë re">e re</span></td><td>Klientët, plakja, limiti, pasqyra, kujtesa.</td></tr>
+              <tr><td>Faturat blerëse me afat</td><td><span class="etiketë re">e re</span></td><td>Pagesat pjesore dhe «skadon këtë javë».</td></tr>
+              <tr><td>Paneli «Ku janë paratë»</td><td><span class="etiketë re">e re</span></td><td>Pozicioni dhe ndarja e daljeve.</td></tr>
             </tbody>
           </table>
         </div>
       </section>
 
-      <!-- 11 ────────────────────────────────────────── -->
+      <!-- 12 ────────────────────────────────────────── -->
       <section id="plani">
-        <div class="kokaSeksionit"><span class="numri">11</span><h2 class="tituj">Plani i punës</h2></div>
+        <div class="kokaSeksionit"><span class="numri">12</span><h2 class="tituj">Plani i punës</h2></div>
         <p>
-          Tetë faza, <strong>14–17 javë kalendarike</strong> për një zhvillues. Javët janë kalendarike dhe
-          përfshijnë testim e korrigjim; radha është zgjedhur që <strong>pas javës së nëntë të keni diçka që
-          punon vërtet në dyqan</strong>, jo një demo. Çdo fazë mbyllet me një version të instalueshëm dhe me
-          një takim të shkurtër ku e shihni.
+          Tetë faza, <strong>11–13 javë kalendarike</strong>, testimi dhe korrigjimi brenda. Radha është
+          zgjedhur që <strong>arka të barazojë që nga java e pestë</strong> — pra të filloni ta përdorni
+          për problemin e §01 ndërsa pjesa tjetër ende ndërtohet. Çdo fazë mbyllet me një version të
+          instalueshëm dhe një takim të shkurtër ku e shihni.
         </p>
 
         <div class="fazat">
@@ -917,153 +909,141 @@ figcaption { font-size: .84rem; color: var(--bojë3); margin-top: 18px; max-widt
             <div class="kohë">Java 1<small>Faza 0</small></div>
             <div>
               <h3>Zbulimi në terren</h3>
-              <p>Një ditë e plotë në market, nga hapja te mbyllja. Shohim Z-raportin real, defterin real, kunjin e fletëdërgesave dhe si numërohet arka. Nuk fillohet kod para kësaj.</p>
-              <div class="dorëzimi"><b>Dorëzohet:</b> lista përfundimtare e fushave, kategoritë fillestare, rolet e sakta, vendimi për stokun</div>
+              <p>Një ditë e plotë në market, nga hapja te mbyllja. Shohim Z-raportin real, fletoren e borxheve, kunjin e fletëdërgesave dhe si numërohet arka sot. Nuk fillohet kod para kësaj.</p>
+              <div class="dorëzimi"><b>Dorëzohet:</b> llojet përfundimtare të daljeve · kategoritë fillestare · pragu i arsyes</div>
             </div>
           </div>
 
           <div class="faza">
-            <div class="kohë">Javët 2–4<small>Faza 1</small></div>
+            <div class="kohë">Javët 2–3<small>Faza 1</small></div>
             <div>
               <h3>Themeli</h3>
-              <p>Projekti, baza IndexedDB me depot e §08, projekti Supabase me RLS, hyrja e përdoruesve, rolet, njësitë, sinkronizimi dy-drejtimësh me kyçje, gjurma e veprimeve, ndërfaqja bazë dhe tema.</p>
-              <div class="dorëzimi"><b>Dorëzohet:</b> aplikacion që hyn me tre role · sinkronizon mes dy pajisjeve · punon offline</div>
-            </div>
-          </div>
-
-          <div class="faza">
-            <div class="kohë">Javët 5–7<small>Faza 2</small></div>
-            <div>
-              <h3>Arka, ndërrimet, barazimi</h3>
-              <p>Modulet M1–M3. Hapja e ndërrimit, futja e shpejtë e lëvizjeve, numëruesi i prerjeve, barazimi me arsye dhe kyçja e ditës. Storno për menaxherin.</p>
-              <div class="dorëzimi"><b>Dorëzohet:</b> një ndërrim i plotë mbyllet dhe barazon · funksionet e §09 me teste</div>
+              <p>Projekti, baza IndexedDB me depot e §10, projekti Supabase, sinkronizimi i trashëguar, kategoritë, ndërfaqja bazë dhe tema. Pa role — kjo fazë është dy javë pikërisht për këtë arsye.</p>
+              <div class="dorëzimi"><b>Dorëzohet:</b> aplikacion që sinkronizon mes telefonit dhe kompjuterit · punon offline</div>
             </div>
           </div>
 
           <div class="faza gurThemeli">
-            <div class="kohë">Javët 8–9<small>Faza 3</small></div>
+            <div class="kohë">Javët 4–5<small>Faza 2</small></div>
             <div>
-              <h3>Defteri i borxheve — <em>versioni i parë i përdorshëm</em></h3>
-              <p>Moduli M4 i plotë: klientët, shitja me borxh, arkëtimi, limiti, plakja, pasqyra në PDF dhe kujtesa. Nga këtu, marketi mund ta lërë fletoren.</p>
-              <div class="dorëzimi"><b>Dorëzohet:</b> <b>MVP i vënë në një njësi</b> · arka + defteri zëvendësojnë letrën</div>
+              <h3>Arka dhe barazimi — <em>versioni i parë i përdorshëm</em></h3>
+              <p>Modulet M1 dhe M2. Tetë llojet e daljeve, futja e shpejtë, numëruesi i prerjeve, mbyllja me arsye, kyçja dhe historiku i diferencave.</p>
+              <div class="dorëzimi"><b>Dorëzohet:</b> <b>arka barazon çdo mbrëmje në market</b> · funksionet e §10 me teste</div>
             </div>
           </div>
 
           <div class="faza">
-            <div class="kohë">Javët 10–11<small>Faza 4</small></div>
+            <div class="kohë">Javët 6–7<small>Faza 3</small></div>
             <div>
-              <h3>Furnitorët dhe shpenzimet</h3>
-              <p>Modulet M5 dhe M7. Faturat me afat, pagesat pjesore, «skadon këtë javë», fotoja e fletëdërgesës, kategoritë e shpenzimeve dhe pagesat e përsëritura.</p>
-              <div class="dorëzimi"><b>Dorëzohet:</b> anë e detyrimeve e mbyllur · arkivi i fletëdërgesave</div>
+              <h3>Lista e borxheve</h3>
+              <p>Moduli M3 i plotë: klientët, mall me borxh, pagesat e pjesshme, limiti, plakja, pasqyra në PDF dhe kujtesa. Nga këtu fletorja mund të lihet.</p>
+              <div class="dorëzimi"><b>Dorëzohet:</b> defteri i zëvendësuar · pasqyra që i tregohet klientit</div>
             </div>
           </div>
 
           <div class="faza">
-            <div class="kohë">Javët 12–13<small>Faza 5</small></div>
+            <div class="kohë">Javët 8–9<small>Faza 4</small></div>
             <div>
-              <h3>Xhiroja, paneli, raportet</h3>
-              <p>Modulet M6, M8 dhe M9. Paneli i pronarit, krahasimi mes njësive, punëtorët dhe avancat, raporti i mbrëmjes me email, raporti javor e mujor, eksportet Excel/PDF.</p>
-              <div class="dorëzimi"><b>Dorëzohet:</b> pronari e mbyll ditën nga telefoni pa qenë në dyqan</div>
+              <h3>Faturat blerëse</h3>
+              <p>Moduli M4: furnitorët me afate, fatura me foto, pagesat pjesore, «skadon këtë javë», blerja pa faturë si kategori më vete.</p>
+              <div class="dorëzimi"><b>Dorëzohet:</b> ana e detyrimeve e mbyllur · arkivi i fletëdërgesave</div>
             </div>
           </div>
 
           <div class="faza">
-            <div class="kohë">Javët 14–16<small>Faza 6</small></div>
+            <div class="kohë">Java 10<small>Faza 5</small></div>
+            <div>
+              <h3>Paneli dhe raportet</h3>
+              <p>Pozicioni «Ku janë paratë», ndarja e daljeve sipas §02, raporti i mbrëmjes me email, raporti javor e mujor, eksportet.</p>
+              <div class="dorëzimi"><b>Dorëzohet:</b> përgjigjja e §01 si një ekran i vetëm</div>
+            </div>
+          </div>
+
+          <div class="faza">
+            <div class="kohë">Javët 11–12<small>Faza 6</small></div>
             <div>
               <h3>Pilotimi</h3>
-              <p>Dy deri tre javë përdorim paralel me letrën në një njësi të vetme. Kjo fazë <em>nuk</em> është testim — është vendi ku dalin gjërat që asnjë specifikim nuk i parashikon: kush e mban tabletin, sa gjatë zgjat futja e një shitjeje kur ka radhë, cili buton nuk gjendet.</p>
-              <div class="dorëzimi"><b>Dorëzohet:</b> lista e rregullimeve nga terreni, e zbatuar · vendimi për vazhdim</div>
+              <p>Dy javë përdorim paralel me letrën. Kjo nuk është testim — është vendi ku dalin gjërat që asnjë specifikim nuk i parashikon: sa gjatë zgjat futja e një shitjeje kur ka radhë, cili buton nuk gjendet, cila kategori mungon.</p>
+              <div class="dorëzimi"><b>Dorëzohet:</b> lista e rregullimeve nga terreni, e zbatuar</div>
             </div>
           </div>
 
           <div class="faza">
-            <div class="kohë">Java 17<small>Faza 7</small></div>
+            <div class="kohë">Java 13<small>Faza 7</small></div>
             <div>
-              <h3>Trajnimi dhe vënia në punë</h3>
-              <p>Udhëzuesi brenda aplikacionit i shkruar sipas gjuhës së stafit tuaj, një seancë me arkatarët, një me menaxherin, një me pronarin. Plani i kopjeve rezervë dhe kujt i bie telefoni kur diçka nuk shkon.</p>
-              <div class="dorëzimi"><b>Dorëzohet:</b> të gjitha njësitë në punë · dokumenti i mirëmbajtjes</div>
+              <h3>Vënia në punë</h3>
+              <p>Udhëzuesi brenda aplikacionit i shkruar me fjalët tuaja, plani i kopjeve rezervë, dhe kujt i bie telefoni kur diçka nuk shkon.</p>
+              <div class="dorëzimi"><b>Dorëzohet:</b> aplikacioni në punë · dokumenti i mirëmbajtjes</div>
             </div>
           </div>
         </div>
 
         <h3>Jashtë fushëveprimit — faza e dytë</h3>
         <p>
-          Këto nuk janë të harruara; janë të lëna me qëllim jashtë çmimit dhe afatit të mësipërm, sepse secila
-          është projekt në vete dhe asnjëra nuk duhet për t’i zgjidhur katër pyetjet e §01.
+          Të lëna me qëllim jashtë afatit të mësipërm. Asnjëra nuk duhet për t’i dhënë përgjigje pyetjes
+          «ku shkoi keshi», dhe secila është projekt në vete.
         </p>
         <ul>
-          <li><strong>Stoku dhe barkodi</strong> — hyrje malli për artikull, inventar, alarm për mungesa.</li>
+          <li><strong>Stoku dhe barkodi</strong> — hyrje malli për artikull, inventar, marzha reale.</li>
+          <li><strong>Rolet dhe arkatarët</strong> — nëse një ditë stafi fillon të shkruajë vetë.</li>
+          <li><strong>Disa njësi</strong> — nëse hapet marketi i dytë; baza është e përgatitur, ndërfaqja jo.</li>
           <li><strong>Arka fiskale</strong> — leximi automatik i Z-raportit, nëse pajisja e lejon.</li>
-          <li><strong>TVSH-ja dhe kontabiliteti</strong> — eksport i formatuar për kontabilistin.</li>
-          <li><strong>Dërgues SMS</strong> — kujtesa masive, nëse pranohet kalimi nëpër një shërbim të jashtëm.</li>
-          <li><strong>Programi i besnikërisë</strong> — pikë për klientët e rregullt.</li>
+          <li><strong>TVSH-ja</strong> — eksport i formatuar për kontabilistin.</li>
         </ul>
       </section>
 
-      <!-- 12 ────────────────────────────────────────── -->
-      <section id="kalimi">
-        <div class="kokaSeksionit"><span class="numri">12</span><h2 class="tituj">Kalimi nga letra</h2></div>
-        <p>
-          Pjesa ku dështojnë më shpesh projektet e këtij lloji nuk është kodi — është mëngjesi i parë kur
-          arkatari ka fletoren në njërën dorë dhe tabletin në tjetrën. Prandaj kalimi është pjesë e planit,
-          jo detyrë e klientit.
-        </p>
-        <ol class="list">
-          <li><strong>Gjendjet fillestare, jo historiku.</strong> Nuk shtypet fletorja e tri viteve. Shtypet një rresht për klient — «gjendja më 1 tetor 2026» — me datë dhe me nënshkrimin e pronarit. Historiku i vjetër mbetet në letër, i skanuar dhe i ruajtur si foto nëse dëshironi.</li>
-          <li><strong>Dy javë paralele.</strong> Fletorja vazhdon të mbahet gjatë pilotimit. Në fund të çdo dite krahasohen të dyja; kur pesë ditë me radhë përputhen, fletorja mbyllet zyrtarisht.</li>
-          <li><strong>Furnitorët nga kunji.</strong> Vetëm faturat e papaguara hyjnë në sistem, me numër, afat dhe vlerë. Ato të paguarat janë histori.</li>
-          <li><strong>Një njësi në fillim.</strong> Njësia e dytë nis vetëm pasi e para ka mbyllur një muaj të plotë pa probleme.</li>
-        </ol>
-      </section>
-
       <!-- 13 ────────────────────────────────────────── -->
-      <section id="rreziqet">
-        <div class="kokaSeksionit"><span class="numri">13</span><h2 class="tituj">Rreziqet, dhe si i trajtojmë</h2></div>
+      <section id="kalimi">
+        <div class="kokaSeksionit"><span class="numri">13</span><h2 class="tituj">Kalimi, rreziqet, nevojat</h2></div>
+
+        <h3>Kalimi nga letra</h3>
+        <ol class="list">
+          <li><strong>Gjendjet fillestare, jo historiku.</strong> Nuk shtypet fletorja e tri viteve. Shtypet një rresht për klient — «gjendja më 1 tetor 2026» — dhe një rresht për çdo faturë ende të papaguar. Pjesa tjetër është histori dhe mbetet në letër.</li>
+          <li><strong>Numërimi i parë është themeli.</strong> Ditën e nisjes numërohet arka dhe ajo shifër bëhet pikënisja. Gjithçka para saj nuk llogaritet — dhe as nuk duhet.</li>
+          <li><strong>Dy javë paralel.</strong> Fletorja vazhdon gjatë pilotimit. Kur pesë ditë me radhë përputhen, mbyllet zyrtarisht.</li>
+          <li><strong>Pritni një muaj para se të nxirrni përfundime.</strong> Historiku i diferencave ka nevojë për njëzet ditë që të marrë formë. Java e parë tregon vetëm se aplikacioni punon.</li>
+        </ol>
+
+        <h3>Rreziqet dhe si i trajtojmë</h3>
         <div class="tabela">
           <table>
             <thead><tr><th>Rreziku</th><th>Trajtimi</th></tr></thead>
             <tbody>
-              <tr><td>Stafi nuk e regjistron borxhin në momentin e shitjes</td><td>Futja e një borxhi duhet të zgjasë nën dhjetë sekonda: klient, shumë, gati. Ndërrimi nuk mbyllet me lëvizje të papërfunduara. Kjo është arsyeja pse Faza 6 është pilotim me kohëmatës në dorë, jo demonstrim.</td></tr>
-              <tr><td>Interneti bie në mes të ditës</td><td>Aplikacioni shkruan lokalisht dhe punon plotësisht offline; sinkronizimi kapërcen vetë kur lidhja kthehet. Dy tableta offline njëkohësisht nuk përplasen: ndërrimet e tyre janë rreshta të ndryshëm.</td></tr>
-              <tr><td>Mosmarrëveshje me klientin për borxhin</td><td>Çdo rresht mban orën, autorin dhe pajisjen; pasqyra e klientit nxirret si PDF. Për shuma të mëdha, mund të bashkëngjitet edhe foto e nënshkrimit.</td></tr>
-              <tr><td>Ndërrimi i stafit</td><td>Përdoruesit çaktivizohen, nuk fshihen — historiku i tyre mbetet i lidhur me emrin që e shkroi.</td></tr>
+              <tr><td>Daljet nuk shkruhen në moment</td><td>I gjithë produkti varet nga kjo. Prandaj futja është nën dhjetë sekonda, mbyllja e ditës e kujton çka mungon, dhe Faza 6 është pilotim me kohëmatës në dorë — jo demonstrim.</td></tr>
+              <tr><td>Diferenca mbetet e pashpjegueshme edhe pas një muaji</td><td>Atëherë përgjigjja është te rreshti i tetë i §02, dhe aplikacioni ka bërë punën e vet: ka eliminuar shtatë shpjegimet e tjera me datë e me shifër.</td></tr>
+              <tr><td>Pritja që aplikacioni «t’i gjejë» paratë vetë</td><td>Thënë hapur në §03 dhe e përsërisim: aplikacioni e bën të dukshme rrjedhjen, nuk e ndal atë. Vendimi mbetet i juaji.</td></tr>
+              <tr><td>Interneti bie</td><td>Shkruan lokalisht dhe punon plotësisht offline; sinkronizimi kapërcen vetë kur lidhja kthehet.</td></tr>
               <tr><td>Shfletuesi fshin të dhënat lokale</td><td>Kërkohet ruajtje e qëndrueshme sapo ka të dhëna për të humbur, dhe e vërteta rri gjithsesi te projekti juaj Supabase. Kopja ZIP javore mbetet e rekomanduar për fotot, të cilat nuk sinkronizohen.</td></tr>
-              <tr><td>Pritjet fiskale</td><td>Trajtuar hapur në §03 dhe e përsërisim në kontratë: kjo nuk zëvendëson arkën fiskale.</td></tr>
-              <tr><td>Rritja e historikut</td><td>Ngarkimi i plotë në memorie funksionon për vite të tëra me këtë vëllim; kur nuk mjafton, muajt e mbyllur ngarkohen sipas kërkesës dhe paneli lexon shifra përmbledhëse.</td></tr>
+              <tr><td>Historiku rritet me vite</td><td>Ngarkimi i plotë në memorie mban vite me këtë vëllim; kur nuk mjafton, muajt e mbyllur ngarkohen sipas kërkesës.</td></tr>
             </tbody>
           </table>
         </div>
-      </section>
 
-      <!-- 14 ────────────────────────────────────────── -->
-      <section id="nevojat">
-        <div class="kokaSeksionit"><span class="numri">14</span><h2 class="tituj">Çka na duhet nga ju</h2></div>
-        <p>Faza 0 nuk fillon pa këto. Asnjëra nuk kërkon punë përgatitore — vetëm një ditë kohë.</p>
+        <h3>Çka na duhet nga ju</h3>
         <ul>
-          <li>Një ditë të plotë në një market, nga hapja te mbyllja, me lejen për të pyetur arkatarin.</li>
-          <li>Një Z-raport real dhe një faqe të defterit (emrat mund të mbulohen).</li>
+          <li>Një ditë të plotë në market, nga hapja te mbyllja.</li>
+          <li>Një Z-raport real dhe një faqe të fletores së borxheve (emrat mund të mbulohen).</li>
           <li>Listën e furnitorëve dhe afatet e tyre të pagesës.</li>
-          <li>Numrin e njësive, arkave dhe punëtorëve, sot dhe brenda dy viteve.</li>
-          <li>Cilat pajisje përdoren: tablet, telefon, kompjuter — dhe kush i mban.</li>
-          <li>Një llogari Supabase në emër të biznesit (falas, hapet për pesë minuta bashkë me ne).</li>
+          <li>Sa kesh ka arka sot dhe sa është fondi i zakonshëm i mëngjesit.</li>
+          <li>Cilat pajisje përdorni: telefon, tablet, kompjuter.</li>
+          <li>Një llogari Supabase në emër të biznesit — falas, hapet për pesë minuta bashkë me ne.</li>
         </ul>
 
-        <h3>Pyetjet e hapura që i vendosni ju</h3>
+        <h3>Pyetjet që i vendosni ju</h3>
         <ul>
           <li>A hyn xhiroja si shifër e vetme nga Z-raporti, apo shitje për shitje?</li>
           <li>Sa është pragu i diferencës mbi të cilin kërkohet arsye — 1 €, 2 €, 5 €?</li>
-          <li>A lejohet shitja me borxh mbi limit me miratim, apo bllokohet plotësisht?</li>
-          <li>A duhet ta shohë menaxheri marzhën dhe pagat, apo vetëm pronari?</li>
-          <li>A ju duhet gjurmimi i mallit (stoku) brenda vitit të parë? Nëse po, e planifikojmë që tani si fazë të dytë të lidhur, jo si shtesë të vonshme.</li>
+          <li>A mbyllet arka një herë në ditë, apo edhe në mesditë kur ndërrohet stafi?</li>
+          <li>A doni limit për klientët e defterit, apo vetëm paralajmërim pa tavan?</li>
         </ul>
 
         <div class="kutiaTheksit" style="margin-top:28px">
-          <p><strong>Hapi tjetër.</strong> Një takim njëorësh për të kaluar §03 (kufijtë) dhe §14 (pyetjet e hapura). Pas tij dërgojmë ofertën me çmim dhe afat të fiksuar për Fazat 0–3 — deri te versioni i përdorshëm në market — dhe një vlerësim të veçantë për Fazat 4–7, që të mos paguani për diçka para se ta keni parë duke punuar.</p>
+          <p><strong>Hapi tjetër.</strong> Një takim njëorësh mbi §03 (kufijtë) dhe pyetjet e mësipërme. Pas tij dërgojmë ofertën me çmim dhe afat të fiksuar për <strong>Fazat 0–3</strong> — deri te arka që barazon dhe defteri i zëvendësuar — dhe një vlerësim të veçantë për fazat e mbetura, që të mos paguani për diçka para se ta keni parë duke punuar.</p>
         </div>
       </section>
 
       <footer class="fundi">
-        <span>FinanCareBusiness · propozim teknik v1</span>
+        <span>FinanCareBusiness · propozim teknik v2</span>
         <span>Mbi FinanCarePersonal v2.21.0 · gusht 2026</span>
       </footer>
 
