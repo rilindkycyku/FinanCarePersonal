@@ -72,6 +72,43 @@ export function bazaEPerdorshme(baza) {
     /^172\.(1[6-9]|2\d|3[01])\./.test(strehuesi);
   return lokal ? "" : teksti;
 }
+
+/** The wordmark set in text: white "FinanCare", emerald "PERSONAL", the way the app's own header
+ * and the PDF masthead set it. It is both the header of an email that has no logo to point at and,
+ * through `alt`, what a client that refuses to load the image shows in its place. */
+const MARKA_TEKST =
+  `<span style="color:#ffffff;font-size:17px;font-weight:bold;">FinanCare</span>` +
+  `<span style="color:${EMERALD};font-size:11px;font-weight:bold;letter-spacing:.12em;"> PERSONAL</span>`;
+
+/**
+ * The masthead of the email: the logo when there is somewhere to load it from, the words when not.
+ *
+ * The logo the app draws everywhere else is an SVG, and an SVG is the one image format no email
+ * client agrees on - Gmail drops it entirely - so the header points at `LogoEmail.png`, a raster
+ * copy of the same lockup baked onto the same navy this cell paints (`npm run ikonat` makes it).
+ * An email cannot carry the file with it either, since a data URL is stripped by the same clients,
+ * so the copy has to be fetched, and the only host worth fetching it from is the app itself: it is
+ * the user's own deployment serving a static file that says nothing about who opened the message.
+ *
+ * That makes the address the same condition the footer link has, and for the same reason - a logo
+ * hosted on `localhost` is a broken image in every inbox on earth - so an email built without a
+ * usable origin keeps the text lockup rather than a grey box with a torn-paper icon.
+ *
+ * `PERSONAL` stays live text beside the image. It is what the PDF statement does with the same
+ * logo, and it means a blocked image degrades to exactly the old header: `alt` is styled like the
+ * white half of the wordmark, and the emerald half was never an image to begin with.
+ */
+export function stema(adresa) {
+  if (!adresa) return MARKA_TEKST;
+  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
+            <td valign="middle" style="padding-right:9px;">
+              <img src="${esc(adresa)}/img/web/LogoEmail.png" width="171" height="32" alt="FinanCare"
+                   style="display:block;border:0;outline:none;text-decoration:none;width:171px;height:32px;color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:17px;font-weight:bold;">
+            </td>
+            <td valign="middle" style="font-family:Arial,Helvetica,sans-serif;color:${EMERALD};font-size:11px;font-weight:bold;letter-spacing:.12em;">PERSONAL</td>
+          </tr></table>`;
+}
+
 const meShenje = (n, monedha) => `${n >= 0 ? "+" : ""}${formatMoney(n, monedha)}`;
 const perqindjeMeShenje = (p) => `${p >= 0 ? "+" : ""}${Math.round(p)}%`;
 
@@ -404,7 +441,7 @@ export function ndertoRaportin({
       <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0"
              style="width:600px;max-width:100%;background:#ffffff;border-radius:14px;overflow:hidden;">
         <tr><td style="background:${NAVY};padding:20px 24px;font-family:Arial,Helvetica,sans-serif;">
-          <span style="color:#ffffff;font-size:17px;font-weight:bold;">FinanCare</span><span style="color:${EMERALD};font-size:11px;font-weight:bold;letter-spacing:.12em;"> PERSONAL</span>
+          ${stema(adresa)}
         </td></tr>
         <tr><td style="padding:24px;">
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">

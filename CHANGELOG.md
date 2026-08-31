@@ -9,6 +9,24 @@ e fundit kur rregullohet diçka, dhe e para vetëm kur ndryshon vetë forma e pr
 herë, te `2.0.0`, kur të dhënat mësuan të dalin nga shfletuesi. Datat janë ato të commit-it që e
 ngriti versionin.
 
+## [2.21.1] - 2026-08-31
+
+### Ndryshuar
+- **Koka e emailit mban logon, jo emrin e shkruar.** Pasqyra PDF që udhëton bashkë me raportin e ka
+  logon në krye; vetë emaili që e dërgon e kishte fjalën «FinanCare» të shkruar me shkronja të
+  zakonshme. Tani koka mban të njëjtën stemë si aplikacioni dhe si pasqyra: logon si figurë, me
+  fjalën «PERSONAL» pranë saj.
+
+  Logoja e aplikacionit është SVG dhe asnjë klient emaili nuk e shfaq atë me siguri - Gmail-i e heq
+  fare - prandaj u shtua një kopje PNG, `LogoEmail.png`, e prodhuar nga `npm run ikonat` mbi të
+  njëjtin fond kaltërosh që ka koka. Ajo kopje merret nga vetë faqja ku e keni ngritur aplikacionin,
+  jo nga ndonjë server tjetër. Nëse raporti niset nga një adresë që e sheh vetëm ai kompjuter -
+  `localhost` ose rrjeti i shtëpisë - koka mbetet siç ishte, sepse fjala e shkruar është më e mirë
+  se një figurë e thyer në çdo kuti postare. Po ashtu, kur klienti i emailit i bllokon figurat,
+  teksti zëvendësues del i stiluar si më parë: koka nuk mbetet kurrë bosh.
+
+  Grafikët e emailit mbeten tabela me ngjyra, jo figura, dhe asnjë shifër e raportit nuk ndryshoi.
+
 ## [2.21.0] - 2026-08-27
 
 ### Shtuar

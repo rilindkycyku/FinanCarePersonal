@@ -241,8 +241,10 @@ sa shpenzohet, sa mbetet dhe sa po kursesh.
   javët e muajit, muajt e tremujorit apo të vitit), ku shkuan paratë dhe sa mbeti nga çfarë hyri.
   Muaji, tremujori dhe viti e mbajnë të bashkëngjitur edhe pasqyrën e plotë PDF; javori mbetet i
   shkurtër me qëllim - shtatë ditët, shpenzimi më i madh dhe pagesat që vijnë brenda javës tjetër.
-  Grafikët janë tabela me ngjyra, jo figura: asnjë imazh nuk merret nga një server i jashtëm, pra
-  emaili hapet i plotë edhe kur klienti i bllokon figurat.
+  Grafikët janë tabela me ngjyra, jo figura, prandaj emaili hapet i plotë edhe kur klienti i
+  bllokon figurat. E vetmja figurë është logoja te koka, dhe ajo merret nga vetë faqja ku e keni
+  ngritur aplikacionin - jo nga një server i jashtëm; kur nuk ngarkohet, në vend të saj shfaqet
+  emri i shkruar, ashtu si më parë.
   <br />Nuk ka server tonin as këtu: emaili niset nga një funksion i vogël te **projekti juaj i
   Supabase-it**, me çelësin tuaj të [Resend](https://resend.com). Kodi i funksionit jepet i gatshëm
   te Cilësimet dhe instalohet një herë të vetme për të katër raportet. Cila pajisje e dërgon

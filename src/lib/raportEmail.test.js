@@ -6,7 +6,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { bazaEPerdorshme, ndertoRaportin } from "./raportEmail";
+import { bazaEPerdorshme, ndertoRaportin, stema } from "./raportEmail";
 import { JAVOR, TREMUJOR, VJETOR } from "./periudhat";
 
 const kategorite = [
@@ -178,5 +178,50 @@ describe("adresa te fundi i emailit", () => {
     expect(bazaEPerdorshme(undefined)).toBe("");
     expect(bazaEPerdorshme("javascript:alert(1)")).toBe("");
     expect(bazaEPerdorshme("file:///Users/dikush/app")).toBe("");
+  });
+});
+
+/**
+ * The masthead. The logo is the one picture in the email, it is loaded from wherever the app that
+ * sent the report happens to live, and a picture that cannot load has to leave the brand behind it
+ * - not an empty header.
+ */
+describe("stema e emailit", () => {
+  const meBaze = () =>
+    ndertoRaportin({
+      muaji: "2026-07",
+      profile: { monedha: "EUR" },
+      accounts: llogarite,
+      categories: kategorite,
+      transactions: transaksionet,
+      baza: "https://financarepersonal.vercel.app",
+    });
+
+  it("shows the logo, served by the app that sent the report", () => {
+    const { html } = meBaze();
+    expect(html).toContain('src="https://financarepersonal.vercel.app/img/web/LogoEmail.png"');
+    // Sized in attributes as well as in CSS: Outlook reads the attributes and nothing else.
+    expect(html).toContain('width="171" height="32"');
+  });
+
+  it("keeps the wordmark readable when the client refuses to load images", () => {
+    const { html } = meBaze();
+    // The alt text is styled like the white half of the lockup, and the emerald half is text
+    // anyway, so a blocked image leaves exactly the header the email had before.
+    expect(html).toContain('alt="FinanCare"');
+    expect(html).toContain(">PERSONAL<");
+  });
+
+  it("falls back to the words when there is no address to load a logo from", () => {
+    const { html } = ndertimi();
+    expect(html).not.toContain("LogoEmail.png");
+    expect(html).toContain(">FinanCare</span>");
+  });
+
+  it("never points at an address that only the sending machine can reach", () => {
+    // Same rule as the footer link: on a phone that URL is a torn-image icon, and the header is
+    // the first thing the reader sees.
+    expect(stema(bazaEPerdorshme("http://localhost:5173"))).not.toContain("<img");
+    expect(stema(bazaEPerdorshme("https://shembull.com"))).toContain("<img");
   });
 });
