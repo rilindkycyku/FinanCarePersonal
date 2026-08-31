@@ -6,7 +6,8 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
-  celesiRaportit, ekzekutoRaportet, marresiIRaportit, muajiIRaportit, provoSerish, raportiAktiv,
+  celesiRaportit, derguesiIVlefshem, ekzekutoRaportet, marresiIRaportit, muajiIRaportit, provoSerish,
+  raportiAktiv,
 } from "./raporti";
 import { JAVOR, VJETOR } from "./raportet";
 
@@ -66,6 +67,30 @@ describe("marrësi", () => {
 
   it("is empty when there is neither", () => {
     expect(marresiIRaportit({}, {})).toBe("");
+  });
+});
+
+/**
+ * The sender. It is typed once and then rides on every report for months, so a slip here is not one
+ * bad email - it is a year of them, each refused by Resend for a reason nobody is reading.
+ */
+describe("dërguesi", () => {
+  it("takes a plain address and a named one", () => {
+    expect(derguesiIVlefshem("raporte@contact.shembull.dev")).toBe(true);
+    expect(derguesiIVlefshem("FinanCare Personal <raporte@contact.shembull.dev>")).toBe(true);
+  });
+
+  it("treats blank as the function's own default rather than as a mistake", () => {
+    expect(derguesiIVlefshem("")).toBe(true);
+    expect(derguesiIVlefshem(undefined)).toBe(true);
+  });
+
+  it("refuses what Resend would refuse", () => {
+    expect(derguesiIVlefshem("raporte")).toBe(false);
+    expect(derguesiIVlefshem("raporte@domeni")).toBe(false);
+    // A name in front of the address only works inside angle brackets.
+    expect(derguesiIVlefshem("FinanCare raporte@shembull.dev")).toBe(false);
+    expect(derguesiIVlefshem("raporte@shembull.dev, tjeter@shembull.dev")).toBe(false);
   });
 });
 

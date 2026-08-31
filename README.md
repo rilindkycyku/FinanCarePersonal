@@ -252,7 +252,9 @@ sa shpenzohet, sa mbetet dhe sa po kursesh.
   ngritur aplikacionin - jo nga një server i jashtëm; kur nuk ngarkohet, në vend të saj shfaqet
   emri i shkruar, ashtu si më parë.
   <br />Nuk ka server tonin as këtu: emaili niset nga një funksion i vogël te **projekti juaj i
-  Supabase-it**, me çelësin tuaj të [Resend](https://resend.com). Kodi i funksionit jepet i gatshëm
+  Supabase-it**, me çelësin tuaj të [Resend](https://resend.com). Dërguesi zgjidhet te Cilësimet:
+  bosh do të thotë adresa e parazgjedhur e Resend-it, që shkruan vetëm te llogaria juaj, kurse me
+  një domen tuajin të verifikuar te Resend raportet nisen nga adresa juaj dhe shkojnë kudo. Kodi i funksionit jepet i gatshëm
   te Cilësimet dhe instalohet një herë të vetme për të katër raportet. Cila pajisje e dërgon
   vendoset te vetë projekti - një rresht shënjues që merret nga e para që arrin - pra tre pajisje
   nuk dërgojnë tre kopje të së njëjtës periudhë.

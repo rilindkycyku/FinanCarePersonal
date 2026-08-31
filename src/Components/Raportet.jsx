@@ -9,7 +9,8 @@ import { useDialog } from "../Context/DialogContext";
 import { useSync } from "../Context/SyncContext";
 import Zgjedhesi from "./Zgjedhesi";
 import {
-  EMRI_FUNKSIONIT, dergoRaportin, gjendjaFunksionit, lexoShenjat, marresiIRaportit, shenoDerguar,
+  EMRI_FUNKSIONIT, dergoRaportin, derguesiIVlefshem, gjendjaFunksionit, lexoShenjat, marresiIRaportit,
+  shenoDerguar,
 } from "../lib/raporti";
 // The function's real source, read straight out of the repository: the code the user pastes into
 // their project and the code reviewed here are then the same text, and cannot drift apart.
@@ -47,6 +48,7 @@ function Raportet() {
   const dialog = useDialog();
 
   const [marresi, setMarresi] = useState(profile.raportiMarresi || "");
+  const [derguesi, setDerguesi] = useState(profile.raportiNga || "");
   const [shenjat, setShenjat] = useState([]);
   const [funksioni, setFunksioni] = useState(null);
   const [duke, setDuke] = useState("");
@@ -73,6 +75,7 @@ function Raportet() {
   const eMbyllur = periudhat.find((p) => p.celesi === periudhaZgjedhur)?.mbyllur ?? true;
 
   useEffect(() => setMarresi(profile.raportiMarresi || ""), [profile.raportiMarresi]);
+  useEffect(() => setDerguesi(profile.raportiNga || ""), [profile.raportiNga]);
   // Switching the kind leaves the old period key behind - "2026-07" is not a week - so the picker
   // falls back to the most recent closed period of whatever was just chosen.
   useEffect(() => {
@@ -170,6 +173,25 @@ function Raportet() {
     await saveProfile({ ...profile, raportiMarresi: vlera });
   };
 
+  /**
+   * The sender is refused here rather than by Resend a month later: a report that fails at 6am on
+   * the first of the month fails quietly, and the reason is a line in a marker row nobody reads.
+   */
+  const ruajDerguesin = async () => {
+    const vlera = derguesi.trim();
+    if (vlera === (profile.raportiNga || "")) return;
+    if (!derguesiIVlefshem(vlera)) {
+      dialog.alert(
+        "Dërguesi duhet të jetë një adresë e plotë - «raporte@domeni-juaj.com» ose " +
+          "«Emri <raporte@domeni-juaj.com>» - dhe domeni duhet të jetë i verifikuar te Resend.",
+        { title: "Dërgues i pavlefshëm", variant: "warning" }
+      );
+      setDerguesi(profile.raportiNga || "");
+      return;
+    }
+    await saveProfile({ ...profile, raportiNga: vlera });
+  };
+
   const dergoTani = async () => {
     if (!iVertete) {
       dialog.alert("Nuk ka adresë ku ta dërgojmë - shkruani një ose hyni te projekti juaj.", {
@@ -256,6 +278,24 @@ function Raportet() {
                 : parazgjedhur
                   ? `Bosh do të thotë llogaria juaj: ${parazgjedhur}. Kjo është edhe e vetmja adresë që Resend e pranon derisa të verifikoni një domen tuajin.`
                   : "Shkruani adresën ku doni t'ju vijnë raportet."}
+            </div>
+          </Form.Group>
+
+          <Form.Group className="mb-3" controlId="raporti-derguesi">
+            <Form.Label className="small fw-semibold">Dërguesi</Form.Label>
+            <Form.Control
+              type="text"
+              placeholder="FinanCare Personal <raporte@domeni-juaj.com>"
+              value={derguesi}
+              onChange={(e) => setDerguesi(e.target.value)}
+              onBlur={ruajDerguesin}
+            />
+            <div className="fcp-modal-hint">
+              {derguesi.trim()
+                ? `Raportet do të nisen nga ${derguesi.trim()}. Domeni duhet të jetë i verifikuar te Resend.`
+                : "Bosh do të thotë adresa e parazgjedhur e Resend-it (onboarding@resend.dev), e cila " +
+                  "shkruan vetëm te llogaria juaj. Nëse keni verifikuar një domen tuajin te Resend, " +
+                  "shkruani një adresë të tij këtu - që andej raportet mund të shkojnë te çdo adresë."}
             </div>
           </Form.Group>
 

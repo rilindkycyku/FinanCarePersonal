@@ -835,8 +835,11 @@ export const UDHEZIMET = [
           "çfarë do të vijë. Emaili niset nga projekti juaj i " +
           "Supabase-it, pra kërkon një projekt të lidhur dhe një funksion të vogël me çelësin tuaj të " +
           "Resend; hapat e instalimit janë brenda vetë kartelës, një herë të vetme, dhe i njëjti instalim " +
-          "u shërben të katërve. Adresa lihet bosh për llogarinë me të cilën hyni te projekti, ose " +
-          "shkruhet një tjetër. Edhe një periudhë pa asnjë transaksion dërgohet - pikërisht ajo është " +
+          "u shërben të katërve. Adresa e marrësit lihet bosh për llogarinë me të cilën hyni te " +
+          "projekti, ose shkruhet një tjetër. «Dërguesi» është nga kush vijnë: bosh do të thotë " +
+          "adresa e parazgjedhur e Resend-it, e cila shkruan vetëm te llogaria juaj; nëse keni " +
+          "verifikuar një domen tuajin te Resend, shkruani një adresë të tij dhe raportet mund të " +
+          "shkojnë te çdo adresë. Edhe një periudhë pa asnjë transaksion dërgohet - pikërisht ajo është " +
           "shenja që diçka ka mbetur pa u shënuar. Çelësat i ndalin një nga një kur nuk i doni më. " +
           "Me «Dërgo tani» mund të merrni edhe periudhën që ende po rrjedh - p.sh. muajin e tanishëm: " +
           "shifrat ndalen te sot, krahasimi pritet te e njëjta pikë e periudhës së kaluar që të mos " +

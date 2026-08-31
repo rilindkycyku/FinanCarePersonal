@@ -82,6 +82,28 @@ export function marresiIRaportit(profile, konfigurimi = lexoKonfigurimin()) {
   return String(profile?.raportiMarresi || konfigurimi?.email || "").trim();
 }
 
+/**
+ * Whether a sender address is one Resend will take: `raporte@domeni.com`, or the friendlier
+ * `Emri <raporte@domeni.com>`.
+ *
+ * Blank is valid and means the function's own default (`onboarding@resend.dev`), which Resend lets
+ * an unverified account use to write to the account owner and nobody else. A user who has verified
+ * a domain in Resend puts an address on that domain here, and from then on the reports can go to
+ * any inbox they like.
+ *
+ * The check is deliberately shallow - one `@`, a dot after it, no spaces or angle brackets inside
+ * the address. Resend is the real judge and its refusal comes back verbatim; this only catches the
+ * slip that would otherwise cost a whole month's report: a name typed without the angle brackets,
+ * or a domain left half-written.
+ */
+export function derguesiIVlefshem(raw) {
+  const teksti = String(raw || "").trim();
+  if (!teksti) return true;
+  const meEmer = teksti.match(/^[^<>]+<([^<>]+)>$/);
+  const adresa = (meEmer ? meEmer[1] : teksti).trim();
+  return /^[^\s@<>]+@[^\s@<>.]+\.[^\s@<>]+$/.test(adresa);
+}
+
 /** Reads one period's marker, or null when it has never been attempted. */
 export async function lexoShenjen(lloji, periudha) {
   const rreshtat = await rest(

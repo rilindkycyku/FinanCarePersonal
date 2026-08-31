@@ -31,6 +31,14 @@ ngriti versionin.
   ajo blerje është e vetmja e ditës më të shtrenjtë, sepse atëherë do të ishte i njëjti fakt dy
   herë.
 
+- **Dërguesi i raporteve zgjidhet te Cilësimet.** Funksioni e pranonte një adresë dërguesi që nga
+  dita e parë, por asgjë në aplikacion nuk e shkruante dot: raportet niseshin gjithmonë nga adresa e
+  parazgjedhur e Resend-it, e cila lejon vetëm një marrës - vetë llogarinë tuaj. Tani te kartela e
+  raporteve ka një fushë «Dërguesi». Kush ka verifikuar një domen te Resend shkruan aty një adresë
+  të tij - «FinanCare Personal <raporte@domeni-juaj.com>» - dhe që andej raportet mund t'i shkojnë
+  çdo adrese. Fusha kontrollohet në vend: një adresë e gjysmuar ndalet aty, e jo pas një muaji te
+  një raport që dështoi në heshtje.
+
 - **Raporti mujor tregon qëllimet e kursimit dhe borxhet.** Që të dyja janë pjesë të librit që
   mund të rrinë muaj të tërë pa u parë: asgjë nuk i nxjerr para syve, dhe nuk lëvizin veçse kur dikush
   shkon t'i kërkojë. Tani mujori i mban në fund, nga tre secila.
