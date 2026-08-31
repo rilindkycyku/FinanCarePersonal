@@ -342,13 +342,10 @@ describe("etiketat në raport", () => {
     expect(text).not.toContain("Sipas etiketave");
   });
 
-  it("keeps the weekly email short - no tag section there", () => {
-    const { html, text } = iLlojit(JAVOR, "2026-W28", meEtiketa);
-    expect(html).not.toContain("Sipas etiketave");
-    expect(text).not.toContain("Sipas etiketave");
-  });
-
-  it("shows it in the quarterly and the yearly too", () => {
+  it("shows it in every kind, the weekly one included", () => {
+    // It costs the weekly email nothing to carry: a week with no tags draws no section at all, and
+    // a week with them has two or three rows.
+    expect(iLlojit(JAVOR, "2026-W28", meEtiketa).html).toContain("Sipas etiketave");
     expect(iLlojit(TREMUJOR, "2026-Q3", meEtiketa).html).toContain("Sipas etiketave");
     expect(iLlojit(VJETOR, "2026", meEtiketa).html).toContain("Sipas etiketave");
   });

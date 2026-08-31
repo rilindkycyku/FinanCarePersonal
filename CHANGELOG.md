@@ -31,13 +31,21 @@ ngriti versionin.
   ajo blerje është e vetmja e ditës më të shtrenjtë, sepse atëherë do të ishte i njëjti fakt dy
   herë.
 
+- **Logoja e humbi parullën e produktit tjetër.** Nën fjalën «FinanCare» rrinte «POS, ORDER & MORE»
+  - parulla e programit të arkës, jo e këtij. Në menu, te fundi i faqes, te koka e pasqyrës PDF dhe
+  te emaili ajo rresht ishte gjithsesi e palexueshme në atë madhësi, dhe atje ku lexohej, thoshte
+  diçka që nuk ka të bëjë me këtë aplikacion. Tani stema është vetëm shenja, «FinanCare» dhe
+  «PERSONAL», me fjalën të qendërzuar përballë shenjës. Pasqyra PDF e merr tani logon me shenjën
+  jeshile dhe fjalën blu në vend të asaj krejt të zezë, dhe në pesëfishin e madhësisë ku printohet,
+  që të mos dalë e ashpër në letër.
+
 - **Raportet tregojnë edhe etiketat tuaja.** «Ku shkuan paratë» i ndan paratë sipas kategorive, që
   janë raftet e vetë aplikacionit; etiketat janë ato që i shkruani vetë - «pushime2026», «makina» -
   dhe pikërisht ato nuk merren dot me mend nga një përmbledhje. Nën kategoritë del tani «Sipas
   etiketave» me pesë më të mëdhatë, me të njëjtat ngjyra që kanë te Statistikat. Një transaksion me
   dy etiketa numërohet i plotë te secila, prandaj përqindjet lexohen si «kaq nga muaji shkoi këtu»
   dhe mund t'i kalojnë 100 bashkë - njësoj si te paneli në aplikacion. Një libër që nuk përdor
-  etiketa nuk e sheh fare seksionin, dhe javori mbetet i shkurtër si më parë.
+  etiketa nuk e sheh fare seksionin - prandaj e mban edhe javori, pa u zgjatur për askënd.
 
 ### Ndryshuar
 - **Emaili i raportit lexohet më mirë në telefon.** Kartela ishte 600 piksel e ngulitur, pra në një
@@ -56,6 +64,13 @@ ngriti versionin.
   e deklaron veten si dizajn i çelët, që një klient në modalitet të errët të mos e kthejë përgjysmë.
 
 ### Rregulluar
+- **Instalimi i aplikacionit shkarkon 230 kB më pak.** Shërbyesi i punës (service worker) ruante në
+  fillim edhe dy copa kodi që asnjë klikim nuk i arrin dot: `html2canvas` dhe `DOMPurify`, që jsPDF
+  i kërkon vetëm për funksionin `doc.html()` - e ky aplikacion i vizaton vetë të dyja pasqyrat, pra
+  atë funksion nuk e thërret askund. Tani ato nuk paraprakisht-ruhen: 3,54 MB në vend të 3,77 MB, në
+  çdo instalim dhe pas çdo versioni. Asgjë nuk humbet jashtë linje - eksportet, fontet dhe pasqyra
+  PDF ruhen si më parë.
+
 - **Pasqyra e bashkëngjitur mban emrin e periudhës së vet.** Emri i skedarit dilte nga datat, dhe
   vetëm një muaj i plotë ose një vit i plotë njihen ashtu; një javë apo një tremujor vinin të dyja
   si `pasqyra-e-periudhes.pdf`, pra në kuti postare nuk dalloheshin nga njëra-tjetra. Tani raporti

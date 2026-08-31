@@ -284,7 +284,7 @@ export async function exportStatementPdf({
   let vizatuar = false;
   if (logo) {
     try {
-      // 481 × 90 in the source, kept in proportion.
+      // 962 × 180 in the source - the wordmark's own 481:90, kept in proportion.
       doc.addImage(logo, "PNG", MARGIN, MARGIN - 4, 128, 24);
       vizatuar = true;
     } catch {

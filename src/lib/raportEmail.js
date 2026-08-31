@@ -158,7 +158,9 @@ const rreshtiKursimit = (f, monedha) =>
  * does in the app, and it is the honest reading of "how much of this month went to this".
  *
  * Nothing is drawn for a ledger that uses no tags, which is most of them - an empty heading is
- * worse than a missing one.
+ * worse than a missing one. That is also what keeps this in the weekly email without making it
+ * longer for anybody: a week with no tags on it shows nothing at all, and a week with them has
+ * two or three rows to show.
  */
 const seksioniEtiketave = (f, monedha) =>
   f.etiketat?.length
@@ -218,6 +220,7 @@ function trupiJavor(f, monedha) {
             })}</td></tr>
             ${rreshtiMeIMadh(f, monedha, "i javës")}
             ${seksioniKategorive(f, monedha)}
+            ${seksioniEtiketave(f, monedha)}
             ${
               pagesat.length
                 ? `${titulliSeksionit("Brenda shtatë ditësh")}
@@ -621,8 +624,8 @@ ${qelizaShifres("Bilanci", formatMoney(f.perfundimtar, monedha), NAVY)}
         ...(f.meIMadhi
           ? ["", `Shpenzimi më i madh: ${f.meIMadhi.pershkrimi} - ${formatMoney(f.meIMadhi.vlera, monedha)}`]
           : []),
-        // The same sections the HTML shows, in the same order - the weekly one keeps neither.
-        ...(lloji !== JAVOR && f.etiketat?.length
+        // The same sections the HTML shows, in the same order.
+        ...(f.etiketat?.length
           ? [
               "",
               "Sipas etiketave:",
