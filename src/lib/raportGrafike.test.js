@@ -88,6 +88,19 @@ describe("markup-i", () => {
     expect(html).toContain("400,00");
   });
 
+  it("leaves a zero unlabelled - the missing bar has already said it", () => {
+    const html = grafikuShtyllave({
+      kolonat: [
+        { etiketa: "Hën", vlerat: [40] },
+        { etiketa: "Mar", vlerat: [0] },
+      ],
+      monedha: "EUR",
+      tregoVlerat: true,
+    });
+    expect(html).toContain(">40,00 €<");
+    expect(html).not.toContain(">0,00 €<");
+  });
+
   it("narrows a lone bar so a row of them does not read as a block of colour", () => {
     expect(grafikuShtyllave({ kolonat: [{ etiketa: "Hën", vlerat: [10] }] })).toContain('width="58%"');
     expect(grafikuShtyllave({ kolonat: [{ etiketa: "Hën", vlerat: [10, 5] }] })).toContain('width="100%"');

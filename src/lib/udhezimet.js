@@ -826,10 +826,11 @@ export const UDHEZIMET = [
           "Katër raporte, secili me çelësin e vet: javor, mujor, tremujor dhe vjetor. Sa herë mbyllet një " +
           "periudhë, hera e parë që hapet aplikacioni pas saj dërgon me email pasqyrën e asaj periudhe - " +
           "shifrat kryesore, grafikët e periudhës dhe, për muajin, tremujorin e vitin, pasqyra e plotë si " +
-          "PDF bashkëngjitur. Javori vjen i shkurtër dhe pa bashkëngjitje: shtatë ditët si grafik, " +
-          "shpenzimi më i madh dhe pagesat që vijnë brenda javës tjetër - por nën çelësin e tij ka një " +
-          "të dytë, «Bashkëngjit edhe pasqyrën PDF të javës», për ata që e duan pasqyrën çdo javë ose " +
-          "që kanë ndezur vetëm javorin. Emaili niset nga projekti juaj i " +
+          "PDF bashkëngjitur. Javori vjen i shkurtër dhe pa të: shtatë ditët si grafik, shpenzimi më " +
+          "i madh dhe pagesat që vijnë brenda javës tjetër. Këtë e vendosni ju: nën çdo çelës të " +
+          "ndezur del një i dytë, «Bashkëngjit pasqyrën PDF...», që ia shton bashkëngjitjen javorit " +
+          "ose ia heq muajit, tremujorit e vitit - rreshti nën emrin e raportit tregon gjithmonë se " +
+          "çfarë do të vijë. Emaili niset nga projekti juaj i " +
           "Supabase-it, pra kërkon një projekt të lidhur dhe një funksion të vogël me çelësin tuaj të " +
           "Resend; hapat e instalimit janë brenda vetë kartelës, një herë të vetme, dhe i njëjti instalim " +
           "u shërben të katërve. Adresa lihet bosh për llogarinë me të cilën hyni te projekti, ose " +

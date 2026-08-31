@@ -215,9 +215,14 @@ export async function dergoRaportin({
 }) {
   if (!marresi) throw new Error("Mungon adresa e marrësit.");
   const celesi = periudha || muaji;
+  // Decided before the email is written, not after it: the monthly report ends by pointing at the
+  // statement "attached to this email", and a reader who switched the attachment off would be
+  // reading a sentence about a file that is not there.
+  const duhetPdf = meBashkengjitje === null ? bashkengjitjaERaportit(profile, lloji) : meBashkengjitje;
   const { ndertoRaportin } = await import("./raportEmail");
   const { subject, html, text } = ndertoRaportin({
     lloji, periudha: celesi, profile, accounts, categories, transactions, recurring, budgets,
+    mePdf: duhetPdf,
     // Always "now", for both paths. A closed period ends before today, so this changes nothing
     // there; a period the user asked for by hand may still be running, and this is what stops the
     // figures at today instead of drawing the rest of the month as empty.
@@ -228,7 +233,6 @@ export async function dergoRaportin({
     baza: typeof window !== "undefined" ? window.location?.origin || "" : "",
   });
 
-  const duhetPdf = meBashkengjitje === null ? bashkengjitjaERaportit(profile, lloji) : meBashkengjitje;
   const bashkengjitja = duhetPdf
     ? await pdfBase64({ lloji, periudha: celesi, profile, accounts, categories, transactions, recurring })
     : { pdf: "", filename: "" };

@@ -225,3 +225,40 @@ describe("stema e emailit", () => {
     expect(stema(bazaEPerdorshme("https://shembull.com"))).toContain("<img");
   });
 });
+
+/**
+ * What the email says about the attachment, and what it does with a figure inside a sentence.
+ * Both are things a reader notices immediately and nobody tests by reading the HTML.
+ */
+describe("bashkëngjitja dhe shifrat në fjali", () => {
+  const mujori = (extra = {}) =>
+    ndertoRaportin({
+      muaji: "2026-07",
+      profile: { monedha: "EUR" },
+      accounts: llogarite,
+      categories: kategorite,
+      transactions: transaksionet,
+      ...extra,
+    });
+
+  it("points at the attached statement only when one is really coming", () => {
+    expect(mujori({ mePdf: true }).html).toContain("pasqyra PDF bashkëngjitur");
+    // The attachment is a switch: a sentence about a file that is not there is worse than none.
+    expect(mujori({ mePdf: false }).html).not.toContain("bashkëngjitur");
+    expect(mujori().html).not.toContain("bashkëngjitur");
+  });
+
+  it("still counts the transactions in that closing line", () => {
+    expect(mujori({ mePdf: false }).html).toContain("2 transaksione");
+  });
+
+  it("keeps a figure from breaking across two lines mid-sentence", () => {
+    // "853,55" at the end of one line and "€" at the start of the next reads as a broken template.
+    const { html } = mujori();
+    expect(html).toContain("Bilanci hapës ishte 40,00&nbsp;€");
+    expect(html).toContain("+780,00&nbsp;€");
+    // The figure strip is a table cell and holds itself together with `white-space`, so the plain
+    // space is right there.
+    expect(html).toContain(">900,00 €<");
+  });
+});

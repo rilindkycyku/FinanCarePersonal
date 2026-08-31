@@ -102,15 +102,18 @@ export function grafikuShtyllave({
   const gjeresia = (100 / kolonat.length).toFixed(3);
 
   // The value sits above the bar it belongs to, not above the column: a single figure over a pair
-  // of bars reads as the total of both, which it is not.
+  // of bars reads as the total of both, which it is not. A genuine zero is left blank rather than
+  // labelled `0,00` - the missing bar has already said it, and a week with three quiet days would
+  // otherwise carry three zeros across the top of its chart. The row itself stays, so every column
+  // keeps the same height and the bars keep the same baseline.
   const shtylla = (h, ngjyra, vlera) => `
                     <td valign="bottom" style="padding:0 1px;">
                       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                         ${
                           tregoVlerat
-                            ? `<tr><td align="center" style="font-family:Arial,Helvetica,sans-serif;font-size:9px;color:${MUTED};padding-bottom:3px;white-space:nowrap;">${escapeHtml(
-                                formatMoney(vlera, monedha)
-                              )}</td></tr>`
+                            ? `<tr><td align="center" style="font-family:Arial,Helvetica,sans-serif;font-size:9px;color:${MUTED};padding-bottom:3px;white-space:nowrap;">${
+                                pozitiv(vlera) > 0 ? escapeHtml(formatMoney(vlera, monedha)) : "&nbsp;"
+                              }</td></tr>`
                             : ""
                         }
                         <tr><td height="${lartesia - h}" style="line-height:0;font-size:0;">&nbsp;</td></tr>
@@ -257,10 +260,11 @@ export function matesi({ perqindja = 0, etiketa = "", vlera = "", ngjyra = EMERA
         </table>`;
 }
 
-/** The three-across figure strip every report opens with. */
+/** The three-across figure strip every report opens with. The class is the hook the message's own
+ * stylesheet uses to stack the three on a phone; a client that ignores stylesheets keeps the row. */
 export function qelizaShifres(etiketa, vlera, ngjyra, gjeresia = "33%") {
   return `
-              <td width="${gjeresia}" style="padding:0 4px;" valign="top">
+              <td class="fcp-shifra" width="${gjeresia}" style="padding:0 4px;" valign="top">
                 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
                        style="background:${PANEL};border:1px solid ${LINE};border-radius:10px;">
                   <tr><td style="padding:14px 12px;text-align:center;font-family:Arial,Helvetica,sans-serif;">

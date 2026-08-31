@@ -155,8 +155,10 @@ function Raportet() {
     await saveProfile({ ...profile, [perkufizimi.fusha]: true, raportiMarresi: marresi.trim() });
   };
 
-  // The PDF that rides along with a kind - only the weekly has the choice, and it is a plain flag:
-  // nothing needs checking first, since the kind it belongs to is already on and already working.
+  // The PDF that rides along with a kind. A plain flag: nothing needs checking first, since the
+  // kind it belongs to is already on and therefore already sending. It is written even when it
+  // matches the default, so `bashkengjitjaERaportit` can tell "the user decided this" from "nobody
+  // has ever been asked".
   const ndryshoBashkengjitjen = async (perkufizimi, vlera) => {
     await saveProfile({ ...profile, [perkufizimi.fushaBashkengjitje]: vlera });
   };
@@ -272,15 +274,17 @@ function Raportet() {
                     ? " · me pasqyrën PDF bashkëngjitur"
                     : " · pa bashkëngjitje"}
                 </div>
-                {/* The attachment switch belongs to the kind that has one, and appears only once
-                    the kind itself is on: a choice about an email nobody has asked for is noise. */}
+                {/* The attachment switch appears only once the kind itself is on: a choice about
+                    an email nobody has asked for is noise. */}
                 {r.fushaBashkengjitje && profile[r.fusha] ? (
                   <div className="fcp-raporti-nenrresht">
                     <Form.Check
                       type="switch"
                       id={`raporti-pdf-${r.lloji}`}
                       label={r.tekstiBashkengjitjes}
-                      checked={Boolean(profile[r.fushaBashkengjitje])}
+                      // The kind's own default until the user has decided, so a switch nobody has
+                      // touched shows what that email really carries.
+                      checked={bashkengjitjaERaportit(profile, r.lloji)}
                       onChange={(e) => ndryshoBashkengjitjen(r, e.target.checked)}
                     />
                     <div className="fcp-modal-hint">{r.ndihmaBashkengjitjes}</div>

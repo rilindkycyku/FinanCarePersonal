@@ -12,15 +12,33 @@ ngriti versionin.
 ## [2.22.0] - 2026-08-31
 
 ### Shtuar
-- **Pasqyra PDF mund t'i bashkëngjitet edhe raportit javor.** Deri tani PDF-ja shkonte vetëm me
-  muajin, tremujorin dhe vitin, dhe javori mbetej qëllimisht i shkurtër. Arsyeja qëndron - një
-  bashkëngjitje dy-faqëshe çdo të hënë është ajo që e bën njeriun ta fikë emailin - por ishte
-  vendim i marrë për të gjithë: kush kishte ndezur vetëm javorin nuk e shihte kurrë një pasqyrë.
+- **Secili raport vendos vetë nëse mban pasqyrën PDF.** Deri tani PDF-ja shkonte me muajin,
+  tremujorin dhe vitin, kurse javori mbetej qëllimisht i shkurtër - dhe kjo ishte një zgjedhje e
+  bërë njëherë për të gjithë: kush kishte ndezur vetëm javorin nuk e shihte kurrë një pasqyrë, e
+  kush e donte emailin pa skedar nuk kishte si ta hiqte.
 
-  Tani, nën çelësin e raportit javor te Cilësimet, del një çelës i dytë: «Bashkëngjit edhe pasqyrën
-  PDF të javës». I fikur si më parë për këdo që nuk e prek, pra asnjë kuti postare nuk ndryshon pa u
-  kërkuar. Kur ndizet, javori vjen me të njëjtën pasqyrë të plotë si mujori, vetëm për ato shtatë
-  ditë.
+  Tani nën çdo raport të ndezur te Cilësimet del një çelës i dytë - «Bashkëngjit pasqyrën PDF të
+  javës / të muajit / të tremujorit / të vitit». Parazgjedhjet mbeten saktësisht siç ishin, sepse
+  një çelës që nuk është prekur kurrë nuk lexohet si «jo»: javori vjen pa bashkëngjitje derisa ta
+  kërkoni, tre të tjerët vijnë me të derisa ta hiqni. Rreshti nën emrin e raportit e thotë gjithmonë
+  gjendjen e tanishme, dhe teksti i emailit shkon pas saj - mujori nuk e përmend më «pasqyrën
+  bashkëngjitur këtij emaili» kur bashkëngjitja është e fikur.
+
+### Ndryshuar
+- **Emaili i raportit lexohet më mirë në telefon.** Kartela ishte 600 piksel e ngulitur, pra në një
+  ekran 375 pikselësh dilte jashtë dhe kërkonte tërheqje anash; tani është e rrjedhshme me kufi 600,
+  dhe nën 480 piksel tri shifrat e para (hyrje, shpenzime, bilanc) radhiten njëra nën tjetrën në
+  vend që të shtrydhen në nga një të tretë ekrani. Outlook-u, që nuk e njeh `max-width`, e merr
+  gjerësinë fikse si më parë përmes një tabele të kushtëzuar.
+
+- **Grafiku i javës dhe i muajit i tregojnë shifrat.** Tremujori i kishte, javori dhe mujori jo -
+  shtylla thoshte «kjo ditë ishte më e rëndë se ajo», por jo sa. Tani secila shtyllë e mban vlerën
+  sipër; një ditë pa shpenzime mbetet pa numër, sepse mungesa e shtyllës e ka thënë tashmë. Viti
+  mbetet pa shifra: dymbëdhjetë numra në një rresht do të mbivendoseshin.
+
+- **Shifrat nuk këputen më në fund të rreshtit.** «853,55» në një rresht dhe «€» në tjetrin duket si
+  gabim i shabllonit; brenda fjalive hapësirat e shumave tani janë të pathyeshme. Emaili gjithashtu
+  e deklaron veten si dizajn i çelët, që një klient në modalitet të errët të mos e kthejë përgjysmë.
 
 ### Rregulluar
 - **Pasqyra e bashkëngjitur mban emrin e periudhës së vet.** Emri i skedarit dilte nga datat, dhe

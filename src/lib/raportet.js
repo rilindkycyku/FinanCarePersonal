@@ -23,13 +23,18 @@
  * visible. A year is the story, and the one people keep. `raportEmail.js` builds each accordingly;
  * this file only says which is which.
  *
- * ---- the weekly attachment ----
+ * ---- the attachment ----
  *
- * The PDF statement rides along with the month, the quarter and the year, and not with the week:
- * a two-page attachment every Monday is what makes somebody switch a weekly email off. But that is
- * a default, not a verdict - a ledger where the week is the only report switched on never sees a
- * statement at all - so the week carries a switch of its own (`fushaBashkengjitje`), off until the
- * user asks for it. Read it through `bashkengjitjaERaportit`, never straight off `bashkengjitje`.
+ * `bashkengjitje` is what a kind does when nobody has said otherwise: the month, the quarter and
+ * the year arrive with the PDF statement, the week does not - a two-page attachment every Monday
+ * is what makes somebody switch a weekly email off, and a ledger where only the week is on would
+ * otherwise never see a statement at all.
+ *
+ * Both halves of that are defaults rather than verdicts, so every kind also names a profile flag
+ * (`fushaBashkengjitje`) the user can set either way. An untouched flag is `undefined`, which is
+ * not the same as `false`: it means "nobody has decided", and the kind's own answer stands. That
+ * distinction is the whole reason this is a function - read it through `bashkengjitjaERaportit`,
+ * never straight off `bashkengjitje` or off the profile.
  */
 
 import { JAVOR, MUJOR, TREMUJOR, VJETOR, etiketaPeriudhes, periudhaEMbyllur } from "./periudhat";
@@ -40,9 +45,9 @@ export { JAVOR, MUJOR, TREMUJOR, VJETOR };
 export const PREFIKSI_RAPORTIT = "raporti:";
 
 /**
- * `fusha` is the profile flag that switches the kind on; `bashkengjitje` says whether the PDF
- * statement rides along, and `fushaBashkengjitje` - where a kind has one - is the profile flag
- * that lets the user overrule that default.
+ * `fusha` is the profile flag that switches the kind on; `bashkengjitje` is whether the PDF
+ * statement rides along when nobody has said otherwise, and `fushaBashkengjitje` is the profile
+ * flag that overrules it in either direction.
  */
 export const LLOJET_RAPORTIT = [
   {
@@ -55,10 +60,10 @@ export const LLOJET_RAPORTIT = [
       "pagesat që vijnë brenda shtatë ditësh.",
     bashkengjitje: false,
     fushaBashkengjitje: "raportiJavorPdf",
-    tekstiBashkengjitjes: "Bashkëngjit edhe pasqyrën PDF të javës",
+    tekstiBashkengjitjes: "Bashkëngjit pasqyrën PDF të javës",
     ndihmaBashkengjitjes:
-      "Javori vjen pa bashkëngjitje, që të mbetet i shkurtër. Ndizeni nëse doni edhe pasqyrën e " +
-      "plotë të shtatë ditëve - të njëjtat rreshta si te pasqyra mujore, vetëm për atë javë.",
+      "E fikur, që javori të mbetet i shkurtër. Ndizeni nëse doni edhe pasqyrën e plotë të shtatë " +
+      "ditëve - të njëjtat rreshta si te pasqyra mujore, vetëm për atë javë.",
   },
   {
     lloji: MUJOR,
@@ -66,9 +71,14 @@ export const LLOJET_RAPORTIT = [
     emri: "Raporti mujor",
     kur: "Në fillim të muajit, për muajin që mbylli",
     pershkrimi:
-      "Pasqyra e muajit: shifrat kryesore, javë pas jave, ku shkuan paratë, buxhetet që u mbushën " +
-      "dhe pasqyra e plotë si PDF bashkëngjitur.",
+      "Pasqyra e muajit: shifrat kryesore, javë pas jave, ku shkuan paratë dhe buxhetet që u " +
+      "mbushën.",
     bashkengjitje: true,
+    fushaBashkengjitje: "raportiMujorPdf",
+    tekstiBashkengjitjes: "Bashkëngjit pasqyrën PDF të muajit",
+    ndihmaBashkengjitjes:
+      "E ndezur: emaili tregon shifrat, pasqyra i mban rreshtat një nga një. Fikeni nëse ju " +
+      "mjafton emaili - lista e plotë mbetet gjithsesi te faqja e të dhënave.",
   },
   {
     lloji: TREMUJOR,
@@ -79,6 +89,11 @@ export const LLOJET_RAPORTIT = [
       "Tre muajt krah për krah: cili muaj peshoi më shumë, sa ndryshuan kategoritë kryesore dhe " +
       "sa përqind e të ardhurave mbeti.",
     bashkengjitje: true,
+    fushaBashkengjitje: "raportiTremujorPdf",
+    tekstiBashkengjitjes: "Bashkëngjit pasqyrën PDF të tremujorit",
+    ndihmaBashkengjitjes:
+      "E ndezur. Tre muaj rreshtash bëjnë një skedar të trashë; fikeni nëse ju mjaftojnë shifrat " +
+      "te vetë emaili.",
   },
   {
     lloji: VJETOR,
@@ -89,6 +104,10 @@ export const LLOJET_RAPORTIT = [
       "Viti në një faqe: dymbëdhjetë muajt si grafik, muaji më i shtrenjtë dhe më i kursyer, " +
       "kategoritë që u rritën e që u ulën, dhe krahasimi me vitin paraardhës.",
     bashkengjitje: true,
+    fushaBashkengjitje: "raportiVjetorPdf",
+    tekstiBashkengjitjes: "Bashkëngjit pasqyrën PDF të vitit",
+    ndihmaBashkengjitjes:
+      "E ndezur. Pasqyra e një viti të plotë është dokumenti që ruhet; fikeni nëse nuk ju duhet.",
   },
 ];
 
@@ -108,17 +127,18 @@ export function aktiv(profile, lloji) {
 /**
  * Whether this kind's email carries the PDF statement, for this ledger.
  *
- * A kind with a switch of its own obeys the switch and nothing else - the week's is off until it
- * is ticked, which is why an untouched profile behaves exactly as it did before the switch
- * existed. A kind without one keeps the fixed answer above: the month, the quarter and the year
- * are the statement, and an email that calls itself a statement arrives with it.
+ * A flag that has never been touched is `undefined`, and that is deliberately not read as "no":
+ * every ledger out there has an untouched profile, and reading it as "no" would quietly strip the
+ * statement off every monthly report already going out. Only a flag somebody has actually set -
+ * `true` or `false` - overrules what the kind does by default.
  */
 export function bashkengjitjaERaportit(profile, lloji) {
   const perkufizimi = SIPAS_LLOJIT.get(lloji);
   if (!perkufizimi) return false;
-  return perkufizimi.fushaBashkengjitje
-    ? Boolean(profile?.[perkufizimi.fushaBashkengjitje])
-    : Boolean(perkufizimi.bashkengjitje);
+  const zgjedhja = perkufizimi.fushaBashkengjitje ? profile?.[perkufizimi.fushaBashkengjitje] : undefined;
+  return zgjedhja === undefined || zgjedhja === null
+    ? Boolean(perkufizimi.bashkengjitje)
+    : Boolean(zgjedhja);
 }
 
 /** The kinds switched on, shortest period first - the order `raporti.js` works through them in, so

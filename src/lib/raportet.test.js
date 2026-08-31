@@ -30,24 +30,38 @@ describe("regjistri", () => {
 });
 
 /**
- * Which emails carry the PDF. The weekly one is the only kind that asks, and the answer has to stay
- * "no" for every ledger that has never been asked - a Monday email that suddenly grows a two-page
- * attachment is a report people switch off.
+ * Which emails carry the PDF. Every kind can be told either way now, and the one thing that must
+ * not change is what an untouched profile gets: every ledger out there has one, and reading a
+ * missing flag as "no" would quietly strip the statement off every monthly report already going
+ * out.
  */
 describe("bashkëngjitja", () => {
-  it("leaves the weekly email without one until it is asked for", () => {
+  it("keeps each kind's own default while nobody has decided", () => {
     expect(bashkengjitjaERaportit({}, JAVOR)).toBe(false);
-    expect(bashkengjitjaERaportit({ raportiJavor: true }, JAVOR)).toBe(false);
-  });
-
-  it("attaches the statement to the weekly email once the switch is on", () => {
-    expect(bashkengjitjaERaportit({ raportiJavor: true, raportiJavorPdf: true }, JAVOR)).toBe(true);
-  });
-
-  it("keeps the statement on the kinds that are the statement", () => {
     expect(bashkengjitjaERaportit({}, MUJOR)).toBe(true);
     expect(bashkengjitjaERaportit({}, TREMUJOR)).toBe(true);
     expect(bashkengjitjaERaportit({}, VJETOR)).toBe(true);
+  });
+
+  it("does not read a switched-on report as a decision about its attachment", () => {
+    expect(bashkengjitjaERaportit({ raportiJavor: true }, JAVOR)).toBe(false);
+    expect(bashkengjitjaERaportit({ raportiMujor: true }, MUJOR)).toBe(true);
+  });
+
+  it("attaches the statement to a kind that asks for one", () => {
+    expect(bashkengjitjaERaportit({ raportiJavorPdf: true }, JAVOR)).toBe(true);
+  });
+
+  it("takes it off a kind that says no, default or not", () => {
+    expect(bashkengjitjaERaportit({ raportiMujorPdf: false }, MUJOR)).toBe(false);
+    expect(bashkengjitjaERaportit({ raportiTremujorPdf: false }, TREMUJOR)).toBe(false);
+    expect(bashkengjitjaERaportit({ raportiVjetorPdf: false }, VJETOR)).toBe(false);
+  });
+
+  it("gives every kind a flag of its own", () => {
+    const fushat = LLOJET_RAPORTIT.map((r) => r.fushaBashkengjitje);
+    expect(fushat.every(Boolean)).toBe(true);
+    expect(new Set(fushat).size).toBe(fushat.length);
   });
 
   it("says no for a kind it does not know", () => {
