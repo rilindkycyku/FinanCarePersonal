@@ -31,6 +31,14 @@ ngriti versionin.
   ajo blerje është e vetmja e ditës më të shtrenjtë, sepse atëherë do të ishte i njëjti fakt dy
   herë.
 
+- **Raportet tregojnë edhe etiketat tuaja.** «Ku shkuan paratë» i ndan paratë sipas kategorive, që
+  janë raftet e vetë aplikacionit; etiketat janë ato që i shkruani vetë - «pushime2026», «makina» -
+  dhe pikërisht ato nuk merren dot me mend nga një përmbledhje. Nën kategoritë del tani «Sipas
+  etiketave» me pesë më të mëdhatë, me të njëjtat ngjyra që kanë te Statistikat. Një transaksion me
+  dy etiketa numërohet i plotë te secila, prandaj përqindjet lexohen si «kaq nga muaji shkoi këtu»
+  dhe mund t'i kalojnë 100 bashkë - njësoj si te paneli në aplikacion. Një libër që nuk përdor
+  etiketa nuk e sheh fare seksionin, dhe javori mbetet i shkurtër si më parë.
+
 ### Ndryshuar
 - **Emaili i raportit lexohet më mirë në telefon.** Kartela ishte 600 piksel e ngulitur, pra në një
   ekran 375 pikselësh dilte jashtë dhe kërkonte tërheqje anash; tani është e rrjedhshme me kufi 600,

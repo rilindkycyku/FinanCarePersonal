@@ -238,8 +238,8 @@ sa shpenzohet, sa mbetet dhe sa po kursesh.
 - **Raportet me email (opsionale)** - katër raporte, secili me çelësin e vet: **javor**, **mujor**,
   **tremujor** dhe **vjetor**. Sa herë mbyllet një periudhë, hera e parë që hapet aplikacioni pas saj
   dërgon me email pasqyrën e asaj periudhe - shifrat kryesore, grafikët e periudhës (ditët e javës,
-  javët e muajit, muajt e tremujorit apo të vitit), ku shkuan paratë, shpenzimi më i madh i asaj
-  periudhe dhe sa mbeti nga çfarë hyri.
+  javët e muajit, muajt e tremujorit apo të vitit), ku shkuan paratë sipas kategorive dhe sipas
+  etiketave tuaja, shpenzimi më i madh i asaj periudhe dhe sa mbeti nga çfarë hyri.
   Muaji, tremujori dhe viti e mbajnë të bashkëngjitur edhe pasqyrën e plotë PDF; javori vjen i
   shkurtër me qëllim - shtatë ditët, shpenzimi më i madh dhe pagesat që vijnë brenda javës tjetër.
   Secili raport e ka çelësin e vet të bashkëngjitjes, pra pasqyra i shtohet edhe javorit ose i hiqet

@@ -148,6 +148,25 @@ const rreshtiKursimit = (f, monedha) =>
       })}</td></tr>`;
 
 /**
+ * Where the money went by the reader's own labels, under the section that says where it went by
+ * category.
+ *
+ * The two answer the same question from opposite ends: categories are the ledger's own shelves,
+ * tags are what the reader wrote on a handful of rows - "pushime2026", "makina" - and it is the
+ * second that a summary cannot reconstruct. A transaction with two tags counts under both, so the
+ * shares are of the whole period's spending and may add up past 100; that is what the same panel
+ * does in the app, and it is the honest reading of "how much of this month went to this".
+ *
+ * Nothing is drawn for a ledger that uses no tags, which is most of them - an empty heading is
+ * worse than a missing one.
+ */
+const seksioniEtiketave = (f, monedha) =>
+  f.etiketat?.length
+    ? `${titulliSeksionit("Sipas etiketave")}
+            <tr><td>${shiritetHorizontale({ rreshtat: f.etiketat, monedha })}</td></tr>`
+    : "";
+
+/**
  * The single largest purchase of the period.
  *
  * `figuratERaportit` has always worked this out for every kind, and for a long time only the weekly
@@ -243,6 +262,7 @@ function trupiMujor(f, monedha, { mePdf = false } = {}) {
             })}</td></tr>
             ${rreshtiMeIMadh(f, monedha, "i muajit")}
             ${seksioniKategorive(f, monedha)}
+            ${seksioniEtiketave(f, monedha)}
             ${rreshtiKursimit(f, monedha)}
             ${
               f.buxhetet?.length
@@ -301,6 +321,7 @@ function trupiTremujor(f, monedha, { mePdf = false } = {}) {
             ${rreshtiMeIMadh(f, monedha, "i tremujorit", { lart: 10 })}
             ${rreshtiKursimit(f, monedha)}
             ${seksioniKategorive(f, monedha)}
+            ${seksioniEtiketave(f, monedha)}
             ${
               f.levizjet?.length
                 ? `${titulliSeksionit("Çfarë lëvizi më shumë")}
@@ -381,6 +402,7 @@ function trupiVjetor(f, monedha, { mePdf = false } = {}) {
             }
             ${rreshtiKursimit(f, monedha)}
             ${seksioniKategorive(f, monedha)}
+            ${seksioniEtiketave(f, monedha)}
             ${
               v.uRrit || v.uUl
                 ? paragraf(
@@ -598,6 +620,16 @@ ${qelizaShifres("Bilanci", formatMoney(f.perfundimtar, monedha), NAVY)}
         ),
         ...(f.meIMadhi
           ? ["", `Shpenzimi më i madh: ${f.meIMadhi.pershkrimi} - ${formatMoney(f.meIMadhi.vlera, monedha)}`]
+          : []),
+        // The same sections the HTML shows, in the same order - the weekly one keeps neither.
+        ...(lloji !== JAVOR && f.etiketat?.length
+          ? [
+              "",
+              "Sipas etiketave:",
+              ...f.etiketat.map(
+                (e) => `  ${e.emri}: ${formatMoney(e.vlera, monedha)} (${Math.round(e.perqindja)}%)`
+              ),
+            ]
           : []),
         ...(f.kursimi === null ? [] : ["", `Sa mbeti nga çfarë hyri: ${formatPercent(f.kursimi)}`]),
         "",

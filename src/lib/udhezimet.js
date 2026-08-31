@@ -825,8 +825,8 @@ export const UDHEZIMET = [
         teksti:
           "Katër raporte, secili me çelësin e vet: javor, mujor, tremujor dhe vjetor. Sa herë mbyllet një " +
           "periudhë, hera e parë që hapet aplikacioni pas saj dërgon me email pasqyrën e asaj periudhe - " +
-          "shifrat kryesore, grafikët e periudhës, shpenzimin më të madh të saj dhe, për muajin, " +
-          "tremujorin e vitin, pasqyra e plotë si " +
+          "shifrat kryesore, grafikët e periudhës, shpenzimin më të madh të saj, ndarjen sipas " +
+          "kategorive e sipas etiketave dhe, për muajin, tremujorin e vitin, pasqyra e plotë si " +
           "PDF bashkëngjitur. Javori vjen i shkurtër dhe pa të: shtatë ditët si grafik, shpenzimi më " +
           "i madh dhe pagesat që vijnë brenda javës tjetër. Këtë e vendosni ju: nën çdo çelës të " +
           "ndezur del një i dytë, «Bashkëngjit pasqyrën PDF...», që ia shton bashkëngjitjen javorit " +

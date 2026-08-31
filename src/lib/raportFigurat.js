@@ -25,6 +25,7 @@ import {
   upcomingRecurring,
 } from "./finance";
 import { emriIPlote } from "./kategorite";
+import { totalsByTag } from "./etiketat";
 import { statementRows } from "./exportPdf";
 import { toNumber } from "./format";
 import { JAVOR, MUJOR, TREMUJOR, VJETOR, kufijtePeriudhes, periudhaParaardhese } from "./periudhat";
@@ -35,6 +36,15 @@ import { vitiNeNjeFaqe } from "./viti";
 const SA_KATEGORI = 6;
 /** How many budgets are worth naming: the ones in trouble, not the whole page. */
 const SA_BUXHETE = 3;
+/**
+ * How many tags a report names.
+ *
+ * Fewer than the categories, and on purpose. Categories are a fixed set the ledger is built on;
+ * tags are whatever the reader wrote that period, so the tail is long and mostly things used once.
+ * The few big ones are the answer to "what did the holiday cost" - past five it is a list to
+ * scroll rather than a figure to read.
+ */
+const SA_ETIKETA = 5;
 
 const DITA = 24 * 60 * 60 * 1000;
 const utc = (iso) => {
@@ -202,6 +212,10 @@ export function figuratERaportit({
     epjesshme,
     kategorite: t.kategorite.slice(0, SA_KATEGORI),
     teGjithaKategorite: t.kategorite,
+    // Spending only, and against the period's whole spending - a transaction carrying two tags
+    // counts in full under both, so these shares answer "how much of the month went to this" and
+    // are not slices of a pie that has to come to 100. `totalsByTag` holds that reasoning.
+    etiketat: totalsByTag(rreshtat).slice(0, SA_ETIKETA),
     kursimi: normaEKursimit(t.hyrjet, t.daljet),
     meIMadhi: shpenzimiMeIMadh(rreshtat, categories),
     krahasimi: rreshtatPara.length

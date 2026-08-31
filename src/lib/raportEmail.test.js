@@ -298,3 +298,58 @@ describe("bashkëngjitja dhe shifrat në fjali", () => {
     expect(html).toContain(">900,00 €<");
   });
 });
+
+/**
+ * The tag section. It is the one part of the report the reader wrote themselves, and the one a
+ * ledger without tags must never see - an empty heading reads as something that failed to load.
+ */
+describe("etiketat në raport", () => {
+  const meEtiketa = [
+    { id: "e1", data: "2026-07-04", lloji: "shpenzim", vlera: 200, kategoriaId: "k1", llogariaId: "l1", etiketat: ["pushime2026"] },
+    { id: "e2", data: "2026-07-06", lloji: "shpenzim", vlera: 60, kategoriaId: "k1", llogariaId: "l1", etiketat: ["pushime2026", "makina"] },
+    { id: "e3", data: "2026-07-08", lloji: "shpenzim", vlera: 40, kategoriaId: "k1", llogariaId: "l1" },
+  ];
+  const iLlojit = (lloji, periudha, transactions) =>
+    ndertoRaportin({
+      lloji,
+      periudha,
+      profile: { monedha: "EUR" },
+      accounts: llogarite,
+      categories: kategorite,
+      transactions,
+      });
+
+  it("ranks the reader's own labels under the categories", () => {
+    const { html, text } = iLlojit("mujor", "2026-07", meEtiketa);
+    expect(html).toContain("Sipas etiketave");
+    expect(html).toContain("pushime2026");
+    expect(html).toContain("260,00 €");
+    expect(text).toContain("Sipas etiketave:");
+    expect(text).toContain("pushime2026: 260,00 € (87%)");
+  });
+
+  it("counts a transaction under each of its tags, and says so as a share of the period", () => {
+    // 60 € carries two tags, so both totals hold it in full and the shares can pass 100 together -
+    // the question is "how much of the month went to this", not "which slice of a pie".
+    const { html } = iLlojit("mujor", "2026-07", meEtiketa);
+    expect(html).toContain("60,00 €");
+    expect(html).toContain("makina");
+  });
+
+  it("draws nothing at all for a ledger that uses no tags", () => {
+    const { html, text } = iLlojit("mujor", "2026-07", transaksionet);
+    expect(html).not.toContain("Sipas etiketave");
+    expect(text).not.toContain("Sipas etiketave");
+  });
+
+  it("keeps the weekly email short - no tag section there", () => {
+    const { html, text } = iLlojit(JAVOR, "2026-W28", meEtiketa);
+    expect(html).not.toContain("Sipas etiketave");
+    expect(text).not.toContain("Sipas etiketave");
+  });
+
+  it("shows it in the quarterly and the yearly too", () => {
+    expect(iLlojit(TREMUJOR, "2026-Q3", meEtiketa).html).toContain("Sipas etiketave");
+    expect(iLlojit(VJETOR, "2026", meEtiketa).html).toContain("Sipas etiketave");
+  });
+});

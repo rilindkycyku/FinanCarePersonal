@@ -76,6 +76,46 @@ describe("figurat e përbashkëta", () => {
   });
 });
 
+/**
+ * The tag ranking. Tags are the reader's own labels rather than a fixed set, so the tail is long
+ * and only the head belongs in a summary.
+ */
+describe("etiketat", () => {
+  const meEtiketa = [
+    hyrje("h9", "2026-07-01", 900),
+    dalje("e1", "2026-07-02", 200, "k1", { etiketat: ["pushime"] }),
+    dalje("e2", "2026-07-03", 60, "k1", { etiketat: ["pushime", "makina"] }),
+    dalje("e3", "2026-07-04", 10, "k1", { etiketat: ["a"] }),
+    dalje("e4", "2026-07-05", 9, "k1", { etiketat: ["b"] }),
+    dalje("e5", "2026-07-06", 8, "k1", { etiketat: ["c"] }),
+    dalje("e6", "2026-07-07", 7, "k1", { etiketat: ["d"] }),
+    dalje("e7", "2026-07-08", 6, "k1", { etiketat: ["e"] }),
+  ];
+  const f = figuratERaportit({
+    lloji: MUJOR,
+    periudha: "2026-07",
+    accounts: llogarite,
+    categories: kategorite,
+    transactions: meEtiketa,
+  });
+
+  it("ranks them by what they cost, and stops at five", () => {
+    expect(f.etiketat).toHaveLength(5);
+    expect(f.etiketat.map((e) => e.emri)).toEqual(["pushime", "makina", "a", "b", "c"]);
+    expect(f.etiketat[0].vlera).toBe(260);
+  });
+
+  it("counts a transaction in full under each tag it carries", () => {
+    // 60 € is tagged twice, so it is whole under both - the shares are of the month's spending,
+    // not slices of one pie.
+    expect(f.etiketat.find((e) => e.emri === "makina").vlera).toBe(60);
+  });
+
+  it("has nothing to rank in a ledger that uses no tags", () => {
+    expect(figurat({ lloji: MUJOR, periudha: "2026-07" }).etiketat).toEqual([]);
+  });
+});
+
 describe("norma e kursimit", () => {
   it("is the share of what came in that was still there", () => {
     expect(normaEKursimit(1000, 250)).toBe(75);
