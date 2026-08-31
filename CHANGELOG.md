@@ -9,6 +9,114 @@ e fundit kur rregullohet diçka, dhe e para vetëm kur ndryshon vetë forma e pr
 herë, te `2.0.0`, kur të dhënat mësuan të dalin nga shfletuesi. Datat janë ato të commit-it që e
 ngriti versionin.
 
+## [2.22.0] - 2026-08-31
+
+### Shtuar
+- **Secili raport vendos vetë nëse mban pasqyrën PDF.** Deri tani PDF-ja shkonte me muajin,
+  tremujorin dhe vitin, kurse javori mbetej qëllimisht i shkurtër - dhe kjo ishte një zgjedhje e
+  bërë njëherë për të gjithë: kush kishte ndezur vetëm javorin nuk e shihte kurrë një pasqyrë, e
+  kush e donte emailin pa skedar nuk kishte si ta hiqte.
+
+  Tani nën çdo raport të ndezur te Cilësimet del një çelës i dytë - «Bashkëngjit pasqyrën PDF të
+  javës / të muajit / të tremujorit / të vitit». Parazgjedhjet mbeten saktësisht siç ishin, sepse
+  një çelës që nuk është prekur kurrë nuk lexohet si «jo»: javori vjen pa bashkëngjitje derisa ta
+  kërkoni, tre të tjerët vijnë me të derisa ta hiqni. Rreshti nën emrin e raportit e thotë gjithmonë
+  gjendjen e tanishme, dhe teksti i emailit shkon pas saj - mujori nuk e përmend më «pasqyrën
+  bashkëngjitur këtij emaili» kur bashkëngjitja është e fikur.
+
+- **Çdo raport tregon tani shpenzimin më të madh të periudhës.** Shifra llogaritej për të katërt
+  qëmoti, por e shkruante vetëm javori: mujori, tremujori dhe vjetori e kishin në dorë dhe e
+  hidhnin. «Ku shkuan paratë» thotë se te Banesa shkuan 791 €; kjo rreshtë thotë se 640 prej tyre
+  ishin një lavatriçe më 18 korrik - pyetja që vjen menjëherë pas «sa shpenzova». Viti e heq kur
+  ajo blerje është e vetmja e ditës më të shtrenjtë, sepse atëherë do të ishte i njëjti fakt dy
+  herë.
+
+- **Dërguesi i raporteve zgjidhet te Cilësimet.** Funksioni e pranonte një adresë dërguesi që nga
+  dita e parë, por asgjë në aplikacion nuk e shkruante dot: raportet niseshin gjithmonë nga adresa e
+  parazgjedhur e Resend-it, e cila lejon vetëm një marrës - vetë llogarinë tuaj. Tani te kartela e
+  raporteve ka një fushë «Dërguesi». Kush ka verifikuar një domen te Resend shkruan aty një adresë
+  të tij - «FinanCare Personal <raporte@domeni-juaj.com>» - dhe që andej raportet mund t'i shkojnë
+  çdo adrese. Fusha kontrollohet në vend: një adresë e gjysmuar ndalet aty, e jo pas një muaji te
+  një raport që dështoi në heshtje.
+
+- **Raporti mujor tregon qëllimet e kursimit dhe borxhet.** Që të dyja janë pjesë të librit që
+  mund të rrinë muaj të tërë pa u parë: asgjë nuk i nxjerr para syve, dhe nuk lëvizin veçse kur dikush
+  shkon t'i kërkojë. Tani mujori i mban në fund, nga tre secila.
+
+  Te qëllimet, shiriti është historia e plotë e qëllimit dhe rreshta poshtë tij është pjesa e këtij
+  muaji: sa hyri, sa mbeten dhe - kur qëllimi ka afat - rreth sa duhet çdo muaj për të mbërritur më
+  kohë. Një muaj që nuk shtoi asgjë e thotë me fjalë; pikërisht ai është qëllimi që ia vlen të
+  shihet. Qëllimet e arritura nuk shfaqen: raporti është për atë që është ende në punë.
+
+  Te borxhet, shiriti tregon sa është shlyer nga shënimi dhe rreshta poshtë sa u pagua këtë muaj e
+  sa mbetet. Shënimet mbeten jashtë çdo bilanci, ashtu si kudo tjetër në aplikacion - këtu vetëm
+  raportohen. Të dy drejtimet janë bashkë, por fjalët ndryshojnë: një borxh «paguhet», një hua e
+  dhënë «arkëtohet». Shënimet e mbyllura dhe të arkivuarat nuk dalin.
+
+- **Logoja e humbi parullën e produktit tjetër.** Nën fjalën «FinanCare» rrinte «POS, ORDER & MORE»
+  - parulla e programit të arkës, jo e këtij. Në menu, te fundi i faqes, te koka e pasqyrës PDF dhe
+  te emaili ajo rresht ishte gjithsesi e palexueshme në atë madhësi, dhe atje ku lexohej, thoshte
+  diçka që nuk ka të bëjë me këtë aplikacion. Tani stema është vetëm shenja, «FinanCare» dhe
+  «PERSONAL», me fjalën të qendërzuar përballë shenjës. Pasqyra PDF e merr tani logon me shenjën
+  jeshile dhe fjalën blu në vend të asaj krejt të zezë, dhe në pesëfishin e madhësisë ku printohet,
+  që të mos dalë e ashpër në letër.
+
+- **Raportet tregojnë edhe etiketat tuaja.** «Ku shkuan paratë» i ndan paratë sipas kategorive, që
+  janë raftet e vetë aplikacionit; etiketat janë ato që i shkruani vetë - «pushime2026», «makina» -
+  dhe pikërisht ato nuk merren dot me mend nga një përmbledhje. Nën kategoritë del tani «Sipas
+  etiketave» me pesë më të mëdhatë, me të njëjtat ngjyra që kanë te Statistikat. Një transaksion me
+  dy etiketa numërohet i plotë te secila, prandaj përqindjet lexohen si «kaq nga muaji shkoi këtu»
+  dhe mund t'i kalojnë 100 bashkë - njësoj si te paneli në aplikacion. Një libër që nuk përdor
+  etiketa nuk e sheh fare seksionin - prandaj e mban edhe javori, pa u zgjatur për askënd.
+
+### Ndryshuar
+- **Emaili i raportit lexohet më mirë në telefon.** Kartela ishte 600 piksel e ngulitur, pra në një
+  ekran 375 pikselësh dilte jashtë dhe kërkonte tërheqje anash; tani është e rrjedhshme me kufi 600,
+  dhe nën 480 piksel tri shifrat e para (hyrje, shpenzime, bilanc) radhiten njëra nën tjetrën në
+  vend që të shtrydhen në nga një të tretë ekrani. Outlook-u, që nuk e njeh `max-width`, e merr
+  gjerësinë fikse si më parë përmes një tabele të kushtëzuar.
+
+- **Grafiku i javës dhe i muajit i tregojnë shifrat.** Tremujori i kishte, javori dhe mujori jo -
+  shtylla thoshte «kjo ditë ishte më e rëndë se ajo», por jo sa. Tani secila shtyllë e mban vlerën
+  sipër; një ditë pa shpenzime mbetet pa numër, sepse mungesa e shtyllës e ka thënë tashmë. Viti
+  mbetet pa shifra: dymbëdhjetë numra në një rresht do të mbivendoseshin.
+
+- **Shifrat nuk këputen më në fund të rreshtit.** «853,55» në një rresht dhe «€» në tjetrin duket si
+  gabim i shabllonit; brenda fjalive hapësirat e shumave tani janë të pathyeshme. Emaili gjithashtu
+  e deklaron veten si dizajn i çelët, që një klient në modalitet të errët të mos e kthejë përgjysmë.
+
+### Rregulluar
+- **Instalimi i aplikacionit shkarkon 230 kB më pak.** Shërbyesi i punës (service worker) ruante në
+  fillim edhe dy copa kodi që asnjë klikim nuk i arrin dot: `html2canvas` dhe `DOMPurify`, që jsPDF
+  i kërkon vetëm për funksionin `doc.html()` - e ky aplikacion i vizaton vetë të dyja pasqyrat, pra
+  atë funksion nuk e thërret askund. Tani ato nuk paraprakisht-ruhen: 3,54 MB në vend të 3,77 MB, në
+  çdo instalim dhe pas çdo versioni. Asgjë nuk humbet jashtë linje - eksportet, fontet dhe pasqyra
+  PDF ruhen si më parë.
+
+- **Pasqyra e bashkëngjitur mban emrin e periudhës së vet.** Emri i skedarit dilte nga datat, dhe
+  vetëm një muaj i plotë ose një vit i plotë njihen ashtu; një javë apo një tremujor vinin të dyja
+  si `pasqyra-e-periudhes.pdf`, pra në kuti postare nuk dalloheshin nga njëra-tjetra. Tani raporti
+  ia jep skedarit emrin që tashmë e di - `pasqyra-e-jav-s-10-16-gusht-2026.pdf`,
+  `pasqyra-e-tremujorit-te-trete-2026.pdf`. Emrat e muajit dhe të vitit mbeten pikërisht siç ishin.
+
+## [2.21.1] - 2026-08-31
+
+### Ndryshuar
+- **Koka e emailit mban logon, jo emrin e shkruar.** Pasqyra PDF që udhëton bashkë me raportin e ka
+  logon në krye; vetë emaili që e dërgon e kishte fjalën «FinanCare» të shkruar me shkronja të
+  zakonshme. Tani koka mban të njëjtën stemë si aplikacioni dhe si pasqyra: logon si figurë, me
+  fjalën «PERSONAL» pranë saj.
+
+  Logoja e aplikacionit është SVG dhe asnjë klient emaili nuk e shfaq atë me siguri - Gmail-i e heq
+  fare - prandaj u shtua një kopje PNG, `LogoEmail.png`, e prodhuar nga `npm run ikonat` mbi të
+  njëjtin fond kaltërosh që ka koka. Ajo kopje merret nga vetë faqja ku e keni ngritur aplikacionin,
+  jo nga ndonjë server tjetër. Nëse raporti niset nga një adresë që e sheh vetëm ai kompjuter -
+  `localhost` ose rrjeti i shtëpisë - koka mbetet siç ishte, sepse fjala e shkruar është më e mirë
+  se një figurë e thyer në çdo kuti postare. Po ashtu, kur klienti i emailit i bllokon figurat,
+  teksti zëvendësues del i stiluar si më parë: koka nuk mbetet kurrë bosh.
+
+  Grafikët e emailit mbeten tabela me ngjyra, jo figura, dhe asnjë shifër e raportit nuk ndryshoi.
+
 ## [2.21.0] - 2026-08-27
 
 ### Shtuar

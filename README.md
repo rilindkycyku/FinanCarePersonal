@@ -238,13 +238,23 @@ sa shpenzohet, sa mbetet dhe sa po kursesh.
 - **Raportet me email (opsionale)** - katër raporte, secili me çelësin e vet: **javor**, **mujor**,
   **tremujor** dhe **vjetor**. Sa herë mbyllet një periudhë, hera e parë që hapet aplikacioni pas saj
   dërgon me email pasqyrën e asaj periudhe - shifrat kryesore, grafikët e periudhës (ditët e javës,
-  javët e muajit, muajt e tremujorit apo të vitit), ku shkuan paratë dhe sa mbeti nga çfarë hyri.
-  Muaji, tremujori dhe viti e mbajnë të bashkëngjitur edhe pasqyrën e plotë PDF; javori mbetet i
+  javët e muajit, muajt e tremujorit apo të vitit), ku shkuan paratë sipas kategorive dhe sipas
+  etiketave tuaja, shpenzimi më i madh i asaj periudhe dhe sa mbeti nga çfarë hyri. Mujori mban edhe
+  buxhetet që u mbushën, qëllimet e kursimit (sa hyri këtë muaj, sa mbetet, sa duhet në muaj deri te
+  afati) dhe borxhet që janë ende hapur - këto të fundit vetëm si raportim: shënimet mbeten jashtë
+  çdo bilanci, si gjithmonë.
+  Muaji, tremujori dhe viti e mbajnë të bashkëngjitur edhe pasqyrën e plotë PDF; javori vjen i
   shkurtër me qëllim - shtatë ditët, shpenzimi më i madh dhe pagesat që vijnë brenda javës tjetër.
-  Grafikët janë tabela me ngjyra, jo figura: asnjë imazh nuk merret nga një server i jashtëm, pra
-  emaili hapet i plotë edhe kur klienti i bllokon figurat.
+  Secili raport e ka çelësin e vet të bashkëngjitjes, pra pasqyra i shtohet edhe javorit ose i hiqet
+  muajit, sipas asaj që doni të gjeni në kuti postare.
+  Grafikët janë tabela me ngjyra, jo figura, prandaj emaili hapet i plotë edhe kur klienti i
+  bllokon figurat. E vetmja figurë është logoja te koka, dhe ajo merret nga vetë faqja ku e keni
+  ngritur aplikacionin - jo nga një server i jashtëm; kur nuk ngarkohet, në vend të saj shfaqet
+  emri i shkruar, ashtu si më parë.
   <br />Nuk ka server tonin as këtu: emaili niset nga një funksion i vogël te **projekti juaj i
-  Supabase-it**, me çelësin tuaj të [Resend](https://resend.com). Kodi i funksionit jepet i gatshëm
+  Supabase-it**, me çelësin tuaj të [Resend](https://resend.com). Dërguesi zgjidhet te Cilësimet:
+  bosh do të thotë adresa e parazgjedhur e Resend-it, që shkruan vetëm te llogaria juaj, kurse me
+  një domen tuajin të verifikuar te Resend raportet nisen nga adresa juaj dhe shkojnë kudo. Kodi i funksionit jepet i gatshëm
   te Cilësimet dhe instalohet një herë të vetme për të katër raportet. Cila pajisje e dërgon
   vendoset te vetë projekti - një rresht shënjues që merret nga e para që arrin - pra tre pajisje
   nuk dërgojnë tre kopje të së njëjtës periudhë.

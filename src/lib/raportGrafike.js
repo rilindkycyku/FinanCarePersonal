@@ -102,15 +102,18 @@ export function grafikuShtyllave({
   const gjeresia = (100 / kolonat.length).toFixed(3);
 
   // The value sits above the bar it belongs to, not above the column: a single figure over a pair
-  // of bars reads as the total of both, which it is not.
+  // of bars reads as the total of both, which it is not. A genuine zero is left blank rather than
+  // labelled `0,00` - the missing bar has already said it, and a week with three quiet days would
+  // otherwise carry three zeros across the top of its chart. The row itself stays, so every column
+  // keeps the same height and the bars keep the same baseline.
   const shtylla = (h, ngjyra, vlera) => `
                     <td valign="bottom" style="padding:0 1px;">
                       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                         ${
                           tregoVlerat
-                            ? `<tr><td align="center" style="font-family:Arial,Helvetica,sans-serif;font-size:9px;color:${MUTED};padding-bottom:3px;white-space:nowrap;">${escapeHtml(
-                                formatMoney(vlera, monedha)
-                              )}</td></tr>`
+                            ? `<tr><td align="center" style="font-family:Arial,Helvetica,sans-serif;font-size:9px;color:${MUTED};padding-bottom:3px;white-space:nowrap;">${
+                                pozitiv(vlera) > 0 ? escapeHtml(formatMoney(vlera, monedha)) : "&nbsp;"
+                              }</td></tr>`
                             : ""
                         }
                         <tr><td height="${lartesia - h}" style="line-height:0;font-size:0;">&nbsp;</td></tr>
@@ -233,8 +236,11 @@ export function shiritetHorizontale({ rreshtat = [], monedha, ngjyraStandarde = 
 }
 
 /** A single filled bar with a caption: the savings rate, how much of a budget is gone. Anything
- * past 100% is drawn full and said in words - a bar that overflows its frame reads as a bug. */
-export function matesi({ perqindja = 0, etiketa = "", vlera = "", ngjyra = EMERALD } = {}) {
+ * past 100% is drawn full and said in words - a bar that overflows its frame reads as a bug.
+ *
+ * `nen` is the line under the bar, for the sentence a caption cannot hold: what the period itself
+ * put in, what is left, by when. It is left out when it is empty rather than drawn as a gap. */
+export function matesi({ perqindja = 0, etiketa = "", vlera = "", ngjyra = EMERALD, nen = "" } = {}) {
   const mbushja = Math.max(0, Math.min(100, Math.round(numer(perqindja))));
   return `
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
@@ -254,13 +260,21 @@ export function matesi({ perqindja = 0, etiketa = "", vlera = "", ngjyra = EMERA
               </tr>
             </table>
           </td></tr>
+          ${
+            nen
+              ? `<tr><td colspan="2" style="padding-top:5px;font-family:Arial,Helvetica,sans-serif;font-size:11px;color:${MUTED};">${escapeHtml(
+                  nen
+                )}</td></tr>`
+              : ""
+          }
         </table>`;
 }
 
-/** The three-across figure strip every report opens with. */
+/** The three-across figure strip every report opens with. The class is the hook the message's own
+ * stylesheet uses to stack the three on a phone; a client that ignores stylesheets keeps the row. */
 export function qelizaShifres(etiketa, vlera, ngjyra, gjeresia = "33%") {
   return `
-              <td width="${gjeresia}" style="padding:0 4px;" valign="top">
+              <td class="fcp-shifra" width="${gjeresia}" style="padding:0 4px;" valign="top">
                 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
                        style="background:${PANEL};border:1px solid ${LINE};border-radius:10px;">
                   <tr><td style="padding:14px 12px;text-align:center;font-family:Arial,Helvetica,sans-serif;">

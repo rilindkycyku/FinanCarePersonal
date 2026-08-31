@@ -737,6 +737,14 @@ body.light-mode .fcp-detaje-tabs .fcp-faqe-tab.active {
   border-top: 1px solid var(--sp-border);
 }
 
+/* A choice that belongs to the row above it (the weekly report's PDF), indented so it reads as
+   part of that switch and not as a fifth report. */
+.fcp-raporti-nenrresht {
+  margin: 0.5rem 0 0 1.1rem;
+  padding-left: 0.75rem;
+  border-left: 2px solid var(--sp-border);
+}
+
 /* ── Two halves of one page ───────────────────────────────────
    Sinkronizimi and Eksporto / Importo, which used to be two menu entries. Each tab is a real link
    (the URL still says which half is open), drawn as a switch rather than as a list of links. */

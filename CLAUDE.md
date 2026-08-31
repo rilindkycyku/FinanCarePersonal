@@ -31,9 +31,9 @@ npm run dev       # vite --host
 npm run build
 npm run preview
 npm run lint      # eslint . — must stay at 0 errors (5 pre-existing warnings)
-npm test          # vitest run — 25 files, 512 tests, all green
+npm test          # vitest run — 27 files, 611 tests, all green
 npm run test:watch
-npm run ikonat    # regenerates public/img/web/icon-*.png from Logo.svg via Playwright/Chromium
+npm run ikonat    # regenerates the icons and the two wordmark PNGs from Logo.svg (Playwright)
 ```
 
 Always run `npm test` and `npm run lint` before committing. `npm run ikonat` is *not* part of the
@@ -227,8 +227,10 @@ version — and note that an upgrade blocked by another open tab is surfaced thr
 - Vitest, no DOM environment, no jsdom setup file. Tests sit next to the code as `*.test.js`.
 - Everything tested is pure: `finance`, `csv`, `sinkronizimi`, `kategorite`, `etiketat`, `format`,
   `options`, `calc`, `periudhat`, `raportet`, `raporti`, `raportFigurat`, `raportGrafike`,
-  `raportEmail`, `paralajmerimet`, `njoftimet`, `abonimet`, `viti`, `skema`, `supabase`,
-  `transferQr`, `pajisja`, `instalimi`, `udhezimet`.
+  `raportEmail`, `paralajmerimet`, `njoftimet`, `abonimet`, `viti`, `zerat`, `skema`, `supabase`,
+  `transferQr`, `pajisja`, `instalimi`, `udhezimet`, plus the naming half of `exportPdf`
+  (`statementTitle` / `statementFilename`) — the rest of that file draws into jsPDF and needs a
+  browser.
 - Follow the existing style: small factory helpers (`const tx = (id, extra = {}) => ({…})`), fixed
   dates, `"today"` passed in as an argument.
 - New logic in `lib/` is expected to arrive with tests. React components are not unit-tested —

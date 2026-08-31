@@ -88,6 +88,19 @@ describe("markup-i", () => {
     expect(html).toContain("400,00");
   });
 
+  it("leaves a zero unlabelled - the missing bar has already said it", () => {
+    const html = grafikuShtyllave({
+      kolonat: [
+        { etiketa: "Hën", vlerat: [40] },
+        { etiketa: "Mar", vlerat: [0] },
+      ],
+      monedha: "EUR",
+      tregoVlerat: true,
+    });
+    expect(html).toContain(">40,00 €<");
+    expect(html).not.toContain(">0,00 €<");
+  });
+
   it("narrows a lone bar so a row of them does not read as a block of colour", () => {
     expect(grafikuShtyllave({ kolonat: [{ etiketa: "Hën", vlerat: [10] }] })).toContain('width="58%"');
     expect(grafikuShtyllave({ kolonat: [{ etiketa: "Hën", vlerat: [10, 5] }] })).toContain('width="100%"');
@@ -111,5 +124,12 @@ describe("markup-i", () => {
   it("draws a full bar for anything past the limit rather than overflowing the frame", () => {
     expect(matesi({ perqindja: 180, etiketa: "Buxheti", vlera: "180%" })).toContain('width="100%"');
     expect(matesi({ perqindja: -20 })).toContain('width="0%"');
+  });
+
+  it("carries a line under the bar when it is given one, and no empty row when it is not", () => {
+    const me = matesi({ perqindja: 40, etiketa: "Makina", vlera: "2.400,00 €", nen: "+200,00 € këtë muaj" });
+    expect(me).toContain("+200,00 € këtë muaj");
+    // One row more than the same meter without it, and not an empty one left behind.
+    expect(me.match(/<tr>/g)).toHaveLength(matesi({ perqindja: 40 }).match(/<tr>/g).length + 1);
   });
 });

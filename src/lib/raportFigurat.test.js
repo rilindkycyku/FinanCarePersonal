@@ -76,6 +76,123 @@ describe("figurat e përbashkëta", () => {
   });
 });
 
+/**
+ * The tag ranking. Tags are the reader's own labels rather than a fixed set, so the tail is long
+ * and only the head belongs in a summary.
+ */
+describe("etiketat", () => {
+  const meEtiketa = [
+    hyrje("h9", "2026-07-01", 900),
+    dalje("e1", "2026-07-02", 200, "k1", { etiketat: ["pushime"] }),
+    dalje("e2", "2026-07-03", 60, "k1", { etiketat: ["pushime", "makina"] }),
+    dalje("e3", "2026-07-04", 10, "k1", { etiketat: ["a"] }),
+    dalje("e4", "2026-07-05", 9, "k1", { etiketat: ["b"] }),
+    dalje("e5", "2026-07-06", 8, "k1", { etiketat: ["c"] }),
+    dalje("e6", "2026-07-07", 7, "k1", { etiketat: ["d"] }),
+    dalje("e7", "2026-07-08", 6, "k1", { etiketat: ["e"] }),
+  ];
+  const f = figuratERaportit({
+    lloji: MUJOR,
+    periudha: "2026-07",
+    accounts: llogarite,
+    categories: kategorite,
+    transactions: meEtiketa,
+  });
+
+  it("ranks them by what they cost, and stops at five", () => {
+    expect(f.etiketat).toHaveLength(5);
+    expect(f.etiketat.map((e) => e.emri)).toEqual(["pushime", "makina", "a", "b", "c"]);
+    expect(f.etiketat[0].vlera).toBe(260);
+  });
+
+  it("counts a transaction in full under each tag it carries", () => {
+    // 60 € is tagged twice, so it is whole under both - the shares are of the month's spending,
+    // not slices of one pie.
+    expect(f.etiketat.find((e) => e.emri === "makina").vlera).toBe(60);
+  });
+
+  it("has nothing to rank in a ledger that uses no tags", () => {
+    expect(figurat({ lloji: MUJOR, periudha: "2026-07" }).etiketat).toEqual([]);
+  });
+});
+
+/**
+ * The goals and the debt notes. Both are stores the reader can go a whole month without opening,
+ * and both are reported on without being folded into anything: a note stays outside every balance,
+ * exactly as it is everywhere else in the app.
+ */
+describe("qëllimet dhe borxhet", () => {
+  const goals = [
+    { id: "g1", emri: "Makina", vleraSynim: 6000, vleraFillestare: 1000, dataSynim: "2027-07-31" },
+    { id: "g2", emri: "Pushimet", vleraSynim: 1000, vleraFillestare: 200, dataSynim: "2026-10-31" },
+    { id: "g3", emri: "Rezerva", vleraSynim: 500, vleraFillestare: 500 },
+  ];
+  const borxhet = [
+    {
+      id: "b1", emri: "Karta", lloji: "karte", vleraTotale: 900,
+      pagesat: [
+        { id: "p1", data: "2026-06-20", vlera: 100 },
+        { id: "p2", data: "2026-07-15", vlera: 150 },
+      ],
+    },
+    { id: "b2", emri: "E mbyllur", lloji: "karte", vleraTotale: 100, pagesat: [{ id: "p3", data: "2026-07-02", vlera: 100 }] },
+    { id: "b3", emri: "E arkivuar", lloji: "karte", vleraTotale: 400, arkivuar: true, pagesat: [] },
+  ];
+  const f = figuratERaportit({
+    lloji: MUJOR,
+    periudha: "2026-07",
+    accounts: llogarite,
+    categories: kategorite,
+    transactions: [
+      ...transaksionet,
+      { id: "k1", data: "2026-07-05", lloji: "shpenzim", vlera: 300, llogariaId: "l1", qellimiId: "g1" },
+      { id: "k2", data: "2026-06-05", lloji: "shpenzim", vlera: 200, llogariaId: "l1", qellimiId: "g1" },
+    ],
+    goals,
+    borxhet,
+  });
+
+  it("separates the whole story of a goal from what this month did about it", () => {
+    const makina = f.qellimet.find((q) => q.emri === "Makina");
+    // 1000 put aside before the goal existed, plus both contributions; only July's is this month's.
+    expect(makina.kursyer).toBe(1500);
+    expect(makina.kontribuar).toBe(300);
+    expect(makina.mbetur).toBe(4500);
+  });
+
+  it("says what would have to go in monthly to arrive on the goal's own date", () => {
+    const pushimet = f.qellimet.find((q) => q.emri === "Pushimet");
+    // 800 left over the four months from the end of July to the end of October.
+    expect(Math.round(pushimet.duhetNeMuaj)).toBe(200);
+  });
+
+  it("leaves out a goal already reached, and a note already settled or archived", () => {
+    expect(f.qellimet.map((q) => q.emri)).not.toContain("Rezerva");
+    expect(f.borxhet.map((b) => b.emri)).toEqual(["Karta"]);
+  });
+
+  it("counts only the payments made inside the period", () => {
+    const karta = f.borxhet[0];
+    expect(karta.paguar).toBe(250);
+    expect(karta.paguarNePeriudhe).toBe(150);
+    expect(karta.mbetur).toBe(650);
+  });
+
+  it("has nothing to report for a ledger with neither", () => {
+    const bosh = figurat({ lloji: MUJOR, periudha: "2026-07" });
+    expect(bosh.qellimet).toEqual([]);
+    expect(bosh.borxhet).toEqual([]);
+  });
+
+  it("is the month's business only - the other kinds do not carry it", () => {
+    const vjetor = figuratERaportit({
+      lloji: VJETOR, periudha: "2026", accounts: llogarite, categories: kategorite,
+      transactions: transaksionet, goals, borxhet,
+    });
+    expect(vjetor.qellimet).toBeUndefined();
+  });
+});
+
 describe("norma e kursimit", () => {
   it("is the share of what came in that was still there", () => {
     expect(normaEKursimit(1000, 250)).toBe(75);

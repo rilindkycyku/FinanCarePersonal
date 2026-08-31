@@ -825,13 +825,21 @@ export const UDHEZIMET = [
         teksti:
           "Katër raporte, secili me çelësin e vet: javor, mujor, tremujor dhe vjetor. Sa herë mbyllet një " +
           "periudhë, hera e parë që hapet aplikacioni pas saj dërgon me email pasqyrën e asaj periudhe - " +
-          "shifrat kryesore, grafikët e periudhës dhe, për muajin, tremujorin e vitin, pasqyra e plotë si " +
-          "PDF bashkëngjitur. Javori mbetet i shkurtër dhe pa bashkëngjitje: shtatë ditët si grafik, " +
-          "shpenzimi më i madh dhe pagesat që vijnë brenda javës tjetër. Emaili niset nga projekti juaj i " +
+          "shifrat kryesore, grafikët e periudhës, shpenzimin më të madh të saj, ndarjen sipas " +
+          "kategorive e sipas etiketave dhe - te mujori - buxhetet, qëllimet e kursimit e borxhet " +
+          "që janë ende hapur. Për muajin, tremujorin e vitin vjen edhe pasqyra e plotë si " +
+          "PDF bashkëngjitur. Javori vjen i shkurtër dhe pa të: shtatë ditët si grafik, shpenzimi më " +
+          "i madh dhe pagesat që vijnë brenda javës tjetër. Këtë e vendosni ju: nën çdo çelës të " +
+          "ndezur del një i dytë, «Bashkëngjit pasqyrën PDF...», që ia shton bashkëngjitjen javorit " +
+          "ose ia heq muajit, tremujorit e vitit - rreshti nën emrin e raportit tregon gjithmonë se " +
+          "çfarë do të vijë. Emaili niset nga projekti juaj i " +
           "Supabase-it, pra kërkon një projekt të lidhur dhe një funksion të vogël me çelësin tuaj të " +
           "Resend; hapat e instalimit janë brenda vetë kartelës, një herë të vetme, dhe i njëjti instalim " +
-          "u shërben të katërve. Adresa lihet bosh për llogarinë me të cilën hyni te projekti, ose " +
-          "shkruhet një tjetër. Edhe një periudhë pa asnjë transaksion dërgohet - pikërisht ajo është " +
+          "u shërben të katërve. Adresa e marrësit lihet bosh për llogarinë me të cilën hyni te " +
+          "projekti, ose shkruhet një tjetër. «Dërguesi» është nga kush vijnë: bosh do të thotë " +
+          "adresa e parazgjedhur e Resend-it, e cila shkruan vetëm te llogaria juaj; nëse keni " +
+          "verifikuar një domen tuajin te Resend, shkruani një adresë të tij dhe raportet mund të " +
+          "shkojnë te çdo adresë. Edhe një periudhë pa asnjë transaksion dërgohet - pikërisht ajo është " +
           "shenja që diçka ka mbetur pa u shënuar. Çelësat i ndalin një nga një kur nuk i doni më. " +
           "Me «Dërgo tani» mund të merrni edhe periudhën që ende po rrjedh - p.sh. muajin e tanishëm: " +
           "shifrat ndalen te sot, krahasimi pritet te e njëjta pikë e periudhës së kaluar që të mos " +

@@ -9,12 +9,13 @@ import { useDialog } from "../Context/DialogContext";
 import { useSync } from "../Context/SyncContext";
 import Zgjedhesi from "./Zgjedhesi";
 import {
-  EMRI_FUNKSIONIT, dergoRaportin, gjendjaFunksionit, lexoShenjat, marresiIRaportit, shenoDerguar,
+  EMRI_FUNKSIONIT, dergoRaportin, derguesiIVlefshem, gjendjaFunksionit, lexoShenjat, marresiIRaportit,
+  shenoDerguar,
 } from "../lib/raporti";
 // The function's real source, read straight out of the repository: the code the user pastes into
 // their project and the code reviewed here are then the same text, and cannot drift apart.
 import KODI_FUNKSIONIT from "../../supabase/functions/raporti/index.ts?raw";
-import { LLOJET_RAPORTIT } from "../lib/raportet";
+import { LLOJET_RAPORTIT, bashkengjitjaERaportit } from "../lib/raportet";
 import { MUJOR, celesiPeriudhes, emriPeriudhes, etiketaPeriudhes, periudhatPerZgjedhje } from "../lib/periudhat";
 import { dataEParaERegjistruar } from "../lib/finance";
 
@@ -41,11 +42,13 @@ const koha = (iso) => {
  * rather than four cards.
  */
 function Raportet() {
-  const { profile, saveProfile, accounts, categories, transactions, recurring, budgets } = useData();
+  const { profile, saveProfile, accounts, categories, transactions, recurring, budgets, goals, borxhet } =
+    useData();
   const { lidhur, konfigurimi } = useSync();
   const dialog = useDialog();
 
   const [marresi, setMarresi] = useState(profile.raportiMarresi || "");
+  const [derguesi, setDerguesi] = useState(profile.raportiNga || "");
   const [shenjat, setShenjat] = useState([]);
   const [funksioni, setFunksioni] = useState(null);
   const [duke, setDuke] = useState("");
@@ -72,6 +75,7 @@ function Raportet() {
   const eMbyllur = periudhat.find((p) => p.celesi === periudhaZgjedhur)?.mbyllur ?? true;
 
   useEffect(() => setMarresi(profile.raportiMarresi || ""), [profile.raportiMarresi]);
+  useEffect(() => setDerguesi(profile.raportiNga || ""), [profile.raportiNga]);
   // Switching the kind leaves the old period key behind - "2026-07" is not a week - so the picker
   // falls back to the most recent closed period of whatever was just chosen.
   useEffect(() => {
@@ -155,10 +159,37 @@ function Raportet() {
     await saveProfile({ ...profile, [perkufizimi.fusha]: true, raportiMarresi: marresi.trim() });
   };
 
+  // The PDF that rides along with a kind. A plain flag: nothing needs checking first, since the
+  // kind it belongs to is already on and therefore already sending. It is written even when it
+  // matches the default, so `bashkengjitjaERaportit` can tell "the user decided this" from "nobody
+  // has ever been asked".
+  const ndryshoBashkengjitjen = async (perkufizimi, vlera) => {
+    await saveProfile({ ...profile, [perkufizimi.fushaBashkengjitje]: vlera });
+  };
+
   const ruajMarresin = async () => {
     const vlera = marresi.trim();
     if (vlera === (profile.raportiMarresi || "")) return;
     await saveProfile({ ...profile, raportiMarresi: vlera });
+  };
+
+  /**
+   * The sender is refused here rather than by Resend a month later: a report that fails at 6am on
+   * the first of the month fails quietly, and the reason is a line in a marker row nobody reads.
+   */
+  const ruajDerguesin = async () => {
+    const vlera = derguesi.trim();
+    if (vlera === (profile.raportiNga || "")) return;
+    if (!derguesiIVlefshem(vlera)) {
+      dialog.alert(
+        "Dërguesi duhet të jetë një adresë e plotë - «raporte@domeni-juaj.com» ose " +
+          "«Emri <raporte@domeni-juaj.com>» - dhe domeni duhet të jetë i verifikuar te Resend.",
+        { title: "Dërgues i pavlefshëm", variant: "warning" }
+      );
+      setDerguesi(profile.raportiNga || "");
+      return;
+    }
+    await saveProfile({ ...profile, raportiNga: vlera });
   };
 
   const dergoTani = async () => {
@@ -181,6 +212,8 @@ function Raportet() {
         transactions,
         recurring,
         budgets,
+        goals,
+        borxhet,
       });
       // Only a period that has ended is recorded as sent. A running month written down here would
       // be found by the automatic path at the start of the next one and taken as already done -
@@ -248,6 +281,24 @@ function Raportet() {
             </div>
           </Form.Group>
 
+          <Form.Group className="mb-3" controlId="raporti-derguesi">
+            <Form.Label className="small fw-semibold">Dërguesi</Form.Label>
+            <Form.Control
+              type="text"
+              placeholder="FinanCare Personal <raporte@domeni-juaj.com>"
+              value={derguesi}
+              onChange={(e) => setDerguesi(e.target.value)}
+              onBlur={ruajDerguesin}
+            />
+            <div className="fcp-modal-hint">
+              {derguesi.trim()
+                ? `Raportet do të nisen nga ${derguesi.trim()}. Domeni duhet të jetë i verifikuar te Resend.`
+                : "Bosh do të thotë adresa e parazgjedhur e Resend-it (onboarding@resend.dev), e cila " +
+                  "shkruan vetëm te llogaria juaj. Nëse keni verifikuar një domen tuajin te Resend, " +
+                  "shkruani një adresë të tij këtu - që andej raportet mund të shkojnë te çdo adresë."}
+            </div>
+          </Form.Group>
+
           <div className="fcp-raportet-lista mb-3">
             {LLOJET_RAPORTIT.map((r) => (
               <div key={r.lloji} className="fcp-raporti-rresht">
@@ -262,8 +313,26 @@ function Raportet() {
                 <div className="text-muted small">{r.pershkrimi}</div>
                 <div className="fcp-modal-hint">
                   {r.kur}
-                  {r.bashkengjitje ? " · me pasqyrën PDF bashkëngjitur" : " · pa bashkëngjitje"}
+                  {bashkengjitjaERaportit(profile, r.lloji)
+                    ? " · me pasqyrën PDF bashkëngjitur"
+                    : " · pa bashkëngjitje"}
                 </div>
+                {/* The attachment switch appears only once the kind itself is on: a choice about
+                    an email nobody has asked for is noise. */}
+                {r.fushaBashkengjitje && profile[r.fusha] ? (
+                  <div className="fcp-raporti-nenrresht">
+                    <Form.Check
+                      type="switch"
+                      id={`raporti-pdf-${r.lloji}`}
+                      label={r.tekstiBashkengjitjes}
+                      // The kind's own default until the user has decided, so a switch nobody has
+                      // touched shows what that email really carries.
+                      checked={bashkengjitjaERaportit(profile, r.lloji)}
+                      onChange={(e) => ndryshoBashkengjitjen(r, e.target.checked)}
+                    />
+                    <div className="fcp-modal-hint">{r.ndihmaBashkengjitjes}</div>
+                  </div>
+                ) : null}
               </div>
             ))}
           </div>

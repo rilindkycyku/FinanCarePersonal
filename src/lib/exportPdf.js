@@ -51,7 +51,18 @@ export function statementTitle(start, end) {
  * one was picked so two statements for the same period don't overwrite each other.
  */
 export function statementFilename(start, end, emriLlogarise) {
-  return `${["financarepersonal", statementTitle(start, end), emriLlogarise]
+  return statementFilenameFromTitle(statementTitle(start, end), emriLlogarise);
+}
+
+/**
+ * The same name, built from a title the caller already has rather than from the dates.
+ *
+ * `statementTitle` can only read a title out of the bounds it is given, and the bounds of a week
+ * or of a quarter say nothing - both come back as "Pasqyra e periudhës". Anywhere the period is
+ * known by name (the email reports know theirs), the name is the better one to file it under.
+ */
+export function statementFilenameFromTitle(titulli, emriLlogarise) {
+  return `${["financarepersonal", titulli, emriLlogarise]
     .filter(Boolean)
     .join("-")
     .toLowerCase()
@@ -273,7 +284,7 @@ export async function exportStatementPdf({
   let vizatuar = false;
   if (logo) {
     try {
-      // 481 × 90 in the source, kept in proportion.
+      // 962 × 180 in the source - the wordmark's own 481:90, kept in proportion.
       doc.addImage(logo, "PNG", MARGIN, MARGIN - 4, 128, 24);
       vizatuar = true;
     } catch {

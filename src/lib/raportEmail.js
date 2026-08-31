@@ -15,6 +15,11 @@
  * `raportGrafike.js` holds those, and the reasoning behind drawing them rather than attaching a
  * picture.
  *
+ * The card is fluid and capped at 600 pixels rather than fixed at 600, so a phone gets the report
+ * at the width of its screen instead of a page it has to drag sideways. Outlook's Word engine does
+ * not do `max-width`, so it gets the fixed 600 through the conditional table around it - the one
+ * `<!--[if mso]-->` block in the message, and the reason the closing tag has a twin at the bottom.
+ *
  * It is also written for a light background on purpose. A dark-mode client will invert what it
  * likes, but an email that *assumes* dark and lands in a white inbox is unreadable, and the app's
  * own dark palette is not worth that risk.
@@ -72,7 +77,56 @@ export function bazaEPerdorshme(baza) {
     /^172\.(1[6-9]|2\d|3[01])\./.test(strehuesi);
   return lokal ? "" : teksti;
 }
+
+/** The wordmark set in text: white "FinanCare", emerald "PERSONAL", the way the app's own header
+ * and the PDF masthead set it. It is both the header of an email that has no logo to point at and,
+ * through `alt`, what a client that refuses to load the image shows in its place. */
+const MARKA_TEKST =
+  `<span style="color:#ffffff;font-size:17px;font-weight:bold;">FinanCare</span>` +
+  `<span style="color:${EMERALD};font-size:11px;font-weight:bold;letter-spacing:.12em;"> PERSONAL</span>`;
+
+/**
+ * The masthead of the email: the logo when there is somewhere to load it from, the words when not.
+ *
+ * The logo the app draws everywhere else is an SVG, and an SVG is the one image format no email
+ * client agrees on - Gmail drops it entirely - so the header points at `LogoEmail.png`, a raster
+ * copy of the same lockup baked onto the same navy this cell paints (`npm run ikonat` makes it).
+ * An email cannot carry the file with it either, since a data URL is stripped by the same clients,
+ * so the copy has to be fetched, and the only host worth fetching it from is the app itself: it is
+ * the user's own deployment serving a static file that says nothing about who opened the message.
+ *
+ * That makes the address the same condition the footer link has, and for the same reason - a logo
+ * hosted on `localhost` is a broken image in every inbox on earth - so an email built without a
+ * usable origin keeps the text lockup rather than a grey box with a torn-paper icon.
+ *
+ * `PERSONAL` stays live text beside the image. It is what the PDF statement does with the same
+ * logo, and it means a blocked image degrades to exactly the old header: `alt` is styled like the
+ * white half of the wordmark, and the emerald half was never an image to begin with.
+ */
+export function stema(adresa) {
+  if (!adresa) return MARKA_TEKST;
+  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
+            <td valign="middle" style="padding-right:9px;">
+              <img src="${esc(adresa)}/img/web/LogoEmail.png" width="171" height="32" alt="FinanCare"
+                   style="display:block;border:0;outline:none;text-decoration:none;width:171px;height:32px;color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:17px;font-weight:bold;">
+            </td>
+            <td valign="middle" style="font-family:Arial,Helvetica,sans-serif;color:${EMERALD};font-size:11px;font-weight:bold;letter-spacing:.12em;">PERSONAL</td>
+          </tr></table>`;
+}
+
 const meShenje = (n, monedha) => `${n >= 0 ? "+" : ""}${formatMoney(n, monedha)}`;
+
+/**
+ * A figure as it goes into a sentence: escaped, and with its spaces made unbreakable.
+ *
+ * `formatMoney` puts a space before the symbol and a stop between thousands, and a paragraph is
+ * free to break at that space - which lands "853,55" at the end of one line and "€" at the start of
+ * the next, and reads as a template that came apart. Tables set `white-space:nowrap` on the cell;
+ * running text has no cell, so the spaces themselves have to hold.
+ */
+const paNdarje = (teksti) => esc(teksti).replace(/\s/g, "&nbsp;");
+const para = (vlera, monedha) => paNdarje(formatMoney(vlera, monedha));
+const paraMeShenje = (vlera, monedha) => paNdarje(meShenje(vlera, monedha));
 const perqindjeMeShenje = (p) => `${p >= 0 ? "+" : ""}${Math.round(p)}%`;
 
 /** "shpenzimet +12% ndaj qershorit 2026", or nothing at all when the period before held nothing to
@@ -93,6 +147,49 @@ const rreshtiKursimit = (f, monedha) =>
         ngjyra: f.kursimi >= 0 ? EMERALD : RED,
       })}</td></tr>`;
 
+/**
+ * Where the money went by the reader's own labels, under the section that says where it went by
+ * category.
+ *
+ * The two answer the same question from opposite ends: categories are the ledger's own shelves,
+ * tags are what the reader wrote on a handful of rows - "pushime2026", "makina" - and it is the
+ * second that a summary cannot reconstruct. A transaction with two tags counts under both, so the
+ * shares are of the whole period's spending and may add up past 100; that is what the same panel
+ * does in the app, and it is the honest reading of "how much of this month went to this".
+ *
+ * Nothing is drawn for a ledger that uses no tags, which is most of them - an empty heading is
+ * worse than a missing one. That is also what keeps this in the weekly email without making it
+ * longer for anybody: a week with no tags on it shows nothing at all, and a week with them has
+ * two or three rows to show.
+ */
+const seksioniEtiketave = (f, monedha) =>
+  f.etiketat?.length
+    ? `${titulliSeksionit("Sipas etiketave")}
+            <tr><td>${shiritetHorizontale({ rreshtat: f.etiketat, monedha })}</td></tr>`
+    : "";
+
+/**
+ * The single largest purchase of the period.
+ *
+ * `figuratERaportit` has always worked this out for every kind, and for a long time only the weekly
+ * email printed it - the other three carried the figure and threw it away. It is the question that
+ * follows "how much did I spend", it costs one line, and it is the one row of the ledger worth
+ * lifting into a summary. Everything else about individual transactions stays the PDF statement's
+ * job, which matters more now that the statement can be switched off.
+ *
+ * `kujt` is the period in the genitive - "i javës", "i muajit" - because Albanian will not take a
+ * period key here and the four bodies each know which word is theirs.
+ */
+const rreshtiMeIMadh = (f, monedha, kujt, opsione = {}) =>
+  f.meIMadhi
+    ? paragraf(
+        `Shpenzimi më i madh ${kujt} ishte <strong>${esc(f.meIMadhi.pershkrimi)}</strong> - ` +
+          `${para(f.meIMadhi.vlera, monedha)} më ${esc(dataShkurt(f.meIMadhi.data))} ` +
+          `(${esc(f.meIMadhi.kategoria)}).`,
+        opsione
+      )
+    : "";
+
 const seksioniKategorive = (f, monedha, { meShirit = true } = {}) => `
             ${titulliSeksionit("Ku shkuan paratë")}
             ${
@@ -106,6 +203,80 @@ const seksioniKategorive = (f, monedha, { meShirit = true } = {}) => `
             }
             <tr><td>${shiritetHorizontale({ rreshtat: f.kategorite, monedha })}</td></tr>`;
 
+/**
+ * The savings goals, as the month left them.
+ *
+ * A goal is the slowest-moving thing in the ledger and the easiest to forget: nothing puts it in
+ * front of anybody, and it only moves when somebody decides it should. So the bar is the whole
+ * story and the line under it is this month's part in it - what went in, what is left, and what
+ * would have to go in monthly to arrive by the date the goal itself names.
+ *
+ * A month that put nothing into a goal says so, in words. That is the sentence worth sending.
+ */
+const seksioniQellimeve = (f, monedha) =>
+  f.qellimet?.length
+    ? `${titulliSeksionit("Qëllimet e kursimit")}
+            <tr><td>
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                ${f.qellimet
+                  .map(
+                    (q) => `<tr><td style="padding:8px 0 0;">${matesi({
+                      perqindja: q.perqindja,
+                      etiketa: q.emri,
+                      vlera: `${formatMoney(q.kursyer, monedha)} nga ${formatMoney(q.synimi, monedha)}`,
+                      ngjyra: q.ngjyra || EMERALD,
+                      nen: [
+                        q.kontribuar > 0
+                          ? `+${formatMoney(q.kontribuar, monedha)} këtë muaj`
+                          : "Asgjë e shtuar këtë muaj",
+                        `mbeten ${formatMoney(q.mbetur, monedha)}`,
+                        q.duhetNeMuaj
+                          ? `rreth ${formatMoney(q.duhetNeMuaj, monedha)} në muaj deri më ${dataShkurt(q.dataSynim)}`
+                          : "",
+                      ]
+                        .filter(Boolean)
+                        .join(" · "),
+                    })}</td></tr>`
+                  )
+                  .join("")}
+              </table>
+            </td></tr>`
+    : "";
+
+/**
+ * The debt notes, as the month left them.
+ *
+ * They stay outside every balance - that is the rule the whole app is built on - and this reports
+ * on them without folding them in: the bar is how much of the note is settled, and the amounts are
+ * the note's own. Both directions share the section, and the words change with `drejtimi`, because
+ * "paid off" and "collected" are not the same event even when the arithmetic is.
+ */
+const seksioniBorxheve = (f, monedha) =>
+  f.borxhet?.length
+    ? `${titulliSeksionit("Borxhet")}
+            <tr><td>
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                ${f.borxhet
+                  .map((b) => {
+                    const imi = b.drejtimi === "detyrim";
+                    return `<tr><td style="padding:8px 0 0;">${matesi({
+                      perqindja: b.perqindja,
+                      etiketa: b.emri,
+                      vlera: `${formatMoney(b.paguar, monedha)} nga ${formatMoney(b.totali, monedha)}`,
+                      ngjyra: imi ? AMBER : EMERALD,
+                      nen: [
+                        b.paguarNePeriudhe > 0
+                          ? `${imi ? "Paguar" : "Arkëtuar"} ${formatMoney(b.paguarNePeriudhe, monedha)} këtë muaj`
+                          : `Asnjë ${imi ? "pagesë" : "arkëtim"} këtë muaj`,
+                        `${imi ? "mbeten" : "ju detyrohen ende"} ${formatMoney(b.mbetur, monedha)}`,
+                      ].join(" · "),
+                    })}</td></tr>`;
+                  })
+                  .join("")}
+              </table>
+            </td></tr>`
+    : "";
+
 // ── The four bodies ─────────────────────────────────────────────────────────
 
 function trupiJavor(f, monedha) {
@@ -117,17 +288,13 @@ function trupiJavor(f, monedha) {
               ngjyrat: [RED],
               lartesia: 70,
               monedha,
+              // Seven columns and five leave room for the figure above each bar; the year's twelve
+              // do not, and a row of overlapping numbers is worth less than the shape of the year.
+              tregoVlerat: true,
             })}</td></tr>
-            ${
-              f.meIMadhi
-                ? paragraf(
-                    `Shpenzimi më i madh i javës ishte <strong>${esc(f.meIMadhi.pershkrimi)}</strong> - ` +
-                      `${esc(formatMoney(f.meIMadhi.vlera, monedha))} më ${esc(dataShkurt(f.meIMadhi.data))} ` +
-                      `(${esc(f.meIMadhi.kategoria)}).`
-                  )
-                : ""
-            }
+            ${rreshtiMeIMadh(f, monedha, "i javës")}
             ${seksioniKategorive(f, monedha)}
+            ${seksioniEtiketave(f, monedha)}
             ${
               pagesat.length
                 ? `${titulliSeksionit("Brenda shtatë ditësh")}
@@ -160,7 +327,7 @@ function trupiJavor(f, monedha) {
             )}`;
 }
 
-function trupiMujor(f, monedha) {
+function trupiMujor(f, monedha, { mePdf = false } = {}) {
   return `
             ${titulliSeksionit("Javë pas jave")}
             <tr><td style="padding:6px 0 0;">${grafikuShtyllave({
@@ -168,8 +335,11 @@ function trupiMujor(f, monedha) {
               ngjyrat: [RED],
               lartesia: 70,
               monedha,
+              tregoVlerat: true,
             })}</td></tr>
+            ${rreshtiMeIMadh(f, monedha, "i muajit")}
             ${seksioniKategorive(f, monedha)}
+            ${seksioniEtiketave(f, monedha)}
             ${rreshtiKursimit(f, monedha)}
             ${
               f.buxhetet?.length
@@ -190,16 +360,23 @@ function trupiMujor(f, monedha) {
             </td></tr>`
                 : ""
             }
+            ${seksioniQellimeve(f, monedha)}
+            ${seksioniBorxheve(f, monedha)}
             ${paragraf(
               `${f.nrRreshtave} transaksione${
                 krahasimiNeFjale(f) ? ` · shpenzimet ${esc(krahasimiNeFjale(f))}` : ""
-              }. Lista e plotë, e ndarë sipas hyrjeve, blerjeve, kësteve dhe transfereve, është te ` +
-                `pasqyra PDF bashkëngjitur këtij emaili.`,
+              }.` +
+                // Only when one is really coming: the attachment is a switch now, and a sentence
+                // pointing at a file that is not there is worse than no sentence.
+                (mePdf
+                  ? ` Lista e plotë, e ndarë sipas hyrjeve, blerjeve, kësteve dhe transfereve, është te ` +
+                    `pasqyra PDF bashkëngjitur këtij emaili.`
+                  : ""),
               { lart: 18 }
             )}`;
 }
 
-function trupiTremujor(f, monedha) {
+function trupiTremujor(f, monedha, { mePdf = false } = {}) {
   return `
             ${titulliSeksionit("Tre muajt, krah për krah")}
             <tr><td style="padding:6px 0 0;">${grafikuShtyllave({
@@ -210,17 +387,20 @@ function trupiTremujor(f, monedha) {
             })}</td></tr>
             ${paragraf(
               `Jeshile hyrjet, e kuqe shpenzimet. Mesatarja mujore e shpenzimeve ishte ` +
-                `<strong>${esc(formatMoney(f.mesatarjaMujore, monedha))}</strong>` +
+                `<strong>${para(f.mesatarjaMujore, monedha)}</strong>` +
                 `${
                   f.muajiMeIShtrenjte
-                    ? `, dhe muaji më i rëndë ishte ${esc(f.muajiMeIShtrenjte.etiketa)} me ${esc(
-                        formatMoney(f.muajiMeIShtrenjte.shpenzimet, monedha)
+                    ? `, dhe muaji më i rëndë ishte ${esc(f.muajiMeIShtrenjte.etiketa)} me ${para(
+                        f.muajiMeIShtrenjte.shpenzimet,
+                        monedha
                       )}`
                     : ""
                 }.`
             )}
+            ${rreshtiMeIMadh(f, monedha, "i tremujorit", { lart: 10 })}
             ${rreshtiKursimit(f, monedha)}
             ${seksioniKategorive(f, monedha)}
+            ${seksioniEtiketave(f, monedha)}
             ${
               f.levizjet?.length
                 ? `${titulliSeksionit("Çfarë lëvizi më shumë")}
@@ -246,12 +426,15 @@ function trupiTremujor(f, monedha) {
             )}`
                 : ""
             }
-            ${paragraf(`${f.nrRreshtave} transaksione në tre muaj. Pasqyra e plotë është bashkëngjitur.`, {
-              lart: 18,
-            })}`;
+            ${paragraf(
+              `${f.nrRreshtave} transaksione në tre muaj.${
+                mePdf ? " Pasqyra e plotë është bashkëngjitur." : ""
+              }`,
+              { lart: 18 }
+            )}`;
 }
 
-function trupiVjetor(f, monedha) {
+function trupiVjetor(f, monedha, { mePdf = false } = {}) {
   const v = f.viti;
   const k = v.krahasimi;
   return `
@@ -269,15 +452,17 @@ function trupiVjetor(f, monedha) {
               `Jeshile hyrjet, e kuqe shpenzimet.` +
                 `${
                   v.muajiMeIShtrenjte
-                    ? ` Muaji më i shtrenjtë ishte <strong>${esc(v.muajiMeIShtrenjte.label)}</strong> me ${esc(
-                        formatMoney(v.muajiMeIShtrenjte.shpenzimet, monedha)
+                    ? ` Muaji më i shtrenjtë ishte <strong>${esc(v.muajiMeIShtrenjte.label)}</strong> me ${para(
+                        v.muajiMeIShtrenjte.shpenzimet,
+                        monedha
                       )};`
                     : ""
                 }` +
                 `${
                   v.muajiMeIKursyer
-                    ? ` më i kursyeri ishte <strong>${esc(v.muajiMeIKursyer.label)}</strong> me ${esc(
-                        meShenje(v.muajiMeIKursyer.neto, monedha)
+                    ? ` më i kursyeri ishte <strong>${esc(v.muajiMeIKursyer.label)}</strong> me ${paraMeShenje(
+                        v.muajiMeIKursyer.neto,
+                        monedha
                       )}.`
                     : ""
                 }`
@@ -296,19 +481,22 @@ function trupiVjetor(f, monedha) {
             }
             ${rreshtiKursimit(f, monedha)}
             ${seksioniKategorive(f, monedha)}
+            ${seksioniEtiketave(f, monedha)}
             ${
               v.uRrit || v.uUl
                 ? paragraf(
                     `${
                       v.uRrit
-                        ? `U rrit më shumë <strong>${esc(v.uRrit.emri)}</strong> (${esc(
-                            meShenje(v.uRrit.ndryshimi, monedha)
+                        ? `U rrit më shumë <strong>${esc(v.uRrit.emri)}</strong> (${paraMeShenje(
+                            v.uRrit.ndryshimi,
+                            monedha
                           )})`
                         : ""
                     }${v.uRrit && v.uUl ? "; " : ""}${
                       v.uUl
-                        ? `u ul më shumë <strong>${esc(v.uUl.emri)}</strong> (${esc(
-                            meShenje(v.uUl.ndryshimi, monedha)
+                        ? `u ul më shumë <strong>${esc(v.uUl.emri)}</strong> (${paraMeShenje(
+                            v.uUl.ndryshimi,
+                            monedha
                           )})`
                         : ""
                     }.`,
@@ -319,15 +507,29 @@ function trupiVjetor(f, monedha) {
             ${
               v.dita
                 ? paragraf(
-                    `Dita më e shtrenjtë e vitit ishte ${esc(dataShkurt(v.dita.data))}, me ${esc(
-                      formatMoney(v.dita.vlera, monedha)
+                    `Dita më e shtrenjtë e vitit ishte ${esc(dataShkurt(v.dita.data))}, me ${para(
+                      v.dita.vlera,
+                      monedha
                     )}.`,
                     { lart: 10 }
                   )
                 : ""
             }
+            ${
+              // Both lines are about the year's largest something, and for a ledger with one
+              // purchase on its heaviest day they are the same fact twice - the day line has
+              // already given the date and the amount, so the purchase line stands down.
+              v.dita &&
+              f.meIMadhi &&
+              v.dita.data === f.meIMadhi.data &&
+              Math.abs(v.dita.vlera - f.meIMadhi.vlera) < 0.005
+                ? ""
+                : rreshtiMeIMadh(f, monedha, "i vitit", { lart: 10 })
+            }
             ${paragraf(
-              `${f.nrRreshtave} transaksione gjatë vitit. Pasqyra e plotë është bashkëngjitur këtij emaili.`,
+              `${f.nrRreshtave} transaksione gjatë vitit.${
+                mePdf ? " Pasqyra e plotë është bashkëngjitur këtij emaili." : ""
+              }`,
               { lart: 18 }
             )}`;
 }
@@ -361,8 +563,13 @@ export function ndertoRaportin({
   transactions = [],
   recurring = [],
   budgets = [],
+  goals = [],
+  borxhet = [],
   sot = null,
   baza = "",
+  // Whether the statement PDF is really riding along with this email. `raporti.js` decides it
+  // before this is called, because a body may want to mention it.
+  mePdf = false,
 }) {
   const celesi = periudha || muaji;
   const adresa = bazaEPerdorshme(baza);
@@ -375,6 +582,8 @@ export function ndertoRaportin({
     transactions,
     recurring,
     budgets,
+    goals,
+    borxhet,
     sot,
   });
   const titulli = titulliPeriudhes(lloji, celesi);
@@ -396,17 +605,38 @@ export function ndertoRaportin({
 
   const html = `<!doctype html>
 <html lang="sq"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width">
-<title>${esc(titulli)}</title></head>
+<meta name="color-scheme" content="light"><meta name="supported-color-schemes" content="light">
+<title>${esc(titulli)}</title>
+<style>
+  /* Two things a head stylesheet can do for an email, and nothing more: it is thrown away by
+     Outlook's Word engine and rewritten by Outlook.com, so everything that matters stays inline
+     and this only improves what it reaches.
+
+     The first is to say the design is a light one. A client left to guess inverts the parts it
+     recognises and leaves the rest - white text on a pale panel, a navy header that stays navy -
+     and a half-inverted report is harder to read than either version whole.
+
+     The second is the phone. The three opening figures sit in a row of thirds, which at 320
+     pixels is a third of a screen each and a figure that no longer fits in it; below 480 they
+     become three full-width rows, and the padding narrows so the card is not mostly margin. */
+  :root { color-scheme: light; supported-color-schemes: light; }
+  @media only screen and (max-width: 480px) {
+    .fcp-shifra { display: block !important; width: 100% !important; padding: 0 0 8px !important; }
+    .fcp-trupi { padding: 20px 16px !important; }
+    .fcp-koka, .fcp-fundi { padding-left: 16px !important; padding-right: 16px !important; }
+  }
+</style></head>
 <body style="margin:0;padding:0;background:#eef2f6;">
   <div style="display:none;max-height:0;overflow:hidden;opacity:0;">${esc(paraprakja)}</div>
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#eef2f6;padding:24px 12px;">
     <tr><td align="center">
-      <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0"
-             style="width:600px;max-width:100%;background:#ffffff;border-radius:14px;overflow:hidden;">
-        <tr><td style="background:${NAVY};padding:20px 24px;font-family:Arial,Helvetica,sans-serif;">
-          <span style="color:#ffffff;font-size:17px;font-weight:bold;">FinanCare</span><span style="color:${EMERALD};font-size:11px;font-weight:bold;letter-spacing:.12em;"> PERSONAL</span>
+      <!--[if mso]><table role="presentation" width="600" align="center" cellpadding="0" cellspacing="0" border="0"><tr><td><![endif]-->
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+             style="width:100%;max-width:600px;background:#ffffff;border-radius:14px;overflow:hidden;">
+        <tr><td class="fcp-koka" style="background:${NAVY};padding:20px 24px;font-family:Arial,Helvetica,sans-serif;">
+          ${stema(adresa)}
         </td></tr>
-        <tr><td style="padding:24px;">
+        <tr><td class="fcp-trupi" style="padding:24px;">
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
             <tr><td style="font-family:Arial,Helvetica,sans-serif;font-size:21px;font-weight:bold;color:${TEXT};padding-bottom:4px;">
               ${esc(titulli)}
@@ -436,16 +666,19 @@ ${qelizaShifres("Bilanci", formatMoney(f.perfundimtar, monedha), NAVY)}
                 : ""
             }
             ${paragraf(
-              `Bilanci hapës ishte ${esc(formatMoney(f.fillestar, monedha))} dhe ${
+              `Bilanci hapës ishte ${para(f.fillestar, monedha)} dhe ${
                 f.epjesshme ? "deri tani është" : "periudha u mbyll me"
               } ` +
-                `${esc(formatMoney(f.perfundimtar, monedha))} - një ndryshim prej ` +
-                `<strong style="color:${f.neto >= 0 ? EMERALD : RED};">${esc(meShenje(f.neto, monedha))}</strong>.`
+                `${para(f.perfundimtar, monedha)} - një ndryshim prej ` +
+                `<strong style="color:${f.neto >= 0 ? EMERALD : RED};">${paraMeShenje(
+                  f.neto,
+                  monedha
+                )}</strong>.`
             )}
-            ${f.teQeta ? trupiQete : (TRUPAT[lloji] || trupiMujor)(f, monedha)}
+            ${f.teQeta ? trupiQete : (TRUPAT[lloji] || trupiMujor)(f, monedha, { mePdf })}
           </table>
         </td></tr>
-        <tr><td style="border-top:1px solid ${LINE};padding:16px 24px;font-family:Arial,Helvetica,sans-serif;font-size:11px;line-height:1.7;color:${MUTED};">
+        <tr><td class="fcp-fundi" style="border-top:1px solid ${LINE};padding:16px 24px;font-family:Arial,Helvetica,sans-serif;font-size:11px;line-height:1.7;color:${MUTED};">
           Ky raport u përgatit nga aplikacioni juaj dhe u dërgua nga projekti juaj i Supabase-it -
           asnjë server i FinanCarePersonal nuk i sheh këto shifra. Për ta ndalur, çaktivizoni
           raportet te ${
@@ -455,6 +688,7 @@ ${qelizaShifres("Bilanci", formatMoney(f.perfundimtar, monedha), NAVY)}
           }.
         </td></tr>
       </table>
+      <!--[if mso]></td></tr></table><![endif]-->
     </td></tr>
   </table>
 </body></html>`;
@@ -469,6 +703,38 @@ ${qelizaShifres("Bilanci", formatMoney(f.perfundimtar, monedha), NAVY)}
         ),
         ...(f.meIMadhi
           ? ["", `Shpenzimi më i madh: ${f.meIMadhi.pershkrimi} - ${formatMoney(f.meIMadhi.vlera, monedha)}`]
+          : []),
+        ...(f.qellimet?.length
+          ? [
+              "",
+              "Qëllimet e kursimit:",
+              ...f.qellimet.map(
+                (q) =>
+                  `  ${q.emri}: ${formatMoney(q.kursyer, monedha)} nga ${formatMoney(q.synimi, monedha)}` +
+                  ` (këtë muaj +${formatMoney(q.kontribuar, monedha)})`
+              ),
+            ]
+          : []),
+        ...(f.borxhet?.length
+          ? [
+              "",
+              "Borxhet:",
+              ...f.borxhet.map(
+                (b) =>
+                  `  ${b.emri}: mbeten ${formatMoney(b.mbetur, monedha)} nga ${formatMoney(b.totali, monedha)}` +
+                  ` (këtë muaj ${formatMoney(b.paguarNePeriudhe, monedha)})`
+              ),
+            ]
+          : []),
+        // The same sections the HTML shows, in the same order.
+        ...(f.etiketat?.length
+          ? [
+              "",
+              "Sipas etiketave:",
+              ...f.etiketat.map(
+                (e) => `  ${e.emri}: ${formatMoney(e.vlera, monedha)} (${Math.round(e.perqindja)}%)`
+              ),
+            ]
           : []),
         ...(f.kursimi === null ? [] : ["", `Sa mbeti nga çfarë hyri: ${formatPercent(f.kursimi)}`]),
         "",

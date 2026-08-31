@@ -38,9 +38,10 @@
 
 import { pajisjaKjo } from "./pajisja";
 import {
-  MUJOR, PREFIKSI_RAPORTIT, celesiShenjes, llojiRaportit, ngaCelesi, periudhaERaportit, raportetAktive,
+  MUJOR, PREFIKSI_RAPORTIT, bashkengjitjaERaportit, celesiShenjes, llojiRaportit, ngaCelesi,
+  periudhaERaportit, raportetAktive,
 } from "./raportet";
-import { kufijtePeriudhes } from "./periudhat";
+import { kufijtePeriudhes, titulliPeriudhes } from "./periudhat";
 import { dataEParaERegjistruar } from "./finance";
 import { STORI_META, TABELA } from "./skema";
 import { eshteLidhur, lexoKonfigurimin, rest, siguroSesionin, thirrFunksionin } from "./supabase";
@@ -79,6 +80,28 @@ export function raportiAktiv(profile, lloji = MUJOR) {
  */
 export function marresiIRaportit(profile, konfigurimi = lexoKonfigurimin()) {
   return String(profile?.raportiMarresi || konfigurimi?.email || "").trim();
+}
+
+/**
+ * Whether a sender address is one Resend will take: `raporte@domeni.com`, or the friendlier
+ * `Emri <raporte@domeni.com>`.
+ *
+ * Blank is valid and means the function's own default (`onboarding@resend.dev`), which Resend lets
+ * an unverified account use to write to the account owner and nobody else. A user who has verified
+ * a domain in Resend puts an address on that domain here, and from then on the reports can go to
+ * any inbox they like.
+ *
+ * The check is deliberately shallow - one `@`, a dot after it, no spaces or angle brackets inside
+ * the address. Resend is the real judge and its refusal comes back verbatim; this only catches the
+ * slip that would otherwise cost a whole month's report: a name typed without the angle brackets,
+ * or a domain left half-written.
+ */
+export function derguesiIVlefshem(raw) {
+  const teksti = String(raw || "").trim();
+  if (!teksti) return true;
+  const meEmer = teksti.match(/^[^<>]+<([^<>]+)>$/);
+  const adresa = (meEmer ? meEmer[1] : teksti).trim();
+  return /^[^\s@<>]+@[^\s@<>.]+\.[^\s@<>]+$/.test(adresa);
 }
 
 /** Reads one period's marker, or null when it has never been attempted. */
@@ -166,16 +189,22 @@ export async function gjendjaFunksionit() {
 }
 
 /** The statement PDF as base64, or null when it could not be produced - a report that arrives
- * without its attachment is still worth having, so this never takes the email down with it. */
+ * without its attachment is still worth having, so this never takes the email down with it.
+ *
+ * The file is named after the period the report is about, not after the bounds it happens to have:
+ * a statement works out its own title from the dates, and only a whole month or a whole year is
+ * recognisable that way - every week and every quarter would otherwise arrive as the same
+ * `pasqyra-e-periudhes.pdf`, which in an inbox is an attachment nobody can tell from the last one. */
 async function pdfBase64({ lloji, periudha, profile, accounts, categories, transactions, recurring }) {
   try {
-    const [{ exportStatementPdf }, { blobNeDataUrl }] = await Promise.all([
+    const [{ exportStatementPdf, statementFilenameFromTitle }, { blobNeDataUrl }] = await Promise.all([
       import("./exportPdf"),
       import("./images"),
     ]);
     const { start, end } = kufijtePeriudhes(lloji, periudha);
     const { blob, filename } = await exportStatementPdf({
       profile, accounts, categories, transactions, recurring, start, end, kthejBlob: true,
+      filename: statementFilenameFromTitle(titulliPeriudhes(lloji, periudha)),
     });
     const dataUrl = await blobNeDataUrl(blob);
     return { pdf: String(dataUrl).split(",")[1] || "", filename };
@@ -188,9 +217,10 @@ async function pdfBase64({ lloji, periudha, profile, accounts, categories, trans
  * Builds one report and hands it to the function. Used both by the automatic path and by the
  * buttons in Cilësimet, so what a test sends is exactly what August would have sent.
  *
- * `meBashkengjitje` defaults to whatever the kind asks for - the weekly email deliberately carries
- * no PDF - and a caller may still say no, which is what the "provoje pa bashkëngjitje" path in the
- * settings card uses when an attachment is what a send is failing on.
+ * `meBashkengjitje` defaults to what the kind asks for once the profile has had its say - the
+ * weekly email carries no PDF unless its own switch is on - and a caller may still say no, which
+ * is what the "provoje pa bashkëngjitje" path in the settings card uses when an attachment is what
+ * a send is failing on.
  */
 export async function dergoRaportin({
   lloji = MUJOR,
@@ -203,13 +233,21 @@ export async function dergoRaportin({
   transactions = [],
   recurring = [],
   budgets = [],
+  goals = [],
+  borxhet = [],
   meBashkengjitje = null,
 }) {
   if (!marresi) throw new Error("Mungon adresa e marrësit.");
   const celesi = periudha || muaji;
+  // Decided before the email is written, not after it: the monthly report ends by pointing at the
+  // statement "attached to this email", and a reader who switched the attachment off would be
+  // reading a sentence about a file that is not there.
+  const duhetPdf = meBashkengjitje === null ? bashkengjitjaERaportit(profile, lloji) : meBashkengjitje;
   const { ndertoRaportin } = await import("./raportEmail");
   const { subject, html, text } = ndertoRaportin({
     lloji, periudha: celesi, profile, accounts, categories, transactions, recurring, budgets,
+    goals, borxhet,
+    mePdf: duhetPdf,
     // Always "now", for both paths. A closed period ends before today, so this changes nothing
     // there; a period the user asked for by hand may still be running, and this is what stops the
     // figures at today instead of drawing the rest of the month as empty.
@@ -220,7 +258,6 @@ export async function dergoRaportin({
     baza: typeof window !== "undefined" ? window.location?.origin || "" : "",
   });
 
-  const duhetPdf = meBashkengjitje === null ? Boolean(llojiRaportit(lloji)?.bashkengjitje) : meBashkengjitje;
   const bashkengjitja = duhetPdf
     ? await pdfBase64({ lloji, periudha: celesi, profile, accounts, categories, transactions, recurring })
     : { pdf: "", filename: "" };
@@ -311,6 +348,8 @@ export async function ekzekutoRaportet({
   transactions = [],
   recurring = [],
   budgets = [],
+  goals = [],
+  borxhet = [],
   sot = new Date(),
 } = {}) {
   const aktivet = raportetAktive(profile);
@@ -320,7 +359,7 @@ export async function ekzekutoRaportet({
   const marresi = marresiIRaportit(profile);
   if (!marresi) return [{ gjendja: "pa-marres" }];
 
-  const teDhenat = { profile, accounts, categories, transactions, recurring, budgets };
+  const teDhenat = { profile, accounts, categories, transactions, recurring, budgets, goals, borxhet };
   const fillimi = dataEParaERegjistruar(transactions);
   const rezultatet = [];
   for (const def of aktivet) {
