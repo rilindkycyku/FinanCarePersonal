@@ -38,9 +38,10 @@
 
 import { pajisjaKjo } from "./pajisja";
 import {
-  MUJOR, PREFIKSI_RAPORTIT, celesiShenjes, llojiRaportit, ngaCelesi, periudhaERaportit, raportetAktive,
+  MUJOR, PREFIKSI_RAPORTIT, bashkengjitjaERaportit, celesiShenjes, llojiRaportit, ngaCelesi,
+  periudhaERaportit, raportetAktive,
 } from "./raportet";
-import { kufijtePeriudhes } from "./periudhat";
+import { kufijtePeriudhes, titulliPeriudhes } from "./periudhat";
 import { dataEParaERegjistruar } from "./finance";
 import { STORI_META, TABELA } from "./skema";
 import { eshteLidhur, lexoKonfigurimin, rest, siguroSesionin, thirrFunksionin } from "./supabase";
@@ -166,16 +167,22 @@ export async function gjendjaFunksionit() {
 }
 
 /** The statement PDF as base64, or null when it could not be produced - a report that arrives
- * without its attachment is still worth having, so this never takes the email down with it. */
+ * without its attachment is still worth having, so this never takes the email down with it.
+ *
+ * The file is named after the period the report is about, not after the bounds it happens to have:
+ * a statement works out its own title from the dates, and only a whole month or a whole year is
+ * recognisable that way - every week and every quarter would otherwise arrive as the same
+ * `pasqyra-e-periudhes.pdf`, which in an inbox is an attachment nobody can tell from the last one. */
 async function pdfBase64({ lloji, periudha, profile, accounts, categories, transactions, recurring }) {
   try {
-    const [{ exportStatementPdf }, { blobNeDataUrl }] = await Promise.all([
+    const [{ exportStatementPdf, statementFilenameFromTitle }, { blobNeDataUrl }] = await Promise.all([
       import("./exportPdf"),
       import("./images"),
     ]);
     const { start, end } = kufijtePeriudhes(lloji, periudha);
     const { blob, filename } = await exportStatementPdf({
       profile, accounts, categories, transactions, recurring, start, end, kthejBlob: true,
+      filename: statementFilenameFromTitle(titulliPeriudhes(lloji, periudha)),
     });
     const dataUrl = await blobNeDataUrl(blob);
     return { pdf: String(dataUrl).split(",")[1] || "", filename };
@@ -188,9 +195,10 @@ async function pdfBase64({ lloji, periudha, profile, accounts, categories, trans
  * Builds one report and hands it to the function. Used both by the automatic path and by the
  * buttons in Cilësimet, so what a test sends is exactly what August would have sent.
  *
- * `meBashkengjitje` defaults to whatever the kind asks for - the weekly email deliberately carries
- * no PDF - and a caller may still say no, which is what the "provoje pa bashkëngjitje" path in the
- * settings card uses when an attachment is what a send is failing on.
+ * `meBashkengjitje` defaults to what the kind asks for once the profile has had its say - the
+ * weekly email carries no PDF unless its own switch is on - and a caller may still say no, which
+ * is what the "provoje pa bashkëngjitje" path in the settings card uses when an attachment is what
+ * a send is failing on.
  */
 export async function dergoRaportin({
   lloji = MUJOR,
@@ -220,7 +228,7 @@ export async function dergoRaportin({
     baza: typeof window !== "undefined" ? window.location?.origin || "" : "",
   });
 
-  const duhetPdf = meBashkengjitje === null ? Boolean(llojiRaportit(lloji)?.bashkengjitje) : meBashkengjitje;
+  const duhetPdf = meBashkengjitje === null ? bashkengjitjaERaportit(profile, lloji) : meBashkengjitje;
   const bashkengjitja = duhetPdf
     ? await pdfBase64({ lloji, periudha: celesi, profile, accounts, categories, transactions, recurring })
     : { pdf: "", filename: "" };

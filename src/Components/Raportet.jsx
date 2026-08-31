@@ -14,7 +14,7 @@ import {
 // The function's real source, read straight out of the repository: the code the user pastes into
 // their project and the code reviewed here are then the same text, and cannot drift apart.
 import KODI_FUNKSIONIT from "../../supabase/functions/raporti/index.ts?raw";
-import { LLOJET_RAPORTIT } from "../lib/raportet";
+import { LLOJET_RAPORTIT, bashkengjitjaERaportit } from "../lib/raportet";
 import { MUJOR, celesiPeriudhes, emriPeriudhes, etiketaPeriudhes, periudhatPerZgjedhje } from "../lib/periudhat";
 import { dataEParaERegjistruar } from "../lib/finance";
 
@@ -155,6 +155,12 @@ function Raportet() {
     await saveProfile({ ...profile, [perkufizimi.fusha]: true, raportiMarresi: marresi.trim() });
   };
 
+  // The PDF that rides along with a kind - only the weekly has the choice, and it is a plain flag:
+  // nothing needs checking first, since the kind it belongs to is already on and already working.
+  const ndryshoBashkengjitjen = async (perkufizimi, vlera) => {
+    await saveProfile({ ...profile, [perkufizimi.fushaBashkengjitje]: vlera });
+  };
+
   const ruajMarresin = async () => {
     const vlera = marresi.trim();
     if (vlera === (profile.raportiMarresi || "")) return;
@@ -262,8 +268,24 @@ function Raportet() {
                 <div className="text-muted small">{r.pershkrimi}</div>
                 <div className="fcp-modal-hint">
                   {r.kur}
-                  {r.bashkengjitje ? " · me pasqyrën PDF bashkëngjitur" : " · pa bashkëngjitje"}
+                  {bashkengjitjaERaportit(profile, r.lloji)
+                    ? " · me pasqyrën PDF bashkëngjitur"
+                    : " · pa bashkëngjitje"}
                 </div>
+                {/* The attachment switch belongs to the kind that has one, and appears only once
+                    the kind itself is on: a choice about an email nobody has asked for is noise. */}
+                {r.fushaBashkengjitje && profile[r.fusha] ? (
+                  <div className="fcp-raporti-nenrresht">
+                    <Form.Check
+                      type="switch"
+                      id={`raporti-pdf-${r.lloji}`}
+                      label={r.tekstiBashkengjitjes}
+                      checked={Boolean(profile[r.fushaBashkengjitje])}
+                      onChange={(e) => ndryshoBashkengjitjen(r, e.target.checked)}
+                    />
+                    <div className="fcp-modal-hint">{r.ndihmaBashkengjitjes}</div>
+                  </div>
+                ) : null}
               </div>
             ))}
           </div>

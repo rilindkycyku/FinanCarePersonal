@@ -9,6 +9,26 @@ e fundit kur rregullohet diçka, dhe e para vetëm kur ndryshon vetë forma e pr
 herë, te `2.0.0`, kur të dhënat mësuan të dalin nga shfletuesi. Datat janë ato të commit-it që e
 ngriti versionin.
 
+## [2.22.0] - 2026-08-31
+
+### Shtuar
+- **Pasqyra PDF mund t'i bashkëngjitet edhe raportit javor.** Deri tani PDF-ja shkonte vetëm me
+  muajin, tremujorin dhe vitin, dhe javori mbetej qëllimisht i shkurtër. Arsyeja qëndron - një
+  bashkëngjitje dy-faqëshe çdo të hënë është ajo që e bën njeriun ta fikë emailin - por ishte
+  vendim i marrë për të gjithë: kush kishte ndezur vetëm javorin nuk e shihte kurrë një pasqyrë.
+
+  Tani, nën çelësin e raportit javor te Cilësimet, del një çelës i dytë: «Bashkëngjit edhe pasqyrën
+  PDF të javës». I fikur si më parë për këdo që nuk e prek, pra asnjë kuti postare nuk ndryshon pa u
+  kërkuar. Kur ndizet, javori vjen me të njëjtën pasqyrë të plotë si mujori, vetëm për ato shtatë
+  ditë.
+
+### Rregulluar
+- **Pasqyra e bashkëngjitur mban emrin e periudhës së vet.** Emri i skedarit dilte nga datat, dhe
+  vetëm një muaj i plotë ose një vit i plotë njihen ashtu; një javë apo një tremujor vinin të dyja
+  si `pasqyra-e-periudhes.pdf`, pra në kuti postare nuk dalloheshin nga njëra-tjetra. Tani raporti
+  ia jep skedarit emrin që tashmë e di - `pasqyra-e-jav-s-10-16-gusht-2026.pdf`,
+  `pasqyra-e-tremujorit-te-trete-2026.pdf`. Emrat e muajit dhe të vitit mbeten pikërisht siç ishin.
+
 ## [2.21.1] - 2026-08-31
 
 ### Ndryshuar

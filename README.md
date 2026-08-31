@@ -239,8 +239,10 @@ sa shpenzohet, sa mbetet dhe sa po kursesh.
   **tremujor** dhe **vjetor**. Sa herë mbyllet një periudhë, hera e parë që hapet aplikacioni pas saj
   dërgon me email pasqyrën e asaj periudhe - shifrat kryesore, grafikët e periudhës (ditët e javës,
   javët e muajit, muajt e tremujorit apo të vitit), ku shkuan paratë dhe sa mbeti nga çfarë hyri.
-  Muaji, tremujori dhe viti e mbajnë të bashkëngjitur edhe pasqyrën e plotë PDF; javori mbetet i
-  shkurtër me qëllim - shtatë ditët, shpenzimi më i madh dhe pagesat që vijnë brenda javës tjetër.
+  Muaji, tremujori dhe viti e mbajnë të bashkëngjitur edhe pasqyrën e plotë PDF; javori vjen i
+  shkurtër me qëllim - shtatë ditët, shpenzimi më i madh dhe pagesat që vijnë brenda javës tjetër -
+  por nën çelësin e tij ka një të dytë që ia bashkëngjit edhe atij pasqyrën, për ata që e duan çdo
+  javë ose që kanë ndezur vetëm javorin.
   Grafikët janë tabela me ngjyra, jo figura, prandaj emaili hapet i plotë edhe kur klienti i
   bllokon figurat. E vetmja figurë është logoja te koka, dhe ajo merret nga vetë faqja ku e keni
   ngritur aplikacionin - jo nga një server i jashtëm; kur nuk ngarkohet, në vend të saj shfaqet

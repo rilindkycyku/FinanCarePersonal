@@ -18,10 +18,18 @@
  *
  * ---- what each kind is for ----
  *
- * They are not the same report over different spans. A week is a nudge - it is short, it has no
- * attachment, and it is about what just happened. A month is the statement. A quarter is where a
- * trend first becomes visible. A year is the story, and the one people keep. `raportEmail.js`
- * builds each accordingly; this file only says which is which.
+ * They are not the same report over different spans. A week is a nudge - it is short and it is
+ * about what just happened. A month is the statement. A quarter is where a trend first becomes
+ * visible. A year is the story, and the one people keep. `raportEmail.js` builds each accordingly;
+ * this file only says which is which.
+ *
+ * ---- the weekly attachment ----
+ *
+ * The PDF statement rides along with the month, the quarter and the year, and not with the week:
+ * a two-page attachment every Monday is what makes somebody switch a weekly email off. But that is
+ * a default, not a verdict - a ledger where the week is the only report switched on never sees a
+ * statement at all - so the week carries a switch of its own (`fushaBashkengjitje`), off until the
+ * user asks for it. Read it through `bashkengjitjaERaportit`, never straight off `bashkengjitje`.
  */
 
 import { JAVOR, MUJOR, TREMUJOR, VJETOR, etiketaPeriudhes, periudhaEMbyllur } from "./periudhat";
@@ -33,8 +41,8 @@ export const PREFIKSI_RAPORTIT = "raporti:";
 
 /**
  * `fusha` is the profile flag that switches the kind on; `bashkengjitje` says whether the PDF
- * statement rides along - a weekly email with a two-page attachment every Monday is an email
- * people turn off.
+ * statement rides along, and `fushaBashkengjitje` - where a kind has one - is the profile flag
+ * that lets the user overrule that default.
  */
 export const LLOJET_RAPORTIT = [
   {
@@ -46,6 +54,11 @@ export const LLOJET_RAPORTIT = [
       "Një email i shkurtër: sa u shpenzua javën që shkoi, ku, shpenzimi më i madh i javës dhe " +
       "pagesat që vijnë brenda shtatë ditësh.",
     bashkengjitje: false,
+    fushaBashkengjitje: "raportiJavorPdf",
+    tekstiBashkengjitjes: "Bashkëngjit edhe pasqyrën PDF të javës",
+    ndihmaBashkengjitjes:
+      "Javori vjen pa bashkëngjitje, që të mbetet i shkurtër. Ndizeni nëse doni edhe pasqyrën e " +
+      "plotë të shtatë ditëve - të njëjtat rreshta si te pasqyra mujore, vetëm për atë javë.",
   },
   {
     lloji: MUJOR,
@@ -90,6 +103,22 @@ export function llojiRaportit(lloji) {
  * none of them can work before the Edge Function is deployed. */
 export function aktiv(profile, lloji) {
   return Boolean(profile?.[SIPAS_LLOJIT.get(lloji)?.fusha]);
+}
+
+/**
+ * Whether this kind's email carries the PDF statement, for this ledger.
+ *
+ * A kind with a switch of its own obeys the switch and nothing else - the week's is off until it
+ * is ticked, which is why an untouched profile behaves exactly as it did before the switch
+ * existed. A kind without one keeps the fixed answer above: the month, the quarter and the year
+ * are the statement, and an email that calls itself a statement arrives with it.
+ */
+export function bashkengjitjaERaportit(profile, lloji) {
+  const perkufizimi = SIPAS_LLOJIT.get(lloji);
+  if (!perkufizimi) return false;
+  return perkufizimi.fushaBashkengjitje
+    ? Boolean(profile?.[perkufizimi.fushaBashkengjitje])
+    : Boolean(perkufizimi.bashkengjitje);
 }
 
 /** The kinds switched on, shortest period first - the order `raporti.js` works through them in, so

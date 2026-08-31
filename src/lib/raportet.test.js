@@ -6,8 +6,8 @@
 
 import { describe, expect, it } from "vitest";
 import {
-  JAVOR, LLOJET_RAPORTIT, MUJOR, TREMUJOR, VJETOR, aktiv, celesiShenjes, emriRaportit, llojiRaportit,
-  ngaCelesi, periudhaERaportit, raportetAktive,
+  JAVOR, LLOJET_RAPORTIT, MUJOR, TREMUJOR, VJETOR, aktiv, bashkengjitjaERaportit, celesiShenjes,
+  emriRaportit, llojiRaportit, ngaCelesi, periudhaERaportit, raportetAktive,
 } from "./raportet";
 
 describe("regjistri", () => {
@@ -26,6 +26,32 @@ describe("regjistri", () => {
     const fushat = LLOJET_RAPORTIT.map((r) => r.fusha);
     expect(new Set(fushat).size).toBe(fushat.length);
     expect(llojiRaportit(MUJOR).fusha).toBe("raportiMujor");
+  });
+});
+
+/**
+ * Which emails carry the PDF. The weekly one is the only kind that asks, and the answer has to stay
+ * "no" for every ledger that has never been asked - a Monday email that suddenly grows a two-page
+ * attachment is a report people switch off.
+ */
+describe("bashkëngjitja", () => {
+  it("leaves the weekly email without one until it is asked for", () => {
+    expect(bashkengjitjaERaportit({}, JAVOR)).toBe(false);
+    expect(bashkengjitjaERaportit({ raportiJavor: true }, JAVOR)).toBe(false);
+  });
+
+  it("attaches the statement to the weekly email once the switch is on", () => {
+    expect(bashkengjitjaERaportit({ raportiJavor: true, raportiJavorPdf: true }, JAVOR)).toBe(true);
+  });
+
+  it("keeps the statement on the kinds that are the statement", () => {
+    expect(bashkengjitjaERaportit({}, MUJOR)).toBe(true);
+    expect(bashkengjitjaERaportit({}, TREMUJOR)).toBe(true);
+    expect(bashkengjitjaERaportit({}, VJETOR)).toBe(true);
+  });
+
+  it("says no for a kind it does not know", () => {
+    expect(bashkengjitjaERaportit({}, "dyjavor")).toBe(false);
   });
 });
 
