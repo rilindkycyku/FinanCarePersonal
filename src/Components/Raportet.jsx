@@ -41,7 +41,8 @@ const koha = (iso) => {
  * rather than four cards.
  */
 function Raportet() {
-  const { profile, saveProfile, accounts, categories, transactions, recurring, budgets } = useData();
+  const { profile, saveProfile, accounts, categories, transactions, recurring, budgets, goals, borxhet } =
+    useData();
   const { lidhur, konfigurimi } = useSync();
   const dialog = useDialog();
 
@@ -189,6 +190,8 @@ function Raportet() {
         transactions,
         recurring,
         budgets,
+        goals,
+        borxhet,
       });
       // Only a period that has ended is recorded as sent. A running month written down here would
       // be found by the automatic path at the start of the next one and taken as already done -

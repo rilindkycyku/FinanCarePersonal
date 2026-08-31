@@ -23,6 +23,8 @@
 import {
   cashflow, filterByRange, budgetProgress, monthKeyBounds, sumByType, totalsByCategory,
   upcomingRecurring,
+  debtProgress,
+  goalProgress,
 } from "./finance";
 import { emriIPlote } from "./kategorite";
 import { totalsByTag } from "./etiketat";
@@ -45,6 +47,9 @@ const SA_BUXHETE = 3;
  * scroll rather than a figure to read.
  */
 const SA_ETIKETA = 5;
+/** How many goals and how many debt notes a report names - the ones being worked on, not the file. */
+const SA_QELLIME = 3;
+const SA_BORXHE = 3;
 
 const DITA = 24 * 60 * 60 * 1000;
 const utc = (iso) => {
@@ -80,6 +85,74 @@ function shpenzimiMeIMadh(rreshtat, categories) {
     pershkrimi: tx.pershkrimi || emriIPlote(categories, tx.kategoriaId, "Shpenzim"),
     kategoria: emriIPlote(categories, tx.kategoriaId, "Pa kategori"),
   };
+}
+
+/**
+ * Where the savings goals stand at the end of the period, and what the period itself put into them.
+ *
+ * Two figures rather than one, because they answer different questions: `kursyer` is the whole
+ * story of the goal, `kontribuar` is what these weeks did about it - and a goal that moved by
+ * nothing in a month is exactly the one worth seeing.
+ *
+ * `duhetNeMuaj` is what would still have to go in every month to arrive on time, and it is left
+ * out when there is no deadline or the deadline has passed: a goal already late does not need a
+ * figure implying it can be caught up in the month that has just ended. Finished goals drop out
+ * entirely - a report is about what is still being worked on.
+ */
+function qellimetEPeriudhes(goals, transactions, rreshtat, deri) {
+  return goals
+    .map((goal) => {
+      const ecuria = goalProgress(goal, transactions);
+      const kontribuar = rreshtat
+        .filter((tx) => tx.qellimiId === goal.id)
+        .reduce((sum, tx) => sum + toNumber(tx.vlera), 0);
+      const muajt = goal.dataSynim ? muajtDeri(deri, goal.dataSynim) : 0;
+      return {
+        ...ecuria,
+        kontribuar,
+        duhetNeMuaj: muajt > 0 && ecuria.mbetur > 0 ? ecuria.mbetur / muajt : null,
+      };
+    })
+    .filter((g) => !g.perfunduar && g.synimi > 0)
+    // The nearest deadline first, then the one with most left to do: both are "the goal that needs
+    // attention", and a goal without a date never outranks one that has one.
+    .sort(
+      (a, b) =>
+        (a.dataSynim || "9999-12-31").localeCompare(b.dataSynim || "9999-12-31") || b.mbetur - a.mbetur
+    )
+    .slice(0, SA_QELLIME);
+}
+
+/** Whole months from one ISO day to another, rounded up, or 0 when the second is already past. */
+function muajtDeri(nga, deri) {
+  if (!deri || deri <= nga) return 0;
+  const [vA, mA, dA] = nga.split("-").map(Number);
+  const [vB, mB, dB] = deri.split("-").map(Number);
+  return Math.max(1, (vB - vA) * 12 + (mB - mA) + (dB >= dA ? 0 : -1) + 1);
+}
+
+/**
+ * Where the debt notes stand, and what the period paid off them.
+ *
+ * Notes are deliberately outside every balance - a card with 900 € on it does not darken the total
+ * - and this changes none of that: it reports on them, it does not fold them in. Settled and
+ * archived notes are left out, and both directions stay in one list with `drejtimi` saying which
+ * way each one points, because "what I owe" and "what is owed me" are the same question about the
+ * same month.
+ */
+function borxhetEPeriudhes(debts, start, deri) {
+  return debts
+    .filter((d) => !d.arkivuar)
+    .map((debt) => {
+      const ecuria = debtProgress(debt);
+      const paguar = ecuria.pagesat
+        .filter((p) => p.lloji !== "shtese" && p.data >= start && p.data <= deri)
+        .reduce((sum, p) => sum + toNumber(p.vlera), 0);
+      return { ...ecuria, paguarNePeriudhe: paguar };
+    })
+    .filter((d) => !d.perfunduar && d.mbetur > 0)
+    .sort((a, b) => b.mbetur - a.mbetur)
+    .slice(0, SA_BORXHE);
 }
 
 /** Spending per day across a span - the seven columns of the weekly chart. */
@@ -167,6 +240,8 @@ export function figuratERaportit({
   transactions = [],
   recurring = [],
   budgets = [],
+  goals = [],
+  borxhet = [],
   sot = null,
 } = {}) {
   const { start, end } = kufijtePeriudhes(lloji, periudha);
@@ -247,6 +322,11 @@ export function figuratERaportit({
       ...bazë,
       javet: javetEMuajit(transactions, start, deri),
       buxhetet: buxhetetETejkaluara(budgets, categories, transactions, periudha),
+      // The month is the statement, and these two are the only parts of the ledger a reader can go
+      // a whole month without seeing: nothing on the dashboard forces a goal or a debt note in
+      // front of them, and neither moves unless somebody goes looking for it.
+      qellimet: qellimetEPeriudhes(goals, transactions, rreshtat, deri),
+      borxhet: borxhetEPeriudhes(borxhet, start, deri),
     };
   }
 

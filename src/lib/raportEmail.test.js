@@ -350,3 +350,97 @@ describe("etiketat në raport", () => {
     expect(iLlojit(VJETOR, "2026", meEtiketa).html).toContain("Sipas etiketave");
   });
 });
+
+/**
+ * The goals and the debt notes in the monthly report. Both sections exist because nothing else
+ * puts either in front of the reader between one opening of the app and the next.
+ */
+describe("qëllimet dhe borxhet në raportin mujor", () => {
+  const goals = [
+    { id: "g1", emri: "Makina", vleraSynim: 6000, vleraFillestare: 1000, dataSynim: "2027-07-31" },
+  ];
+  const borxhet = [
+    {
+      id: "b1", emri: "Karta", lloji: "karte", vleraTotale: 900,
+      pagesat: [{ id: "p1", data: "2026-07-15", vlera: 150 }],
+    },
+  ];
+  const mujori = (extra = {}) =>
+    ndertoRaportin({
+      muaji: "2026-07",
+      profile: { monedha: "EUR" },
+      accounts: llogarite,
+      categories: kategorite,
+      transactions: [
+        ...transaksionet,
+        { id: "k1", data: "2026-07-05", lloji: "shpenzim", vlera: 300, llogariaId: "l1", qellimiId: "g1" },
+      ],
+      ...extra,
+    });
+
+  it("shows where a goal stands and what the month put into it", () => {
+    const { html, text } = mujori({ goals });
+    expect(html).toContain("Qëllimet e kursimit");
+    expect(html).toContain("Makina");
+    expect(html).toContain("1300,00 € nga 6000,00 €");
+    expect(html).toContain("+300,00 € këtë muaj");
+    expect(text).toContain("Makina: 1300,00 € nga 6000,00 €");
+  });
+
+  it("says so in words when a month put nothing in", () => {
+    const { html } = ndertoRaportin({
+      muaji: "2026-07",
+      profile: { monedha: "EUR" },
+      accounts: llogarite,
+      categories: kategorite,
+      transactions: transaksionet,
+      goals,
+    });
+    // The goal that did not move is the one worth seeing.
+    expect(html).toContain("Asgjë e shtuar këtë muaj");
+  });
+
+  it("reports a debt note without folding it into any balance", () => {
+    const { html, totalet } = mujori({ borxhet });
+    expect(html).toContain("Borxhet");
+    expect(html).toContain("Paguar 150,00 € këtë muaj");
+    expect(html).toContain("mbeten 750,00 €");
+    // The 900 € still owed on the note leaves every figure in the report exactly where it was.
+    expect(totalet.perfundimtar).toBe(mujori().totalet.perfundimtar);
+    expect(totalet.daljet).toBe(mujori().totalet.daljet);
+  });
+
+  it("changes the words for money lent out, not just the colour", () => {
+    const { html } = mujori({
+      borxhet: [
+        {
+          id: "b2", emri: "Huaja", lloji: "huadhene", vleraTotale: 500,
+          pagesat: [{ id: "p2", data: "2026-07-20", vlera: 200 }],
+        },
+      ],
+    });
+    // "Paid off" and "collected" are not the same event, even when the arithmetic is.
+    expect(html).toContain("Arkëtuar 200,00 € këtë muaj");
+    expect(html).toContain("ju detyrohen ende 300,00 €");
+  });
+
+  it("draws neither section for a ledger that has neither", () => {
+    const { html } = mujori();
+    expect(html).not.toContain("Qëllimet e kursimit");
+    expect(html).not.toContain("Borxhet");
+  });
+
+  it("keeps them out of the other three reports", () => {
+    const vjetor = ndertoRaportin({
+      lloji: VJETOR,
+      periudha: "2026",
+      profile: { monedha: "EUR" },
+      accounts: llogarite,
+      categories: kategorite,
+      transactions: transaksionet,
+      goals,
+      borxhet,
+    });
+    expect(vjetor.html).not.toContain("Qëllimet e kursimit");
+  });
+});

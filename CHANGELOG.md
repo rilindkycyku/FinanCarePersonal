@@ -31,6 +31,20 @@ ngriti versionin.
   ajo blerje është e vetmja e ditës më të shtrenjtë, sepse atëherë do të ishte i njëjti fakt dy
   herë.
 
+- **Raporti mujor tregon qëllimet e kursimit dhe borxhet.** Që të dyja janë pjesë të librit që
+  mund të rrinë muaj të tërë pa u parë: asgjë nuk i nxjerr para syve, dhe nuk lëvizin veçse kur dikush
+  shkon t'i kërkojë. Tani mujori i mban në fund, nga tre secila.
+
+  Te qëllimet, shiriti është historia e plotë e qëllimit dhe rreshta poshtë tij është pjesa e këtij
+  muaji: sa hyri, sa mbeten dhe - kur qëllimi ka afat - rreth sa duhet çdo muaj për të mbërritur më
+  kohë. Një muaj që nuk shtoi asgjë e thotë me fjalë; pikërisht ai është qëllimi që ia vlen të
+  shihet. Qëllimet e arritura nuk shfaqen: raporti është për atë që është ende në punë.
+
+  Te borxhet, shiriti tregon sa është shlyer nga shënimi dhe rreshta poshtë sa u pagua këtë muaj e
+  sa mbetet. Shënimet mbeten jashtë çdo bilanci, ashtu si kudo tjetër në aplikacion - këtu vetëm
+  raportohen. Të dy drejtimet janë bashkë, por fjalët ndryshojnë: një borxh «paguhet», një hua e
+  dhënë «arkëtohet». Shënimet e mbyllura dhe të arkivuarat nuk dalin.
+
 - **Logoja e humbi parullën e produktit tjetër.** Nën fjalën «FinanCare» rrinte «POS, ORDER & MORE»
   - parulla e programit të arkës, jo e këtij. Në menu, te fundi i faqes, te koka e pasqyrës PDF dhe
   te emaili ajo rresht ishte gjithsesi e palexueshme në atë madhësi, dhe atje ku lexohej, thoshte

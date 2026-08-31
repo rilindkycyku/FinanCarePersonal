@@ -203,6 +203,80 @@ const seksioniKategorive = (f, monedha, { meShirit = true } = {}) => `
             }
             <tr><td>${shiritetHorizontale({ rreshtat: f.kategorite, monedha })}</td></tr>`;
 
+/**
+ * The savings goals, as the month left them.
+ *
+ * A goal is the slowest-moving thing in the ledger and the easiest to forget: nothing puts it in
+ * front of anybody, and it only moves when somebody decides it should. So the bar is the whole
+ * story and the line under it is this month's part in it - what went in, what is left, and what
+ * would have to go in monthly to arrive by the date the goal itself names.
+ *
+ * A month that put nothing into a goal says so, in words. That is the sentence worth sending.
+ */
+const seksioniQellimeve = (f, monedha) =>
+  f.qellimet?.length
+    ? `${titulliSeksionit("Qëllimet e kursimit")}
+            <tr><td>
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                ${f.qellimet
+                  .map(
+                    (q) => `<tr><td style="padding:8px 0 0;">${matesi({
+                      perqindja: q.perqindja,
+                      etiketa: q.emri,
+                      vlera: `${formatMoney(q.kursyer, monedha)} nga ${formatMoney(q.synimi, monedha)}`,
+                      ngjyra: q.ngjyra || EMERALD,
+                      nen: [
+                        q.kontribuar > 0
+                          ? `+${formatMoney(q.kontribuar, monedha)} këtë muaj`
+                          : "Asgjë e shtuar këtë muaj",
+                        `mbeten ${formatMoney(q.mbetur, monedha)}`,
+                        q.duhetNeMuaj
+                          ? `rreth ${formatMoney(q.duhetNeMuaj, monedha)} në muaj deri më ${dataShkurt(q.dataSynim)}`
+                          : "",
+                      ]
+                        .filter(Boolean)
+                        .join(" · "),
+                    })}</td></tr>`
+                  )
+                  .join("")}
+              </table>
+            </td></tr>`
+    : "";
+
+/**
+ * The debt notes, as the month left them.
+ *
+ * They stay outside every balance - that is the rule the whole app is built on - and this reports
+ * on them without folding them in: the bar is how much of the note is settled, and the amounts are
+ * the note's own. Both directions share the section, and the words change with `drejtimi`, because
+ * "paid off" and "collected" are not the same event even when the arithmetic is.
+ */
+const seksioniBorxheve = (f, monedha) =>
+  f.borxhet?.length
+    ? `${titulliSeksionit("Borxhet")}
+            <tr><td>
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                ${f.borxhet
+                  .map((b) => {
+                    const imi = b.drejtimi === "detyrim";
+                    return `<tr><td style="padding:8px 0 0;">${matesi({
+                      perqindja: b.perqindja,
+                      etiketa: b.emri,
+                      vlera: `${formatMoney(b.paguar, monedha)} nga ${formatMoney(b.totali, monedha)}`,
+                      ngjyra: imi ? AMBER : EMERALD,
+                      nen: [
+                        b.paguarNePeriudhe > 0
+                          ? `${imi ? "Paguar" : "Arkëtuar"} ${formatMoney(b.paguarNePeriudhe, monedha)} këtë muaj`
+                          : `Asnjë ${imi ? "pagesë" : "arkëtim"} këtë muaj`,
+                        `${imi ? "mbeten" : "ju detyrohen ende"} ${formatMoney(b.mbetur, monedha)}`,
+                      ].join(" · "),
+                    })}</td></tr>`;
+                  })
+                  .join("")}
+              </table>
+            </td></tr>`
+    : "";
+
 // ── The four bodies ─────────────────────────────────────────────────────────
 
 function trupiJavor(f, monedha) {
@@ -286,6 +360,8 @@ function trupiMujor(f, monedha, { mePdf = false } = {}) {
             </td></tr>`
                 : ""
             }
+            ${seksioniQellimeve(f, monedha)}
+            ${seksioniBorxheve(f, monedha)}
             ${paragraf(
               `${f.nrRreshtave} transaksione${
                 krahasimiNeFjale(f) ? ` · shpenzimet ${esc(krahasimiNeFjale(f))}` : ""
@@ -487,6 +563,8 @@ export function ndertoRaportin({
   transactions = [],
   recurring = [],
   budgets = [],
+  goals = [],
+  borxhet = [],
   sot = null,
   baza = "",
   // Whether the statement PDF is really riding along with this email. `raporti.js` decides it
@@ -504,6 +582,8 @@ export function ndertoRaportin({
     transactions,
     recurring,
     budgets,
+    goals,
+    borxhet,
     sot,
   });
   const titulli = titulliPeriudhes(lloji, celesi);
@@ -623,6 +703,28 @@ ${qelizaShifres("Bilanci", formatMoney(f.perfundimtar, monedha), NAVY)}
         ),
         ...(f.meIMadhi
           ? ["", `Shpenzimi më i madh: ${f.meIMadhi.pershkrimi} - ${formatMoney(f.meIMadhi.vlera, monedha)}`]
+          : []),
+        ...(f.qellimet?.length
+          ? [
+              "",
+              "Qëllimet e kursimit:",
+              ...f.qellimet.map(
+                (q) =>
+                  `  ${q.emri}: ${formatMoney(q.kursyer, monedha)} nga ${formatMoney(q.synimi, monedha)}` +
+                  ` (këtë muaj +${formatMoney(q.kontribuar, monedha)})`
+              ),
+            ]
+          : []),
+        ...(f.borxhet?.length
+          ? [
+              "",
+              "Borxhet:",
+              ...f.borxhet.map(
+                (b) =>
+                  `  ${b.emri}: mbeten ${formatMoney(b.mbetur, monedha)} nga ${formatMoney(b.totali, monedha)}` +
+                  ` (këtë muaj ${formatMoney(b.paguarNePeriudhe, monedha)})`
+              ),
+            ]
           : []),
         // The same sections the HTML shows, in the same order.
         ...(f.etiketat?.length

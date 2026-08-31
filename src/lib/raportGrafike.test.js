@@ -125,4 +125,11 @@ describe("markup-i", () => {
     expect(matesi({ perqindja: 180, etiketa: "Buxheti", vlera: "180%" })).toContain('width="100%"');
     expect(matesi({ perqindja: -20 })).toContain('width="0%"');
   });
+
+  it("carries a line under the bar when it is given one, and no empty row when it is not", () => {
+    const me = matesi({ perqindja: 40, etiketa: "Makina", vlera: "2.400,00 €", nen: "+200,00 € këtë muaj" });
+    expect(me).toContain("+200,00 € këtë muaj");
+    // One row more than the same meter without it, and not an empty one left behind.
+    expect(me.match(/<tr>/g)).toHaveLength(matesi({ perqindja: 40 }).match(/<tr>/g).length + 1);
+  });
 });

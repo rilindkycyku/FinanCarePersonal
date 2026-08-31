@@ -236,8 +236,11 @@ export function shiritetHorizontale({ rreshtat = [], monedha, ngjyraStandarde = 
 }
 
 /** A single filled bar with a caption: the savings rate, how much of a budget is gone. Anything
- * past 100% is drawn full and said in words - a bar that overflows its frame reads as a bug. */
-export function matesi({ perqindja = 0, etiketa = "", vlera = "", ngjyra = EMERALD } = {}) {
+ * past 100% is drawn full and said in words - a bar that overflows its frame reads as a bug.
+ *
+ * `nen` is the line under the bar, for the sentence a caption cannot hold: what the period itself
+ * put in, what is left, by when. It is left out when it is empty rather than drawn as a gap. */
+export function matesi({ perqindja = 0, etiketa = "", vlera = "", ngjyra = EMERALD, nen = "" } = {}) {
   const mbushja = Math.max(0, Math.min(100, Math.round(numer(perqindja))));
   return `
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
@@ -257,6 +260,13 @@ export function matesi({ perqindja = 0, etiketa = "", vlera = "", ngjyra = EMERA
               </tr>
             </table>
           </td></tr>
+          ${
+            nen
+              ? `<tr><td colspan="2" style="padding-top:5px;font-family:Arial,Helvetica,sans-serif;font-size:11px;color:${MUTED};">${escapeHtml(
+                  nen
+                )}</td></tr>`
+              : ""
+          }
         </table>`;
 }
 

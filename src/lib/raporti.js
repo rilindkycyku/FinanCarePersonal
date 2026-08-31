@@ -211,6 +211,8 @@ export async function dergoRaportin({
   transactions = [],
   recurring = [],
   budgets = [],
+  goals = [],
+  borxhet = [],
   meBashkengjitje = null,
 }) {
   if (!marresi) throw new Error("Mungon adresa e marrësit.");
@@ -222,6 +224,7 @@ export async function dergoRaportin({
   const { ndertoRaportin } = await import("./raportEmail");
   const { subject, html, text } = ndertoRaportin({
     lloji, periudha: celesi, profile, accounts, categories, transactions, recurring, budgets,
+    goals, borxhet,
     mePdf: duhetPdf,
     // Always "now", for both paths. A closed period ends before today, so this changes nothing
     // there; a period the user asked for by hand may still be running, and this is what stops the
@@ -323,6 +326,8 @@ export async function ekzekutoRaportet({
   transactions = [],
   recurring = [],
   budgets = [],
+  goals = [],
+  borxhet = [],
   sot = new Date(),
 } = {}) {
   const aktivet = raportetAktive(profile);
@@ -332,7 +337,7 @@ export async function ekzekutoRaportet({
   const marresi = marresiIRaportit(profile);
   if (!marresi) return [{ gjendja: "pa-marres" }];
 
-  const teDhenat = { profile, accounts, categories, transactions, recurring, budgets };
+  const teDhenat = { profile, accounts, categories, transactions, recurring, budgets, goals, borxhet };
   const fillimi = dataEParaERegjistruar(transactions);
   const rezultatet = [];
   for (const def of aktivet) {
