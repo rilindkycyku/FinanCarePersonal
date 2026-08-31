@@ -147,6 +147,28 @@ const rreshtiKursimit = (f, monedha) =>
         ngjyra: f.kursimi >= 0 ? EMERALD : RED,
       })}</td></tr>`;
 
+/**
+ * The single largest purchase of the period.
+ *
+ * `figuratERaportit` has always worked this out for every kind, and for a long time only the weekly
+ * email printed it - the other three carried the figure and threw it away. It is the question that
+ * follows "how much did I spend", it costs one line, and it is the one row of the ledger worth
+ * lifting into a summary. Everything else about individual transactions stays the PDF statement's
+ * job, which matters more now that the statement can be switched off.
+ *
+ * `kujt` is the period in the genitive - "i javës", "i muajit" - because Albanian will not take a
+ * period key here and the four bodies each know which word is theirs.
+ */
+const rreshtiMeIMadh = (f, monedha, kujt, opsione = {}) =>
+  f.meIMadhi
+    ? paragraf(
+        `Shpenzimi më i madh ${kujt} ishte <strong>${esc(f.meIMadhi.pershkrimi)}</strong> - ` +
+          `${para(f.meIMadhi.vlera, monedha)} më ${esc(dataShkurt(f.meIMadhi.data))} ` +
+          `(${esc(f.meIMadhi.kategoria)}).`,
+        opsione
+      )
+    : "";
+
 const seksioniKategorive = (f, monedha, { meShirit = true } = {}) => `
             ${titulliSeksionit("Ku shkuan paratë")}
             ${
@@ -175,15 +197,7 @@ function trupiJavor(f, monedha) {
               // do not, and a row of overlapping numbers is worth less than the shape of the year.
               tregoVlerat: true,
             })}</td></tr>
-            ${
-              f.meIMadhi
-                ? paragraf(
-                    `Shpenzimi më i madh i javës ishte <strong>${esc(f.meIMadhi.pershkrimi)}</strong> - ` +
-                      `${para(f.meIMadhi.vlera, monedha)} më ${esc(dataShkurt(f.meIMadhi.data))} ` +
-                      `(${esc(f.meIMadhi.kategoria)}).`
-                  )
-                : ""
-            }
+            ${rreshtiMeIMadh(f, monedha, "i javës")}
             ${seksioniKategorive(f, monedha)}
             ${
               pagesat.length
@@ -227,6 +241,7 @@ function trupiMujor(f, monedha, { mePdf = false } = {}) {
               monedha,
               tregoVlerat: true,
             })}</td></tr>
+            ${rreshtiMeIMadh(f, monedha, "i muajit")}
             ${seksioniKategorive(f, monedha)}
             ${rreshtiKursimit(f, monedha)}
             ${
@@ -283,6 +298,7 @@ function trupiTremujor(f, monedha, { mePdf = false } = {}) {
                     : ""
                 }.`
             )}
+            ${rreshtiMeIMadh(f, monedha, "i tremujorit", { lart: 10 })}
             ${rreshtiKursimit(f, monedha)}
             ${seksioniKategorive(f, monedha)}
             ${
@@ -397,6 +413,17 @@ function trupiVjetor(f, monedha, { mePdf = false } = {}) {
                     { lart: 10 }
                   )
                 : ""
+            }
+            ${
+              // Both lines are about the year's largest something, and for a ledger with one
+              // purchase on its heaviest day they are the same fact twice - the day line has
+              // already given the date and the amount, so the purchase line stands down.
+              v.dita &&
+              f.meIMadhi &&
+              v.dita.data === f.meIMadhi.data &&
+              Math.abs(v.dita.vlera - f.meIMadhi.vlera) < 0.005
+                ? ""
+                : rreshtiMeIMadh(f, monedha, "i vitit", { lart: 10 })
             }
             ${paragraf(
               `${f.nrRreshtave} transaksione gjatë vitit.${

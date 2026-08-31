@@ -24,6 +24,13 @@ ngriti versionin.
   gjendjen e tanishme, dhe teksti i emailit shkon pas saj - mujori nuk e përmend më «pasqyrën
   bashkëngjitur këtij emaili» kur bashkëngjitja është e fikur.
 
+- **Çdo raport tregon tani shpenzimin më të madh të periudhës.** Shifra llogaritej për të katërt
+  qëmoti, por e shkruante vetëm javori: mujori, tremujori dhe vjetori e kishin në dorë dhe e
+  hidhnin. «Ku shkuan paratë» thotë se te Banesa shkuan 791 €; kjo rreshtë thotë se 640 prej tyre
+  ishin një lavatriçe më 18 korrik - pyetja që vjen menjëherë pas «sa shpenzova». Viti e heq kur
+  ajo blerje është e vetmja e ditës më të shtrenjtë, sepse atëherë do të ishte i njëjti fakt dy
+  herë.
+
 ### Ndryshuar
 - **Emaili i raportit lexohet më mirë në telefon.** Kartela ishte 600 piksel e ngulitur, pra në një
   ekran 375 pikselësh dilte jashtë dhe kërkonte tërheqje anash; tani është e rrjedhshme me kufi 600,

@@ -248,6 +248,42 @@ describe("bashkëngjitja dhe shifrat në fjali", () => {
     expect(mujori().html).not.toContain("bashkëngjitur");
   });
 
+  const iLlojit = (lloji, periudha) =>
+    ndertoRaportin({
+      lloji,
+      periudha,
+      profile: { monedha: "EUR" },
+      accounts: llogarite,
+      categories: kategorite,
+      transactions: transaksionet,
+    });
+
+  it("names the period's biggest purchase, and not only in the weekly email", () => {
+    // The figure was worked out for every kind all along, and printed in one of them.
+    expect(mujori().html).toContain("Shpenzimi më i madh i muajit");
+    expect(iLlojit(JAVOR, "2026-W28").html).toContain("Shpenzimi më i madh i javës");
+    expect(iLlojit(TREMUJOR, "2026-Q3").html).toContain("Shpenzimi më i madh i tremujorit");
+    // The year is the one that can say it twice: when its heaviest day held that single purchase
+    // and nothing else, the day line has already given both the date and the amount.
+    expect(iLlojit(VJETOR, "2026").html).not.toContain("Shpenzimi më i madh i vitit");
+    expect(iLlojit(VJETOR, "2026").html).toContain("Dita më e shtrenjtë e vitit");
+    const meDyBlerje = ndertoRaportin({
+      lloji: VJETOR,
+      periudha: "2026",
+      profile: { monedha: "EUR" },
+      accounts: llogarite,
+      categories: kategorite,
+      transactions: [
+        ...transaksionet,
+        { id: "t9", data: "2026-07-09", lloji: "shpenzim", vlera: 30, kategoriaId: "k1", llogariaId: "l1" },
+      ],
+    });
+    expect(meDyBlerje.html).toContain("Shpenzimi më i madh i vitit");
+    // With what it was: the description, the amount and the category it fell under.
+    expect(mujori().html).toMatch(/Shpenzimi më i madh i muajit ishte <strong>.*<\/strong> - 120,00&nbsp;€/);
+    expect(mujori().html).toContain("(Ushqim)");
+  });
+
   it("still counts the transactions in that closing line", () => {
     expect(mujori({ mePdf: false }).html).toContain("2 transaksione");
   });
