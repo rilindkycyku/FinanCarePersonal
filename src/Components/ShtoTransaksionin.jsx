@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Modal, Button, Form, Row, Col, Alert } from "react-bootstrap";
 import { TrendingUp, TrendingDown, ArrowRightLeft, Wand2 } from "lucide-react";
 import { useData } from "../Context/DataContext";
@@ -63,6 +63,9 @@ function ShtoTransaksionin({
   const { accounts, categories, goals, budgets, transactions, planet, recurring, faturat, save, saveProfile,
     reload, profile, monedha, simboli, njeLlogari, llogariaKryesore } = useData();
   const [tx, setTx] = useState(blank(llojiFillestar));
+  // Tracks if the user intentionally picked an account manually during this modal session,
+  // so category selection won't overwrite a deliberate manual pick.
+  const llogariaZgjedhurMeDore = useRef(false);
   // Invoice photos are staged here and only written once the transaction itself is saved, so a
   // cancelled form leaves nothing behind (see sinkronizoFaturat).
   const [faturaLista, setFaturaLista] = useState([]);
@@ -70,6 +73,7 @@ function ShtoTransaksionin({
 
   useEffect(() => {
     if (!show) return;
+    llogariaZgjedhurMeDore.current = false;
     setError("");
     setFaturaLista(initial ? faturat.filter((f) => f.transaksioniId === initial.id) : []);
     if (initial) {
@@ -98,8 +102,8 @@ function ShtoTransaksionin({
       });
       return;
     }
-    // New transaction: preselect the first usable account (and the goal, when contributing) so
-    // the common case is one amount away from being saved.
+    // New transaction: preselect the goal, when contributing, and the account too - but only where
+    // there is no real choice to make.
     const aktive = accounts.filter((a) => !a.arkivuar);
     if (njeLlogari) {
       // One account holds everything, so a contribution to a savings goal stays inside it: the
@@ -117,17 +121,43 @@ function ShtoTransaksionin({
       llojiFillestar === "transfer"
         ? destinacioniFillestar || aktive.find((a) => a.id !== aktive[0]?.id)?.id || ""
         : "";
+    // The account defaults to whichever one was last used for this same type - `profile` remembers
+    // one per type (set at the end of `handleSave`), because the common case is the same account
+    // every time (the card for subscriptions, the cash account for the coffee run). It only falls
+    // back to asking, rather than quietly picking the first account in the list, when there is no
+    // such memory yet - a fresh profile still needs a conscious first choice instead of a guess.
+    const eFundit = profile.llogariaEFundit?.[llojiFillestar];
+    const eVlefshme = eFundit && aktive.some((a) => a.id === eFundit) ? eFundit : null;
+    const zgjidhVetiu = Boolean(destinacioni) || aktive.length <= 1 || Boolean(eVlefshme);
     setTx({
       ...blank(llojiFillestar),
       // When the destination is fixed (a goal's savings account), the source must not be the same
       // account, or the transfer would be a no-op the form then rejects.
-      llogariaId: (destinacioni ? aktive.find((a) => a.id !== destinacioni) : aktive[0])?.id || "",
+      llogariaId: zgjidhVetiu
+        ? (destinacioni ? aktive.find((a) => a.id !== destinacioni)?.id : eVlefshme || aktive[0]?.id) || ""
+        : "",
       llogariaDestinacionId: destinacioni,
       qellimiId: qellimiFiksuar || "",
     });
-  }, [show, initial, llojiFillestar, qellimiFiksuar, destinacioniFillestar, accounts, faturat, njeLlogari, llogariaKryesore]);
+  }, [show, initial, llojiFillestar, qellimiFiksuar, destinacioniFillestar, accounts, faturat, njeLlogari, llogariaKryesore, profile]);
 
   const aktive = useMemo(() => accounts.filter((a) => !a.arkivuar), [accounts]);
+
+  // Account memory per category: users tend to pay for specific categories with specific accounts
+  // (e.g. card for fuel/supermarket, cash for coffee). Checks the profile first, falling back to
+  // the most recent transaction recorded in that category.
+  const gjejLlogarinePerKategori = useCallback(
+    (katId) => {
+      if (!katId || njeLlogari) return null;
+      const ngaProfili = profile.llogariaKategorive?.[katId];
+      if (ngaProfili && aktive.some((a) => a.id === ngaProfili)) return ngaProfili;
+      const ngaTx = transactions
+        .filter((t) => t.kategoriaId === katId && t.llogariaId && aktive.some((a) => a.id === t.llogariaId))
+        .sort((a, b) => (b.data || "").localeCompare(a.data || "") || (b.krijuar || "").localeCompare(a.krijuar || ""))[0];
+      return ngaTx?.llogariaId || null;
+    },
+    [profile.llogariaKategorive, aktive, transactions, njeLlogari]
+  );
 
   // Only for the hint under the field ("there are none for this direction"), so it counts what the
   // picker would actually offer rather than what the store holds.
@@ -150,6 +180,25 @@ function ShtoTransaksionin({
   // under the field are simply the ones other transactions carry (etiketat.js).
   const etiketatEPerdorura = useMemo(() => perdorimiEtiketave(transactions), [transactions]);
 
+  // The amounts this category has actually been booked for before, most common first - a coffee or
+  // a bus fare is almost always one of the same two or three figures, and tapping one beats typing
+  // it out again. Only offered once the category has at least three prior transactions to draw the
+  // pattern from, so a category used once or twice does not turn its only two data points into
+  // "shortcuts".
+  const shumatEShpeshta = useMemo(() => {
+    if (!tx.kategoriaId) return [];
+    const shumat = transactions
+      .filter((t) => t.kategoriaId === tx.kategoriaId && t.id !== tx.id && t.vlera > 0)
+      .map((t) => Math.round(t.vlera * 100) / 100);
+    if (shumat.length < 3) return [];
+    const numerimi = new Map();
+    shumat.forEach((v) => numerimi.set(v, (numerimi.get(v) || 0) + 1));
+    return [...numerimi.entries()]
+      .sort((a, b) => b[1] - a[1] || a[0] - b[0])
+      .slice(0, 4)
+      .map(([v]) => v);
+  }, [transactions, tx.kategoriaId, tx.id]);
+
   const isTransfer = tx.lloji === "transfer";
 
   // With a single account there is nowhere to transfer to, so the type is dropped from the toggle
@@ -162,6 +211,7 @@ function ShtoTransaksionin({
   const setField = (name, value) => setTx((prev) => ({ ...prev, [name]: value }));
 
   const kategoriaRef = useRef(null);
+  const llogariaRef = useRef(null);
 
   /** The amount input's id - `controlId` on its Form.Group is what puts it there. Compared by id
    * rather than by ref because `VleraInput` owns its input and does not hand one back. */
@@ -172,16 +222,23 @@ function ShtoTransaksionin({
   const mujorTani = tx.ritmi === RITMI_MUJOR;
 
   /**
-   * Enter on the amount walks to the category instead of saving. The amount is where the form
-   * opens and the category is the other thing it cannot be saved without, so Enter there was only
-   * ever bouncing off the "zgjidh një kategori" error - on a phone the key is right under the
-   * keypad that was just used. With nothing chosen yet the picker opens outright; where a category
-   * is already in place the field only takes focus, so a second Enter still opens it and the
-   * choice is never reopened over the user's head.
+   * Enter on the amount walks to the account, then the category, instead of saving. Both are
+   * things the form cannot be saved without, so Enter there was only ever bouncing off one of the
+   * two "zgjidhni ..." errors - on a phone the key is right under the keypad that was just used.
+   * With multiple accounts and none chosen yet, the walk stops at the account picker first (it
+   * used to skip straight to the category, leaving whichever account happened to be preselected
+   * unreviewed); once an account is in place, the same Enter carries on to the category exactly as
+   * before. With nothing chosen yet a picker opens outright; where a choice is already in place the
+   * field only takes focus, so a second Enter still opens it and neither choice is ever reopened
+   * over the user's head.
    */
   const enterTeKategoria = (e) => {
     if (e.key !== "Enter" || isTransfer) return;
     e.preventDefault();
+    if (!njeLlogari && !tx.llogariaId) {
+      llogariaRef.current?.hap();
+      return;
+    }
     if (tx.kategoriaId) kategoriaRef.current?.focus();
     else kategoriaRef.current?.hap();
   };
@@ -214,6 +271,10 @@ function ShtoTransaksionin({
     // The keypad is still up for the field the user is being taken out of, and it would sit over
     // the dialog that is about to open.
     e.target.blur();
+    if (!njeLlogari && !tx.llogariaId) {
+      llogariaRef.current?.hap();
+      return;
+    }
     kategoriaRef.current?.hap();
   };
 
@@ -227,11 +288,13 @@ function ShtoTransaksionin({
     setTx((prev) => {
       if (prev.kategoriaId && !prev.sugjeruar) return { ...prev, pershkrimi: value };
       const propozimi = sugjeroKategorine(value, profile, categories, prev.lloji);
+      const llogariaKat = propozimi ? gjejLlogarinePerKategori(propozimi) : null;
       return {
         ...prev,
         pershkrimi: value,
         kategoriaId: propozimi || (prev.sugjeruar ? "" : prev.kategoriaId),
         sugjeruar: Boolean(propozimi),
+        ...(llogariaKat && !llogariaZgjedhurMeDore.current ? { llogariaId: llogariaKat } : {}),
       };
     });
   };
@@ -333,17 +396,37 @@ function ShtoTransaksionin({
       })
     );
 
-    // Two things the profile remembers from a saved transaction: the exchange rate, so the next
-    // $ subscription starts from the one used last time, and the description → category pairing,
-    // so the next "Spar" fills itself in (and so does a whole imported statement). Both in one
-    // write, because two `saveProfile` calls would each reload the database.
+    // Four things the profile remembers from a saved transaction: the exchange rate, so the next
+    // $ subscription starts from the one used last time; the description → category pairing, so the
+    // next "Spar" fills itself in (and so does a whole imported statement); the account used for this
+    // specific category (e.g. card for fuel, cash for coffee); and a general fallback account per type.
+    // All in one write, because separate `saveProfile` calls would each reload the database.
     const rregullaTeReja = mesoRregullen(profile, rekordi);
     const kursetENdryshuara = monedhat.monedhaOrigjinale
       ? { ...(profile.kurset || {}), [monedhat.monedhaOrigjinale]: monedhat.kursi }
       : profile.kurset;
+    const llogariteEFundit =
+      !njeLlogari && tx.llogariaId && profile.llogariaEFundit?.[tx.lloji] !== tx.llogariaId
+        ? { ...(profile.llogariaEFundit || {}), [tx.lloji]: tx.llogariaId }
+        : profile.llogariaEFundit;
+    const llogariteKategorive =
+      !njeLlogari && tx.llogariaId && tx.kategoriaId && profile.llogariaKategorive?.[tx.kategoriaId] !== tx.llogariaId
+        ? { ...(profile.llogariaKategorive || {}), [tx.kategoriaId]: tx.llogariaId }
+        : profile.llogariaKategorive;
 
-    if (rregullaTeReja !== profile.rregullatKategorive || kursetENdryshuara !== profile.kurset) {
-      await saveProfile({ ...profile, kurset: kursetENdryshuara, rregullatKategorive: rregullaTeReja });
+    if (
+      rregullaTeReja !== profile.rregullatKategorive ||
+      kursetENdryshuara !== profile.kurset ||
+      llogariteEFundit !== profile.llogariaEFundit ||
+      llogariteKategorive !== profile.llogariaKategorive
+    ) {
+      await saveProfile({
+        ...profile,
+        kurset: kursetENdryshuara,
+        rregullatKategorive: rregullaTeReja,
+        llogariaEFundit: llogariteEFundit,
+        llogariaKategorive: llogariteKategorive,
+      });
     }
 
     // The transaction is already safe at this point, so a failure here (a full storage quota, in
@@ -437,6 +520,20 @@ function ShtoTransaksionin({
                 autoFocus
                 required
               />
+              {shumatEShpeshta.length > 0 && (
+                <div className="d-flex align-items-center flex-wrap gap-2 mt-2">
+                  {shumatEShpeshta.map((v) => (
+                    <button
+                      key={v}
+                      type="button"
+                      className="fcp-shuma-shpejte"
+                      onClick={() => setField("vlera", String(v))}
+                    >
+                      {formatMoney(v, monedha)}
+                    </button>
+                  ))}
+                </div>
+              )}
             </Form.Group>
 
             <Form.Group as={Col} md={6} controlId="tx-data">
@@ -468,9 +565,17 @@ function ShtoTransaksionin({
                   {isTransfer ? "Nga llogaria" : "Llogaria"} <span className="text-danger">*</span>
                 </Form.Label>
                 <Zgjedhesi
+                  ref={llogariaRef}
                   id="tx-llogariaid"
                   value={tx.llogariaId}
-                  onChange={(v) => setField("llogariaId", v)}
+                  onChange={(v) => {
+                    llogariaZgjedhurMeDore.current = true;
+                    setField("llogariaId", v);
+                    // The category is the other field the form cannot be saved without, so once the
+                    // account is settled the walk (keyboard or phone "next") carries straight on to
+                    // it rather than stopping here a second time.
+                    if (!isTransfer && !tx.kategoriaId) kategoriaRef.current?.hap();
+                  }}
                   opsionet={opsionetLlogarive(aktive)}
                   placeholder="Zgjidh llogarinë..."
                   titulli={isTransfer ? "Nga llogaria" : "Zgjidh llogarinë"}
@@ -507,7 +612,15 @@ function ShtoTransaksionin({
                   categories={categories}
                   lloji={tx.lloji}
                   value={tx.kategoriaId}
-                  onChange={(kategoriaId) => setTx((prev) => ({ ...prev, kategoriaId, sugjeruar: false }))}
+                  onChange={(kategoriaId) => {
+                    const llogariaKat = gjejLlogarinePerKategori(kategoriaId);
+                    setTx((prev) => ({
+                      ...prev,
+                      kategoriaId,
+                      sugjeruar: false,
+                      ...(llogariaKat && !llogariaZgjedhurMeDore.current ? { llogariaId: llogariaKat } : {}),
+                    }));
+                  }}
                   required
                 />
                 {tx.sugjeruar && tx.kategoriaId && (

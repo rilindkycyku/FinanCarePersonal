@@ -1,0 +1,9 @@
+services:
+  financarepersonal:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: financarepersonal
+    restart: unless-stopped
+    ports:
+      - "3701:80"

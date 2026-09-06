@@ -138,7 +138,6 @@ function TransferoQr() {
       for (const chunk of chunks) {
         imgs.push(
           svgUrl(
-            // eslint-disable-next-line no-await-in-loop
             await QRCode.toString(chunk, {
               type: "svg",
               margin: 2,

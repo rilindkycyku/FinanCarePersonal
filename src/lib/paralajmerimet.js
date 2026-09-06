@@ -18,7 +18,7 @@
  */
 
 import { budgetProgress, dueRecurring, goalProgress } from "./finance";
-import { formatMoney } from "./format";
+import { formatMoney, todayISO } from "./format";
 import { DEFAULT_CURRENCY } from "./options";
 
 /** The two lines worth crossing: three quarters through, and over. */
@@ -99,7 +99,7 @@ export function paralajmerimetPasTransaksionit({
  */
 export function paralajmerimetENisjes({ profile = {}, recurring = [], sot } = {}) {
   if (!profile.njoftimePagesa) return [];
-  const dita = sot || new Date().toISOString().slice(0, 10);
+  const dita = sot || todayISO();
   const pritin = dueRecurring(recurring, dita);
   if (pritin.length === 0) return [];
 

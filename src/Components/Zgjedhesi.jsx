@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
 import { Modal, Form } from "react-bootstrap";
 import { Check, ChevronDown, Search, Slash, X } from "lucide-react";
 import { getIcon } from "../lib/icons";
@@ -46,26 +46,30 @@ function Shenja({ opsioni }) {
  * reading - the list is already on the screen in one glance. */
 const PRAGU_I_KERKIMIT = 8;
 
-function Zgjedhesi({
-  opsionet = [],
-  value,
-  onChange,
-  id,
-  placeholder = "Zgjidh...",
-  titulli = "Zgjidh",
-  /** Offers a "none" row under this name. Only when a call site asks, so a required field cannot
-   * be emptied by accident - same rule as the category picker. */
-  emptyLabel,
-  disabled = false,
-  required = false,
-  size,
-  className = "",
-  kerko,
-  "aria-label": ariaLabel,
-}) {
+const Zgjedhesi = forwardRef(function Zgjedhesi(
+  {
+    opsionet = [],
+    value,
+    onChange,
+    id,
+    placeholder = "Zgjidh...",
+    titulli = "Zgjidh",
+    /** Offers a "none" row under this name. Only when a call site asks, so a required field cannot
+     * be emptied by accident - same rule as the category picker. */
+    emptyLabel,
+    disabled = false,
+    required = false,
+    size,
+    className = "",
+    kerko,
+    "aria-label": ariaLabel,
+  },
+  ref
+) {
   const [hapur, setHapur] = useState(false);
   const [kerkimi, setKerkimi] = useState("");
   const kerkimiRef = useRef(null);
+  const trigerRef = useRef(null);
 
   // Compared as strings: several call sites hold a number in state (rows per page, a year) while
   // the option carries a number too, and one `value=""` placeholder sits among them. Matching
@@ -95,6 +99,10 @@ function Zgjedhesi({
     onChange?.(v);
     setHapur(false);
   };
+
+  // Same reason as the category picker: a form that hands Enter on one field to the next required
+  // one needs a way to open this dialog or just walk the focus to it without a click.
+  useImperativeHandle(ref, () => ({ hap, focus: () => trigerRef.current?.focus() }));
 
   // Same reason as the category picker: autofocusing the search box on a phone opens the keyboard
   // over the very list the dialog exists to show.
@@ -129,6 +137,7 @@ function Zgjedhesi({
       <button
         type="button"
         id={id}
+        ref={trigerRef}
         className={`fcp-cat-trigger${size === "sm" ? " sm" : ""}${zgjedhur ? "" : " bosh"} ${className}`.trim()}
         onClick={hap}
         disabled={disabled}
@@ -198,6 +207,6 @@ function Zgjedhesi({
       </Modal>
     </>
   );
-}
+});
 
 export default Zgjedhesi;

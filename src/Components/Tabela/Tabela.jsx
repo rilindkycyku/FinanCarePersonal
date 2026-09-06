@@ -6,8 +6,31 @@ import EksportoTeDhenat from "./EksportoTeDhenat";
 import SortIcon from "./SortIcon";
 import useSortableData from "../../Context/useSortableData";
 import { cellText, isMarkup } from "../../lib/format";
+import { JAVOR, MUJOR, TREMUJOR, VJETOR, celesiPeriudhes, kufijtePeriudhes, periudhaParaardhese } from "../../lib/periudhat";
 import "./Tabela.css";
 import Zgjedhesi from "../Zgjedhesi";
+
+/** Quick date-range presets for the "Filtrimi sipas Datës" fields, so "this month" or "last week"
+ * is one click instead of typing both ends by hand. Bounds come from `periudhat.js` (the same
+ * month/week/quarter/year math the reports use) so "Ky Muaj" here and "Muaji" in a report always
+ * agree on where a month starts and ends. Not a controlled value - picking one just writes the two
+ * date inputs and the dropdown itself resets, so editing a date by hand afterwards does not fight
+ * a stale selection. */
+const PERIUDHAT_E_SHPEJTA = [
+  // `format(new Date(), ...)`, not `new Date().toISOString()`: the latter converts to UTC, so
+  // anyone east of UTC (or travelling further east, e.g. Kosovo to Istanbul) sees "Sot" still
+  // pointing at yesterday for the first few hours after local midnight.
+  { value: "sot", label: "Sot", gjej: () => { const s = format(new Date(), "yyyy-MM-dd"); return { start: s, end: s }; } },
+  { value: "java", label: "Kjo Javë", gjej: () => kufijtePeriudhes(JAVOR, celesiPeriudhes(JAVOR)) },
+  { value: "muaji", label: "Ky Muaj", gjej: () => kufijtePeriudhes(MUJOR, celesiPeriudhes(MUJOR)) },
+  {
+    value: "muaji-kaluar",
+    label: "Muaji i Kaluar",
+    gjej: () => kufijtePeriudhes(MUJOR, periudhaParaardhese(MUJOR, celesiPeriudhes(MUJOR))),
+  },
+  { value: "tremujori", label: "Ky Tremujor", gjej: () => kufijtePeriudhes(TREMUJOR, celesiPeriudhes(TREMUJOR)) },
+  { value: "viti", label: "Ky Vit", gjej: () => kufijtePeriudhes(VJETOR, celesiPeriudhes(VJETOR)) },
+];
 
 // Cycled across whatever distinct values `filterField` finds, so each one gets a stable,
 // visually distinct color - mirrors the colored "Lloji" chip row on FinanCare's own Lista e
@@ -86,8 +109,13 @@ function Tabela({
     searchQuery,
     mosShfaqPaginimin ? Math.max(data.length, 20) : itemsPerPage,
     dateField,
-    startDate ? new Date(startDate) : null,
-    endDate ? new Date(endDate) : null
+    // Passed as the raw "YYYY-MM-DD" strings, not `new Date(...)`: useSortableData parses them with
+    // `parseISO` (local midnight), the same way it parses each row's date field. Wrapping them in
+    // `new Date()` here parsed them as UTC midnight instead, which east of UTC put the start boundary
+    // a couple of hours after local midnight and silently dropped transactions dated exactly on the
+    // start day from the range.
+    startDate || null,
+    endDate || null
   );
 
   const headeri = data.length > 0 ? Object.keys(data[0]) : [];
@@ -211,6 +239,29 @@ function Tabela({
                       <Form.Control aria-label="Data nga" className="premium-select" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
                       <Form.Control aria-label="Data deri" className="premium-select" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
                     </div>
+                  </Col>
+                )}
+
+                {dateField && (
+                  <Col md={2} lg={2}>
+                    <Form.Label htmlFor={`${idBaza}-periudha`} className="premium-filter-label">
+                      Periudha
+                    </Form.Label>
+                    <Zgjedhesi
+                      id={`${idBaza}-periudha`}
+                      value=""
+                      onChange={(v) => {
+                        const preset = PERIUDHAT_E_SHPEJTA.find((p) => p.value === v);
+                        if (!preset) return;
+                        const { start, end } = preset.gjej();
+                        setStartDate(start);
+                        setEndDate(end);
+                        goToPage(0);
+                      }}
+                      opsionet={PERIUDHAT_E_SHPEJTA}
+                      placeholder="Zgjidh periudhën..."
+                      titulli="Zgjidh periudhën"
+                    />
                   </Col>
                 )}
 

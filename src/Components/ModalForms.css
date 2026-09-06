@@ -727,6 +727,30 @@ body.light-mode .fcp-cat-trigger {
   font-weight: 800;
 }
 
+/* Reveals the suggestions past the cap - plain rather than dashed in a tag colour, since it is not
+   a tag itself. Shared with the amount field's "shuma të shpeshta" chips, which are the same plain
+   pill for the same reason: neither is a tag or a category, so neither gets a tag/category colour. */
+.fcp-etiketa-me-shume,
+.fcp-shuma-shpejte {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.22rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid var(--sp-border);
+  background: transparent;
+  color: var(--sp-text-muted);
+  font-size: 0.7rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.fcp-etiketa-me-shume:hover,
+.fcp-shuma-shpejte:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--sp-text);
+}
+
 /* ── Mobile ───────────────────────────────────────────────────
    Every dialog is read on a phone far more often than on a desk, so the whole shell tightens up:
    less chrome, smaller type, and the total block stacked instead of squeezed side by side. */

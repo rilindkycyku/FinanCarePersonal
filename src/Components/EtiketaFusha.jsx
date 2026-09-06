@@ -16,21 +16,30 @@ import {
  *
  * `onChange` receives a cleaned array; the caller stores it as `etiketat` on the record.
  */
+/** Above this many free suggestions, the rest sit behind "+N më shumë" instead of stretching the
+ * field taller than the form around it every time the account has a long tag history. */
+const KUFIRI_SUGJERIMEVE = 8;
+
 function EtiketaFusha({ etiketat = [], onChange, sugjerime = [], ndihma }) {
   const [teksti, setTeksti] = useState("");
+  const [teGjitha, setTeGjitha] = useState(false);
 
   const zgjedhura = useMemo(() => new Set(etiketat.map((e) => celesiEtiketes(e))), [etiketat]);
   const plot = etiketat.length >= NUMRI_MAX;
 
   // What is left to offer: tags used before, minus the ones already on this record, narrowed by
-  // whatever is half-typed. Capped at eight so the field never grows taller than the form around it.
-  const teLira = useMemo(() => {
+  // whatever is half-typed.
+  const teLiraTeGjitha = useMemo(() => {
     const kerkimi = celesiEtiketes(teksti);
     return sugjerime
       .filter((s) => !zgjedhura.has(s.celesi))
-      .filter((s) => (kerkimi ? s.celesi.includes(kerkimi) : true))
-      .slice(0, 8);
+      .filter((s) => (kerkimi ? s.celesi.includes(kerkimi) : true));
   }, [sugjerime, zgjedhura, teksti]);
+
+  // Typing a search already narrows the list on its own, so the cap only applies to the
+  // unfiltered "most used" row - and "+N më shumë" reveals the rest for exactly that row.
+  const teLira = teksti || teGjitha ? teLiraTeGjitha : teLiraTeGjitha.slice(0, KUFIRI_SUGJERIMEVE);
+  const teFshehura = teksti ? 0 : teLiraTeGjitha.length - teLira.length;
 
   const shto = (raw) => {
     const teReja = ndajEtiketat(raw);
@@ -98,6 +107,15 @@ function EtiketaFusha({ etiketat = [], onChange, sugjerime = [], ndihma }) {
               <span className="fcp-etiketa-numri">{s.numri}</span>
             </button>
           ))}
+          {teFshehura > 0 && (
+            <button
+              type="button"
+              className="fcp-etiketa-me-shume"
+              onClick={() => setTeGjitha(true)}
+            >
+              +{teFshehura} më shumë
+            </button>
+          )}
         </div>
       )}
 

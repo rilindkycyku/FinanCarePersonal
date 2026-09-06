@@ -44,8 +44,13 @@ const useSortableData = (items, config = null, search = "", itemsPerPage = 10, d
     let sortableData = [...items];
 
     if (dateField && startDate && endDate) {
-      const start = new Date(startDate);
-      const end = new Date(endDate);
+      // `parseISO` on both ends, not `new Date()` on the range: a bare "YYYY-MM-DD" is parsed as
+      // *local* midnight by `parseISO` but as *UTC* midnight by `new Date()`. East of UTC that put
+      // the start boundary a few hours after local midnight, so a transaction dated exactly on the
+      // start day fell just outside the interval and only appeared once the range was widened by a
+      // day.
+      const start = parseISO(startDate);
+      const end = parseISO(endDate);
 
       sortableData = sortableData.filter((item) => {
         const itemDate = parseISO(item[dateField]);

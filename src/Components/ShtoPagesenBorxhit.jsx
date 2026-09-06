@@ -5,7 +5,8 @@ import { useData } from "../Context/DataContext";
 import VleraInput from "./VleraInput";
 import ZgjedhesiKategorive from "./ZgjedhesiKategorive";
 import { makeId, STORES } from "../lib/db";
-import { toNumber, todayISO } from "../lib/format";
+import { toNumber, todayISO, formatMoney } from "../lib/format";
+import { debtProgress } from "../lib/finance";
 import { debtTypeMeta } from "../lib/options";
 import { kategoriTeHapura } from "../lib/kategorite";
 import "./ModalForms.css";
@@ -34,7 +35,7 @@ const blank = (lloji = "pagese") => ({
  * note instead of corrupting the balance owed.
  */
 function ShtoPagesenBorxhit({ show, onHide, borxhi, initial }) {
-  const { accounts, categories, transactions, saveMany, destroyMany, simboli, njeLlogari, llogariaKryesore } =
+  const { accounts, categories, transactions, recurring, saveMany, destroyMany, simboli, monedha, njeLlogari, llogariaKryesore } =
     useData();
   const [entry, setEntry] = useState(blank());
   const [lidh, setLidh] = useState(false);
@@ -60,7 +61,11 @@ function ShtoPagesenBorxhit({ show, onHide, borxhi, initial }) {
     const lidhur = initial?.transaksioniId
       ? transactions.find((tx) => tx.id === initial.transaksioniId)
       : null;
-    setLidh(Boolean(lidhur));
+    // A new line defaults to "pagesë"/"kthim" (never "shtesë" - `blank()` opens on it), and that
+    // kind of line is real money moving to or from an account, so it starts ticked rather than
+    // making the user opt in every time. Editing an existing line still follows what it actually
+    // has: a line saved as note-only stays that way until someone deliberately ticks the box.
+    setLidh(Boolean(lidhur) || (!initial && aktive.length > 0));
     // The note's category describes the *debt*, and money coming back from a loan is income: on a
     // "hua e dhënë" that prefill was an expense category landing on an `hyrje`, which the picker
     // below cannot even show (it lists income categories only) and which files the return under a
@@ -96,6 +101,69 @@ function ShtoPagesenBorxhit({ show, onHide, borxhi, initial }) {
   const isShtese = entry.lloji === "shtese";
   // A new charge on a card never leaves a bank account, so there is nothing to book against one.
   const mundLidhet = !isShtese && aktive.length > 0;
+
+  // Quick-amount chips for debt lines: repeating instalments from past payments, any recurring
+  // payment linked to this debt note (e.g. fixed card/loan instalment), and the remaining balance.
+  const shumatEShpeshta = useMemo(() => {
+    if (!borxhi) return [];
+    const lista = [];
+
+    // 1. Remaining balance if paying down the debt
+    if (entry.lloji === "pagese") {
+      const ecuria = debtProgress(borxhi);
+      const mbetur = Math.round(ecuria.mbetur * 100) / 100;
+      if (mbetur > 0) {
+        lista.push({
+          vlera: mbetur,
+          arsyeja: "mbetja",
+          label: `Mbetja: ${formatMoney(mbetur, monedha)}`,
+        });
+      }
+    }
+
+    // 2. Any recurring payment tied to this debt note (e.g. card/loan instalment)
+    const perseritje = (recurring || []).find((r) => r.borxhiId === borxhi.id && r.vlera > 0);
+    if (perseritje) {
+      const kesti = Math.round(perseritje.vlera * 100) / 100;
+      lista.push({
+        vlera: kesti,
+        arsyeja: "kesti",
+        label: `Kësti: ${formatMoney(kesti, monedha)}`,
+      });
+    }
+
+    // 3. Past lines of the same direction on this debt
+    const pagesat = (Array.isArray(borxhi.pagesat) ? borxhi.pagesat : [])
+      .filter((p) => p.id !== initial?.id && p.lloji === entry.lloji && p.vlera > 0)
+      .map((p) => Math.round(p.vlera * 100) / 100);
+
+    const numerimi = new Map();
+    pagesat.forEach((v) => numerimi.set(v, (numerimi.get(v) || 0) + 1));
+    const teShpeshta = [...numerimi.entries()]
+      .sort((a, b) => b[1] - a[1] || a[0] - b[0])
+      .map(([v]) => v);
+
+    teShpeshta.forEach((v) =>
+      lista.push({
+        vlera: v,
+        arsyeja: "historik",
+        label: formatMoney(v, monedha),
+      })
+    );
+
+    // Deduplicate by vlera while keeping order, cap at 4 chips
+    const unike = [];
+    const pare = new Set();
+    for (const item of lista) {
+      if (!pare.has(item.vlera)) {
+        pare.add(item.vlera);
+        unike.push(item);
+      }
+      if (unike.length >= 4) break;
+    }
+
+    return unike;
+  }, [borxhi, entry.lloji, initial?.id, recurring, monedha]);
 
   const handleSave = async (e) => {
     e.preventDefault();
@@ -217,6 +285,20 @@ function ShtoPagesenBorxhit({ show, onHide, borxhi, initial }) {
                 autoFocus
                 required
               />
+              {shumatEShpeshta.length > 0 && (
+                <div className="d-flex align-items-center flex-wrap gap-2 mt-2">
+                  {shumatEShpeshta.map((item) => (
+                    <button
+                      key={`${item.arsyeja}-${item.vlera}`}
+                      type="button"
+                      className="fcp-shuma-shpejte"
+                      onClick={() => setField("vlera", String(item.vlera))}
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
+              )}
             </Form.Group>
 
             <Form.Group as={Col} md={6} controlId="dpay-data">

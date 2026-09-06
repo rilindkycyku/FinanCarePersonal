@@ -14,7 +14,7 @@
 import {
   accountBalance, filterByRange, sortByDateDesc, totalBalance, totalsByCategory, txSignForAccount,
 } from "./finance";
-import { cellText, currencySymbol, formatDate, plainAmount, toNumber } from "./format";
+import { cellText, currencySymbol, formatDate, plainAmount, toNumber, todayISO } from "./format";
 import { accountTypeMeta, DEFAULT_CURRENCY, MONTHS_GENITIVE } from "./options";
 import { emriIPlote } from "./kategorite";
 
@@ -316,7 +316,7 @@ export async function exportStatementPdf({
   doc.text(periudhaTekst, W - MARGIN, MARGIN + 15, { align: "right" });
   setText(7, "normal", CLR.muted);
   doc.text(
-    `Lëshuar më ${formatDate(tani.toISOString().slice(0, 10))} ${dyShifra(tani.getHours())}:${dyShifra(
+    `Lëshuar më ${formatDate(todayISO())} ${dyShifra(tani.getHours())}:${dyShifra(
       tani.getMinutes()
     )}${llogaria ? ` · ${llogaria.emri}` : ""}`,
     W - MARGIN,
@@ -391,7 +391,7 @@ export async function exportStatementPdf({
     ["Monedha", `${monedha} (${simboli})`],
     ["Transaksione", String(t.nrRreshtave)],
     // The reference number and issue time are in the masthead, where there is room for them.
-    ["Gjeneruar më", formatDate(tani.toISOString().slice(0, 10))],
+    ["Gjeneruar më", formatDate(todayISO())],
   ].forEach(([label, value]) => {
     setText(6.6, "normal", CLR.muted);
     doc.text(label, xA + 12, ay);
@@ -965,7 +965,7 @@ export async function buildListPdfBlob({ titulli, headers, rows, profile = {} })
     doc.setTextColor(...color);
   };
 
-  const sot = formatDate(new Date().toISOString().slice(0, 10));
+  const sot = formatDate(todayISO());
   const monedha = profile.monedha || DEFAULT_CURRENCY;
   const pronari = profile.emri || "FinanCarePersonal";
 
@@ -1086,7 +1086,7 @@ export async function buildListPdfBlob({ titulli, headers, rows, profile = {} })
     .join("-")
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "")}-${new Date().toISOString().slice(0, 10)}.pdf`;
+    .replace(/^-|-$/g, "")}-${todayISO()}.pdf`;
 
   return { blob: doc.output("blob"), filename: emri };
 }

@@ -23,7 +23,7 @@ import { exportListExcel, exportStatementExcel } from "../lib/exportExcel";
 import { exportStatementPdf, statementFilename } from "../lib/exportPdf";
 import PdfViewerModal from "../Components/PdfViewerModal";
 import { backupStatus, periodBounds, sortByDateDesc } from "../lib/finance";
-import { formatDate, plainAmount } from "../lib/format";
+import { formatDate, plainAmount, todayISO } from "../lib/format";
 import { emriIPlote } from "../lib/kategorite";
 import { cilesiaFaturave, formatBytes } from "../lib/images";
 import { STATEMENT_PERIODS, TRANSACTION_TYPE_LABELS } from "../lib/options";
@@ -157,7 +157,7 @@ function TeDhena() {
       const data = await exportAllData();
       shkarko(
         new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }),
-        `financarepersonal-backup-${new Date().toISOString().slice(0, 10)}.json`
+        `financarepersonal-backup-${todayISO()}.json`
       );
       // The whole database is now in a file outside this browser - the one thing the reminder on
       // the Panel is watching for.
@@ -178,7 +178,7 @@ function TeDhena() {
     setZipi({ bere: 0, gjithsej: faturat.length });
     try {
       const blob = await exportZipData((bere, gjithsej) => setZipi({ bere, gjithsej }));
-      shkarko(blob, `financarepersonal-backup-${new Date().toISOString().slice(0, 10)}.zip`);
+      shkarko(blob, `financarepersonal-backup-${todayISO()}.zip`);
       // A ZIP is the fuller copy of the two, so it counts as *the* backup just as much.
       await shenoKopjen();
       await reload();
@@ -232,7 +232,7 @@ function TeDhena() {
         "Transaksionet",
         Object.keys(rows[0]),
         rows,
-        `financarepersonal-transaksionet-${new Date().toISOString().slice(0, 10)}.xlsx`
+        `financarepersonal-transaksionet-${todayISO()}.xlsx`
       );
     } catch (err) {
       njofto("danger", `Excel-i nuk u krijua: ${err.message}`);

@@ -8,7 +8,7 @@ import { exportStatementPdf } from "../lib/exportPdf";
 import { exportStatementExcel } from "../lib/exportExcel";
 import TransferoQr from "./TransferoQr";
 import { cashflow, filterByRange, monthBounds, totalBalance } from "../lib/finance";
-import { formatMoney, monthKey, monthLabel } from "../lib/format";
+import { formatMoney, monthKey, monthLabel, todayISO } from "../lib/format";
 import "../Pages/Styles/Dashboard.css";
 
 const ADRESA = "https://personal.financare.rilindkycyku.dev";
@@ -129,7 +129,7 @@ function Ndaje() {
       const data = await exportAllData();
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
       const rezultat = await ndajSkedarin(
-        { blob, filename: `financarepersonal-backup-${new Date().toISOString().slice(0, 10)}.json` },
+        { blob, filename: `financarepersonal-backup-${todayISO()}.json` },
         "Kopja e të dhënave - FinanCarePersonal"
       );
       // A copy the user cancelled out of the share sheet never left the device, so it is not one.

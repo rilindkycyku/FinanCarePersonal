@@ -15,9 +15,13 @@ const ora = (iso) => new Date(iso).getTime();
 
 describe("cili muaj raportohet", () => {
   it("takes the month that has just ended, across a year boundary", () => {
-    expect(muajiIRaportit(new Date("2026-08-01T06:00:00Z"))).toBe("2026-07");
-    expect(muajiIRaportit(new Date("2026-08-31T23:00:00Z"))).toBe("2026-07");
-    expect(muajiIRaportit(new Date("2026-01-03T09:00:00Z"))).toBe("2025-12");
+    // Built with local Date components (no "Z"), not parsed from a UTC ISO string: `muajiIRaportit`
+    // reads "today" by its *local* calendar day (see periudhat.js's `utc()`), so a UTC instant near
+    // a day boundary - 23:00Z on the 31st is already the 1st in any timezone east of UTC+1 - made
+    // this test's outcome depend on the machine's timezone instead of on the logic being tested.
+    expect(muajiIRaportit(new Date(2026, 7, 1, 6))).toBe("2026-07");
+    expect(muajiIRaportit(new Date(2026, 7, 31, 23))).toBe("2026-07");
+    expect(muajiIRaportit(new Date(2026, 0, 3, 9))).toBe("2025-12");
   });
 
   it("names the marker row after the month it covers", () => {

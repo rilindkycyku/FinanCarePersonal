@@ -9,6 +9,39 @@ e fundit kur rregullohet diçka, dhe e para vetëm kur ndryshon vetë forma e pr
 herë, te `2.0.0`, kur të dhënat mësuan të dalin nga shfletuesi. Datat janë ato të commit-it që e
 ngriti versionin.
 
+## [2.23.0] - 2026-09-05
+
+### Shtuar
+- **Filtri i shpejtë i periudhës te Tabela e transaksioneve.** Pranë fushave të datave u shtua një
+  zgjedhës me intervale të gatshme: *Sot*, *Kjo Javë*, *Ky Muaj*, *Muaji i Kaluar*, *Ky Tremujor* dhe
+  *Ky Vit*. Përzgjedhja e njërës prej tyre mbush menjëherë të dyja datat pa qenë nevoja të kërkohen në
+  kalendar.
+- **Mbajtja mend e llogarisë sipas kategorisë.** Për përdoruesit me disa llogari (kesh, kartelë
+  bankare, etj.), aplikacioni mëson tani preferencën e llogarisë për çdo kategori (p.sh. kartela për
+  karburant ose fatura, kesh për kafe). Kur përzgjidhet kategoria ose sugjerohet nga përshkrimi,
+  llogaria përshtatet automatikisht, duke mbajtur gjithashtu llogarinë e fundit të llojit si rezervë.
+- **Çipat e shumave të shpejta te pagesat e borxhit.** Te modali i pagesës së borxhit shfaqen tashmë
+  çipa të klikueshëm për plotësim të menjëhershëm: shlyerja e mbetjes së plotë me një klikim (p.sh.
+  «Mbetja: 150,00 €»), kësti fiks mujor nëse ka pagesë periodike të lidhur, dhe shumat më të
+  shpeshta nga pagesat e mëparshme.
+- **Zgjerimi i etiketave me «+N më shumë».** Lista e sugjerimeve të etiketave tregon fillimisht deri
+  në 8 më të përdorurat për të shmangur mbipopullimin e pamjes në ekran, dhe shton një buton të
+  thjeshtë «+N më shumë» për shfaqjen e plotë kur kërkohen të gjitha.
+- **Përzgjedhja e parazgjedhur e llogarisë te pagesa e borxhit.** Shtimi i një pagese të re te një
+  borxh e ka tani kutinë «Zbrite edhe nga një llogari e vërtetë» të shënjuar vetiu, pasi pagesat dhe
+  kthimet e borxheve zakonisht lëvizin para reale në llogaritë ekzistuese.
+
+### Rregulluar
+- **Sinkronizimi i plotë me orën dhe zonën kohore të pajisjes.** U eliminuan mospërputhjet ku
+  përllogaritjet në UTC shkaktonin zhvendosje prej disa orësh (p.sh. 2 orë më herët në eksportet PDF/Excel,
+  ose humbje të transaksioneve të ditës së parë të muajit në filtra në timezone UTC+2). Tani të gjitha
+  ndjekin besnikërisht kalendarin dhe orën lokale të vetë pajisjes.
+- **Rrjedha e lëvizjes me tastierë në modale me shumë llogari.** Shtypja e Enter mbi fushën e shumës
+  ndalon fillimisht te llogaria nëse nuk ka ende një llogari të paracaktuar, dhe pas zgjedhjes së
+  llogarisë kalon automatikisht te kategoria.
+- **Pavarësia e testit të raporteve nga zona kohore.** Korrigjimi i `raporti.test.js` që të kalojë
+  plotësisht i gjelbër në çdo timezone të makinës ku ekzekutohet.
+
 ## [2.22.0] - 2026-08-31
 
 ### Shtuar

@@ -57,6 +57,15 @@ const utc = (iso) => {
   return new Date(Date.UTC(v, m - 1, d));
 };
 const isoDite = (d) => (typeof d === "string" ? d : d.toISOString().slice(0, 10));
+/** The calendar day a *wall-clock* Date names where it was read - `sot` is always "now" on the
+ * device sending the report, so this reads local `getFullYear`/`getMonth`/`getDate`, not
+ * `isoDite`'s UTC conversion. East of UTC (or the hour or two after midnight while travelling
+ * further east) `isoDite(new Date())` reported the report as still running yesterday. */
+const isoDiteVendore = (d) => {
+  if (typeof d === "string") return d;
+  const dy = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${dy(d.getMonth() + 1)}-${dy(d.getDate())}`;
+};
 /** Whole days from one ISO day to another, both ends counted. */
 const ditetMes = (a, b) => Math.round((utc(b) - utc(a)) / DITA);
 
@@ -245,7 +254,7 @@ export function figuratERaportit({
   sot = null,
 } = {}) {
   const { start, end } = kufijtePeriudhes(lloji, periudha);
-  const sotStr = sot ? isoDite(sot) : null;
+  const sotStr = sot ? isoDiteVendore(sot) : null;
 
   /**
    * A period the user asked for by hand may not have finished yet - "how is this month going" is a
