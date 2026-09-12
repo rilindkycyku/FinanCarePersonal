@@ -23,7 +23,7 @@
 import {
   cashflow, filterByRange, budgetProgress, monthKeyBounds, sumByType, totalsByCategory,
   upcomingRecurring,
-  debtProgress,
+  debtPace, debtProgress,
   goalProgress,
 } from "./finance";
 import { emriIPlote } from "./kategorite";
@@ -157,7 +157,10 @@ function borxhetEPeriudhes(debts, start, deri) {
       const paguar = ecuria.pagesat
         .filter((p) => p.lloji !== "shtese" && p.data >= start && p.data <= deri)
         .reduce((sum, p) => sum + toNumber(p.vlera), 0);
-      return { ...ecuria, paguarNePeriudhe: paguar };
+      // Measured to the end of the period being reported on, not to today: a report about July
+      // read in September must say what was true in July, or the figures in it stop agreeing with
+      // each other the longer it sits in an inbox.
+      return { ...ecuria, paguarNePeriudhe: paguar, ritmi: debtPace(debt, deri) };
     })
     .filter((d) => !d.perfunduar && d.mbetur > 0)
     .sort((a, b) => b.mbetur - a.mbetur)

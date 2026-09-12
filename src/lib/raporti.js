@@ -172,6 +172,42 @@ export function provoSerish(shenja, tani = Date.now()) {
   return (shenja.prova || 0) < PROVAT_MAX && tani - kur > PRITJA_PAS_DESHTIMIT;
 }
 
+/**
+ * Which reports are owed right now and have not gone out.
+ *
+ * Until this existed the settings card could say a report was sent and say one had failed, but had
+ * no word for the third and most common state: the period closed, nothing went wrong, and the
+ * email simply has not been sent because nobody has opened the app since. That state was invisible,
+ * which is why a late report looked like a lost one - there is no scheduler behind any of this and
+ * there cannot be, since a browser that is closed runs nothing, so "the first opening after the
+ * period closed" *is* the schedule, and the app owes the user that sentence rather than silence.
+ *
+ * Pure, and given everything it needs: the markers are read once by the caller (one request) and
+ * handed in, so this can be tested and so a page can call it as often as it re-renders.
+ *
+ * `fillimi` is the ledger's first transaction date, applied exactly as `ekzekutoNje` applies it -
+ * a period that ended before the ledger began is not owed, it is simply not reported on.
+ */
+export function raportetNePritje({ profile = {}, shenjat = [], sot = new Date(), fillimi = null } = {}) {
+  return raportetAktive(profile)
+    .map((def) => {
+      const periudha = periudhaERaportit(def.lloji, sot);
+      if (!fillimi || kufijtePeriudhes(def.lloji, periudha).end < fillimi) return null;
+      const shenja = shenjat.find((sh) => sh.lloji === def.lloji && sh.periudha === periudha);
+      if (shenja?.gjendja === "derguar") return null;
+      return {
+        lloji: def.lloji,
+        emri: def.emri,
+        periudha,
+        // "duke u derguar" is another device mid-send, not something this one should offer to do
+        // again; "deshtoi" already has its own line in the card, with the reason.
+        gjendja: shenja?.gjendja || "pa-nisur",
+        gabimi: shenja?.gabimi || "",
+      };
+    })
+    .filter(Boolean);
+}
+
 /** Is the function there, does it have its key, and is it the version this release expects. */
 export async function gjendjaFunksionit() {
   try {

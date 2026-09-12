@@ -16,7 +16,8 @@ import {
   filterByItem, PA_KATEGORI, reassignAccount,
   reconciliation,
   dataEParaERegjistruar,
-  convertedAmount, currencyFields, dailyLimit, debtPace, debtPaymentsFromTransactions, debtProgress,
+  convertedAmount, currencyFields, dailyLimit, debtMonthlyInterest, debtMonthlyRate, debtPace,
+  debtPayoffOrder, debtPaymentsFromTransactions, debtProgress, debtRequiredPayment,
   debtTotals, dueRecurring, effectiveBudgets, enteredAt, filterByRange, generateDueTransactions,
   muajiEfektiv,
   idIPerseritjes,
@@ -838,6 +839,81 @@ describe("debt payoff pace", () => {
     expect(ritmi.perTeteje).toBe(true);
     expect(ritmi.dataParashikuar).toBeNull();
     expect(ritmi.afatiMbahet).toBeNull();
+  });
+
+  it("counts the interest against the pace, so a payment that only covers it never ends", () => {
+    // 1200 left at 24% a year is 24 € a month in interest alone. Paying 20 is falling behind.
+    const ngadalë = debtPace(
+      kredi([pagese("2026-03-10", 20)], { normaVjetore: 24 }),
+      "2026-03-31"
+    );
+    expect(ngadalë.nukZvogelohet).toBe(true);
+    expect(ngadalë.muajTeMbetur).toBe(Infinity);
+    expect(ngadalë.dataParashikuar).toBeNull();
+
+    // The same note with no rate on it clears eventually, because nothing is being added: the
+    // 1.180 € still owed fall by the full 20 every month.
+    const paNorme = debtPace(kredi([pagese("2026-03-10", 20)]), "2026-03-31");
+    expect(paNorme.nukZvogelohet).toBe(false);
+    expect(paNorme.muajTeMbetur).toBe(59);
+  });
+
+  it("makes a rated note take longer than the same note without a rate", () => {
+    const pagesat = [pagese("2026-03-10", 100), pagese("2026-04-10", 100)];
+    const paNorme = debtPace(kredi(pagesat), "2026-04-30");
+    const meNorme = debtPace(kredi(pagesat, { normaVjetore: 18 }), "2026-04-30");
+    expect(paNorme.muajTeMbetur).toBe(10);
+    expect(meNorme.muajTeMbetur).toBeGreaterThan(paNorme.muajTeMbetur);
+    // And what the extra months cost is what the interest is.
+    expect(paNorme.interesiIMbetur).toBe(0);
+    expect(meNorme.interesiIMbetur).toBeGreaterThan(0);
+  });
+
+  it("reads the monthly rate off the note and charges it on what is left", () => {
+    expect(debtMonthlyRate({ normaVjetore: 12 })).toBeCloseTo(0.01, 10);
+    expect(debtMonthlyRate({})).toBe(0);
+    expect(debtMonthlyRate({ normaVjetore: 0 })).toBe(0);
+    // 1200 owed at 12% is 12 € of standing still per month.
+    expect(debtMonthlyInterest(kredi([], { normaVjetore: 12 }))).toBeCloseTo(12, 10);
+    expect(debtMonthlyInterest(kredi([]))).toBe(0);
+  });
+
+  it("says what monthly payment would hold the deadline", () => {
+    // 1200 across the twelve months of 2026, counting the current one.
+    expect(debtRequiredPayment(kredi([], { dataMbarimit: "2026-12-31" }), "2026-01-15")).toBe(100);
+    // Half the time left means twice the payment.
+    expect(debtRequiredPayment(kredi([], { dataMbarimit: "2026-12-31" }), "2026-07-15")).toBe(200);
+    // A rate on the note asks for more than plain division would.
+    expect(
+      debtRequiredPayment(kredi([], { dataMbarimit: "2026-12-31", normaVjetore: 18 }), "2026-01-15")
+    ).toBeGreaterThan(100);
+    // Nothing to answer without a deadline, or once it is settled.
+    expect(debtRequiredPayment(kredi([]), "2026-01-15")).toBeNull();
+    expect(debtRequiredPayment(kredi([pagese("2026-01-10", 1200)], { dataMbarimit: "2026-12-31" }), "2026-01-15")).toBeNull();
+  });
+
+  it("orders what is owed by rate, or by size, and leaves everything else out", () => {
+    const notes = [
+      { id: "a", lloji: "karte", vleraTotale: 900, normaVjetore: 18, pagesat: [] },
+      { id: "b", lloji: "keste", vleraTotale: 300, pagesat: [] },
+      { id: "c", lloji: "kredi", vleraTotale: 5000, normaVjetore: 6, pagesat: [] },
+      { id: "d", lloji: "huadhene", vleraTotale: 400, pagesat: [] },
+      { id: "e", lloji: "karte", vleraTotale: 200, pagesat: [], arkivuar: true },
+      { id: "f", lloji: "borxh", vleraTotale: 100, pagesat: [{ id: "x", data: "2026-01-01", lloji: "pagese", vlera: 100 }] },
+    ];
+
+    const ortek = debtPayoffOrder(notes, "ortek");
+    // Money lent out (d), an archived note (e) and a settled one (f) are not in a payoff queue.
+    expect(ortek.radha.map((x) => x.id)).toEqual(["a", "c", "b"]);
+    expect(ortek.radha[0].rendi).toBe(1);
+
+    const debora = debtPayoffOrder(notes, "debora");
+    expect(debora.radha.map((x) => x.id)).toEqual(["b", "a", "c"]);
+
+    // Same set either way, so the standing-still cost does not depend on the order.
+    expect(ortek.mbeturGjithsej).toBe(6200);
+    expect(ortek.interesiMujorGjithsej).toBeCloseTo(900 * 0.015 + 5000 * 0.005, 10);
+    expect(debora.interesiMujorGjithsej).toBeCloseTo(ortek.interesiMujorGjithsej, 10);
   });
 
   it("has nothing to project without payments, or once the note is settled", () => {

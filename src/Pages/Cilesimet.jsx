@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Card, Form, Row, Col, Button } from "react-bootstrap";
-import { Settings, Save, Trash2, RotateCcw, Sun, Moon, AlertTriangle, BellRing, Eraser } from "lucide-react";
+import { Settings, Save, Trash2, RotateCcw, Sun, Moon, MonitorSmartphone, AlertTriangle, BellRing, Eraser } from "lucide-react";
 import NavBar from "../Components/NavBar";
 import Footer from "../Components/Footer";
 import PageTitle from "../Components/PageTitle";
@@ -33,7 +33,7 @@ function Cilesimet() {
   const { profile, transactions, accounts, categories, budgets, goals, recurring, borxhet, saveProfile, reload,
     loading, njeLlogari } = useData();
   const dialog = useDialog();
-  const { theme, toggleTheme } = useTheme();
+  const { theme, tema, sistemi, setTema } = useTheme();
   const { lidhur } = useSync();
   const [form, setForm] = useState({
     emri: "", monedha: DEFAULT_CURRENCY, teArdhuratMujore: "", objektiviKursimit: "", limitiDitor: "",
@@ -441,13 +441,37 @@ function Cilesimet() {
           <Card className="profile-card border-0 p-4 mb-4">
             <h2 className="fcp-card-title fw-bold mb-3">Pamja</h2>
             <p className="text-muted small">
-              Tema aktuale: <strong>{theme === "dark" ? "E errët" : "E bardhë"}</strong>. Zgjedhja ruhet në këtë
-              shfletues.
+              Zgjedhja ruhet në këtë shfletues.{" "}
+              {tema === "sistemi"
+                ? `Tani ndiqet pajisja, e cila po kërkon temën ${sistemi === "dark" ? "e errët" : "e bardhë"} - nëse ajo ndërron vetë në mbrëmje, ndërron edhe faqja.`
+                : `Tani është zgjedhur tema ${theme === "dark" ? "e errët" : "e bardhë"}, pavarësisht se çka kërkon pajisja.`}
             </p>
-            <Button variant="outline-light" onClick={toggleTheme} style={{ maxWidth: 240 }}>
-              {theme === "dark" ? <Sun size={16} className="me-1" /> : <Moon size={16} className="me-1" />}
-              Kalo në temën {theme === "dark" ? "e bardhë" : "e errët"}
-            </Button>
+            <div className="d-flex flex-wrap gap-2">
+              <Button
+                variant={tema === "sistemi" ? "primary" : "outline-light"}
+                onClick={() => setTema("sistemi")}
+                aria-pressed={tema === "sistemi"}
+              >
+                <MonitorSmartphone size={16} className="me-1" />
+                Sipas pajisjes
+              </Button>
+              <Button
+                variant={tema === "dark" ? "primary" : "outline-light"}
+                onClick={() => setTema("dark")}
+                aria-pressed={tema === "dark"}
+              >
+                <Moon size={16} className="me-1" />
+                E errët
+              </Button>
+              <Button
+                variant={tema === "light" ? "primary" : "outline-light"}
+                onClick={() => setTema("light")}
+                aria-pressed={tema === "light"}
+              >
+                <Sun size={16} className="me-1" />
+                E bardhë
+              </Button>
+            </div>
           </Card>
 
           <Card className="profile-card border-0 p-4 mb-4">

@@ -9,6 +9,72 @@ e fundit kur rregullohet diçka, dhe e para vetëm kur ndryshon vetë forma e pr
 herë, te `2.0.0`, kur të dhënat mësuan të dalin nga shfletuesi. Datat janë ato të commit-it që e
 ngriti versionin.
 
+## [2.25.0] - 2026-09-12
+
+### Shtuar
+- **Kamata e një borxhi, dhe çka do të thotë ajo.** Te formulari i borxhit u shtua fusha **Norma
+  Vjetore e Kamatës** - shkruhet si në kontratë (18 për 18%). Deri tani norma mund të shkruhej vetëm
+  si tekst te shënimi, ku asnjë llogaritje nuk e shihte dot; tani e sheh gjithçka.
+
+  Me të, rreshti i ritmit nën borxh e ndan pagesën në dysh: sa prej saj e zbret vërtet borxhin dhe
+  sa shkon te kamata («Nga to, rreth 200,00 € janë kamatë»). Dhe thotë rastin që përndryshe nuk
+  duket me sy - kur pagesa mujore është më e vogël se kamata e muajit, borxhi nuk po zvogëlohet
+  fare, sado gjatë të paguhet. Parashikimi i mbylljes llogaritet si te banka, me kamatën që i
+  shtohet asaj që mbetet, prandaj një borxh me normë del më i gjatë se i njëjti borxh pa të - siç
+  është në të vërtetë. Pa normë të shënuar, gjithçka mbetet saktësisht si më parë.
+
+- **Sa duhet paguar që afati të mbahet.** Rreshti i ritmit e ngrinte problemin («Afati i 31/12/2026
+  nuk arrihet») dhe ndalej aty. Tani e mbaron fjalinë: *«Afati i 31/12/2026 kërkon 233,50 € në
+  muaj»* - kësti i vërtetë, me kamatë kur ka, dhe pjesëtim i thjeshtë kur s'ka. Një borxh me normë
+  por ende pa asnjë pagesë e ka rreshtin e vet: sa kushton çdo muaj që rri ashtu.
+
+- **«Çfarë të paguhet e para».** Kur ka më shumë se një borxh të hapur, sipër tyre del radha, me dy
+  mënyra renditjeje: **kamata më e lartë e para** (kushton më pak gjithsej, sepse ndal të shtrenjtin
+  të rritet) ose **shuma më e vogël e para** (mbyll një borxh më shpejt, dhe një borxh më pak është
+  një pagesë më pak për të mbajtur mend). Të dyja janë përgjigje të sakta për pyetje të ndryshme,
+  prandaj zgjidhet, nuk vendoset. Nën titull shkruhet edhe sa kushton gjithë grupi vetëm për të
+  qëndruar në vend - shuma e kamatave mujore. Huatë e dhëna, borxhet e mbyllura dhe të arkivuarat
+  nuk hyjnë në radhë: ato nuk janë diçka që paguhet.
+
+- **Tema ndjek pajisjen.** Te Cilësimet → Pamja ka tri zgjedhje tani: *Sipas pajisjes*, *E errët*,
+  *E bardhë*. E para është parazgjedhja e re, dhe ishte mungesa më e vjetër e temës së bardhë: deri
+  tani aplikacioni hapej i errët edhe në një telefon të vendosur në të bardhë, dhe rrinte ashtu
+  derisa dikush gjente butonin. Tani ndiqet ajo që kërkon vetë pajisja, edhe kur ajo ndërron vetë
+  në mbrëmje me tabin hapur. Kush e ka zgjedhur temën me dorë e ka po atë zgjedhje si më parë.
+
+- **Raportet që presin shihen tani.** Kartela e raporteve dinte të thoshte «u dërgua» dhe «nuk u
+  dërgua», por jo gjendjen e tretë e më të shpeshtën: periudha mbylli, asgjë nuk dështoi, dhe emaili
+  thjesht pret. Ajo gjendje ishte e padukshme, prandaj një raport i vonuar dukej si i humbur. Tani
+  del një rresht i vetin: cili raport pret, pse nuk ka orar që e nis vetë, dhe ku shtypet për ta
+  nisur menjëherë.
+
+- **Kamata dhe ritmi edhe te raporti mujor.** Seksioni i borxheve te emaili tregonte sa është paguar
+  dhe sa ka mbetur; tani shton edhe rreth kur mbyllet me ritmin që tregoi vetë ajo periudhë - ose e
+  thotë hapur kur nuk po zvogëlohet. Matur deri në fund të periudhës për të cilën flet raporti, jo
+  deri sot, që një email i korrikut i lexuar në shtator të mos i ketë shifrat në kundërshtim me
+  njëra-tjetrën.
+
+- **139 ikona në vend të 36.** Lista e ikonave ishte ajo e kategorive të para, dhe mbeti aty edhe kur
+  kategoritë u bënë 141: pesë fëmijët e «Ushqim & Pije» vizatoheshin të gjithë me të njëjtin karrocë
+  tregu. U shtuan rreth njëqind - ushqim, banesë, transport, shëndet, pajisje, para, festa, sport -
+  dhe 75 nënkategori të parazgjedhura morën ikonën e vet, pra asnjë familje nuk ka më dy rreshta që
+  duken njësoj. Asnjë emër i vjetër nuk u hoq: një ikonë e ruajtur në bazën e dikujt vizatohet si
+  gjithmonë.
+
+### Rregulluar
+- **Raporti provohet sërish sapo kthehet interneti.** Aplikacioni i hapur pa lidhje nuk e dërgonte
+  dot raportin - gjë e pritshme - por as nuk provonte më derisa tabi të fshihej e të rishfaqej, që
+  në një telefon të lënë në një ekran mund të jetë nesër. Tani dëgjohet kthimi i lidhjes dhe
+  provohet menjëherë, duke anashkaluar pritjen e zakonshme njëorëshe: pikërisht ai çast është kur
+  ia vlen të provohet.
+
+### Ndryshuar
+- **Profili pastrohet nga dy fushat e hequra.** `llogariaKategorive` dhe `llogariaEFundit` - kujtesa
+  e llogarisë sipas kategorisë dhe sipas llojit - nuk lexohen e nuk shkruhen që nga 2.24.0. Tani
+  hiqen edhe nga vetë rekordi, në hapjen e parë pas përditësimit. Profili sinkronizohet dhe njëra
+  prej tyre mbante një çelës për çdo kategori, pra do të bartej mes pajisjeve dhe në çdo kopje JSON
+  përgjithmonë, pa thënë asgjë. Shkruhet vetëm nëse ka vërtet çka hiqet.
+
 ## [2.24.0] - 2026-09-12
 
 ### Shtuar

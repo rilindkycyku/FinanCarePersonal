@@ -4,7 +4,7 @@ import { Container, Row, Button, Alert } from "react-bootstrap";
 import { differenceInCalendarDays, parseISO } from "date-fns";
 import {
   Receipt, Plus, Edit3, Trash2, Archive, ArchiveRestore, CheckCircle2, CalendarClock,
-  ChevronDown, ChevronUp, HandCoins, Wallet, Info, Repeat, TrendingDown,
+  ChevronDown, ChevronUp, HandCoins, Wallet, Info, Repeat, TrendingDown, Percent, ListOrdered,
 } from "lucide-react";
 import NavBar from "../Components/NavBar";
 import Footer from "../Components/Footer";
@@ -18,9 +18,14 @@ import { Kpi, ProgressBar, Empty } from "../Components/Ui";
 import { useData } from "../Context/DataContext";
 import { useDialog } from "../Context/DialogContext";
 import { STORES } from "../lib/db";
-import { MUAJT_MAX_PARASHIKIM, debtPace, debtProgress, debtTotals, frequencyLabel } from "../lib/finance";
+import {
+  MUAJT_MAX_PARASHIKIM, RENDITJET_BORXHIT, debtPace, debtPayoffOrder, debtProgress,
+  debtRequiredPayment, debtTotals, frequencyLabel,
+} from "../lib/finance";
 import { formatDate, formatPercent, markup, monthLabel, plainAmount, todayISO } from "../lib/format";
 import { debtTypeMeta } from "../lib/options";
+import { opsionetEThjeshta } from "../lib/opsionet";
+import Zgjedhesi from "../Components/Zgjedhesi";
 import { getIcon } from "../lib/icons";
 import "./Styles/PremiumTheme.css";
 import "./Styles/DizajniPergjithshem.css";
@@ -47,13 +52,18 @@ function Borxhet() {
   const [payingFor, setPayingFor] = useState(null);
   const [editingEntry, setEditingEntry] = useState(null);
   const [openId, setOpenId] = useState(null);
+  const [renditja, setRenditja] = useState("ortek");
 
   const sot = todayISO();
 
   const progress = useMemo(
     () =>
       borxhet
-        .map((d) => ({ ...debtProgress(d), ritmi: debtPace(d, sot) }))
+        .map((d) => ({
+          ...debtProgress(d),
+          ritmi: debtPace(d, sot),
+          kestiIDuhur: debtRequiredPayment(d, sot),
+        }))
         .sort(
           (a, b) =>
             Number(a.arkivuar) - Number(b.arkivuar) ||
@@ -77,6 +87,8 @@ function Borxhet() {
   const ritmiMujor = miat
     .filter((d) => !d.perfunduar && d.ritmi)
     .reduce((sum, d) => sum + d.ritmi.mesatarjaMujore, 0);
+
+  const radha = useMemo(() => debtPayoffOrder(borxhet, renditja), [borxhet, renditja]);
 
   const openNew = (lloji) => {
     setEditing(null);
@@ -252,8 +264,24 @@ function Borxhet() {
               : `Me këtë ritëm mbyllet rreth ${monthLabel(d.ritmi.dataParashikuar.slice(0, 7))} - edhe ${
                   d.ritmi.muajTeMbetur === 1 ? "një muaj" : `${d.ritmi.muajTeMbetur} muaj`
                 }.`}
+            {d.ritmi.nukZvogelohet
+              ? ` Me ${money(d.ritmi.interesiMujor)} kamatë në muaj, kjo pagesë nuk e zvogëlon borxhin fare.`
+              : d.ritmi.interesiIMbetur > 0
+                ? ` Nga to, rreth ${money(d.ritmi.interesiIMbetur)} janë kamatë.`
+                : ""}
             {d.ritmi.afatiMbahet === false &&
-              ` Afati i ${formatDate(d.dataMbarimit)} nuk arrihet pa e rritur pagesën.`}
+              ` Afati i ${formatDate(d.dataMbarimit)} kërkon ${money(d.kestiIDuhur)} në muaj.`}
+          </div>
+        )}
+
+        {/* A note with a rate but no payments yet has no pace to show, and still costs something
+            every month it sits there - which is the one thing worth saying about it. */}
+        {!d.perfunduar && !d.arkivuar && !d.ritmi && d.normaVjetore > 0 && (
+          <div className="fcp-row-sub mt-2">
+            <Percent size={12} className="me-1" />
+            {formatPercent(d.normaVjetore, 2)} në vit - rreth {money((d.mbetur * d.normaVjetore) / 100 / 12)} kamatë
+            në muaj derisa të nisin pagesat.
+            {d.kestiIDuhur > 0 && ` Afati kërkon ${money(d.kestiIDuhur)} në muaj.`}
           </div>
         )}
 
@@ -398,6 +426,65 @@ function Borxhet() {
               color="violet"
             />
           </Row>
+
+          {/* Where the next spare euro does the most. Only worth the space once there is a real
+              choice to make: with a single open note the answer is that note, and a queue of one
+              is a heading over something the page already says. */}
+          {radha.radha.length > 1 && (
+            <section className="mb-4">
+              <div className="fcp-section-head">
+                <h2 className="fcp-section-title mb-0">
+                  <ListOrdered size={20} className="text-primary" />
+                  Çfarë të Paguhet e Para
+                </h2>
+                <div style={{ minWidth: "15rem" }}>
+                  <Zgjedhesi
+                    id="renditja-borxheve"
+                    value={renditja}
+                    onChange={setRenditja}
+                    opsionet={opsionetEThjeshta(RENDITJET_BORXHIT)}
+                    titulli="Renditja"
+                  />
+                </div>
+              </div>
+              <p className="fcp-row-sub mb-3">
+                {renditja === "ortek"
+                  ? "Kamata më e lartë e para: kjo radhë kushton më pak gjithsej, sepse e ndal të shtrenjtin të rritet."
+                  : "Shuma më e vogël e para: kjo radhë mbyll një borxh më shpejt, dhe një borxh më pak është një pagesë më pak për të mbajtur mend."}
+                {radha.interesiMujorGjithsej > 0 &&
+                  ` Gjithsej ${money(radha.mbeturGjithsej)} të mbetura, që kushtojnë rreth ${money(
+                    radha.interesiMujorGjithsej
+                  )} kamatë në muaj vetëm për të qëndruar në vend.`}
+              </p>
+
+              <div className="fcp-panel">
+                {radha.radha.map((d) => (
+                  <div className="fcp-row" key={d.id}>
+                    <div className="fcp-row-icon" style={{ color: d.ngjyra }}>
+                      <strong>{d.rendi}</strong>
+                    </div>
+                    <div className="fcp-row-main">
+                      <div className="fcp-row-title">{d.emri}</div>
+                      <div className="fcp-row-sub">
+                        {d.normaVjetore > 0
+                          ? `${formatPercent(d.normaVjetore, 2)} në vit · ${money(d.interesiMujor)} kamatë në muaj`
+                          : "Pa kamatë të shënuar"}
+                      </div>
+                    </div>
+                    <div className="fcp-row-value fcp-neg">{money(d.mbetur)}</div>
+                  </div>
+                ))}
+              </div>
+
+              {radha.radha.every((d) => !(d.normaVjetore > 0)) && (
+                <div className="fcp-row-sub mt-2">
+                  <Percent size={12} className="me-1" />
+                  Asnjë prej tyre nuk ka normë kamate të shënuar, prandaj &laquo;ortek&raquo; s&apos;ka çka
+                  krahasojë - shtoni normën te secili borxh dhe radha bëhet e vërtetë.
+                </div>
+              )}
+            </section>
+          )}
 
           <section className="mb-4">
             <div className="fcp-section-head">

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Alert, Button, Card, Form, Spinner } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import {
-  AlertTriangle, Check, CloudOff, Copy, ExternalLink, Mail, RefreshCw, Send,
+  AlertTriangle, Check, Clock, CloudOff, Copy, ExternalLink, Mail, RefreshCw, Send,
 } from "lucide-react";
 import { useData } from "../Context/DataContext";
 import { useDialog } from "../Context/DialogContext";
@@ -10,6 +10,7 @@ import { useSync } from "../Context/SyncContext";
 import Zgjedhesi from "./Zgjedhesi";
 import {
   EMRI_FUNKSIONIT, dergoRaportin, derguesiIVlefshem, gjendjaFunksionit, lexoShenjat, marresiIRaportit,
+  raportetNePritje,
   shenoDerguar,
 } from "../lib/raporti";
 // The function's real source, read straight out of the repository: the code the user pastes into
@@ -242,6 +243,10 @@ function Raportet() {
     deshtoi: shenjat.find((s) => s.lloji === r.lloji && s.gjendja === "deshtoi"),
   })).filter((g) => g.derguar || g.deshtoi);
 
+  // The third state, which the two lines above never had a word for: the period is closed, nothing
+  // failed, and the email is simply waiting for an opening of the app that reaches the network.
+  const nePritje = raportetNePritje({ profile, shenjat, fillimi });
+
   return (
     <Card className="profile-card border-0 p-4 mb-4">
       <h2 className="fcp-card-title fw-bold mb-2">
@@ -395,6 +400,20 @@ function Raportet() {
                     : `Funksioni «${EMRI_FUNKSIONIT}» nuk u gjet te projekti juaj.`}
                 </>
               )}
+            </Alert>
+          )}
+
+          {nePritje.length > 0 && (
+            <Alert variant="secondary" className="small py-2">
+              <Clock size={15} className="me-2" />
+              {nePritje.length === 1
+                ? `${nePritje[0].emri} i ${etiketaPeriudhes(nePritje[0].lloji, nePritje[0].periudha)} ende s'ka dalë.`
+                : `${nePritje.length} raporte ende s'kanë dalë: ` +
+                  nePritje.map((n) => `${n.emri.toLowerCase()} i ${etiketaPeriudhes(n.lloji, n.periudha)}`).join(", ") +
+                  "."}{" "}
+              Nuk ka orar që i nis vetë - një shfletues i mbyllur nuk ekzekuton asgjë - prandaj niset
+              hera e parë që hapet aplikacioni me internet. Nëse e doni tani, zgjidheni më poshtë te
+              «Dërgo një raport me dorë».
             </Alert>
           )}
 

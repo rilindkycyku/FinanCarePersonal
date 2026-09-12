@@ -326,6 +326,22 @@ export const UDHEZIMET = [
           "transaksionin.",
       },
       {
+        titulli: "Shkruani normën e kamatës",
+        teksti:
+          "Te formulari i borxhit ka fushën «Norma vjetore e kamatës» - shkruajeni si në kontratë (18 për " +
+          "18%). Me të, faqja e di sa nga çdo pagesë shkon te kamata dhe sa e zbret vërtet borxhin, dhe ju " +
+          "thotë edhe rastin që s'duket me sy: një pagesë më e vogël se kamata e muajit nuk e zvogëlon " +
+          "borxhin fare. Pa normë, gjithçka llogaritet sikur borxhi të mos rritet vetë.",
+      },
+      {
+        titulli: "Çfarë të paguhet e para",
+        teksti:
+          "Kur keni më shumë se një borxh të hapur, sipër tyre del radha: «kamata më e lartë e para» " +
+          "(kushton më pak gjithsej) ose «shuma më e vogël e para» (mbyll një borxh më shpejt). Të dyja " +
+          "janë përgjigje të sakta për pyetje të ndryshme, prandaj zgjidhni vetë - aplikacioni nuk vendos " +
+          "për ju. Radha ka kuptim vetëm nëse keni shënuar normat.",
+      },
+      {
         titulli: "Lexoni ritmin, jo vetëm afatin",
         teksti:
           "Nën çdo borxh të hapur del sa po paguhet mesatarisht në muaj dhe rreth kur mbyllet me atë ritëm. " +
@@ -853,7 +869,22 @@ export const UDHEZIMET = [
           "shifrat ndalen te sot, krahasimi pritet te e njëjta pikë e periudhës së kaluar që të mos " +
           "tregojë rënie aty ku s'ka, dhe raporti i rregullt vjen prapë kur periudha të mbyllet. " +
           "Zgjedhësi ndalet te periudha ku bie transaksioni juaj i parë: periudhat para saj nuk " +
-          "ofrohen, sepse raporti për to mund të vijë vetëm bosh.",
+          "ofrohen, sepse raporti për to mund të vijë vetëm bosh. " +
+          "Nëse një raport vonon: nuk ka orar që i nis vetë, sepse një shfletues i mbyllur nuk " +
+          "ekzekuton asgjë - «hera e parë që hapet aplikacioni» është vetë orari. Kur një periudhë " +
+          "ka mbyllur dhe emaili s'ka dalë ende, kartela e thotë me një rresht të vetin, dhe mund " +
+          "ta nisni menjëherë me «Dërgo tani». Nëse aplikacioni hapet pa internet, provohet vetë " +
+          "sapo lidhja kthehet.",
+      },
+      {
+        titulli: "Tema e pamjes",
+        teksti:
+          "Tri zgjedhje te kartela «Pamja»: «sipas pajisjes», «e errët» dhe «e bardhë». E para është " +
+          "parazgjedhja - ndjek atë që kërkon vetë telefoni ose kompjuteri, pra nëse ai ndërron vetë " +
+          "në mbrëmje, ndërron edhe faqja pa e prekur askush. Dy të tjerat e ngulisin temën pavarësisht " +
+          "pajisjes. Butoni te shiriti i sipërm bën një gjë të vetme - kalon te e kundërta e asaj që " +
+          "shihet - dhe kthimi te «sipas pajisjes» bëhet këtu. Zgjedhja ruhet vetëm në këtë shfletues, " +
+          "prandaj nuk sinkronizohet me pajisjet e tjera.",
       },
       {
         titulli: "Kujtesa e kategorive",

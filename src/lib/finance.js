@@ -1259,6 +1259,33 @@ export function goalProgress(goal, transactions) {
  * Exported because the page words it ("mbi 20 vjet"), and the two must not drift apart. */
 export const MUAJT_MAX_PARASHIKIM = 240;
 
+/**
+ * The monthly interest rate a note carries, as a fraction. `normaVjetore` is the nominal annual
+ * rate the user typed (18 = 18%), divided by twelve the way a card statement does it - not
+ * compounded down from an annual effective rate, because what a bank prints on the contract is the
+ * nominal figure and the point here is that the app agrees with the paper.
+ *
+ * Zero for a note without a rate, which is most of them: a rate is optional, and everything below
+ * falls back to plain division when it is missing.
+ */
+export function debtMonthlyRate(debt) {
+  const vjetore = toNumber(debt?.normaVjetore);
+  return vjetore > 0 ? vjetore / 100 / 12 : 0;
+}
+
+/**
+ * What a note costs to simply stand still for one month: the interest charged on what is left.
+ *
+ * This is the number that makes a debt feel different from a countdown. 900 € at 18% is 13.50 € a
+ * month that buys nothing, so a 50 € payment is really a 36.50 € payment - and a 13 € payment is
+ * not a payment at all. Returns 0 for a note with no rate rather than null, so callers can add it
+ * up without checking.
+ */
+export function debtMonthlyInterest(debt) {
+  const { mbetur } = debtProgress(debt);
+  return mbetur * debtMonthlyRate(debt);
+}
+
 /** The lines of one note, newest first. Tolerates a record saved before `pagesat` existed. */
 export function debtEntries(debt) {
   return [...(Array.isArray(debt?.pagesat) ? debt.pagesat : [])].sort((a, b) => {
@@ -1387,10 +1414,27 @@ export function debtPace(debt, sot = format(new Date(), "yyyy-MM-dd")) {
   const mesatarjaMujore = ecuria.paguar / muajt;
   if (!(mesatarjaMujore > 0)) return null;
 
-  const muajTeMbetur = Math.ceil(ecuria.mbetur / mesatarjaMujore);
+  // With a rate on the note, part of every payment buys nothing: the debt only falls by what is
+  // left after the interest. A payment that does not even cover the interest is not slow, it is
+  // going the wrong way, and no number of months would ever end it - so it is called what it is
+  // instead of being projected.
+  const norma = debtMonthlyRate(debt);
+  const interesiMujor = ecuria.mbetur * norma;
+  const nukZvogelohet = norma > 0 && mesatarjaMujore <= interesiMujor;
+
+  const muajTeMbetur = nukZvogelohet
+    ? Infinity
+    : norma > 0
+      ? // The standard amortisation term: how many payments of this size clear this balance while
+        // interest keeps being added to what is left of it.
+        Math.ceil(
+          -Math.log(1 - (norma * ecuria.mbetur) / mesatarjaMujore) / Math.log(1 + norma)
+        )
+      : Math.ceil(ecuria.mbetur / mesatarjaMujore);
+
   // Capped: past this, the pace is telling the user the debt is not being repaid, and a date in
   // 2140 says that worse than "over 20 years" does.
-  const perTeteje = muajTeMbetur > MUAJT_MAX_PARASHIKIM;
+  const perTeteje = nukZvogelohet || muajTeMbetur > MUAJT_MAX_PARASHIKIM;
   const dataParashikuar = perTeteje
     ? null
     : format(addMonths(parseISO(sot), muajTeMbetur), "yyyy-MM-dd");
@@ -1402,9 +1446,86 @@ export function debtPace(debt, sot = format(new Date(), "yyyy-MM-dd")) {
     muajTeMbetur,
     perTeteje,
     dataParashikuar,
+    norma,
+    interesiMujor,
+    nukZvogelohet,
+    // What the note will still cost in interest if this pace holds: every payment made from here,
+    // less the balance those payments are clearing. Only where there is an end to count to.
+    interesiIMbetur: perTeteje ? null : Math.max(mesatarjaMujore * muajTeMbetur - ecuria.mbetur, 0),
     // Only meaningful against a deadline the note actually carries. Late by the projection is not
     // late yet - it is the warning that arrives while there is still time to change the pace.
     afatiMbahet: !ecuria.dataMbarimit || perTeteje ? null : dataParashikuar <= ecuria.dataMbarimit,
+  };
+}
+
+/**
+ * The monthly payment that clears a note by its own deadline - the answer to the warning the pace
+ * line raises, which until now stopped at "this will be late".
+ *
+ * With a rate it is the annuity payment, the same formula a bank quotes an instalment from; with
+ * no rate it is simply what is left divided by the months still available. The current month
+ * counts as available (a deadline at the end of this month is one payment away, not zero), and a
+ * deadline already past has nothing left to spread over, so it asks for the balance in one go.
+ *
+ * Returns null where there is nothing to answer: no deadline on the note, or nothing left to pay.
+ */
+export function debtRequiredPayment(debt, sot = format(new Date(), "yyyy-MM-dd")) {
+  const { mbetur, dataMbarimit } = debtProgress(debt);
+  if (mbetur <= 0 || !dataMbarimit) return null;
+
+  const muaj = Math.max(
+    1,
+    (Number(dataMbarimit.slice(0, 4)) - Number(sot.slice(0, 4))) * 12 +
+      (Number(dataMbarimit.slice(5, 7)) - Number(sot.slice(5, 7))) +
+      1
+  );
+
+  const norma = debtMonthlyRate(debt);
+  if (norma <= 0) return mbetur / muaj;
+  return (mbetur * norma) / (1 - Math.pow(1 + norma, -muaj));
+}
+
+/** The two orders a set of debts can be cleared in, once there is spare money to put at one of
+ * them. `ortek` (avalanche) takes the most expensive rate first and costs the least; `debora`
+ * (snowball) takes the smallest balance first and closes a note soonest. Both are real answers to
+ * different questions, which is why the app offers both rather than picking. */
+export const RENDITJET_BORXHIT = [
+  { value: "ortek", label: "Kamata më e lartë e para", short: "Ortek" },
+  { value: "debora", label: "Shuma më e vogël e para", short: "Dëborë" },
+];
+
+/**
+ * The order to clear open obligations in, and what the first one in the queue is costing while it
+ * waits.
+ *
+ * Only what you owe: money lent out is not a debt to clear, and an archived or settled note is not
+ * in the queue at all. Ordering is by rate for "ortek" and by balance for "debora", with the other
+ * of the two as the tie-break so the list is stable rather than left to sort order - notes with no
+ * rate fall to the end of an avalanche, because a 0% instalment plan is the last thing worth
+ * overpaying.
+ *
+ * `rendi` is the position, `interesiMujor` what that note charges this month. The total of those
+ * is what the whole set costs to stand still, which is the figure that says whether this is worth
+ * attacking at all.
+ */
+export function debtPayoffOrder(debts = [], renditja = "ortek") {
+  const hapur = debts
+    .filter((d) => !d.arkivuar)
+    .map((d) => debtProgress(d))
+    .filter((d) => d.drejtimi !== "kerkese" && !d.perfunduar && d.mbetur > 0)
+    .map((d) => ({ ...d, norma: debtMonthlyRate(d), interesiMujor: d.mbetur * debtMonthlyRate(d) }));
+
+  const renditur = [...hapur].sort((a, b) =>
+    renditja === "debora"
+      ? a.mbetur - b.mbetur || b.norma - a.norma
+      : b.norma - a.norma || a.mbetur - b.mbetur
+  );
+
+  return {
+    renditja,
+    radha: renditur.map((d, i) => ({ ...d, rendi: i + 1 })),
+    interesiMujorGjithsej: hapur.reduce((sum, d) => sum + d.interesiMujor, 0),
+    mbeturGjithsej: hapur.reduce((sum, d) => sum + d.mbetur, 0),
   };
 }
 

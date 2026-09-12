@@ -32,7 +32,11 @@
  * to send both.
  */
 
-import { currencySymbol, escapeHtml, formatMoney, formatPercent } from "./format";
+import { currencySymbol, escapeHtml, formatMoney, formatPercent, monthLabel } from "./format";
+
+/** "2028-03-14" → "mars 2028". A payoff date is a month, not a day: the projection is an average
+ * of months and a day inside it would claim an accuracy it does not have. */
+const muajiShkurt = (data) => monthLabel(data.slice(0, 7)).toLowerCase();
 import { JAVOR, MUJOR, TREMUJOR, VJETOR, etiketaPeriudhes, titulliPeriudhes } from "./periudhat";
 import { figuratERaportit } from "./raportFigurat";
 import {
@@ -269,7 +273,15 @@ const seksioniBorxheve = (f, monedha) =>
                           ? `${imi ? "Paguar" : "Arkëtuar"} ${formatMoney(b.paguarNePeriudhe, monedha)} këtë muaj`
                           : `Asnjë ${imi ? "pagesë" : "arkëtim"} këtë muaj`,
                         `${imi ? "mbeten" : "ju detyrohen ende"} ${formatMoney(b.mbetur, monedha)}`,
-                      ].join(" · "),
+                        // The one thing a progress bar cannot say: at this rate, when does it end.
+                        b.ritmi?.nukZvogelohet
+                          ? "me këtë ritëm nuk zvogëlohet"
+                          : b.ritmi?.dataParashikuar
+                            ? `me këtë ritëm deri më ${muajiShkurt(b.ritmi.dataParashikuar)}`
+                            : "",
+                      ]
+                        .filter(Boolean)
+                        .join(" · "),
                     })}</td></tr>`;
                   })
                   .join("")}
@@ -722,7 +734,12 @@ ${qelizaShifres("Bilanci", formatMoney(f.perfundimtar, monedha), NAVY)}
               ...f.borxhet.map(
                 (b) =>
                   `  ${b.emri}: mbeten ${formatMoney(b.mbetur, monedha)} nga ${formatMoney(b.totali, monedha)}` +
-                  ` (këtë muaj ${formatMoney(b.paguarNePeriudhe, monedha)})`
+                  ` (këtë muaj ${formatMoney(b.paguarNePeriudhe, monedha)})` +
+                  (b.ritmi?.nukZvogelohet
+                    ? " - me këtë ritëm nuk zvogëlohet"
+                    : b.ritmi?.dataParashikuar
+                      ? ` - me këtë ritëm deri më ${muajiShkurt(b.ritmi.dataParashikuar)}`
+                      : "")
               ),
             ]
           : []),

@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import {
   bookAutomaticRecurring, ensureDefaultCategories, fshiFaturatJetime, getAllData, kerkoRuajtjeQendrueshme,
+  pastroProfilin,
   onBllokimBaze, put, putProfile, remove, ruajtjaEshteQendrueshme,
 } from "../lib/db";
 import { DEFAULT_CURRENCY } from "../lib/options";
@@ -74,10 +75,12 @@ export function DataProvider({ children }) {
 
   useEffect(() => {
     // Only at startup: categories shipped by a newer release are added to a database created by an
-    // older one, schedules marked "regjistroje vetë" catch up on what they owe, and then
-    // everything is read in the usual way.
+    // older one, fields that no longer have any code behind them are dropped from the profile,
+    // schedules marked "regjistroje vetë" catch up on what they owe, and then everything is read in
+    // the usual way.
     ensureDefaultCategories()
       .catch(() => undefined)
+      .then(() => pastroProfilin().catch(() => undefined))
       .then(() => bookAutomaticRecurring().catch(() => undefined))
       .then(reload)
       .then(kerkoQendrueshmerine)

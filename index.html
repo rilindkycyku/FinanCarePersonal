@@ -67,14 +67,21 @@
   </head>
   <body>
     <script>
-      // Applied before React mounts so there's no flash of the wrong theme on load.
+      // Applied before React mounts so there's no flash of the wrong theme on load. Must stay in
+      // step with ThemeContext.jsx: a stored "light"/"dark" is a choice the user made, and no
+      // stored value at all means follow the operating system.
       (function () {
         try {
-          if (localStorage.getItem("financarepersonal-theme") === "light") {
+          var ruajtur = localStorage.getItem("financarepersonal-theme");
+          var eBardhe =
+            ruajtur === "light" ||
+            (ruajtur !== "dark" && window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches);
+          if (eBardhe) {
             document.body.classList.add("light-mode");
+            document.querySelector('meta[name="theme-color"]').setAttribute("content", "#f1f5f9");
           }
         } catch (e) {
-          /* localStorage unavailable - default dark theme stands */
+          /* localStorage or matchMedia unavailable - default dark theme stands */
         }
       })();
     </script>
