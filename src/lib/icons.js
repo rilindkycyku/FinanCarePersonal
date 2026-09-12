@@ -41,6 +41,15 @@ import {
   Book, Newspaper, Pencil, Backpack, School, ShoppingBag,
   // Sport.
   Volleyball, Trophy, Medal,
+  // Added with the second pass over the default subcategories, where the split got finer: a family
+  // is only worth splitting if its rows can be told apart at a glance, and that needs one mark
+  // each.
+  Thermometer, Plug, BatteryCharging, Drill, PaintRoller, Fan, Recycle, Sprout, Leaf, TreePine,
+  Egg, Candy, Cookie, Ham, Shrimp, Grape, Popsicle, Snowflake,
+  Tablets, Cross, HandHeart, HeartHandshake, Cigarette,
+  Dices, Puzzle, Guitar, Clapperboard, Radio, Podcast, Languages,
+  Notebook, NotebookPen, FileSignature, BadgeCheck, BadgeDollarSign,
+  Gem, Crown, TrainFront, PlaneTakeoff, Sailboat, Waves, Wind, Church, Phone,
 } from "lucide-react";
 
 export const ICONS = {
@@ -64,6 +73,12 @@ export const ICONS = {
   Cake, PartyPopper, Heart, Users, Dog, Cat, Bone, Palette, Popcorn, Drama, Mic,
   Book, Newspaper, Pencil, Backpack, School, ShoppingBag,
   Volleyball, Trophy, Medal,
+  Thermometer, Plug, BatteryCharging, Drill, PaintRoller, Fan, Recycle, Sprout, Leaf, TreePine,
+  Egg, Candy, Cookie, Ham, Shrimp, Grape, Popsicle, Snowflake,
+  Tablets, Cross, HandHeart, HeartHandshake, Cigarette,
+  Dices, Puzzle, Guitar, Clapperboard, Radio, Podcast, Languages,
+  Notebook, NotebookPen, FileSignature, BadgeCheck, BadgeDollarSign,
+  Gem, Crown, TrainFront, PlaneTakeoff, Sailboat, Waves, Wind, Church, Phone,
 };
 
 export function getIcon(name) {

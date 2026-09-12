@@ -9,6 +9,47 @@ e fundit kur rregullohet diçka, dhe e para vetëm kur ndryshon vetë forma e pr
 herë, te `2.0.0`, kur të dhënat mësuan të dalin nga shfletuesi. Datat janë ato të commit-it që e
 ngriti versionin.
 
+## [2.26.0] - 2026-09-12
+
+### Shtuar
+- **Ndarja e imët e kategorive: 81 nënkategori të reja.** Pasi lista u nda një herë, e njëjta ankesë
+  u kthye një nivel më poshtë: *Riparime & Mirëmbajtje* përgjigjej njësoj për hidraulikun, bojaxhiun
+  dhe një trapan të blerë një herë, dhe një kategori që përgjigjet për tri zanate nuk të thotë asgjë
+  kur rritet. Tani nënkategoritë janë 183 te 39 kategori kryesore, dhe 34 familje u zgjeruan:
+
+  - **Ushqim & Pije** merr *Bulmet & Vezë*, *Ëmbëlsira & Snacks*, *Të Ngrira & Konserva*.
+  - **Riparime** ndahet në *Hidraulik*, *Elektricist*, *Bojë & Rinovim*, *Vegla & Materiale*.
+  - **Teknologji** merr *Aksesorë & Kabllo*, *Foto & Video*, *Audio & Kufje*, *Konsola & Gaming*.
+  - **Transport** merr *Biçikletë & Trotinet*, *Larje Makine*, *Regjistrim & Kontroll Teknik*.
+  - **Shëndetësi** merr *Operacione & Spital*, *Terapi & Fizioterapi*, *Psikolog & Këshillim*.
+  - Dhe po ashtu Blerje Shtëpiake, Fatura, Telefon, Argëtim, Veshje, Edukim, Udhëtime, Sport,
+    Dhurata, Kredi, Higjienë, Barna, Fëmijët, Kafshët, Abonime, Bukuri, Sigurime, Taksa, Qira -
+    bashkë me hyrjet: Rroga, Bonus, Punë e Lirë, Investime, Qira e Marrë, Dhurata të Marra dhe
+    Rimbursim.
+
+  **Dy kategori që ishin lënë me qëllim të pandara, tani ndahen.** *Karburant* mbahej e tërë sepse
+  «karburanti është një lloj blerjeje sido që shkruhet»; kjo nuk qëndron më - një depozitë benzinë,
+  një bombol gaz dhe një rikarikim elektrik janë tri çmime që lëvizin në tri drejtime, dhe pikërisht
+  kjo rreshtë duhet të përgjigjet kur ndërrohet vetura. U nda në *Benzinë*, *Naftë*, *Gaz (LPG)* dhe
+  *Rikarikim Elektrik*. *Shitje (dorë e dytë)* mori *Pajisje & Teknologji*, *Rroba & Aksesorë*,
+  *Mobilje & Shtëpiake* dhe *Automjet*, sepse aty çfarë u shit është vetë informacioni.
+
+  Të pandara mbeten vetëm ato ku ndarja nuk përgjigjet asgjë: *Këste të Kartelës*, *Shpenzime të
+  Tjera*, *Hyrje të Tjera* dhe dy rreshtat e *Barazimit*. Lista mbetet **një nivel e thellë** si
+  më parë - një i tretë nuk shton përgjigje, vetëm punë arkivimi - dhe kategoria kryesore mbetet e
+  zgjedhshme si më parë: te zgjedhësi ajo del si «... (në përgjithësi)» mbi fëmijët e vet, pra kush
+  nuk e do detajin nuk e prek fare.
+
+- **186 ikona te zgjedhësi.** Ndarja e imët kërkoi shenja të reja - një familje ka kuptim të ndahet
+  vetëm nëse rreshtat e saj dallohen me një shikim. U shtuan rreth 45 (termometër, prizë, karikim,
+  trapan, bojë, vezë, biskotë, tableta, zare, kitarë, gjuhë, bizhuteri, tren, anije...), dhe asnjë
+  familje e parazgjedhur nuk ka dy rreshta me të njëjtën ikonë. Emrat e vjetër mbeten të gjithë:
+  një ikonë e ruajtur në bazën e dikujt vizatohet si gjithmonë.
+
+### Ndryshuar
+- **Ngrohja te faturat merr termometrin**, sepse flaka i takon më shumë rreshtit të ri «Gaz i
+  Gatimit» krahas saj.
+
 ## [2.25.0] - 2026-09-12
 
 ### Shtuar

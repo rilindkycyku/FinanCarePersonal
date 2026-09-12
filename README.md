@@ -88,12 +88,14 @@ sa shpenzohet, sa mbetet dhe sa po kursesh.
   dhe me numërimin e përdorimit real të secilës. Çdo kategori mund të ketë **nënkategori** - p.sh.
   *Ushqim & Pije › Market*, *› Furra*, *› Pije & Ujë*, ose *Kafe & Restorant › Kafe*, *› Drekë në
   Punë*, *› Fast Food* - që i përgjigjen pyetjes që lista e sheshtë nuk e mbulonte: ishte market,
-  drekë në punë apo restorant? Lista e parazgjedhur vjen me nënkategori pothuajse për çdo kategori
-  kryesore - fatura sipas llojit, udhëtimi i ndarë në bileta, fjetje e transferë, sigurimet një nga
-  një - dhe e njëjta gjë vlen edhe për hyrjet, ku *Rroga* ndahet në pagë bazë, orë shtesë, shujta &
-  transport e pagesa të prapambetura, që të dallohet muaji i zakonshëm nga ai që kishte diçka mbi të.
-  Përjashtim bëjnë vetëm ato ku ndarja nuk do të shtonte asgjë (*Karburant*, *Këste të Kartelës*,
-  *Shpenzime të Tjera*, *Hyrje të Tjera*). Lista mbetet **një nivel e thellë** me qëllim; një nivel i tretë nuk
+  drekë në punë apo restorant? Lista e parazgjedhur vjen me **183 nënkategori te 39 kategori
+  kryesore** - ushqimi i ndarë deri te bulmeti dhe të ngrirat, karburanti deri te benzina, nafta,
+  gazi e rikarikimi elektrik, riparimet deri te hidrauliku, elektricisti dhe bojaxhiu, fatura sipas
+  llojit, udhëtimi i ndarë në bileta, fjetje e transferë, sigurimet një nga një - dhe e njëjta gjë
+  vlen edhe për hyrjet, ku *Rroga* ndahet në pagë bazë, orë shtesë, shujta & transport, pagesa të
+  prapambetura, pushime e pagesë të 13-të, që të dallohet muaji i zakonshëm nga ai që kishte diçka
+  mbi të. Përjashtim bëjnë vetëm ato ku ndarja nuk do të shtonte asgjë (*Këste të Kartelës*,
+  *Shpenzime të Tjera*, *Hyrje të Tjera* dhe *Barazimi*). Lista mbetet **një nivel e thellë** me qëllim; një nivel i tretë nuk
   shton përgjigje të re, vetëm punë arkivimi. Në formularë kategoria zgjidhet me një **dritare të
   vetën, jo me listën e shfletuesit**: hapet vetëm me kategoritë kryesore, dhe ajo që ka nënkategori
   i *shfaq* ato kur e prekni - pra nuk shkarrisni dot mbi pesëdhjetë rreshta për të gjetur
@@ -410,7 +412,7 @@ store:
 | --- | --- | --- | --- | --- | --- | --- |
 | `a1b2…` | `transactions` | `tx_m4f2k9x` | `2026-08-11 18:02:18+00` | `false` | `Chrome në Android` | `{"id":"tx_m4f2k9x","data":"2026-08-11","lloji":"shpenzim","vlera":12.34,…}` |
 
-Një libër me 800 transaksione, 6 llogari e 120 kategori (me nënkategoritë) bëhet rreth 930 rreshta,
+Një libër me 800 transaksione, 6 llogari e 222 kategori (me nënkategoritë) bëhet rreth 1.030 rreshta,
 plus një rresht për profilin. Fushat e vetë rekordit rrinë brenda kolonës `data` (jsonb) sepse tabela ndodhet te
 projekti **juaj**: po të kishte kolona të shtypura, çdo version i ri që shton një fushë do të
 kërkonte një `ALTER TABLE` te secili projekt përpara se aplikacioni të vazhdonte të punonte, dhe

@@ -386,7 +386,10 @@ export const UDHEZIMET = [
         teksti:
           "Te formulari zgjidhni një prind dhe kategoria bëhet nënkategori - Ushqim & Pije › Market. Lista " +
           "mbetet një nivel e thellë me qëllim: një nivel i tretë nuk shton përgjigje të re, vetëm punë " +
-          "arkivimi.",
+          "arkivimi. Lista e parazgjedhur vjen e ndarë imët - karburanti deri te benzina, nafta, gazi dhe " +
+          "rikarikimi elektrik; riparimet deri te hidrauliku e bojaxhiu - por asgjë nuk ju detyron ta " +
+          "përdorni atë imtësi: kategoria kryesore mbetet e zgjedhshme si «... (në përgjithësi)» mbi " +
+          "fëmijët e vet, dhe ato që nuk ju hyjnë në punë fshihen ose riemërtohen lirisht.",
       },
       {
         titulli: "Arkivimi",
