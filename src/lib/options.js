@@ -368,11 +368,55 @@ export const DEFAULT_CATEGORIES = [
   // `cat_default_barazim_shp`.
   { id: "cat_default_barazim_hyrje", emri: "Barazim i Bilancit", lloji: "hyrje", ngjyra: "#64748b", ikona: "Scale" },
 
+  // ── Nënkategoritë e hyrjeve ────────────────────────────────────────────────
+  // The expense side was split first, because that is where a month goes wrong. But income arrives
+  // in pieces too, and counted as one line it answers the wrong question: "Rroga: 1.240 €" says
+  // nothing about whether that month was ordinary, whether it held overtime that will not repeat,
+  // or whether half of it was a reimbursement that was really money coming back rather than money
+  // earned. Same rule as above - each one keeps its parent's colour, the parent stays usable on its
+  // own, and a bucket that says nothing when split is left whole ("Hyrje të Tjera", "Barazim").
+
   // Investime & Dividendë - three sources that arrive at different times and behave differently;
   // counted as one line they say only "the investments brought something in this year".
   { id: "cat_default_investime_dividende", emri: "Dividendë", lloji: "hyrje", prindi: "cat_default_investime", ngjyra: "#8b5cf6", ikona: "TrendingUp" },
   { id: "cat_default_investime_interes", emri: "Interes Bankar", lloji: "hyrje", prindi: "cat_default_investime", ngjyra: "#8b5cf6", ikona: "Landmark" },
   { id: "cat_default_investime_tregu", emri: "Aksione & Kripto", lloji: "hyrje", prindi: "cat_default_investime", ngjyra: "#8b5cf6", ikona: "Coins" },
+
+  // Rroga - the base is what a budget can be built on; overtime and allowances are the part that
+  // makes one month look better than the next without the salary having changed at all.
+  { id: "cat_default_rroga_baze", emri: "Paga Bazë", lloji: "hyrje", prindi: "cat_default_rroga", ngjyra: "#10b981", ikona: "Briefcase" },
+  { id: "cat_default_rroga_shtesa", emri: "Orë Shtesë", lloji: "hyrje", prindi: "cat_default_rroga", ngjyra: "#10b981", ikona: "Coins" },
+  { id: "cat_default_rroga_kompensime", emri: "Shujta & Transport", lloji: "hyrje", prindi: "cat_default_rroga", ngjyra: "#10b981", ikona: "Banknote" },
+  { id: "cat_default_rroga_prapambetur", emri: "Pagesa e Prapambetur", lloji: "hyrje", prindi: "cat_default_rroga", ngjyra: "#10b981", ikona: "Receipt" },
+
+  // Bonus & Shpërblime - none of these repeat, and that is exactly why they are worth keeping apart
+  // from the salary they arrive beside.
+  { id: "cat_default_bonus_vjetor", emri: "Bonus Vjetor", lloji: "hyrje", prindi: "cat_default_bonus", ngjyra: "#22c55e", ikona: "Gift" },
+  { id: "cat_default_bonus_performance", emri: "Shpërblim Performance", lloji: "hyrje", prindi: "cat_default_bonus", ngjyra: "#22c55e", ikona: "TrendingUp" },
+  { id: "cat_default_bonus_bakshish", emri: "Bakshish", lloji: "hyrje", prindi: "cat_default_bonus", ngjyra: "#22c55e", ikona: "Coins" },
+
+  // Punë e Lirë - a second income that is several incomes, and the point of freelancing is knowing
+  // which of them is worth the hours.
+  { id: "cat_default_freelance_projekte", emri: "Projekte & Kontrata", lloji: "hyrje", prindi: "cat_default_freelance", ngjyra: "#06b6d4", ikona: "Briefcase" },
+  { id: "cat_default_freelance_konsulence", emri: "Konsulencë me Orë", lloji: "hyrje", prindi: "cat_default_freelance", ngjyra: "#06b6d4", ikona: "Laptop" },
+  { id: "cat_default_freelance_dixhitale", emri: "Shitje Dixhitale", lloji: "hyrje", prindi: "cat_default_freelance", ngjyra: "#06b6d4", ikona: "Coins" },
+
+  // Qira e Marrë - the rent itself and what the tenant pays back for the bills are two different
+  // numbers, and only the first one is income the year can be compared on.
+  { id: "cat_default_qira_marre_banesa", emri: "Qira e Banesës", lloji: "hyrje", prindi: "cat_default_qira_marre", ngjyra: "#f59e0b", ikona: "Home" },
+  { id: "cat_default_qira_marre_lokal", emri: "Qira e Lokalit", lloji: "hyrje", prindi: "cat_default_qira_marre", ngjyra: "#f59e0b", ikona: "Landmark" },
+  { id: "cat_default_qira_marre_shpenzime", emri: "Shpenzime të Mbuluara", lloji: "hyrje", prindi: "cat_default_qira_marre", ngjyra: "#f59e0b", ikona: "Zap" },
+
+  // Rimbursim & Kthim Parash - money coming back, which is not money earned. Split by where it came
+  // back from, because a returned purchase and a work expense claim are owed to different places.
+  { id: "cat_default_rimbursim_blerje", emri: "Kthim Blerjeje", lloji: "hyrje", prindi: "cat_default_rimbursim", ngjyra: "#14b8a6", ikona: "ShoppingCart" },
+  { id: "cat_default_rimbursim_pune", emri: "Rimbursim nga Puna", lloji: "hyrje", prindi: "cat_default_rimbursim", ngjyra: "#14b8a6", ikona: "Briefcase" },
+  { id: "cat_default_rimbursim_sigurim", emri: "Rimbursim Sigurimi", lloji: "hyrje", prindi: "cat_default_rimbursim", ngjyra: "#14b8a6", ikona: "Shield" },
+
+  // Dhurata të Marra - a wedding is the one day of the year when this line is larger than the
+  // salary, and rolled in with everything else it is never found again.
+  { id: "cat_default_dhurata_hyrje_familje", emri: "Dhurata Familjare", lloji: "hyrje", prindi: "cat_default_dhurata_hyrje", ngjyra: "#ec4899", ikona: "Gift" },
+  { id: "cat_default_dhurata_hyrje_festa", emri: "Dasma & Festa", lloji: "hyrje", prindi: "cat_default_dhurata_hyrje", ngjyra: "#ec4899", ikona: "Sparkles" },
 ];
 
 export const DEFAULT_ACCOUNTS = [

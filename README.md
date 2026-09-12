@@ -61,7 +61,13 @@ sa shpenzohet, sa mbetet dhe sa po kursesh.
   ka rreshtat e vet - një *pagesë* e zbret dhe një *shtesë* (blerje e re me kartelë, kamatë, tarifë)
   e rrit - me ecuri, afat dhe arkivim. Pagesa mbetet vetëm shënim, përveç kur e shënjoni
   <em>&laquo;Zbrite edhe nga llogaria&raquo;</em>: atëherë krijohet edhe një transaksion i vërtetë,
-  sepse ato para dolën vërtet nga banka. Të dy anët mbahen në hap - heqja e shënjimit ose fshirja e
+  sepse ato para dolën vërtet nga banka.
+  <br />Nën çdo borxh të hapur qëndron **ritmi i shlyerjes**, nxjerrë nga historiku i vetë atij
+  shënimi: sa po paguhet mesatarisht në muaj dhe rreth kur mbyllet me atë ritëm - dhe kur ajo datë e
+  kalon afatin e rënë dakord, rreshti e thotë me kohë që afati nuk arrihet. Mesatarja matet mbi
+  muajt që ka zgjatur pagesa (jo mbi numrin e pagesave), dhe muajt pa asnjë pagesë numërohen deri
+  sot, sepse pikërisht ata e largojnë fundin. Shuma e këtyre ritmeve është **Ritmi Mujor** sipër
+  faqes: sa marrin borxhet aktive nga një muaj i zakonshëm. Të dy anët mbahen në hap - heqja e shënjimit ose fshirja e
   rreshtit e heq edhe transaksionin.
   <br />Një pagesë e përsëritur mund të **lidhet me një borxh** (fusha *Zbrit nga një borxh*): kësti
   mujor i një kartele bonus ose i një kredie e ul borxhin vetë sa herë e konfirmoni, pa e shënuar dy
@@ -75,8 +81,10 @@ sa shpenzohet, sa mbetet dhe sa po kursesh.
   Punë*, *› Fast Food* - që i përgjigjen pyetjes që lista e sheshtë nuk e mbulonte: ishte market,
   drekë në punë apo restorant? Lista e parazgjedhur vjen me nënkategori pothuajse për çdo kategori
   kryesore - fatura sipas llojit, udhëtimi i ndarë në bileta, fjetje e transferë, sigurimet një nga
-  një - përveç atyre ku ndarja nuk do të shtonte asgjë (*Karburant*, *Këste të Kartelës*,
-  *Shpenzime të Tjera*). Lista mbetet **një nivel e thellë** me qëllim; një nivel i tretë nuk
+  një - dhe e njëjta gjë vlen edhe për hyrjet, ku *Rroga* ndahet në pagë bazë, orë shtesë, shujta &
+  transport e pagesa të prapambetura, që të dallohet muaji i zakonshëm nga ai që kishte diçka mbi të.
+  Përjashtim bëjnë vetëm ato ku ndarja nuk do të shtonte asgjë (*Karburant*, *Këste të Kartelës*,
+  *Shpenzime të Tjera*, *Hyrje të Tjera*). Lista mbetet **një nivel e thellë** me qëllim; një nivel i tretë nuk
   shton përgjigje të re, vetëm punë arkivimi. Në formularë kategoria zgjidhet me një **dritare të
   vetën, jo me listën e shfletuesit**: hapet vetëm me kategoritë kryesore, dhe ajo që ka nënkategori
   i *shfaq* ato kur e prekni - pra nuk shkarrisni dot mbi pesëdhjetë rreshta për të gjetur
@@ -293,9 +301,10 @@ përfshirë fotot e faturave - asnjë foto nuk ngarkohet askund. Asgjë nuk dër
 dhe nuk kërkohet llogari. Pastrimi i të dhënave të faqes i fshin ato - përdorni
 **Eksporto / Importo** për të mbajtur një kopje JSON.
 
-As vetë faqja nuk kërkon gjë nga jashtë: shkronjat (Inter) shërbehen nga i njëjti domen si
-aplikacioni, jo nga Google Fonts, prandaj hapja e faqes nuk i tregon askujt se ju e hapët - dhe
-ndërfaqja duket njësoj edhe offline, ku më parë do të binte te shkronjat e sistemit.
+As vetë faqja nuk kërkon gjë nga jashtë: shkronjat (Quicksand - po ato me të cilat vizatohet edhe
+pasqyra PDF) shërbehen nga i njëjti domen si aplikacioni, jo nga Google Fonts, prandaj hapja e faqes
+nuk i tregon askujt se ju e hapët - dhe ndërfaqja duket njësoj edhe offline, ku më parë do të binte
+te shkronjat e sistemit.
 
 I vetmi rast kur diçka del nga shfletuesi është kur e vendosni vetë: te faqja **Sinkronizimi**
 lidhni një projekt Supabase **tuajin** dhe që nga ai çast libri i llogarive (jo fotot) shkon te

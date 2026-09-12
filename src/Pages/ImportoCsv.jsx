@@ -116,7 +116,9 @@ function ImportoCsv() {
       setParsed(lexuar);
       setMapping(guessMapping(lexuar.headers, lexuar.rows));
       setZgjedhjet({});
-      setLlogaria(njeLlogari ? llogariaKryesore?.id || "" : aktive[0]?.id || "");
+      // A single active account is not a choice, so it is still filled in; with more than one the field is left empty and asked for, the same way the transaction form does. Picking one here would book a whole bank
+      // statement into whichever account happens to sort first.
+      setLlogaria((njeLlogari ? llogariaKryesore?.id : aktive.length === 1 ? aktive[0].id : "") || "");
     } catch (err) {
       njofto("danger", `Skedari nuk u lexua: ${err.message}`);
     }

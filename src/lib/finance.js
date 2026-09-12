@@ -1254,6 +1254,11 @@ export function goalProgress(goal, transactions) {
  * purchase on the card, interest, a fee - puts it back up).
  */
 
+/** How far ahead a payoff projection is worth drawing. Past this the pace is not a schedule any
+ * more, it is the sign of a note that is barely moving, and the page says so in words instead.
+ * Exported because the page words it ("mbi 20 vjet"), and the two must not drift apart. */
+export const MUAJT_MAX_PARASHIKIM = 240;
+
 /** The lines of one note, newest first. Tolerates a record saved before `pagesat` existed. */
 export function debtEntries(debt) {
   return [...(Array.isArray(debt?.pagesat) ? debt.pagesat : [])].sort((a, b) => {
@@ -1332,6 +1337,75 @@ export function debtPaymentsFromTransactions(debts, transactions, makeIdFn) {
       };
     })
     .filter(Boolean);
+}
+
+/**
+ * How fast a note is actually being paid off, and where that pace lands it.
+ *
+ * A debt note already says what is left. What it never said is the thing anyone actually wants to
+ * know from it - *when does this end* - and the deadline field does not answer that either: it is
+ * what was agreed, not what is happening. A card with 900 € left and 50 € a month going onto it is
+ * eighteen months from clear whatever its contract says, and that gap is the whole point of
+ * measuring it.
+ *
+ * The pace is the note's own payment history, not a plan: only lines of type "pagese", only real
+ * ones already recorded. Averaged over the months actually spanned rather than over the number of
+ * payments, so three payments in one month read as one heavy month rather than as three months of
+ * paying - and so a month where nothing was paid counts, because it is exactly the month that
+ * pushes the end date out.
+ *
+ * `shtese` lines are deliberately left out of the pace while staying in `mbetur` (via
+ * `debtProgress`): a new purchase on a card changes what is owed, not how fast it is being repaid.
+ *
+ * Returns `null` where there is nothing to measure - no payments yet, or nothing left to pay - so
+ * the caller shows the note as it was rather than a projection built out of one data point.
+ * Everything time-dependent comes in as `sot`, like every other forecast in this file.
+ */
+export function debtPace(debt, sot = format(new Date(), "yyyy-MM-dd")) {
+  const ecuria = debtProgress(debt);
+  if (ecuria.mbetur <= 0) return null;
+
+  const pagesat = ecuria.pagesat.filter((p) => p.lloji !== "shtese" && p.data && toNumber(p.vlera) > 0);
+  if (pagesat.length === 0) return null;
+
+  const datat = pagesat.map((p) => p.data).sort();
+  const ePara = datat[0];
+  // Through to today, not to the last payment: a note last paid five months ago is being paid at a
+  // fifth of what its own history would otherwise claim, and that is the honest number.
+  const fundi = sot > datat[datat.length - 1] ? sot : datat[datat.length - 1];
+
+  // Whole months spanned, counted on the calendar so that 15 Jan → 15 Mar is two months and not
+  // "about 59 days". The first month always counts, so a single payment made this month reads as
+  // one month of paying rather than as zero - which would divide by nothing.
+  const muajt = Math.max(
+    1,
+    (Number(fundi.slice(0, 4)) - Number(ePara.slice(0, 4))) * 12 +
+      (Number(fundi.slice(5, 7)) - Number(ePara.slice(5, 7))) +
+      1
+  );
+
+  const mesatarjaMujore = ecuria.paguar / muajt;
+  if (!(mesatarjaMujore > 0)) return null;
+
+  const muajTeMbetur = Math.ceil(ecuria.mbetur / mesatarjaMujore);
+  // Capped: past this, the pace is telling the user the debt is not being repaid, and a date in
+  // 2140 says that worse than "over 20 years" does.
+  const perTeteje = muajTeMbetur > MUAJT_MAX_PARASHIKIM;
+  const dataParashikuar = perTeteje
+    ? null
+    : format(addMonths(parseISO(sot), muajTeMbetur), "yyyy-MM-dd");
+
+  return {
+    mesatarjaMujore,
+    muajMatur: muajt,
+    nrPagesave: pagesat.length,
+    muajTeMbetur,
+    perTeteje,
+    dataParashikuar,
+    // Only meaningful against a deadline the note actually carries. Late by the projection is not
+    // late yet - it is the warning that arrives while there is still time to change the pace.
+    afatiMbahet: !ecuria.dataMbarimit || perTeteje ? null : dataParashikuar <= ecuria.dataMbarimit,
+  };
 }
 
 /** Totals across the notes, split by direction - what you owe vs. what is owed to you. Archived

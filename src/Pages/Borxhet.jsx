@@ -4,7 +4,7 @@ import { Container, Row, Button, Alert } from "react-bootstrap";
 import { differenceInCalendarDays, parseISO } from "date-fns";
 import {
   Receipt, Plus, Edit3, Trash2, Archive, ArchiveRestore, CheckCircle2, CalendarClock,
-  ChevronDown, ChevronUp, HandCoins, Wallet, Info, Hash, Repeat,
+  ChevronDown, ChevronUp, HandCoins, Wallet, Info, Repeat, TrendingDown,
 } from "lucide-react";
 import NavBar from "../Components/NavBar";
 import Footer from "../Components/Footer";
@@ -18,8 +18,8 @@ import { Kpi, ProgressBar, Empty } from "../Components/Ui";
 import { useData } from "../Context/DataContext";
 import { useDialog } from "../Context/DialogContext";
 import { STORES } from "../lib/db";
-import { debtProgress, debtTotals, frequencyLabel } from "../lib/finance";
-import { formatDate, formatPercent, markup, plainAmount, todayISO } from "../lib/format";
+import { MUAJT_MAX_PARASHIKIM, debtPace, debtProgress, debtTotals, frequencyLabel } from "../lib/finance";
+import { formatDate, formatPercent, markup, monthLabel, plainAmount, todayISO } from "../lib/format";
 import { debtTypeMeta } from "../lib/options";
 import { getIcon } from "../lib/icons";
 import "./Styles/PremiumTheme.css";
@@ -48,17 +48,19 @@ function Borxhet() {
   const [editingEntry, setEditingEntry] = useState(null);
   const [openId, setOpenId] = useState(null);
 
+  const sot = todayISO();
+
   const progress = useMemo(
     () =>
       borxhet
-        .map((d) => debtProgress(d))
+        .map((d) => ({ ...debtProgress(d), ritmi: debtPace(d, sot) }))
         .sort(
           (a, b) =>
             Number(a.arkivuar) - Number(b.arkivuar) ||
             Number(a.perfunduar) - Number(b.perfunduar) ||
             b.mbetur - a.mbetur
         ),
-    [borxhet]
+    [borxhet, sot]
   );
 
   const totals = useMemo(() => debtTotals(borxhet), [borxhet]);
@@ -69,6 +71,12 @@ function Borxhet() {
   const miat = progress.filter((d) => !d.arkivuar && d.drejtimi === "detyrim");
   const meKane = progress.filter((d) => !d.arkivuar && d.drejtimi === "kerkese");
   const arkivuara = progress.filter((d) => d.arkivuar);
+
+  // Only what is still being paid: a closed note was paid at some pace too, and counting it would
+  // say a month costs money it no longer costs.
+  const ritmiMujor = miat
+    .filter((d) => !d.perfunduar && d.ritmi)
+    .reduce((sum, d) => sum + d.ritmi.mesatarjaMujore, 0);
 
   const openNew = (lloji) => {
     setEditing(null);
@@ -233,6 +241,22 @@ function Borxhet() {
           </span>
         </div>
 
+        {/* What the note's own history says about when it ends - the question the deadline field
+            never answered, since that one holds what was agreed rather than what is happening. */}
+        {!d.perfunduar && !d.arkivuar && d.ritmi && (
+          <div className={`fcp-row-sub mt-2${d.ritmi.afatiMbahet === false ? " fcp-neg" : ""}`}>
+            <TrendingDown size={12} className="me-1" />
+            {kerkese ? "Ju kthehen" : "Paguani"} mesatarisht {money(d.ritmi.mesatarjaMujore)} në muaj.{" "}
+            {d.ritmi.perTeteje
+              ? `Me këtë ritëm mbyllja është mbi ${Math.floor(MUAJT_MAX_PARASHIKIM / 12)} vjet larg.`
+              : `Me këtë ritëm mbyllet rreth ${monthLabel(d.ritmi.dataParashikuar.slice(0, 7))} - edhe ${
+                  d.ritmi.muajTeMbetur === 1 ? "një muaj" : `${d.ritmi.muajTeMbetur} muaj`
+                }.`}
+            {d.ritmi.afatiMbahet === false &&
+              ` Afati i ${formatDate(d.dataMbarimit)} nuk arrihet pa e rritur pagesën.`}
+          </div>
+        )}
+
         {d.shenim && <div className="fcp-row-sub mt-2">{d.shenim}</div>}
 
         {/* Visible from this end too, so a card whose instalment is already scheduled does not get
@@ -363,7 +387,16 @@ function Borxhet() {
               icon={HandCoins}
               color="cyan"
             />
-            <Kpi label="Rreshta Gjithsej" value={progress.reduce((s, d) => s + d.pagesat.length, 0)} icon={Hash} color="violet" />
+            {/* What the notes actually take out of a month at the pace they are being paid - the
+                figure that decides whether another instalment fits, which a count of rows never
+                was. The row count keeps its place underneath it. */}
+            <Kpi
+              label="Ritmi Mujor"
+              value={money(ritmiMujor)}
+              sub={`${progress.reduce((s, d) => s + d.pagesat.length, 0)} rreshta të regjistruara`}
+              icon={TrendingDown}
+              color="violet"
+            />
           </Row>
 
           <section className="mb-4">

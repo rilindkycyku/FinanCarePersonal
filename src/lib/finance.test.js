@@ -16,7 +16,7 @@ import {
   filterByItem, PA_KATEGORI, reassignAccount,
   reconciliation,
   dataEParaERegjistruar,
-  convertedAmount, currencyFields, dailyLimit, debtPaymentsFromTransactions, debtProgress,
+  convertedAmount, currencyFields, dailyLimit, debtPace, debtPaymentsFromTransactions, debtProgress,
   debtTotals, dueRecurring, effectiveBudgets, enteredAt, filterByRange, generateDueTransactions,
   muajiEfektiv,
   idIPerseritjes,
@@ -758,6 +758,93 @@ describe("debt notes", () => {
     expect(updated[0].pagesat).toHaveLength(3);
     const shtuar = updated[0].pagesat.at(-1);
     expect(shtuar).toMatchObject({ vlera: 120, lloji: "pagese", transaksioniId: "tx1", shenim: "Kësti" });
+  });
+});
+
+describe("debt payoff pace", () => {
+  const kredi = (pagesat, extra = {}) => ({
+    id: "d1",
+    emri: "Kredia",
+    lloji: "kredi",
+    vleraTotale: 1200,
+    pagesat,
+    ...extra,
+  });
+
+  const pagese = (data, vlera) => ({ id: `p${data}${vlera}`, data, lloji: "pagese", vlera });
+
+  it("averages over the months spanned, not over the number of payments", () => {
+    // 300 paid across March, April and May: three months of paying at 100, with 900 still to go.
+    const ritmi = debtPace(
+      kredi([pagese("2026-03-10", 100), pagese("2026-04-10", 100), pagese("2026-05-10", 100)]),
+      "2026-05-31"
+    );
+    expect(ritmi.muajMatur).toBe(3);
+    expect(ritmi.mesatarjaMujore).toBe(100);
+    expect(ritmi.muajTeMbetur).toBe(9);
+    expect(ritmi.dataParashikuar).toBe("2027-02-28");
+  });
+
+  it("reads three payments inside one month as one heavy month, not as three", () => {
+    const ritmi = debtPace(
+      kredi([pagese("2026-03-02", 100), pagese("2026-03-14", 100), pagese("2026-03-27", 100)]),
+      "2026-03-31"
+    );
+    expect(ritmi.muajMatur).toBe(1);
+    expect(ritmi.mesatarjaMujore).toBe(300);
+    expect(ritmi.nrPagesave).toBe(3);
+  });
+
+  it("counts the silent months since the last payment against the pace", () => {
+    const pagesat = [pagese("2026-01-10", 100), pagese("2026-02-10", 100)];
+    const sapo = debtPace(kredi(pagesat), "2026-02-28");
+    const meVone = debtPace(kredi(pagesat), "2026-08-31");
+    // Same 200 paid, but by August it has been spread over eight months rather than two, so the
+    // note is honestly four times slower than its own history would otherwise claim.
+    expect(sapo.mesatarjaMujore).toBe(100);
+    expect(meVone.muajMatur).toBe(8);
+    expect(meVone.mesatarjaMujore).toBe(25);
+    expect(meVone.muajTeMbetur).toBeGreaterThan(sapo.muajTeMbetur);
+  });
+
+  it("leaves new purchases out of the pace while they still count against what is left", () => {
+    const ritmi = debtPace(
+      kredi([
+        pagese("2026-03-10", 100),
+        pagese("2026-04-10", 100),
+        { id: "s1", data: "2026-04-20", lloji: "shtese", vlera: 200 },
+      ]),
+      "2026-04-30"
+    );
+    // Paying 100 a month, and 1200 + 200 - 200 = 1200 still owed.
+    expect(ritmi.mesatarjaMujore).toBe(100);
+    expect(ritmi.muajTeMbetur).toBe(12);
+  });
+
+  it("says whether the agreed deadline still holds at this pace", () => {
+    const pagesat = [pagese("2026-03-10", 100), pagese("2026-04-10", 100)];
+    // 1000 left at 100 a month is ten more months - comfortably inside a 2027 deadline.
+    expect(debtPace(kredi(pagesat, { dataMbarimit: "2027-06-30" }), "2026-04-30").afatiMbahet).toBe(true);
+    expect(debtPace(kredi(pagesat, { dataMbarimit: "2026-09-30" }), "2026-04-30").afatiMbahet).toBe(false);
+    // No deadline on the note is not a deadline that holds - there is simply nothing to compare.
+    expect(debtPace(kredi(pagesat), "2026-04-30").afatiMbahet).toBeNull();
+  });
+
+  it("refuses to draw a date for a note that is barely moving", () => {
+    const ritmi = debtPace(
+      kredi([pagese("2020-01-10", 1)], { vleraTotale: 40000 }),
+      "2026-01-31"
+    );
+    expect(ritmi.perTeteje).toBe(true);
+    expect(ritmi.dataParashikuar).toBeNull();
+    expect(ritmi.afatiMbahet).toBeNull();
+  });
+
+  it("has nothing to project without payments, or once the note is settled", () => {
+    expect(debtPace(kredi([]), "2026-05-31")).toBeNull();
+    expect(debtPace(kredi([pagese("2026-03-10", 1200)]), "2026-05-31")).toBeNull();
+    // A note whose only lines are new purchases has no repayment history to measure.
+    expect(debtPace(kredi([{ id: "s1", data: "2026-03-10", lloji: "shtese", vlera: 50 }]), "2026-05-31")).toBeNull();
   });
 });
 

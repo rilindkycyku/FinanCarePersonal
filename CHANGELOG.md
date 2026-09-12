@@ -9,6 +9,72 @@ e fundit kur rregullohet diçka, dhe e para vetëm kur ndryshon vetë forma e pr
 herë, te `2.0.0`, kur të dhënat mësuan të dalin nga shfletuesi. Datat janë ato të commit-it që e
 ngriti versionin.
 
+## [2.24.0] - 2026-09-12
+
+### Shtuar
+- **Ritmi i shlyerjes te çdo borxh.** Një shënim borxhi e thoshte sa ka mbetur dhe cili ishte afati
+  i rënë dakord, por jo atë që dikush do ta pyeste i pari: *kur mbaron kjo në të vërtetë*. Afati
+  është marrëveshja, jo ecuria. Tani nën çdo borxh të hapur del një rresht i nxjerrë nga historiku i
+  vetë atij shënimi - «Paguani mesatarisht 50,00 € në muaj. Me këtë ritëm mbyllet rreth Mars 2028 -
+  edhe 18 muaj» - dhe kur ai datë e kalon afatin e shkruar, rreshti kalon në të kuqe dhe e thotë:
+  «Afati i 31/12/2026 nuk arrihet pa e rritur pagesën».
+
+  Mesatarja matet mbi muajt që ka zgjatur pagesa, jo mbi numrin e pagesave, sepse të dyja s'janë e
+  njëjta gjë: tri pagesa brenda një muaji janë një muaj i rëndë, jo tre muaj që po paguhen. Dhe
+  numërohen edhe muajt në të cilët nuk u pagua asgjë - deri sot, jo deri te pagesa e fundit - sepse
+  pikërisht ata e largojnë fundin. Blerjet e reja mbi kartelë («shtesa») nuk hyjnë në ritëm, edhe pse
+  rrinë te sa ka mbetur: ato e ndryshojnë borxhin, jo shpejtësinë me të cilën po shlyhet. Kur ritmi
+  është aq i ngadalshëm sa mbyllja del mbi 20 vjet larg, faqja e thotë me fjalë në vend se të nxjerrë
+  një datë që nuk do të thotë asgjë.
+
+  Kartela e katërt sipër faqes tani është **Ritmi Mujor** - sa marrin borxhet aktive nga një muaj me
+  ritmin e tanishëm, shifra kundër së cilës matet nëse një këst i ri ka vend. Numri i rreshtave të
+  regjistruar, që zinte atë vend më parë, ka mbetur si rreshti i vogël nën të.
+
+- **Nënkategoritë e hyrjeve.** Shpenzimet ishin ndarë me kohë; hyrjet jo, dhe si një rresht i vetëm
+  ato i përgjigjen pyetjes së gabuar. «Rroga: 1.240 €» nuk thotë nëse ai muaj ishte i zakonshëm, nëse
+  kishte orë shtesë që nuk përsëriten, apo nëse gjysma ishte një rimbursim - para që po ktheheshin,
+  jo para që u fituan. U shtuan 18 nënkategori te gjashtë prej tyre: **Rroga** (Paga Bazë, Orë Shtesë,
+  Shujta & Transport, Pagesa e Prapambetur), **Bonus & Shpërblime**, **Punë e Lirë**, **Qira e Marrë**,
+  **Rimbursim & Kthim Parash** dhe **Dhurata të Marra** - kjo e fundit sepse në ditën e një dasme ajo
+  rreshtë është më e madhe se rroga, e përzier me të tjerat nuk gjendet më kurrë.
+
+  Si çdo herë, vijnë edhe te bazat ekzistuese (vetëm aty ku prindi është ende në listë), mbajnë
+  ngjyrën e prindit, dhe riemërtohen ose fshihen lirisht. «Hyrje të Tjera» dhe «Barazim i Bilancit»
+  mbeten të pandara me qëllim: ndarja e tyre nuk do t'i përgjigjej asgjëje.
+
+### Ndryshuar
+- **Shkronjat e aplikacionit janë Quicksand.** Pasqyra PDF vizatohej me Quicksand që nga dita e parë,
+  kurse ekrani me Inter - dy fytyra për një produkt. Tani janë një. Skedarët vijnë nga ky origjinë si
+  më parë (asgjë nuk kërkohet nga Google, aplikacioni punon njësoj pa internet) dhe janë dy, një për
+  çdo nënbashkësi shkronjash, me gjithë trashësitë brenda një skedari të vetëm.
+
+  Quicksand shkon deri te 700, kurse Inter shkonte deri te 900 dhe ndërfaqja e përdorte të gjithë,
+  prandaj e gjithë shkalla e trashësive zbriti një hap: 800 dhe 900 u bënë 700, 700 u bë 600. Pa këtë,
+  etiketa, shifra dhe totali - tri gjëra që dalloheshin pikërisht nga trashësia - do të vizatoheshin
+  njësoj.
+
+- **Llogaria zgjidhet çdo herë, nuk merret me mend.** Versioni i kaluar mësonte se me cilën llogari
+  paguhet zakonisht një kategori dhe e mbushte fushën vetë. Në letër kursen një klikim; në praktikë
+  fusha arrinte e përgjigjur, dhe herën e vetme kur kafja u pagua me kartelë e jo me kesh, ajo u
+  regjistrua te llogaria e gabuar pa e parë njeri. Një llogari e gabuar është e heshtur: totalet
+  mbeten të sakta, vetëm dy bilancet largohen nga njëri-tjetri, dhe del pas javësh si një barazim që
+  nuk mbyllet. Asgjë këtu nuk rregullohet më shpejt sesa zgjidhet, prandaj zgjidhet.
+
+  E njëjta rregull tani te të gjitha format që lëvizin para - transaksioni, pagesa e periodikja, kryerja
+  e një plani, pagesa e borxhit dhe importimi i një ekstrakti CSV - të cilat më parë zgjidhnin në
+  heshtje llogarinë e parë të listës. Përjashtim bëjnë dy rastet ku s'ka çka zgjidhet: kur është vetëm
+  një llogari aktive (ose është ndezur «një llogari kryesore»), dhe kur destinacioni i një transferi
+  është i ngulitur. Kujtesa përshkrim → kategori mbetet e paprekur - ajo propozon, nuk vendos, dhe
+  kategoria shihet aty ku shkruhet.
+
+### Rregulluar
+- **Sipërfaqet që zhdukeshin në temën e bardhë.** Disa gjendje ishin shkruar si e bardhë me 4-12%
+  tejdukshmëri - një hije vetëm mbi faqe të errët. Mbi faqen e bardhë e bardha mbi të bardhë nuk është
+  asgjë: kalimi i miut dukej i vdekur dhe - më keq - një opsion i zgjedhur brenda një dialogu (monedha,
+  llogaria) nuk tregonte shenjë se ishte zgjedhur. Tani janë dy ndryshore teme që errësohen mbi faqe të
+  çelët, prandaj e njëjta rregull vlen për të dyja temat.
+
 ## [2.23.0] - 2026-09-05
 
 ### Shtuar

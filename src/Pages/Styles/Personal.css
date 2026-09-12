@@ -47,7 +47,7 @@
    a screen reader's heading list opened one level down with nothing above it. The size is set here
    rather than inherited from the tag, so nothing about the page looks different. */
 .fcp-page-head h1 {
-  font-weight: 900;
+  font-weight: 700;
   letter-spacing: -0.02em;
   font-size: 1.5rem;
   margin-bottom: 0.25rem;
@@ -104,7 +104,7 @@
 
 .fcp-kpi-label {
   font-size: 0.7rem;
-  font-weight: 800;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--sp-text-muted);
@@ -113,7 +113,7 @@
 
 .fcp-kpi-value {
   font-size: 1.35rem;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--sp-text);
   letter-spacing: -0.02em;
   word-break: break-word;
@@ -143,14 +143,14 @@
   background: var(--sp-surface-3);
   border-bottom: 1px solid var(--sp-border);
   font-size: 0.82rem;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--sp-text);
 }
 
 .fcp-panel-header .fcp-panel-header-action {
   margin-left: auto;
   font-size: 0.7rem;
-  font-weight: 800;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--sp-emerald);
@@ -243,7 +243,7 @@
 .fcp-nen-emri {
   flex: 1 1 auto;
   min-width: 0;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--sp-text-muted);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -251,7 +251,7 @@
 }
 
 .fcp-nen-vlera {
-  font-weight: 800;
+  font-weight: 700;
   white-space: nowrap;
 }
 
@@ -273,7 +273,7 @@
 
 .fcp-row-title {
   font-size: 0.85rem;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--sp-text);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -288,7 +288,7 @@
 
 .fcp-row-value {
   font-size: 0.88rem;
-  font-weight: 800;
+  font-weight: 700;
   text-align: right;
   white-space: nowrap;
 }
@@ -308,7 +308,7 @@
 
 .fcp-row-perdite {
   font-size: 0.64rem;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--sp-text-muted);
   white-space: nowrap;
   margin-top: 0.05rem;
@@ -401,7 +401,7 @@ a.fcp-row-klikues:hover {
 
 .fcp-detaje-emri {
   font-size: 1rem;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--sp-text);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -441,7 +441,7 @@ a.fcp-row-klikues:hover {
 
 .fcp-detaje-tx-emri {
   font-size: 0.76rem;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--sp-text);
   overflow-wrap: anywhere;
 }
@@ -508,7 +508,7 @@ body.light-mode .fcp-detaje-tabs .fcp-faqe-tab.active {
   gap: 0.3rem;
   padding: 0.2rem 0;
   font-size: 0.74rem;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--sp-emerald);
   text-decoration: none;
 }
@@ -526,7 +526,7 @@ body.light-mode .fcp-detaje-tabs .fcp-faqe-tab.active {
   align-items: center;
   gap: 0.35rem;
   font-size: 0.82rem;
-  font-weight: 800;
+  font-weight: 700;
 }
 
 /* ── Amount colours (also used inside table cells) ────────── */
@@ -542,7 +542,7 @@ body.light-mode .fcp-detaje-tabs .fcp-faqe-tab.active {
   padding: 0.16rem 0.55rem;
   border-radius: 999px;
   font-size: 0.68rem;
-  font-weight: 800;
+  font-weight: 700;
   border: 1px solid currentColor;
   white-space: nowrap;
 }
@@ -563,7 +563,7 @@ body.light-mode .fcp-detaje-tabs .fcp-faqe-tab.active {
   border: 1px solid var(--etiketa-color, var(--sp-border));
   color: var(--etiketa-color, var(--sp-text-soft));
   font-size: 0.66rem;
-  font-weight: 800;
+  font-weight: 700;
   white-space: nowrap;
 }
 
@@ -609,7 +609,7 @@ body.light-mode .fcp-detaje-tabs .fcp-faqe-tab.active {
 
 .fcp-account-name {
   font-size: 0.85rem;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--sp-text);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -618,7 +618,7 @@ body.light-mode .fcp-detaje-tabs .fcp-faqe-tab.active {
 
 .fcp-account-type {
   font-size: 0.65rem;
-  font-weight: 700;
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--sp-text-muted);
@@ -626,7 +626,7 @@ body.light-mode .fcp-detaje-tabs .fcp-faqe-tab.active {
 
 .fcp-account-balance {
   font-size: 1.25rem;
-  font-weight: 900;
+  font-weight: 700;
   letter-spacing: -0.02em;
 }
 
@@ -671,7 +671,7 @@ body.light-mode .fcp-detaje-tabs .fcp-faqe-tab.active {
 
 .fcp-chart-label {
   font-size: 0.65rem;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--sp-text-muted);
   text-transform: uppercase;
 }
@@ -682,7 +682,7 @@ body.light-mode .fcp-detaje-tabs .fcp-faqe-tab.active {
   gap: 1rem;
   flex-wrap: wrap;
   font-size: 0.7rem;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--sp-text-muted);
 }
 
@@ -770,7 +770,7 @@ body.light-mode .fcp-detaje-tabs .fcp-faqe-tab.active {
   background: transparent;
   color: var(--sp-text-muted);
   font-size: 0.82rem;
-  font-weight: 800;
+  font-weight: 700;
   transition: background 0.15s ease, color 0.15s ease;
 }
 
@@ -849,7 +849,7 @@ body.light-mode .fcp-detaje-tabs .fcp-faqe-tab.active {
 .fcp-kalendar-koka {
   margin-bottom: 5px;
   font-size: 0.62rem;
-  font-weight: 800;
+  font-weight: 700;
   text-transform: uppercase;
   color: var(--sp-text-muted);
   text-align: center;
@@ -862,7 +862,7 @@ body.light-mode .fcp-detaje-tabs .fcp-faqe-tab.active {
   justify-content: center;
   border-radius: 7px;
   font-size: 0.68rem;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--sp-text-muted);
   background: var(--sp-surface-3);
 }
@@ -926,7 +926,7 @@ body.light-mode .fcp-detaje-tabs .fcp-faqe-tab.active {
 
 .fcp-unaz-vlera {
   font-size: 0.82rem;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--sp-text);
   line-height: 1.1;
   overflow-wrap: anywhere;
@@ -934,7 +934,7 @@ body.light-mode .fcp-detaje-tabs .fcp-faqe-tab.active {
 
 .fcp-unaz-etiketa {
   font-size: 0.6rem;
-  font-weight: 700;
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--sp-text-muted);
@@ -1000,13 +1000,13 @@ body.light-mode .fcp-detaje-tabs .fcp-faqe-tab.active {
 }
 
 .fcp-unaz-perqind {
-  font-weight: 800;
+  font-weight: 700;
   color: var(--sp-text);
 }
 
 /* ── Section headings inside pages ────────────────────────── */
 .fcp-section-title {
-  font-weight: 900;
+  font-weight: 700;
   font-size: 0.95rem;
   color: var(--sp-text);
   margin-bottom: 1rem;
@@ -1023,7 +1023,7 @@ body.light-mode .fcp-detaje-tabs .fcp-faqe-tab.active {
    holds the size they were drawn at, so nothing on screen moved. */
 .fcp-card-title {
   font-size: 1.25rem;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.2;
 }
 
@@ -1173,7 +1173,7 @@ button.hero-cta {
 .fcp-card-actions .fcp-icon-action-label {
   margin-left: auto;
   font-size: 0.65rem;
-  font-weight: 800;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--sp-text-muted);
@@ -1248,7 +1248,7 @@ button.hero-cta {
   border-radius: 5px;
   background: var(--sp-surface-3);
   font-size: 0.6rem;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
@@ -1260,7 +1260,7 @@ button.hero-cta {
 }
 
 .fcp-cat-card.nen .fcp-cat-name {
-  font-weight: 700;
+  font-weight: 600;
   font-size: 0.76rem;
 }
 
@@ -1271,7 +1271,7 @@ button.hero-cta {
 
 .fcp-cat-name {
   font-size: 0.82rem;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--sp-text);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1349,7 +1349,7 @@ body.light-mode .fcp-cat-card.nen {
   min-width: 130px;
   text-align: center;
   font-size: 0.8rem;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--sp-text);
 }
 
@@ -1388,7 +1388,7 @@ body.light-mode .fcp-cat-card.nen {
   gap: 0.35rem;
   margin-top: 0.45rem;
   font-size: 0.7rem;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--sp-text-muted);
 }
 
@@ -1402,7 +1402,7 @@ body.light-mode .fcp-cat-card.nen {
   background: transparent;
   color: var(--sp-text-muted);
   font-size: 0.72rem;
-  font-weight: 700;
+  font-weight: 600;
   transition: all 0.15s ease;
 }
 
@@ -1456,7 +1456,7 @@ body.light-mode .fcp-cat-card.nen {
 }
 
 .fcp-bllokuar-kuti h5 {
-  font-weight: 800;
+  font-weight: 700;
   color: var(--sp-text);
   margin-bottom: 0.6rem;
 }
@@ -1522,14 +1522,14 @@ body.light-mode .fcp-bllokuar-kuti {
 
 .fcp-daily-value {
   font-size: 1.9rem;
-  font-weight: 800;
+  font-weight: 700;
   line-height: 1.1;
   letter-spacing: -0.02em;
 }
 
 .fcp-daily-sub {
   font-size: 0.72rem;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--sp-text-muted);
   margin: 0.25rem 0 0.5rem;
 }
@@ -1556,12 +1556,12 @@ body.light-mode .fcp-bllokuar-kuti {
   border-radius: 12px;
   background: var(--sp-surface-2);
   font-size: 0.82rem;
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .fcp-daily-cell-label {
   font-size: 0.66rem;
-  font-weight: 700;
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--sp-text-muted);
@@ -1583,7 +1583,7 @@ body.light-mode .fcp-month-nav {
 .fcp-trend {
   margin-left: 0.5rem;
   font-size: 0.68rem;
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .fcp-trend.up { color: var(--sp-red-text); }
@@ -1686,7 +1686,7 @@ body.light-mode .card.profile-card.fcp-zona-rrezik:hover {
   flex: 1 1 0;
   text-align: center;
   font-size: 0.65rem;
-  font-weight: 800;
+  font-weight: 700;
   text-transform: uppercase;
   color: var(--sp-text-muted);
   min-width: 0;
@@ -1796,7 +1796,7 @@ body.light-mode .card.profile-card.fcp-zona-rrezik:hover {
 
 .fcp-udh-grup-titull {
   font-size: 0.66rem;
-  font-weight: 900;
+  font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--sp-text-muted);
@@ -1814,7 +1814,7 @@ body.light-mode .card.profile-card.fcp-zona-rrezik:hover {
   background: transparent;
   color: var(--sp-text-soft);
   font-size: 0.8rem;
-  font-weight: 700;
+  font-weight: 600;
   text-align: left;
   transition: background 0.15s ease, color 0.15s ease;
 }
@@ -1867,7 +1867,7 @@ body.light-mode .card.profile-card.fcp-zona-rrezik:hover {
 
 .fcp-udh-titull {
   font-size: 1.35rem;
-  font-weight: 900;
+  font-weight: 700;
   letter-spacing: -0.02em;
   margin: 0;
   color: var(--sp-text);
@@ -1884,7 +1884,7 @@ body.light-mode .card.profile-card.fcp-zona-rrezik:hover {
   background: var(--sp-surface-2);
   color: var(--sp-text);
   font-size: 0.75rem;
-  font-weight: 800;
+  font-weight: 700;
   text-decoration: none;
 }
 
@@ -1928,12 +1928,12 @@ body.light-mode .card.profile-card.fcp-zona-rrezik:hover {
   background: var(--sp-surface-3);
   color: var(--sp-emerald);
   font-size: 0.75rem;
-  font-weight: 900;
+  font-weight: 700;
 }
 
 .fcp-udh-hap-titull {
   font-size: 0.88rem;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--sp-text);
   margin-bottom: 0.15rem;
 }
@@ -2001,7 +2001,7 @@ body.light-mode .card.profile-card.fcp-zona-rrezik:hover {
   gap: 0.4rem;
   color: var(--sp-text);
   font-size: 0.82rem;
-  font-weight: 800;
+  font-weight: 700;
   text-decoration: none;
 }
 
@@ -2027,7 +2027,7 @@ body.light-mode .card.profile-card.fcp-zona-rrezik:hover {
     background: var(--sp-surface-2);
     color: var(--sp-text);
     font-size: 0.82rem;
-    font-weight: 800;
+    font-weight: 700;
   }
 
   .fcp-udh-celes-shigjeta {
@@ -2057,7 +2057,7 @@ body.light-mode .card.profile-card.fcp-zona-rrezik:hover {
   background: var(--sp-surface-2);
   color: var(--sp-text-muted);
   font-size: 0.72rem;
-  font-weight: 700;
+  font-weight: 600;
   text-decoration: none;
   white-space: nowrap;
 }

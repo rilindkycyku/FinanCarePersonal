@@ -3,7 +3,7 @@
 body {
   background-color: var(--sp-bg) !important;
   color: var(--sp-text) !important;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
+  font-family: 'Quicksand', system-ui, -apple-system, sans-serif !important;
 }
 
 /* Modernized Theme-Aware Containers */
@@ -21,7 +21,7 @@ body {
 }
 
 .title {
-  font-weight: 900;
+  font-weight: 700;
   color: var(--sp-text);
   margin-bottom: 2rem;
   letter-spacing: -0.03em;
@@ -29,7 +29,7 @@ body {
 }
 
 .titulliPerditeso {
-  font-weight: 900;
+  font-weight: 700;
   color: var(--sp-text);
   letter-spacing: -0.02em;
   font-size: 1.4rem;
@@ -48,7 +48,7 @@ body {
   color: var(--sp-text-muted) !important;
   text-transform: uppercase;
   font-size: 0.7rem;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: 0.1em;
   padding: 1.25rem 1.5rem;
   border: none !important;
@@ -111,7 +111,7 @@ body {
 
 .form-label {
   font-size: 0.8rem;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--sp-text-soft);
   margin-bottom: 0.35rem;
 }
@@ -149,7 +149,7 @@ body {
 /* Premium Buttons */
 .btn {
   border-radius: 10px !important;
-  font-weight: 700 !important;
+  font-weight: 600 !important;
   font-size: 0.85rem !important;
   padding: 0.5rem 1.1rem !important;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;

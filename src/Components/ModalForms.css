@@ -19,7 +19,7 @@
   background: var(--sp-surface-2);
   color: var(--sp-text-muted);
   font-size: 0.8rem;
-  font-weight: 800;
+  font-weight: 700;
   cursor: pointer;
   transition: all 0.15s ease;
 }
@@ -40,7 +40,7 @@
 
 .fcp-picker-label {
   font-size: 0.8rem;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--sp-text-soft);
   margin-bottom: 0.4rem;
 }
@@ -113,7 +113,7 @@
 
 .fcp-amount-wrap .form-control {
   font-size: 1.35rem !important;
-  font-weight: 800 !important;
+  font-weight: 700 !important;
   padding: 0.6rem 3rem 0.6rem 0.9rem !important;
   text-align: right;
 }
@@ -124,7 +124,7 @@
   top: 50%;
   transform: translateY(-50%);
   font-size: 1rem;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--sp-text-muted);
   pointer-events: none;
 }
@@ -154,7 +154,7 @@
   padding: 0.2rem 0;
 }
 .fcp-barazim-row + .fcp-barazim-row { border-top: 1px solid var(--sp-border); }
-.fcp-barazim-row strong { color: var(--sp-text); font-weight: 800; }
+.fcp-barazim-row strong { color: var(--sp-text); font-weight: 700; }
 
 /* ── Category picker ──────────────────────────────────────────
    The field itself is a button dressed as the select it replaced, so a form that has one next to a
@@ -330,7 +330,7 @@ body.light-mode .fcp-cat-trigger {
 .fcp-cat-row-name {
   display: block;
   font-size: 0.85rem;
-  font-weight: 700;
+  font-weight: 600;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -359,7 +359,7 @@ body.light-mode .fcp-cat-trigger {
   background: transparent;
   color: var(--sp-text-muted);
   font-size: 0.75rem;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .fcp-cat-back:hover {
@@ -374,7 +374,7 @@ body.light-mode .fcp-cat-trigger {
   gap: 0.5rem;
   padding-bottom: 0.15rem;
   font-size: 0.7rem;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--sp-text-muted);
@@ -407,7 +407,7 @@ body.light-mode .fcp-cat-trigger {
   background: transparent;
   color: var(--sp-text-muted);
   font-size: 0.75rem;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .fcp-cat-arkivat:hover {
@@ -432,7 +432,7 @@ body.light-mode .fcp-cat-trigger {
 
 .fcp-confirm-total-value {
   font-size: 1.15rem;
-  font-weight: 900;
+  font-weight: 700;
   letter-spacing: -0.02em;
   color: var(--sp-text);
 }
@@ -453,7 +453,7 @@ body.light-mode .fcp-cat-trigger {
   color: var(--sp-text-muted) !important;
   text-transform: uppercase;
   font-size: 0.62rem;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: 0.1em;
   border: none !important;
   white-space: nowrap;
@@ -473,7 +473,7 @@ body.light-mode .fcp-cat-trigger {
 
 .fcp-modal-table tfoot td {
   background: var(--sp-surface-2) !important;
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .fcp-date-badge {
@@ -482,14 +482,14 @@ body.light-mode .fcp-cat-trigger {
   padding: 0.2rem 0.5rem;
   border-radius: 6px;
   font-size: 0.68rem;
-  font-weight: 800;
+  font-weight: 700;
   border: 1px solid var(--sp-border);
   white-space: nowrap;
 }
 
 .fcp-status-tani {
   color: var(--sp-emerald);
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .fcp-confirm-line {
@@ -503,7 +503,7 @@ body.light-mode .fcp-cat-trigger {
 /* The schedule being confirmed, highlighted inside the month's list of card payments. */
 .fcp-modal-table tr.fcp-row-tani td {
   background: var(--sp-emerald-glow);
-  font-weight: 700;
+  font-weight: 600;
 }
 
 /* A payment left out of this settlement. */
@@ -541,7 +541,7 @@ body.light-mode .fcp-cat-trigger {
 
 .fcp-adjust-title {
   font-size: 0.8rem;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--sp-text);
 }
 
@@ -550,7 +550,7 @@ body.light-mode .fcp-cat-trigger {
   align-items: center;
   gap: 0.35rem;
   font-size: 0.72rem !important;
-  font-weight: 800 !important;
+  font-weight: 700 !important;
   border-radius: 9px !important;
   white-space: nowrap;
 }
@@ -573,7 +573,7 @@ body.light-mode .fcp-cat-trigger {
 .fcp-adjust-name {
   flex: 1 1 150px;
   font-size: 0.8rem;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--sp-text);
 }
 
@@ -602,7 +602,7 @@ body.light-mode .fcp-cat-trigger {
   align-items: flex-end;
   flex: 0 0 auto;
   font-size: 0.85rem;
-  font-weight: 800;
+  font-weight: 700;
   padding-bottom: 0.15rem;
 }
 
@@ -616,7 +616,7 @@ body.light-mode .fcp-cat-trigger {
   border: 1px solid var(--sp-border);
   color: var(--sp-text-soft);
   font-size: 0.62rem;
-  font-weight: 800;
+  font-weight: 700;
 }
 
 /* ── Tags ─────────────────────────────────────────────────────
@@ -650,7 +650,7 @@ body.light-mode .fcp-cat-trigger {
   color: var(--etiketa-color);
   background: transparent;
   font-size: 0.72rem;
-  font-weight: 800;
+  font-weight: 700;
   white-space: nowrap;
 }
 
@@ -671,7 +671,7 @@ body.light-mode .fcp-cat-trigger {
 
 .fcp-etiketa-chip button:hover {
   opacity: 1;
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--sp-tint-strong);
 }
 
 /* Grows with what is typed but keeps a usable width when empty, so the input still looks clickable
@@ -710,21 +710,21 @@ body.light-mode .fcp-cat-trigger {
   background: transparent;
   color: var(--etiketa-color);
   font-size: 0.7rem;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .fcp-etiketa-sugjerim:hover {
   border-style: solid;
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--sp-tint);
 }
 
 /* How often the tag has been used - the hint that says which of two similar tags is the real one. */
 .fcp-etiketa-numri {
   color: var(--sp-text-muted);
   font-size: 0.62rem;
-  font-weight: 800;
+  font-weight: 700;
 }
 
 /* Reveals the suggestions past the cap - plain rather than dashed in a tag colour, since it is not
@@ -740,14 +740,14 @@ body.light-mode .fcp-cat-trigger {
   background: transparent;
   color: var(--sp-text-muted);
   font-size: 0.7rem;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .fcp-etiketa-me-shume:hover,
 .fcp-shuma-shpejte:hover {
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--sp-tint);
   color: var(--sp-text);
 }
 
@@ -773,7 +773,7 @@ body.light-mode .fcp-cat-trigger {
 
   .sp-modal .modal-title {
     font-size: 1rem !important;
-    font-weight: 800 !important;
+    font-weight: 700 !important;
   }
 
   .sp-modal .modal-body {
@@ -882,8 +882,8 @@ body.light-mode .fcp-cat-trigger {
   }
 
   .fcp-modal-table .fcp-cell-check { grid-area: check; }
-  .fcp-modal-table .fcp-cell-name { grid-area: name; font-weight: 700; }
-  .fcp-modal-table .fcp-cell-paguhet { grid-area: paguhet; font-weight: 800; }
+  .fcp-modal-table .fcp-cell-name { grid-area: name; font-weight: 600; }
+  .fcp-modal-table .fcp-cell-paguhet { grid-area: paguhet; font-weight: 700; }
   .fcp-modal-table .fcp-cell-plan { grid-area: plan; text-align: left !important; }
   .fcp-modal-table .fcp-cell-keste { grid-area: keste; text-align: right; }
 
@@ -909,7 +909,7 @@ body.light-mode .fcp-cat-trigger {
   }
 
   .fcp-modal-table tfoot td:first-child { grid-area: label; }
-  .fcp-modal-table tfoot td:last-child { grid-area: total; font-weight: 800; }
+  .fcp-modal-table tfoot td:last-child { grid-area: total; font-weight: 700; }
 
   .fcp-adjust-head {
     padding: 0.5rem 0.6rem;
@@ -970,11 +970,11 @@ body.light-mode .fcp-cat-trigger {
 }
 
 .fcp-zgjedhje:hover {
-  background-color: rgba(255, 255, 255, 0.04) !important;
+  background-color: var(--sp-tint) !important;
 }
 
 .fcp-zgjedhje[aria-pressed="true"] {
-  background-color: rgba(255, 255, 255, 0.06) !important;
+  background-color: var(--sp-tint-strong) !important;
   border-width: 2px !important;
 }
 

@@ -326,6 +326,14 @@ export const UDHEZIMET = [
           "transaksionin.",
       },
       {
+        titulli: "Lexoni ritmin, jo vetëm afatin",
+        teksti:
+          "Nën çdo borxh të hapur del sa po paguhet mesatarisht në muaj dhe rreth kur mbyllet me atë ritëm. " +
+          "Afati që shkruani është marrëveshja; ky rresht është ecuria, dhe kur të dyja nuk pajtohen ai e thotë " +
+          "sa herë ta hapni faqen - jo në muajin e fundit. Mesatarja matet mbi muajt që ka zgjatur pagesa, " +
+          "prandaj edhe muajt në të cilët nuk u pagua asgjë e ngadalësojnë atë.",
+      },
+      {
         titulli: "Lidheni me një pagesë të përsëritur",
         teksti:
           "Te formulari i një pagese të përsëritur ka fushën «Zbrit nga një borxh»: kësti mujor i një kartele " +
