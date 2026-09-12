@@ -82,15 +82,19 @@ function ShtoPagesenBorxhit({ show, onHide, borxhi, initial }) {
             ...initial,
             vlera: String(initial.vlera ?? ""),
             shenim: initial.shenim || "",
-            // Falls back to the same preselection a new payment gets, so ticking the box on a line
-            // that was note-only until now does not leave the account picker empty.
-            llogariaId: lidhur?.llogariaId || (njeLlogari ? llogariaKryesore?.id : aktive[0]?.id) || "",
+            // Falls back to the same starting point a new payment gets - which, with more than one
+            // account, is now no account at all: the line says which one the money left, and that
+            // is not something the form can know on the user's behalf.
+            llogariaId:
+              lidhur?.llogariaId ||
+              (njeLlogari ? llogariaKryesore?.id : aktive.length === 1 ? aktive[0].id : "") ||
+              "",
             kategoriaId:
               kategoriaQePershtatet(lidhur?.kategoriaId) || kategoriaQePershtatet(borxhi?.kategoriaId),
           }
         : {
             ...blank(),
-            llogariaId: (njeLlogari ? llogariaKryesore?.id : aktive[0]?.id) || "",
+            llogariaId: (njeLlogari ? llogariaKryesore?.id : aktive.length === 1 ? aktive[0].id : "") || "",
             kategoriaId: kategoriaQePershtatet(borxhi?.kategoriaId),
           }
     );

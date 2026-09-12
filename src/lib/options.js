@@ -152,13 +152,56 @@ export const CATEGORY_COLORS = [
   "#ef4444", "#eab308", "#22c55e", "#0ea5e9", "#f97316",
 ];
 
-/** Icon names must exist in `ICONS` (src/lib/icons.js), which is what renders them. */
+/**
+ * Icon names must exist in `ICONS` (src/lib/icons.js), which is what renders them. The order is
+ * the order the picker offers them in, so it is grouped by what somebody is looking for rather
+ * than alphabetically: the everyday ones the default categories use come first, then food, home,
+ * transport, health, devices, money and the rest.
+ */
 export const CATEGORY_ICONS = [
+  // The originals, which are what the top-level categories are drawn with.
   "Utensils", "Coffee", "ShoppingCart", "Home", "Zap", "Smartphone", "Car", "Fuel",
   "Bus", "HeartPulse", "Pill", "Film", "Music", "Shirt", "GraduationCap", "BookOpen",
   "Plane", "Dumbbell", "Gift", "PawPrint", "Baby", "Scissors", "Wrench", "CreditCard",
   "Briefcase", "Coins", "Laptop", "TrendingUp", "Landmark", "Banknote", "PiggyBank",
   "Sparkles", "Shield", "Receipt", "Scale", "MoreHorizontal",
+  // Ushqim & pije.
+  "Beef", "Fish", "Drumstick", "Apple", "Carrot", "Wheat", "Croissant", "Pizza",
+  "Sandwich", "Soup", "Salad", "IceCream", "Milk", "CupSoda", "Wine", "Beer",
+  // Banesa dhe faturat.
+  "Lightbulb", "Droplet", "Flame", "Trash2", "Sofa", "Armchair", "Bed", "Bath",
+  "WashingMachine", "Refrigerator", "Hammer", "Paintbrush", "Key", "Building",
+  "Building2", "Factory", "Store", "Trees", "Flower",
+  // Transport dhe udhëtime.
+  "Train", "Bike", "Ship", "TramFront", "CircleParking", "Truck", "Caravan",
+  "Luggage", "Hotel", "Tent", "Mountain", "MapPin", "Sun", "Umbrella", "Ticket",
+  // Shëndet dhe kujdes.
+  "Stethoscope", "Syringe", "Glasses", "Activity", "Bandage", "Brain", "Smile",
+  "Hospital", "Ambulance", "SprayCan", "Footprints",
+  // Teknologji dhe abonime.
+  "Monitor", "Tablet", "Headphones", "Camera", "Tv", "Watch", "Printer", "HardDrive",
+  "Cloud", "Cpu", "Gamepad2", "Router", "Wifi",
+  // Para, punë dhe letra.
+  "BadgePercent", "Percent", "HandCoins", "Calculator", "LineChart", "Bitcoin",
+  "Vault", "Handshake", "Package", "ScrollText", "Stamp", "FileText",
+  // Njerëz, festa dhe qejf.
+  "Cake", "PartyPopper", "Heart", "Users", "Dog", "Cat", "Bone", "Palette",
+  "Popcorn", "Drama", "Mic", "Book", "Newspaper", "Pencil", "Backpack", "School",
+  "ShoppingBag",
+  // Sport.
+  "Volleyball", "Trophy", "Medal",
+  // Shtëpi, riparime dhe energji.
+  "Thermometer", "Plug", "BatteryCharging", "Drill", "PaintRoller", "Fan", "Recycle",
+  "Sprout", "Leaf", "TreePine", "Snowflake", "Wind",
+  // Ushqim, më imët.
+  "Egg", "Candy", "Cookie", "Ham", "Shrimp", "Grape", "Popsicle",
+  // Shëndet dhe kujdes.
+  "Tablets", "Cross", "HandHeart", "HeartHandshake", "Cigarette",
+  // Qejf, media dhe mësim.
+  "Dices", "Puzzle", "Guitar", "Clapperboard", "Radio", "Podcast", "Languages",
+  // Letra, para dhe udhëtim.
+  "Notebook", "NotebookPen", "FileSignature", "BadgeCheck", "BadgeDollarSign",
+  "Gem", "Crown", "TrainFront", "PlaneTakeoff", "Sailboat", "Waves", "Church", "Phone",
 ];
 
 export const DEFAULT_CATEGORIES = [
@@ -210,147 +253,148 @@ export const DEFAULT_CATEGORIES = [
   // parent's colour, so the group still reads as one block on the charts, and the parent stays
   // usable as it was for anyone who does not want the detail.
   //
-  // A category is left without children where the split would answer nothing: "Karburant" is one
-  // kind of purchase however it is written, "Këste të Kartelës" is already the detail of a card,
-  // and "Shpenzime të Tjera" is the bucket for what the list does not name - subdividing it would
-  // only give the leftovers a filing system.
+  // A category is left without children where the split would answer nothing: "Këste të Kartelës"
+  // is already the detail of a card, and "Shpenzime të Tjera" is the bucket for what the list does
+  // not name - subdividing it would only give the leftovers a filing system. ("Karburant" was in
+  // this list too, on the grounds that fuel is one purchase however it is written; the finer pass
+  // at the bottom of this file says why that stopped holding.)
   //
   // Everything below is a starting point like the rest of this file: rename, recolour, re-file or
   // delete freely, and nothing brings a deleted one back.
 
   // Ushqim & Pije - what came home from a shop.
   { id: "cat_default_ushqim_market", emri: "Market & Supermarket", lloji: "shpenzim", prindi: "cat_default_ushqim", ngjyra: "#f59e0b", ikona: "ShoppingCart" },
-  { id: "cat_default_ushqim_furra", emri: "Furra & Ëmbëltore", lloji: "shpenzim", prindi: "cat_default_ushqim", ngjyra: "#f59e0b", ikona: "Utensils" },
-  { id: "cat_default_ushqim_mish", emri: "Mish & Peshk", lloji: "shpenzim", prindi: "cat_default_ushqim", ngjyra: "#f59e0b", ikona: "Utensils" },
-  { id: "cat_default_ushqim_fruta", emri: "Fruta & Perime", lloji: "shpenzim", prindi: "cat_default_ushqim", ngjyra: "#f59e0b", ikona: "ShoppingCart" },
-  { id: "cat_default_ushqim_pije", emri: "Pije & Ujë", lloji: "shpenzim", prindi: "cat_default_ushqim", ngjyra: "#f59e0b", ikona: "Coffee" },
+  { id: "cat_default_ushqim_furra", emri: "Furra & Ëmbëltore", lloji: "shpenzim", prindi: "cat_default_ushqim", ngjyra: "#f59e0b", ikona: "Croissant" },
+  { id: "cat_default_ushqim_mish", emri: "Mish & Peshk", lloji: "shpenzim", prindi: "cat_default_ushqim", ngjyra: "#f59e0b", ikona: "Beef" },
+  { id: "cat_default_ushqim_fruta", emri: "Fruta & Perime", lloji: "shpenzim", prindi: "cat_default_ushqim", ngjyra: "#f59e0b", ikona: "Carrot" },
+  { id: "cat_default_ushqim_pije", emri: "Pije & Ujë", lloji: "shpenzim", prindi: "cat_default_ushqim", ngjyra: "#f59e0b", ikona: "CupSoda" },
 
   // Kafe & Restorant - what was eaten or drunk out.
   { id: "cat_default_restorant_kafe", emri: "Kafe", lloji: "shpenzim", prindi: "cat_default_restorant", ngjyra: "#f97316", ikona: "Coffee" },
-  { id: "cat_default_restorant_dreka", emri: "Drekë në Punë", lloji: "shpenzim", prindi: "cat_default_restorant", ngjyra: "#f97316", ikona: "Briefcase" },
+  { id: "cat_default_restorant_dreka", emri: "Drekë në Punë", lloji: "shpenzim", prindi: "cat_default_restorant", ngjyra: "#f97316", ikona: "Sandwich" },
   { id: "cat_default_restorant_ushqim", emri: "Restorant", lloji: "shpenzim", prindi: "cat_default_restorant", ngjyra: "#f97316", ikona: "Utensils" },
-  { id: "cat_default_restorant_fast", emri: "Fast Food & Porosi Online", lloji: "shpenzim", prindi: "cat_default_restorant", ngjyra: "#f97316", ikona: "Smartphone" },
-  { id: "cat_default_restorant_dalje", emri: "Dalje & Bar", lloji: "shpenzim", prindi: "cat_default_restorant", ngjyra: "#f97316", ikona: "Music" },
+  { id: "cat_default_restorant_fast", emri: "Fast Food & Porosi Online", lloji: "shpenzim", prindi: "cat_default_restorant", ngjyra: "#f97316", ikona: "Pizza" },
+  { id: "cat_default_restorant_dalje", emri: "Dalje & Bar", lloji: "shpenzim", prindi: "cat_default_restorant", ngjyra: "#f97316", ikona: "Beer" },
 
   // Transport - fuel keeps its own category, so what is left here is everything else.
   { id: "cat_default_transport_publik", emri: "Transport Publik", lloji: "shpenzim", prindi: "cat_default_transport", ngjyra: "#3b82f6", ikona: "Bus" },
   { id: "cat_default_transport_taksi", emri: "Taksi", lloji: "shpenzim", prindi: "cat_default_transport", ngjyra: "#3b82f6", ikona: "Car" },
-  { id: "cat_default_transport_parkim", emri: "Parkim & Rrugë", lloji: "shpenzim", prindi: "cat_default_transport", ngjyra: "#3b82f6", ikona: "Car" },
+  { id: "cat_default_transport_parkim", emri: "Parkim & Rrugë", lloji: "shpenzim", prindi: "cat_default_transport", ngjyra: "#3b82f6", ikona: "CircleParking" },
   { id: "cat_default_transport_servis", emri: "Servis & Gomat", lloji: "shpenzim", prindi: "cat_default_transport", ngjyra: "#3b82f6", ikona: "Wrench" },
 
   // Fatura & Shërbime - one line per household bill, because they rise separately.
-  { id: "cat_default_fatura_rryme", emri: "Rrymë", lloji: "shpenzim", prindi: "cat_default_fatura", ngjyra: "#06b6d4", ikona: "Zap" },
-  { id: "cat_default_fatura_uje", emri: "Ujë", lloji: "shpenzim", prindi: "cat_default_fatura", ngjyra: "#06b6d4", ikona: "Zap" },
-  { id: "cat_default_fatura_ngrohje", emri: "Ngrohje", lloji: "shpenzim", prindi: "cat_default_fatura", ngjyra: "#06b6d4", ikona: "Zap" },
-  { id: "cat_default_fatura_mbeturina", emri: "Mbeturina & Komunale", lloji: "shpenzim", prindi: "cat_default_fatura", ngjyra: "#06b6d4", ikona: "Receipt" },
+  { id: "cat_default_fatura_rryme", emri: "Rrymë", lloji: "shpenzim", prindi: "cat_default_fatura", ngjyra: "#06b6d4", ikona: "Lightbulb" },
+  { id: "cat_default_fatura_uje", emri: "Ujë", lloji: "shpenzim", prindi: "cat_default_fatura", ngjyra: "#06b6d4", ikona: "Droplet" },
+  { id: "cat_default_fatura_ngrohje", emri: "Ngrohje", lloji: "shpenzim", prindi: "cat_default_fatura", ngjyra: "#06b6d4", ikona: "Thermometer" },
+  { id: "cat_default_fatura_mbeturina", emri: "Mbeturina & Komunale", lloji: "shpenzim", prindi: "cat_default_fatura", ngjyra: "#06b6d4", ikona: "Trash2" },
 
   // Blerje Shtëpiake.
-  { id: "cat_default_shtepi_pastrim", emri: "Pastrim & Detergjentë", lloji: "shpenzim", prindi: "cat_default_shtepi", ngjyra: "#84cc16", ikona: "Sparkles" },
-  { id: "cat_default_shtepi_ene", emri: "Enë & Vegla", lloji: "shpenzim", prindi: "cat_default_shtepi", ngjyra: "#84cc16", ikona: "Wrench" },
-  { id: "cat_default_shtepi_mobilje", emri: "Mobilje & Dekor", lloji: "shpenzim", prindi: "cat_default_shtepi", ngjyra: "#84cc16", ikona: "Home" },
+  { id: "cat_default_shtepi_pastrim", emri: "Pastrim & Detergjentë", lloji: "shpenzim", prindi: "cat_default_shtepi", ngjyra: "#84cc16", ikona: "SprayCan" },
+  { id: "cat_default_shtepi_ene", emri: "Enë & Vegla", lloji: "shpenzim", prindi: "cat_default_shtepi", ngjyra: "#84cc16", ikona: "Utensils" },
+  { id: "cat_default_shtepi_mobilje", emri: "Mobilje & Dekor", lloji: "shpenzim", prindi: "cat_default_shtepi", ngjyra: "#84cc16", ikona: "Sofa" },
 
   // Shëndetësi.
-  { id: "cat_default_shendet_vizita", emri: "Vizita & Analiza", lloji: "shpenzim", prindi: "cat_default_shendetesi", ngjyra: "#f43f5e", ikona: "HeartPulse" },
-  { id: "cat_default_shendet_dentist", emri: "Dentist", lloji: "shpenzim", prindi: "cat_default_shendetesi", ngjyra: "#f43f5e", ikona: "HeartPulse" },
-  { id: "cat_default_shendet_optike", emri: "Syze & Optikë", lloji: "shpenzim", prindi: "cat_default_shendetesi", ngjyra: "#f43f5e", ikona: "HeartPulse" },
+  { id: "cat_default_shendet_vizita", emri: "Vizita & Analiza", lloji: "shpenzim", prindi: "cat_default_shendetesi", ngjyra: "#f43f5e", ikona: "Stethoscope" },
+  { id: "cat_default_shendet_dentist", emri: "Dentist", lloji: "shpenzim", prindi: "cat_default_shendetesi", ngjyra: "#f43f5e", ikona: "Smile" },
+  { id: "cat_default_shendet_optike", emri: "Syze & Optikë", lloji: "shpenzim", prindi: "cat_default_shendetesi", ngjyra: "#f43f5e", ikona: "Glasses" },
 
   // Veshje.
   { id: "cat_default_veshje_rroba", emri: "Rroba", lloji: "shpenzim", prindi: "cat_default_veshje", ngjyra: "#a855f7", ikona: "Shirt" },
-  { id: "cat_default_veshje_kepuce", emri: "Këpucë", lloji: "shpenzim", prindi: "cat_default_veshje", ngjyra: "#a855f7", ikona: "Shirt" },
-  { id: "cat_default_veshje_aksesore", emri: "Aksesorë", lloji: "shpenzim", prindi: "cat_default_veshje", ngjyra: "#a855f7", ikona: "Gift" },
+  { id: "cat_default_veshje_kepuce", emri: "Këpucë", lloji: "shpenzim", prindi: "cat_default_veshje", ngjyra: "#a855f7", ikona: "Footprints" },
+  { id: "cat_default_veshje_aksesore", emri: "Aksesorë", lloji: "shpenzim", prindi: "cat_default_veshje", ngjyra: "#a855f7", ikona: "Watch" },
 
   // Argëtim.
-  { id: "cat_default_argetim_kinema", emri: "Kinema & Teatër", lloji: "shpenzim", prindi: "cat_default_argetim", ngjyra: "#ec4899", ikona: "Film" },
-  { id: "cat_default_argetim_ngjarje", emri: "Koncerte & Ngjarje", lloji: "shpenzim", prindi: "cat_default_argetim", ngjyra: "#ec4899", ikona: "Music" },
-  { id: "cat_default_argetim_lojera", emri: "Lojëra & Hobi", lloji: "shpenzim", prindi: "cat_default_argetim", ngjyra: "#ec4899", ikona: "Laptop" },
+  { id: "cat_default_argetim_kinema", emri: "Kinema & Teatër", lloji: "shpenzim", prindi: "cat_default_argetim", ngjyra: "#ec4899", ikona: "Popcorn" },
+  { id: "cat_default_argetim_ngjarje", emri: "Koncerte & Ngjarje", lloji: "shpenzim", prindi: "cat_default_argetim", ngjyra: "#ec4899", ikona: "Ticket" },
+  { id: "cat_default_argetim_lojera", emri: "Lojëra & Hobi", lloji: "shpenzim", prindi: "cat_default_argetim", ngjyra: "#ec4899", ikona: "Gamepad2" },
 
   // Qira / Banesa - the monthly rent is one line, but what a flat costs is not only the rent: the
   // building's own bill arrives separately, and moving costs land in a single month.
-  { id: "cat_default_qira_mujore", emri: "Qira Mujore", lloji: "shpenzim", prindi: "cat_default_qira", ngjyra: "#8b5cf6", ikona: "Home" },
-  { id: "cat_default_qira_pallati", emri: "Shpenzimet e Pallatit", lloji: "shpenzim", prindi: "cat_default_qira", ngjyra: "#8b5cf6", ikona: "Landmark" },
-  { id: "cat_default_qira_zhvendosje", emri: "Zhvendosje & Depozitë", lloji: "shpenzim", prindi: "cat_default_qira", ngjyra: "#8b5cf6", ikona: "Receipt" },
+  { id: "cat_default_qira_mujore", emri: "Qira Mujore", lloji: "shpenzim", prindi: "cat_default_qira", ngjyra: "#8b5cf6", ikona: "Key" },
+  { id: "cat_default_qira_pallati", emri: "Shpenzimet e Pallatit", lloji: "shpenzim", prindi: "cat_default_qira", ngjyra: "#8b5cf6", ikona: "Building2" },
+  { id: "cat_default_qira_zhvendosje", emri: "Zhvendosje & Depozitë", lloji: "shpenzim", prindi: "cat_default_qira", ngjyra: "#8b5cf6", ikona: "Package" },
 
   // Telefon & Internet - usually three contracts with three different renewal dates.
   { id: "cat_default_telefon_mobil", emri: "Telefoni Mobil", lloji: "shpenzim", prindi: "cat_default_telefon", ngjyra: "#0ea5e9", ikona: "Smartphone" },
-  { id: "cat_default_telefon_internet", emri: "Internet Shtëpiak", lloji: "shpenzim", prindi: "cat_default_telefon", ngjyra: "#0ea5e9", ikona: "Laptop" },
-  { id: "cat_default_telefon_tv", emri: "TV Kabllor", lloji: "shpenzim", prindi: "cat_default_telefon", ngjyra: "#0ea5e9", ikona: "Film" },
+  { id: "cat_default_telefon_internet", emri: "Internet Shtëpiak", lloji: "shpenzim", prindi: "cat_default_telefon", ngjyra: "#0ea5e9", ikona: "Wifi" },
+  { id: "cat_default_telefon_tv", emri: "TV Kabllor", lloji: "shpenzim", prindi: "cat_default_telefon", ngjyra: "#0ea5e9", ikona: "Tv" },
 
   // Edukim - a semester, a weekend course and a stack of books are not the same decision.
-  { id: "cat_default_edukim_shkollim", emri: "Shkollim & Universitet", lloji: "shpenzim", prindi: "cat_default_edukim", ngjyra: "#14b8a6", ikona: "GraduationCap" },
-  { id: "cat_default_edukim_kurse", emri: "Kurse & Trajnime", lloji: "shpenzim", prindi: "cat_default_edukim", ngjyra: "#14b8a6", ikona: "BookOpen" },
-  { id: "cat_default_edukim_libra", emri: "Libra & Materiale", lloji: "shpenzim", prindi: "cat_default_edukim", ngjyra: "#14b8a6", ikona: "BookOpen" },
+  { id: "cat_default_edukim_shkollim", emri: "Shkollim & Universitet", lloji: "shpenzim", prindi: "cat_default_edukim", ngjyra: "#14b8a6", ikona: "School" },
+  { id: "cat_default_edukim_kurse", emri: "Kurse & Trajnime", lloji: "shpenzim", prindi: "cat_default_edukim", ngjyra: "#14b8a6", ikona: "GraduationCap" },
+  { id: "cat_default_edukim_libra", emri: "Libra & Materiale", lloji: "shpenzim", prindi: "cat_default_edukim", ngjyra: "#14b8a6", ikona: "Book" },
 
   // Udhëtime - one trip is booked in pieces, weeks apart, and the pieces are what gets compared
   // with the next trip.
   { id: "cat_default_udhetime_bileta", emri: "Bileta & Fluturime", lloji: "shpenzim", prindi: "cat_default_udhetime", ngjyra: "#22c55e", ikona: "Plane" },
-  { id: "cat_default_udhetime_fjetje", emri: "Fjetje & Hotel", lloji: "shpenzim", prindi: "cat_default_udhetime", ngjyra: "#22c55e", ikona: "Home" },
-  { id: "cat_default_udhetime_makine", emri: "Qira Makine & Transferë", lloji: "shpenzim", prindi: "cat_default_udhetime", ngjyra: "#22c55e", ikona: "Car" },
-  { id: "cat_default_udhetime_vizita", emri: "Vizita & Aktivitete", lloji: "shpenzim", prindi: "cat_default_udhetime", ngjyra: "#22c55e", ikona: "Sparkles" },
+  { id: "cat_default_udhetime_fjetje", emri: "Fjetje & Hotel", lloji: "shpenzim", prindi: "cat_default_udhetime", ngjyra: "#22c55e", ikona: "Hotel" },
+  { id: "cat_default_udhetime_makine", emri: "Qira Makine & Transferë", lloji: "shpenzim", prindi: "cat_default_udhetime", ngjyra: "#22c55e", ikona: "Caravan" },
+  { id: "cat_default_udhetime_vizita", emri: "Vizita & Aktivitete", lloji: "shpenzim", prindi: "cat_default_udhetime", ngjyra: "#22c55e", ikona: "Mountain" },
 
   // Sport & Fitnes - the membership repeats every month, the shoes do not.
   { id: "cat_default_sport_palester", emri: "Palestër & Anëtarësi", lloji: "shpenzim", prindi: "cat_default_sport", ngjyra: "#10b981", ikona: "Dumbbell" },
-  { id: "cat_default_sport_pajisje", emri: "Pajisje Sportive", lloji: "shpenzim", prindi: "cat_default_sport", ngjyra: "#10b981", ikona: "Shirt" },
-  { id: "cat_default_sport_aktivitete", emri: "Aktivitete & Terrene", lloji: "shpenzim", prindi: "cat_default_sport", ngjyra: "#10b981", ikona: "Dumbbell" },
+  { id: "cat_default_sport_pajisje", emri: "Pajisje Sportive", lloji: "shpenzim", prindi: "cat_default_sport", ngjyra: "#10b981", ikona: "Volleyball" },
+  { id: "cat_default_sport_aktivitete", emri: "Aktivitete & Terrene", lloji: "shpenzim", prindi: "cat_default_sport", ngjyra: "#10b981", ikona: "Trophy" },
 
   // Dhurata - a wedding season and a birthday are different sizes of the same month.
   { id: "cat_default_dhurata_familje", emri: "Dhurata Familjare", lloji: "shpenzim", prindi: "cat_default_dhurata", ngjyra: "#ef4444", ikona: "Gift" },
-  { id: "cat_default_dhurata_dasma", emri: "Dasma & Festa", lloji: "shpenzim", prindi: "cat_default_dhurata", ngjyra: "#ef4444", ikona: "Sparkles" },
-  { id: "cat_default_dhurata_bamiresi", emri: "Bamirësi & Ndihmë", lloji: "shpenzim", prindi: "cat_default_dhurata", ngjyra: "#ef4444", ikona: "HeartPulse" },
+  { id: "cat_default_dhurata_dasma", emri: "Dasma & Festa", lloji: "shpenzim", prindi: "cat_default_dhurata", ngjyra: "#ef4444", ikona: "PartyPopper" },
+  { id: "cat_default_dhurata_bamiresi", emri: "Bamirësi & Ndihmë", lloji: "shpenzim", prindi: "cat_default_dhurata", ngjyra: "#ef4444", ikona: "Heart" },
 
   // Higjienë & Kozmetikë - the drugstore basket holds both the shampoo that runs out and the
   // perfume that does not.
-  { id: "cat_default_higjiene_personale", emri: "Higjienë Personale", lloji: "shpenzim", prindi: "cat_default_higjiene", ngjyra: "#ec4899", ikona: "Sparkles" },
-  { id: "cat_default_higjiene_kozmetike", emri: "Kozmetikë & Parfum", lloji: "shpenzim", prindi: "cat_default_higjiene", ngjyra: "#ec4899", ikona: "Gift" },
+  { id: "cat_default_higjiene_personale", emri: "Higjienë Personale", lloji: "shpenzim", prindi: "cat_default_higjiene", ngjyra: "#ec4899", ikona: "Bath" },
+  { id: "cat_default_higjiene_kozmetike", emri: "Kozmetikë & Parfum", lloji: "shpenzim", prindi: "cat_default_higjiene", ngjyra: "#ec4899", ikona: "Sparkles" },
 
   // Barna & Farmaci.
   { id: "cat_default_barna_recete", emri: "Barna me Recetë", lloji: "shpenzim", prindi: "cat_default_barna", ngjyra: "#14b8a6", ikona: "Pill" },
-  { id: "cat_default_barna_vitamina", emri: "Vitamina & Suplemente", lloji: "shpenzim", prindi: "cat_default_barna", ngjyra: "#14b8a6", ikona: "Pill" },
-  { id: "cat_default_barna_materiale", emri: "Materiale Mjekësore", lloji: "shpenzim", prindi: "cat_default_barna", ngjyra: "#14b8a6", ikona: "HeartPulse" },
+  { id: "cat_default_barna_vitamina", emri: "Vitamina & Suplemente", lloji: "shpenzim", prindi: "cat_default_barna", ngjyra: "#14b8a6", ikona: "Syringe" },
+  { id: "cat_default_barna_materiale", emri: "Materiale Mjekësore", lloji: "shpenzim", prindi: "cat_default_barna", ngjyra: "#14b8a6", ikona: "Bandage" },
 
   // Fëmijët - the one category that otherwise swallows food, clothes and school in a single line.
-  { id: "cat_default_femijet_shkolla", emri: "Kopsht & Shkollë", lloji: "shpenzim", prindi: "cat_default_femijet", ngjyra: "#f97316", ikona: "GraduationCap" },
+  { id: "cat_default_femijet_shkolla", emri: "Kopsht & Shkollë", lloji: "shpenzim", prindi: "cat_default_femijet", ngjyra: "#f97316", ikona: "Backpack" },
   { id: "cat_default_femijet_veshje", emri: "Veshje & Këpucë", lloji: "shpenzim", prindi: "cat_default_femijet", ngjyra: "#f97316", ikona: "Shirt" },
-  { id: "cat_default_femijet_lodra", emri: "Lodra & Aktivitete", lloji: "shpenzim", prindi: "cat_default_femijet", ngjyra: "#f97316", ikona: "Gift" },
+  { id: "cat_default_femijet_lodra", emri: "Lodra & Aktivitete", lloji: "shpenzim", prindi: "cat_default_femijet", ngjyra: "#f97316", ikona: "Drama" },
   { id: "cat_default_femijet_pelena", emri: "Pelena & Ushqim për Bebe", lloji: "shpenzim", prindi: "cat_default_femijet", ngjyra: "#f97316", ikona: "Baby" },
 
   // Kafshët Shtëpiake - the food repeats, the vet does not.
-  { id: "cat_default_kafshet_ushqim", emri: "Ushqim për Kafshë", lloji: "shpenzim", prindi: "cat_default_kafshet", ngjyra: "#84cc16", ikona: "PawPrint" },
-  { id: "cat_default_kafshet_veteriner", emri: "Veteriner", lloji: "shpenzim", prindi: "cat_default_kafshet", ngjyra: "#84cc16", ikona: "HeartPulse" },
-  { id: "cat_default_kafshet_aksesore", emri: "Aksesorë & Higjienë", lloji: "shpenzim", prindi: "cat_default_kafshet", ngjyra: "#84cc16", ikona: "Scissors" },
+  { id: "cat_default_kafshet_ushqim", emri: "Ushqim për Kafshë", lloji: "shpenzim", prindi: "cat_default_kafshet", ngjyra: "#84cc16", ikona: "Bone" },
+  { id: "cat_default_kafshet_veteriner", emri: "Veteriner", lloji: "shpenzim", prindi: "cat_default_kafshet", ngjyra: "#84cc16", ikona: "Dog" },
+  { id: "cat_default_kafshet_aksesore", emri: "Aksesorë & Higjienë", lloji: "shpenzim", prindi: "cat_default_kafshet", ngjyra: "#84cc16", ikona: "Cat" },
 
   // Abonime & Aplikacione - small amounts that only look small until they are counted apart.
-  { id: "cat_default_abonime_streaming", emri: "Streaming & Video", lloji: "shpenzim", prindi: "cat_default_abonime", ngjyra: "#8b5cf6", ikona: "Film" },
-  { id: "cat_default_abonime_muzike", emri: "Muzikë & Podkaste", lloji: "shpenzim", prindi: "cat_default_abonime", ngjyra: "#8b5cf6", ikona: "Music" },
-  { id: "cat_default_abonime_softuer", emri: "Cloud & Softuer", lloji: "shpenzim", prindi: "cat_default_abonime", ngjyra: "#8b5cf6", ikona: "Laptop" },
+  { id: "cat_default_abonime_streaming", emri: "Streaming & Video", lloji: "shpenzim", prindi: "cat_default_abonime", ngjyra: "#8b5cf6", ikona: "Tv" },
+  { id: "cat_default_abonime_muzike", emri: "Muzikë & Podkaste", lloji: "shpenzim", prindi: "cat_default_abonime", ngjyra: "#8b5cf6", ikona: "Headphones" },
+  { id: "cat_default_abonime_softuer", emri: "Cloud & Softuer", lloji: "shpenzim", prindi: "cat_default_abonime", ngjyra: "#8b5cf6", ikona: "Cloud" },
 
   // Bukuri & Parukeri.
   { id: "cat_default_bukuri_parukeri", emri: "Parukeri & Berber", lloji: "shpenzim", prindi: "cat_default_bukuri", ngjyra: "#a855f7", ikona: "Scissors" },
-  { id: "cat_default_bukuri_manikyr", emri: "Manikyr & Pedikyr", lloji: "shpenzim", prindi: "cat_default_bukuri", ngjyra: "#a855f7", ikona: "Sparkles" },
+  { id: "cat_default_bukuri_manikyr", emri: "Manikyr & Pedikyr", lloji: "shpenzim", prindi: "cat_default_bukuri", ngjyra: "#a855f7", ikona: "Palette" },
   { id: "cat_default_bukuri_trajtime", emri: "Trajtime Estetike", lloji: "shpenzim", prindi: "cat_default_bukuri", ngjyra: "#a855f7", ikona: "Sparkles" },
 
   // Riparime & Mirëmbajtje - the flat and the things inside it break on different schedules.
-  { id: "cat_default_riparime_shtepi", emri: "Riparime në Shtëpi", lloji: "shpenzim", prindi: "cat_default_riparime", ngjyra: "#eab308", ikona: "Home" },
+  { id: "cat_default_riparime_shtepi", emri: "Riparime në Shtëpi", lloji: "shpenzim", prindi: "cat_default_riparime", ngjyra: "#eab308", ikona: "Hammer" },
   { id: "cat_default_riparime_pajisje", emri: "Riparime Pajisjesh", lloji: "shpenzim", prindi: "cat_default_riparime", ngjyra: "#eab308", ikona: "Wrench" },
 
   // Teknologji & Pajisje.
-  { id: "cat_default_teknologji_telefon", emri: "Telefon & Tablet", lloji: "shpenzim", prindi: "cat_default_teknologji", ngjyra: "#3b82f6", ikona: "Smartphone" },
-  { id: "cat_default_teknologji_kompjuter", emri: "Kompjuter & Aksesorë", lloji: "shpenzim", prindi: "cat_default_teknologji", ngjyra: "#3b82f6", ikona: "Laptop" },
-  { id: "cat_default_teknologji_shtepiake", emri: "Pajisje Shtëpiake", lloji: "shpenzim", prindi: "cat_default_teknologji", ngjyra: "#3b82f6", ikona: "Home" },
+  { id: "cat_default_teknologji_telefon", emri: "Telefon & Tablet", lloji: "shpenzim", prindi: "cat_default_teknologji", ngjyra: "#3b82f6", ikona: "Tablet" },
+  { id: "cat_default_teknologji_kompjuter", emri: "Kompjuter & Aksesorë", lloji: "shpenzim", prindi: "cat_default_teknologji", ngjyra: "#3b82f6", ikona: "Monitor" },
+  { id: "cat_default_teknologji_shtepiake", emri: "Pajisje Shtëpiake", lloji: "shpenzim", prindi: "cat_default_teknologji", ngjyra: "#3b82f6", ikona: "WashingMachine" },
 
   // Sigurime - four policies that renew on four different dates and are compared one by one.
-  { id: "cat_default_sigurime_shendet", emri: "Sigurim Shëndetësor", lloji: "shpenzim", prindi: "cat_default_sigurime", ngjyra: "#0ea5e9", ikona: "HeartPulse" },
+  { id: "cat_default_sigurime_shendet", emri: "Sigurim Shëndetësor", lloji: "shpenzim", prindi: "cat_default_sigurime", ngjyra: "#0ea5e9", ikona: "Hospital" },
   { id: "cat_default_sigurime_makine", emri: "Sigurim i Makinës", lloji: "shpenzim", prindi: "cat_default_sigurime", ngjyra: "#0ea5e9", ikona: "Car" },
   { id: "cat_default_sigurime_banese", emri: "Sigurim i Banesës", lloji: "shpenzim", prindi: "cat_default_sigurime", ngjyra: "#0ea5e9", ikona: "Home" },
   { id: "cat_default_sigurime_jete", emri: "Sigurim Jete", lloji: "shpenzim", prindi: "cat_default_sigurime", ngjyra: "#0ea5e9", ikona: "Shield" },
 
   // Taksa & Tatime.
-  { id: "cat_default_taksa_tatim", emri: "Tatimi në të Ardhura", lloji: "shpenzim", prindi: "cat_default_taksa", ngjyra: "#64748b", ikona: "Landmark" },
-  { id: "cat_default_taksa_komunale", emri: "Taksa Komunale", lloji: "shpenzim", prindi: "cat_default_taksa", ngjyra: "#64748b", ikona: "Home" },
-  { id: "cat_default_taksa_tarifa", emri: "Tarifa Administrative", lloji: "shpenzim", prindi: "cat_default_taksa", ngjyra: "#64748b", ikona: "Receipt" },
+  { id: "cat_default_taksa_tatim", emri: "Tatimi në të Ardhura", lloji: "shpenzim", prindi: "cat_default_taksa", ngjyra: "#64748b", ikona: "FileText" },
+  { id: "cat_default_taksa_komunale", emri: "Taksa Komunale", lloji: "shpenzim", prindi: "cat_default_taksa", ngjyra: "#64748b", ikona: "Building" },
+  { id: "cat_default_taksa_tarifa", emri: "Tarifa Administrative", lloji: "shpenzim", prindi: "cat_default_taksa", ngjyra: "#64748b", ikona: "Stamp" },
 
   // Kredi & Kamata - the instalment is the plan, the interest and the fees are what it really cost.
   { id: "cat_default_kredi_kesti", emri: "Kësti i Kredisë", lloji: "shpenzim", prindi: "cat_default_kredi", ngjyra: "#64748b", ikona: "Landmark" },
-  { id: "cat_default_kredi_kamata", emri: "Kamata & Tarifa Bankare", lloji: "shpenzim", prindi: "cat_default_kredi", ngjyra: "#64748b", ikona: "Receipt" },
+  { id: "cat_default_kredi_kamata", emri: "Kamata & Tarifa Bankare", lloji: "shpenzim", prindi: "cat_default_kredi", ngjyra: "#64748b", ikona: "Percent" },
 
   // ── Hyrjet ──────────────────────────────────────────────────
   { id: "cat_default_rroga", emri: "Rroga", lloji: "hyrje", ngjyra: "#10b981", ikona: "Briefcase" },
@@ -368,11 +412,150 @@ export const DEFAULT_CATEGORIES = [
   // `cat_default_barazim_shp`.
   { id: "cat_default_barazim_hyrje", emri: "Barazim i Bilancit", lloji: "hyrje", ngjyra: "#64748b", ikona: "Scale" },
 
+  // ── Nënkategoritë e hyrjeve ────────────────────────────────────────────────
+  // The expense side was split first, because that is where a month goes wrong. But income arrives
+  // in pieces too, and counted as one line it answers the wrong question: "Rroga: 1.240 €" says
+  // nothing about whether that month was ordinary, whether it held overtime that will not repeat,
+  // or whether half of it was a reimbursement that was really money coming back rather than money
+  // earned. Same rule as above - each one keeps its parent's colour, the parent stays usable on its
+  // own, and a bucket that says nothing when split is left whole ("Hyrje të Tjera", "Barazim").
+
   // Investime & Dividendë - three sources that arrive at different times and behave differently;
   // counted as one line they say only "the investments brought something in this year".
-  { id: "cat_default_investime_dividende", emri: "Dividendë", lloji: "hyrje", prindi: "cat_default_investime", ngjyra: "#8b5cf6", ikona: "TrendingUp" },
-  { id: "cat_default_investime_interes", emri: "Interes Bankar", lloji: "hyrje", prindi: "cat_default_investime", ngjyra: "#8b5cf6", ikona: "Landmark" },
-  { id: "cat_default_investime_tregu", emri: "Aksione & Kripto", lloji: "hyrje", prindi: "cat_default_investime", ngjyra: "#8b5cf6", ikona: "Coins" },
+  { id: "cat_default_investime_dividende", emri: "Dividendë", lloji: "hyrje", prindi: "cat_default_investime", ngjyra: "#8b5cf6", ikona: "LineChart" },
+  { id: "cat_default_investime_interes", emri: "Interes Bankar", lloji: "hyrje", prindi: "cat_default_investime", ngjyra: "#8b5cf6", ikona: "BadgePercent" },
+  { id: "cat_default_investime_tregu", emri: "Aksione & Kripto", lloji: "hyrje", prindi: "cat_default_investime", ngjyra: "#8b5cf6", ikona: "Bitcoin" },
+
+  // Rroga - the base is what a budget can be built on; overtime and allowances are the part that
+  // makes one month look better than the next without the salary having changed at all.
+  { id: "cat_default_rroga_baze", emri: "Paga Bazë", lloji: "hyrje", prindi: "cat_default_rroga", ngjyra: "#10b981", ikona: "Briefcase" },
+  { id: "cat_default_rroga_shtesa", emri: "Orë Shtesë", lloji: "hyrje", prindi: "cat_default_rroga", ngjyra: "#10b981", ikona: "Coins" },
+  { id: "cat_default_rroga_kompensime", emri: "Shujta & Transport", lloji: "hyrje", prindi: "cat_default_rroga", ngjyra: "#10b981", ikona: "Sandwich" },
+  { id: "cat_default_rroga_prapambetur", emri: "Pagesa e Prapambetur", lloji: "hyrje", prindi: "cat_default_rroga", ngjyra: "#10b981", ikona: "ScrollText" },
+
+  // Bonus & Shpërblime - none of these repeat, and that is exactly why they are worth keeping apart
+  // from the salary they arrive beside.
+  { id: "cat_default_bonus_vjetor", emri: "Bonus Vjetor", lloji: "hyrje", prindi: "cat_default_bonus", ngjyra: "#22c55e", ikona: "Trophy" },
+  { id: "cat_default_bonus_performance", emri: "Shpërblim Performance", lloji: "hyrje", prindi: "cat_default_bonus", ngjyra: "#22c55e", ikona: "Medal" },
+  { id: "cat_default_bonus_bakshish", emri: "Bakshish", lloji: "hyrje", prindi: "cat_default_bonus", ngjyra: "#22c55e", ikona: "HandCoins" },
+
+  // Punë e Lirë - a second income that is several incomes, and the point of freelancing is knowing
+  // which of them is worth the hours.
+  { id: "cat_default_freelance_projekte", emri: "Projekte & Kontrata", lloji: "hyrje", prindi: "cat_default_freelance", ngjyra: "#06b6d4", ikona: "Handshake" },
+  { id: "cat_default_freelance_konsulence", emri: "Konsulencë me Orë", lloji: "hyrje", prindi: "cat_default_freelance", ngjyra: "#06b6d4", ikona: "Laptop" },
+  { id: "cat_default_freelance_dixhitale", emri: "Shitje Dixhitale", lloji: "hyrje", prindi: "cat_default_freelance", ngjyra: "#06b6d4", ikona: "Cloud" },
+
+  // Qira e Marrë - the rent itself and what the tenant pays back for the bills are two different
+  // numbers, and only the first one is income the year can be compared on.
+  { id: "cat_default_qira_marre_banesa", emri: "Qira e Banesës", lloji: "hyrje", prindi: "cat_default_qira_marre", ngjyra: "#f59e0b", ikona: "Key" },
+  { id: "cat_default_qira_marre_lokal", emri: "Qira e Lokalit", lloji: "hyrje", prindi: "cat_default_qira_marre", ngjyra: "#f59e0b", ikona: "Store" },
+  { id: "cat_default_qira_marre_shpenzime", emri: "Shpenzime të Mbuluara", lloji: "hyrje", prindi: "cat_default_qira_marre", ngjyra: "#f59e0b", ikona: "Lightbulb" },
+
+  // Rimbursim & Kthim Parash - money coming back, which is not money earned. Split by where it came
+  // back from, because a returned purchase and a work expense claim are owed to different places.
+  { id: "cat_default_rimbursim_blerje", emri: "Kthim Blerjeje", lloji: "hyrje", prindi: "cat_default_rimbursim", ngjyra: "#14b8a6", ikona: "ShoppingBag" },
+  { id: "cat_default_rimbursim_pune", emri: "Rimbursim nga Puna", lloji: "hyrje", prindi: "cat_default_rimbursim", ngjyra: "#14b8a6", ikona: "Briefcase" },
+  { id: "cat_default_rimbursim_sigurim", emri: "Rimbursim Sigurimi", lloji: "hyrje", prindi: "cat_default_rimbursim", ngjyra: "#14b8a6", ikona: "Shield" },
+
+  // Dhurata të Marra - a wedding is the one day of the year when this line is larger than the
+  // salary, and rolled in with everything else it is never found again.
+  { id: "cat_default_dhurata_hyrje_familje", emri: "Dhurata Familjare", lloji: "hyrje", prindi: "cat_default_dhurata_hyrje", ngjyra: "#ec4899", ikona: "Gift" },
+  { id: "cat_default_dhurata_hyrje_festa", emri: "Dasma & Festa", lloji: "hyrje", prindi: "cat_default_dhurata_hyrje", ngjyra: "#ec4899", ikona: "Cake" },
+
+  // ── Ndarja e imët, shtuar pas së parës ──────────────────────────────────────
+  // The first pass split the baskets that were doing too much on their own. This one goes a step
+  // further inside them, because the same complaint came back one level down: "Riparime" answered
+  // for the plumber, the painter and the drill, and a category that answers for three trades is a
+  // category that tells you nothing when it grows.
+  //
+  // Two parents that were deliberately left whole are split here after all, and the reasons above
+  // them say why the earlier reasoning stopped holding. Everything genuinely unanswerable by a
+  // split stays whole: "Shpenzime të Tjera", "Hyrje të Tjera", "Këste të Kartelës" and the two
+  // "Barazim" rows.
+  //
+  // Still one level deep - a third would not add an answer, only filing work - and still only a
+  // starting point: rename, re-file or delete freely.
+  { id: "cat_default_ushqim_bulmet", emri: "Bulmet & Vezë", lloji: "shpenzim", prindi: "cat_default_ushqim", ngjyra: "#f59e0b", ikona: "Egg" },
+  { id: "cat_default_ushqim_embelsira", emri: "Ëmbëlsira & Snacks", lloji: "shpenzim", prindi: "cat_default_ushqim", ngjyra: "#f59e0b", ikona: "Cookie" },
+  { id: "cat_default_ushqim_ngrira", emri: "Të Ngrira & Konserva", lloji: "shpenzim", prindi: "cat_default_ushqim", ngjyra: "#f59e0b", ikona: "Snowflake" },
+  { id: "cat_default_restorant_mengjes", emri: "Mëngjes & Brunch", lloji: "shpenzim", prindi: "cat_default_restorant", ngjyra: "#f97316", ikona: "Croissant" },
+  { id: "cat_default_restorant_embeltore", emri: "Akullore & Ëmbëltore", lloji: "shpenzim", prindi: "cat_default_restorant", ngjyra: "#f97316", ikona: "Popsicle" },
+  { id: "cat_default_shtepi_tekstil", emri: "Tekstil & Shtroje", lloji: "shpenzim", prindi: "cat_default_shtepi", ngjyra: "#84cc16", ikona: "Bed" },
+  { id: "cat_default_shtepi_kopsht", emri: "Kopsht & Ballkon", lloji: "shpenzim", prindi: "cat_default_shtepi", ngjyra: "#84cc16", ikona: "Sprout" },
+  { id: "cat_default_shtepi_llamba", emri: "Llamba & Elektrike", lloji: "shpenzim", prindi: "cat_default_shtepi", ngjyra: "#84cc16", ikona: "Plug" },
+  { id: "cat_default_qira_garazh", emri: "Garazh & Parkim", lloji: "shpenzim", prindi: "cat_default_qira", ngjyra: "#8b5cf6", ikona: "CircleParking" },
+  { id: "cat_default_fatura_gaz", emri: "Gaz i Gatimit", lloji: "shpenzim", prindi: "cat_default_fatura", ngjyra: "#06b6d4", ikona: "Flame" },
+  { id: "cat_default_fatura_kondicioner", emri: "Ftohje & Kondicioner", lloji: "shpenzim", prindi: "cat_default_fatura", ngjyra: "#06b6d4", ikona: "Fan" },
+  { id: "cat_default_telefon_mbushje", emri: "Mbushje & Paketa", lloji: "shpenzim", prindi: "cat_default_telefon", ngjyra: "#0ea5e9", ikona: "Phone" },
+  { id: "cat_default_transport_biciklete", emri: "Biçikletë & Trotinet", lloji: "shpenzim", prindi: "cat_default_transport", ngjyra: "#3b82f6", ikona: "Bike" },
+  { id: "cat_default_transport_larje", emri: "Larje Makine", lloji: "shpenzim", prindi: "cat_default_transport", ngjyra: "#3b82f6", ikona: "Droplet" },
+  { id: "cat_default_transport_regjistrim", emri: "Regjistrim & Kontroll Teknik", lloji: "shpenzim", prindi: "cat_default_transport", ngjyra: "#3b82f6", ikona: "FileSignature" },
+  { id: "cat_default_karburant_benzine", emri: "Benzinë", lloji: "shpenzim", prindi: "cat_default_karburant", ngjyra: "#eab308", ikona: "Fuel" },
+  { id: "cat_default_karburant_nafte", emri: "Naftë", lloji: "shpenzim", prindi: "cat_default_karburant", ngjyra: "#eab308", ikona: "Truck" },
+  { id: "cat_default_karburant_gaz", emri: "Gaz (LPG)", lloji: "shpenzim", prindi: "cat_default_karburant", ngjyra: "#eab308", ikona: "Flame" },
+  { id: "cat_default_karburant_elektrik", emri: "Rikarikim Elektrik", lloji: "shpenzim", prindi: "cat_default_karburant", ngjyra: "#eab308", ikona: "BatteryCharging" },
+  { id: "cat_default_shendet_spital", emri: "Operacione & Spital", lloji: "shpenzim", prindi: "cat_default_shendetesi", ngjyra: "#f43f5e", ikona: "Hospital" },
+  { id: "cat_default_shendet_terapi", emri: "Terapi & Fizioterapi", lloji: "shpenzim", prindi: "cat_default_shendetesi", ngjyra: "#f43f5e", ikona: "Activity" },
+  { id: "cat_default_shendet_psikolog", emri: "Psikolog & Këshillim", lloji: "shpenzim", prindi: "cat_default_shendetesi", ngjyra: "#f43f5e", ikona: "Brain" },
+  { id: "cat_default_argetim_muze", emri: "Muze & Ekspozita", lloji: "shpenzim", prindi: "cat_default_argetim", ngjyra: "#ec4899", ikona: "Palette" },
+  { id: "cat_default_argetim_bast", emri: "Bast & Lotari", lloji: "shpenzim", prindi: "cat_default_argetim", ngjyra: "#ec4899", ikona: "Dices" },
+  { id: "cat_default_argetim_muzike", emri: "Instrumente & Hobi Muzikor", lloji: "shpenzim", prindi: "cat_default_argetim", ngjyra: "#ec4899", ikona: "Guitar" },
+  { id: "cat_default_veshje_pune", emri: "Veshje Pune & Uniforma", lloji: "shpenzim", prindi: "cat_default_veshje", ngjyra: "#a855f7", ikona: "Briefcase" },
+  { id: "cat_default_veshje_rrobaqepes", emri: "Riparim & Rrobaqepës", lloji: "shpenzim", prindi: "cat_default_veshje", ngjyra: "#a855f7", ikona: "Scissors" },
+  { id: "cat_default_veshje_bizhuteri", emri: "Bizhuteri & Orë", lloji: "shpenzim", prindi: "cat_default_veshje", ngjyra: "#a855f7", ikona: "Gem" },
+  { id: "cat_default_edukim_online", emri: "Kurse Online", lloji: "shpenzim", prindi: "cat_default_edukim", ngjyra: "#14b8a6", ikona: "Monitor" },
+  { id: "cat_default_edukim_gjuhe", emri: "Gjuhë të Huaja", lloji: "shpenzim", prindi: "cat_default_edukim", ngjyra: "#14b8a6", ikona: "Languages" },
+  { id: "cat_default_edukim_provime", emri: "Provime & Certifikime", lloji: "shpenzim", prindi: "cat_default_edukim", ngjyra: "#14b8a6", ikona: "BadgeCheck" },
+  { id: "cat_default_udhetime_ushqim", emri: "Ushqim gjatë Udhëtimit", lloji: "shpenzim", prindi: "cat_default_udhetime", ngjyra: "#22c55e", ikona: "Sandwich" },
+  { id: "cat_default_udhetime_suvenire", emri: "Suvenire & Dhurata", lloji: "shpenzim", prindi: "cat_default_udhetime", ngjyra: "#22c55e", ikona: "Gift" },
+  { id: "cat_default_udhetime_tren", emri: "Tren & Autobus Ndërqytetës", lloji: "shpenzim", prindi: "cat_default_udhetime", ngjyra: "#22c55e", ikona: "TrainFront" },
+  { id: "cat_default_sport_trajner", emri: "Trajner Personal", lloji: "shpenzim", prindi: "cat_default_sport", ngjyra: "#10b981", ikona: "Users" },
+  { id: "cat_default_sport_gara", emri: "Gara & Regjistrime", lloji: "shpenzim", prindi: "cat_default_sport", ngjyra: "#10b981", ikona: "Medal" },
+  { id: "cat_default_dhurata_ditelindje", emri: "Ditëlindje", lloji: "shpenzim", prindi: "cat_default_dhurata", ngjyra: "#ef4444", ikona: "Cake" },
+  { id: "cat_default_dhurata_fundviti", emri: "Festat e Fundvitit", lloji: "shpenzim", prindi: "cat_default_dhurata", ngjyra: "#ef4444", ikona: "TreePine" },
+  { id: "cat_default_kredi_noteri", emri: "Noteri & Dosje", lloji: "shpenzim", prindi: "cat_default_kredi", ngjyra: "#64748b", ikona: "ScrollText" },
+  { id: "cat_default_kredi_sigurim", emri: "Sigurimi i Kredisë", lloji: "shpenzim", prindi: "cat_default_kredi", ngjyra: "#64748b", ikona: "Shield" },
+  { id: "cat_default_higjiene_floke", emri: "Kujdes për Flokët", lloji: "shpenzim", prindi: "cat_default_higjiene", ngjyra: "#ec4899", ikona: "SprayCan" },
+  { id: "cat_default_higjiene_letra", emri: "Peceta & Produkte Letre", lloji: "shpenzim", prindi: "cat_default_higjiene", ngjyra: "#ec4899", ikona: "Package" },
+  { id: "cat_default_higjiene_rroje", emri: "Rroje & Depilim", lloji: "shpenzim", prindi: "cat_default_higjiene", ngjyra: "#ec4899", ikona: "Scissors" },
+  { id: "cat_default_barna_pareceteshme", emri: "Barna pa Recetë", lloji: "shpenzim", prindi: "cat_default_barna", ngjyra: "#14b8a6", ikona: "Tablets" },
+  { id: "cat_default_barna_duhan", emri: "Duhan & Alternativa", lloji: "shpenzim", prindi: "cat_default_barna", ngjyra: "#14b8a6", ikona: "Cigarette" },
+  { id: "cat_default_femijet_kujdestare", emri: "Kujdestare & Çerdhe", lloji: "shpenzim", prindi: "cat_default_femijet", ngjyra: "#f97316", ikona: "Users" },
+  { id: "cat_default_femijet_shendet", emri: "Shëndeti i Fëmijëve", lloji: "shpenzim", prindi: "cat_default_femijet", ngjyra: "#f97316", ikona: "Stethoscope" },
+  { id: "cat_default_femijet_sport", emri: "Aktivitete Sportive", lloji: "shpenzim", prindi: "cat_default_femijet", ngjyra: "#f97316", ikona: "Volleyball" },
+  { id: "cat_default_kafshet_barna", emri: "Barna & Vaksina", lloji: "shpenzim", prindi: "cat_default_kafshet", ngjyra: "#84cc16", ikona: "Syringe" },
+  { id: "cat_default_kafshet_strehim", emri: "Strehim & Ruajtje", lloji: "shpenzim", prindi: "cat_default_kafshet", ngjyra: "#84cc16", ikona: "Home" },
+  { id: "cat_default_abonime_lajme", emri: "Lajme & Revista Online", lloji: "shpenzim", prindi: "cat_default_abonime", ngjyra: "#8b5cf6", ikona: "Newspaper" },
+  { id: "cat_default_abonime_lojera", emri: "Lojëra & Gaming", lloji: "shpenzim", prindi: "cat_default_abonime", ngjyra: "#8b5cf6", ikona: "Gamepad2" },
+  { id: "cat_default_abonime_mjete", emri: "Mjete Pune & AI", lloji: "shpenzim", prindi: "cat_default_abonime", ngjyra: "#8b5cf6", ikona: "Cpu" },
+  { id: "cat_default_bukuri_spa", emri: "Masazh & Spa", lloji: "shpenzim", prindi: "cat_default_bukuri", ngjyra: "#a855f7", ikona: "Bath" },
+  { id: "cat_default_bukuri_produkte", emri: "Produkte Profesionale", lloji: "shpenzim", prindi: "cat_default_bukuri", ngjyra: "#a855f7", ikona: "SprayCan" },
+  { id: "cat_default_riparime_hidraulik", emri: "Hidraulik", lloji: "shpenzim", prindi: "cat_default_riparime", ngjyra: "#eab308", ikona: "Droplet" },
+  { id: "cat_default_riparime_elektricist", emri: "Elektricist", lloji: "shpenzim", prindi: "cat_default_riparime", ngjyra: "#eab308", ikona: "Zap" },
+  { id: "cat_default_riparime_boje", emri: "Bojë & Rinovim", lloji: "shpenzim", prindi: "cat_default_riparime", ngjyra: "#eab308", ikona: "PaintRoller" },
+  { id: "cat_default_riparime_vegla", emri: "Vegla & Materiale", lloji: "shpenzim", prindi: "cat_default_riparime", ngjyra: "#eab308", ikona: "Drill" },
+  { id: "cat_default_teknologji_aksesore", emri: "Aksesorë & Kabllo", lloji: "shpenzim", prindi: "cat_default_teknologji", ngjyra: "#3b82f6", ikona: "Plug" },
+  { id: "cat_default_teknologji_foto", emri: "Foto & Video", lloji: "shpenzim", prindi: "cat_default_teknologji", ngjyra: "#3b82f6", ikona: "Camera" },
+  { id: "cat_default_teknologji_audio", emri: "Audio & Kufje", lloji: "shpenzim", prindi: "cat_default_teknologji", ngjyra: "#3b82f6", ikona: "Headphones" },
+  { id: "cat_default_teknologji_konsola", emri: "Konsola & Gaming", lloji: "shpenzim", prindi: "cat_default_teknologji", ngjyra: "#3b82f6", ikona: "Gamepad2" },
+  { id: "cat_default_sigurime_udhetimi", emri: "Sigurim Udhëtimi", lloji: "shpenzim", prindi: "cat_default_sigurime", ngjyra: "#0ea5e9", ikona: "Luggage" },
+  { id: "cat_default_taksa_automjeti", emri: "Taksa e Automjetit", lloji: "shpenzim", prindi: "cat_default_taksa", ngjyra: "#64748b", ikona: "Car" },
+  { id: "cat_default_taksa_dogana", emri: "Doganë & Import", lloji: "shpenzim", prindi: "cat_default_taksa", ngjyra: "#64748b", ikona: "Package" },
+  { id: "cat_default_rroga_pushime", emri: "Pagesa e Pushimeve", lloji: "hyrje", prindi: "cat_default_rroga", ngjyra: "#10b981", ikona: "Sun" },
+  { id: "cat_default_rroga_trembedhjeta", emri: "Pagesa e 13-të", lloji: "hyrje", prindi: "cat_default_rroga", ngjyra: "#10b981", ikona: "Banknote" },
+  { id: "cat_default_bonus_projekti", emri: "Bonus Projekti", lloji: "hyrje", prindi: "cat_default_bonus", ngjyra: "#22c55e", ikona: "Package" },
+  { id: "cat_default_freelance_perkthime", emri: "Përkthime & Shkrim", lloji: "hyrje", prindi: "cat_default_freelance", ngjyra: "#06b6d4", ikona: "Pencil" },
+  { id: "cat_default_freelance_dizajn", emri: "Dizajn & Media", lloji: "hyrje", prindi: "cat_default_freelance", ngjyra: "#06b6d4", ikona: "Palette" },
+  { id: "cat_default_investime_fonde", emri: "Fonde & ETF", lloji: "hyrje", prindi: "cat_default_investime", ngjyra: "#8b5cf6", ikona: "Vault" },
+  { id: "cat_default_investime_fitim", emri: "Fitim nga Shitja", lloji: "hyrje", prindi: "cat_default_investime", ngjyra: "#8b5cf6", ikona: "TrendingUp" },
+  { id: "cat_default_qira_marre_toke", emri: "Garazh, Tokë ose Depo", lloji: "hyrje", prindi: "cat_default_qira_marre", ngjyra: "#f59e0b", ikona: "CircleParking" },
+  { id: "cat_default_dhurata_hyrje_ndihme", emri: "Ndihmë nga Familja", lloji: "hyrje", prindi: "cat_default_dhurata_hyrje", ngjyra: "#ec4899", ikona: "HandHeart" },
+  { id: "cat_default_rimbursim_taksa", emri: "Kthim Takse", lloji: "hyrje", prindi: "cat_default_rimbursim", ngjyra: "#14b8a6", ikona: "FileText" },
+  { id: "cat_default_rimbursim_udhetim", emri: "Rimbursim Udhëtimi", lloji: "hyrje", prindi: "cat_default_rimbursim", ngjyra: "#14b8a6", ikona: "Luggage" },
+  { id: "cat_default_shitje_teknologji", emri: "Pajisje & Teknologji", lloji: "hyrje", prindi: "cat_default_shitje", ngjyra: "#06b6d4", ikona: "Laptop" },
+  { id: "cat_default_shitje_rroba", emri: "Rroba & Aksesorë", lloji: "hyrje", prindi: "cat_default_shitje", ngjyra: "#06b6d4", ikona: "Shirt" },
+  { id: "cat_default_shitje_shtepiake", emri: "Mobilje & Shtëpiake", lloji: "hyrje", prindi: "cat_default_shitje", ngjyra: "#06b6d4", ikona: "Sofa" },
+  { id: "cat_default_shitje_automjet", emri: "Automjet", lloji: "hyrje", prindi: "cat_default_shitje", ngjyra: "#06b6d4", ikona: "Car" },
 ];
 
 export const DEFAULT_ACCOUNTS = [

@@ -9,6 +9,179 @@ e fundit kur rregullohet diçka, dhe e para vetëm kur ndryshon vetë forma e pr
 herë, te `2.0.0`, kur të dhënat mësuan të dalin nga shfletuesi. Datat janë ato të commit-it që e
 ngriti versionin.
 
+## [2.26.0] - 2026-09-12
+
+### Shtuar
+- **Ndarja e imët e kategorive: 81 nënkategori të reja.** Pasi lista u nda një herë, e njëjta ankesë
+  u kthye një nivel më poshtë: *Riparime & Mirëmbajtje* përgjigjej njësoj për hidraulikun, bojaxhiun
+  dhe një trapan të blerë një herë, dhe një kategori që përgjigjet për tri zanate nuk të thotë asgjë
+  kur rritet. Tani nënkategoritë janë 183 te 39 kategori kryesore, dhe 34 familje u zgjeruan:
+
+  - **Ushqim & Pije** merr *Bulmet & Vezë*, *Ëmbëlsira & Snacks*, *Të Ngrira & Konserva*.
+  - **Riparime** ndahet në *Hidraulik*, *Elektricist*, *Bojë & Rinovim*, *Vegla & Materiale*.
+  - **Teknologji** merr *Aksesorë & Kabllo*, *Foto & Video*, *Audio & Kufje*, *Konsola & Gaming*.
+  - **Transport** merr *Biçikletë & Trotinet*, *Larje Makine*, *Regjistrim & Kontroll Teknik*.
+  - **Shëndetësi** merr *Operacione & Spital*, *Terapi & Fizioterapi*, *Psikolog & Këshillim*.
+  - Dhe po ashtu Blerje Shtëpiake, Fatura, Telefon, Argëtim, Veshje, Edukim, Udhëtime, Sport,
+    Dhurata, Kredi, Higjienë, Barna, Fëmijët, Kafshët, Abonime, Bukuri, Sigurime, Taksa, Qira -
+    bashkë me hyrjet: Rroga, Bonus, Punë e Lirë, Investime, Qira e Marrë, Dhurata të Marra dhe
+    Rimbursim.
+
+  **Dy kategori që ishin lënë me qëllim të pandara, tani ndahen.** *Karburant* mbahej e tërë sepse
+  «karburanti është një lloj blerjeje sido që shkruhet»; kjo nuk qëndron më - një depozitë benzinë,
+  një bombol gaz dhe një rikarikim elektrik janë tri çmime që lëvizin në tri drejtime, dhe pikërisht
+  kjo rreshtë duhet të përgjigjet kur ndërrohet vetura. U nda në *Benzinë*, *Naftë*, *Gaz (LPG)* dhe
+  *Rikarikim Elektrik*. *Shitje (dorë e dytë)* mori *Pajisje & Teknologji*, *Rroba & Aksesorë*,
+  *Mobilje & Shtëpiake* dhe *Automjet*, sepse aty çfarë u shit është vetë informacioni.
+
+  Të pandara mbeten vetëm ato ku ndarja nuk përgjigjet asgjë: *Këste të Kartelës*, *Shpenzime të
+  Tjera*, *Hyrje të Tjera* dhe dy rreshtat e *Barazimit*. Lista mbetet **një nivel e thellë** si
+  më parë - një i tretë nuk shton përgjigje, vetëm punë arkivimi - dhe kategoria kryesore mbetet e
+  zgjedhshme si më parë: te zgjedhësi ajo del si «... (në përgjithësi)» mbi fëmijët e vet, pra kush
+  nuk e do detajin nuk e prek fare.
+
+- **186 ikona te zgjedhësi.** Ndarja e imët kërkoi shenja të reja - një familje ka kuptim të ndahet
+  vetëm nëse rreshtat e saj dallohen me një shikim. U shtuan rreth 45 (termometër, prizë, karikim,
+  trapan, bojë, vezë, biskotë, tableta, zare, kitarë, gjuhë, bizhuteri, tren, anije...), dhe asnjë
+  familje e parazgjedhur nuk ka dy rreshta me të njëjtën ikonë. Emrat e vjetër mbeten të gjithë:
+  një ikonë e ruajtur në bazën e dikujt vizatohet si gjithmonë.
+
+### Ndryshuar
+- **Ngrohja te faturat merr termometrin**, sepse flaka i takon më shumë rreshtit të ri «Gaz i
+  Gatimit» krahas saj.
+
+## [2.25.0] - 2026-09-12
+
+### Shtuar
+- **Kamata e një borxhi, dhe çka do të thotë ajo.** Te formulari i borxhit u shtua fusha **Norma
+  Vjetore e Kamatës** - shkruhet si në kontratë (18 për 18%). Deri tani norma mund të shkruhej vetëm
+  si tekst te shënimi, ku asnjë llogaritje nuk e shihte dot; tani e sheh gjithçka.
+
+  Me të, rreshti i ritmit nën borxh e ndan pagesën në dysh: sa prej saj e zbret vërtet borxhin dhe
+  sa shkon te kamata («Nga to, rreth 200,00 € janë kamatë»). Dhe thotë rastin që përndryshe nuk
+  duket me sy - kur pagesa mujore është më e vogël se kamata e muajit, borxhi nuk po zvogëlohet
+  fare, sado gjatë të paguhet. Parashikimi i mbylljes llogaritet si te banka, me kamatën që i
+  shtohet asaj që mbetet, prandaj një borxh me normë del më i gjatë se i njëjti borxh pa të - siç
+  është në të vërtetë. Pa normë të shënuar, gjithçka mbetet saktësisht si më parë.
+
+- **Sa duhet paguar që afati të mbahet.** Rreshti i ritmit e ngrinte problemin («Afati i 31/12/2026
+  nuk arrihet») dhe ndalej aty. Tani e mbaron fjalinë: *«Afati i 31/12/2026 kërkon 233,50 € në
+  muaj»* - kësti i vërtetë, me kamatë kur ka, dhe pjesëtim i thjeshtë kur s'ka. Një borxh me normë
+  por ende pa asnjë pagesë e ka rreshtin e vet: sa kushton çdo muaj që rri ashtu.
+
+- **«Çfarë të paguhet e para».** Kur ka më shumë se një borxh të hapur, sipër tyre del radha, me dy
+  mënyra renditjeje: **kamata më e lartë e para** (kushton më pak gjithsej, sepse ndal të shtrenjtin
+  të rritet) ose **shuma më e vogël e para** (mbyll një borxh më shpejt, dhe një borxh më pak është
+  një pagesë më pak për të mbajtur mend). Të dyja janë përgjigje të sakta për pyetje të ndryshme,
+  prandaj zgjidhet, nuk vendoset. Nën titull shkruhet edhe sa kushton gjithë grupi vetëm për të
+  qëndruar në vend - shuma e kamatave mujore. Huatë e dhëna, borxhet e mbyllura dhe të arkivuarat
+  nuk hyjnë në radhë: ato nuk janë diçka që paguhet.
+
+- **Tema ndjek pajisjen.** Te Cilësimet → Pamja ka tri zgjedhje tani: *Sipas pajisjes*, *E errët*,
+  *E bardhë*. E para është parazgjedhja e re, dhe ishte mungesa më e vjetër e temës së bardhë: deri
+  tani aplikacioni hapej i errët edhe në një telefon të vendosur në të bardhë, dhe rrinte ashtu
+  derisa dikush gjente butonin. Tani ndiqet ajo që kërkon vetë pajisja, edhe kur ajo ndërron vetë
+  në mbrëmje me tabin hapur. Kush e ka zgjedhur temën me dorë e ka po atë zgjedhje si më parë.
+
+- **Raportet që presin shihen tani.** Kartela e raporteve dinte të thoshte «u dërgua» dhe «nuk u
+  dërgua», por jo gjendjen e tretë e më të shpeshtën: periudha mbylli, asgjë nuk dështoi, dhe emaili
+  thjesht pret. Ajo gjendje ishte e padukshme, prandaj një raport i vonuar dukej si i humbur. Tani
+  del një rresht i vetin: cili raport pret, pse nuk ka orar që e nis vetë, dhe ku shtypet për ta
+  nisur menjëherë.
+
+- **Kamata dhe ritmi edhe te raporti mujor.** Seksioni i borxheve te emaili tregonte sa është paguar
+  dhe sa ka mbetur; tani shton edhe rreth kur mbyllet me ritmin që tregoi vetë ajo periudhë - ose e
+  thotë hapur kur nuk po zvogëlohet. Matur deri në fund të periudhës për të cilën flet raporti, jo
+  deri sot, që një email i korrikut i lexuar në shtator të mos i ketë shifrat në kundërshtim me
+  njëra-tjetrën.
+
+- **139 ikona në vend të 36.** Lista e ikonave ishte ajo e kategorive të para, dhe mbeti aty edhe kur
+  kategoritë u bënë 141: pesë fëmijët e «Ushqim & Pije» vizatoheshin të gjithë me të njëjtin karrocë
+  tregu. U shtuan rreth njëqind - ushqim, banesë, transport, shëndet, pajisje, para, festa, sport -
+  dhe 75 nënkategori të parazgjedhura morën ikonën e vet, pra asnjë familje nuk ka më dy rreshta që
+  duken njësoj. Asnjë emër i vjetër nuk u hoq: një ikonë e ruajtur në bazën e dikujt vizatohet si
+  gjithmonë.
+
+### Rregulluar
+- **Raporti provohet sërish sapo kthehet interneti.** Aplikacioni i hapur pa lidhje nuk e dërgonte
+  dot raportin - gjë e pritshme - por as nuk provonte më derisa tabi të fshihej e të rishfaqej, që
+  në një telefon të lënë në një ekran mund të jetë nesër. Tani dëgjohet kthimi i lidhjes dhe
+  provohet menjëherë, duke anashkaluar pritjen e zakonshme njëorëshe: pikërisht ai çast është kur
+  ia vlen të provohet.
+
+### Ndryshuar
+- **Profili pastrohet nga dy fushat e hequra.** `llogariaKategorive` dhe `llogariaEFundit` - kujtesa
+  e llogarisë sipas kategorisë dhe sipas llojit - nuk lexohen e nuk shkruhen që nga 2.24.0. Tani
+  hiqen edhe nga vetë rekordi, në hapjen e parë pas përditësimit. Profili sinkronizohet dhe njëra
+  prej tyre mbante një çelës për çdo kategori, pra do të bartej mes pajisjeve dhe në çdo kopje JSON
+  përgjithmonë, pa thënë asgjë. Shkruhet vetëm nëse ka vërtet çka hiqet.
+
+## [2.24.0] - 2026-09-12
+
+### Shtuar
+- **Ritmi i shlyerjes te çdo borxh.** Një shënim borxhi e thoshte sa ka mbetur dhe cili ishte afati
+  i rënë dakord, por jo atë që dikush do ta pyeste i pari: *kur mbaron kjo në të vërtetë*. Afati
+  është marrëveshja, jo ecuria. Tani nën çdo borxh të hapur del një rresht i nxjerrë nga historiku i
+  vetë atij shënimi - «Paguani mesatarisht 50,00 € në muaj. Me këtë ritëm mbyllet rreth Mars 2028 -
+  edhe 18 muaj» - dhe kur ai datë e kalon afatin e shkruar, rreshti kalon në të kuqe dhe e thotë:
+  «Afati i 31/12/2026 nuk arrihet pa e rritur pagesën».
+
+  Mesatarja matet mbi muajt që ka zgjatur pagesa, jo mbi numrin e pagesave, sepse të dyja s'janë e
+  njëjta gjë: tri pagesa brenda një muaji janë një muaj i rëndë, jo tre muaj që po paguhen. Dhe
+  numërohen edhe muajt në të cilët nuk u pagua asgjë - deri sot, jo deri te pagesa e fundit - sepse
+  pikërisht ata e largojnë fundin. Blerjet e reja mbi kartelë («shtesa») nuk hyjnë në ritëm, edhe pse
+  rrinë te sa ka mbetur: ato e ndryshojnë borxhin, jo shpejtësinë me të cilën po shlyhet. Kur ritmi
+  është aq i ngadalshëm sa mbyllja del mbi 20 vjet larg, faqja e thotë me fjalë në vend se të nxjerrë
+  një datë që nuk do të thotë asgjë.
+
+  Kartela e katërt sipër faqes tani është **Ritmi Mujor** - sa marrin borxhet aktive nga një muaj me
+  ritmin e tanishëm, shifra kundër së cilës matet nëse një këst i ri ka vend. Numri i rreshtave të
+  regjistruar, që zinte atë vend më parë, ka mbetur si rreshti i vogël nën të.
+
+- **Nënkategoritë e hyrjeve.** Shpenzimet ishin ndarë me kohë; hyrjet jo, dhe si një rresht i vetëm
+  ato i përgjigjen pyetjes së gabuar. «Rroga: 1.240 €» nuk thotë nëse ai muaj ishte i zakonshëm, nëse
+  kishte orë shtesë që nuk përsëriten, apo nëse gjysma ishte një rimbursim - para që po ktheheshin,
+  jo para që u fituan. U shtuan 18 nënkategori te gjashtë prej tyre: **Rroga** (Paga Bazë, Orë Shtesë,
+  Shujta & Transport, Pagesa e Prapambetur), **Bonus & Shpërblime**, **Punë e Lirë**, **Qira e Marrë**,
+  **Rimbursim & Kthim Parash** dhe **Dhurata të Marra** - kjo e fundit sepse në ditën e një dasme ajo
+  rreshtë është më e madhe se rroga, e përzier me të tjerat nuk gjendet më kurrë.
+
+  Si çdo herë, vijnë edhe te bazat ekzistuese (vetëm aty ku prindi është ende në listë), mbajnë
+  ngjyrën e prindit, dhe riemërtohen ose fshihen lirisht. «Hyrje të Tjera» dhe «Barazim i Bilancit»
+  mbeten të pandara me qëllim: ndarja e tyre nuk do t'i përgjigjej asgjëje.
+
+### Ndryshuar
+- **Shkronjat e aplikacionit janë Quicksand.** Pasqyra PDF vizatohej me Quicksand që nga dita e parë,
+  kurse ekrani me Inter - dy fytyra për një produkt. Tani janë një. Skedarët vijnë nga ky origjinë si
+  më parë (asgjë nuk kërkohet nga Google, aplikacioni punon njësoj pa internet) dhe janë dy, një për
+  çdo nënbashkësi shkronjash, me gjithë trashësitë brenda një skedari të vetëm.
+
+  Quicksand shkon deri te 700, kurse Inter shkonte deri te 900 dhe ndërfaqja e përdorte të gjithë,
+  prandaj e gjithë shkalla e trashësive zbriti një hap: 800 dhe 900 u bënë 700, 700 u bë 600. Pa këtë,
+  etiketa, shifra dhe totali - tri gjëra që dalloheshin pikërisht nga trashësia - do të vizatoheshin
+  njësoj.
+
+- **Llogaria zgjidhet çdo herë, nuk merret me mend.** Versioni i kaluar mësonte se me cilën llogari
+  paguhet zakonisht një kategori dhe e mbushte fushën vetë. Në letër kursen një klikim; në praktikë
+  fusha arrinte e përgjigjur, dhe herën e vetme kur kafja u pagua me kartelë e jo me kesh, ajo u
+  regjistrua te llogaria e gabuar pa e parë njeri. Një llogari e gabuar është e heshtur: totalet
+  mbeten të sakta, vetëm dy bilancet largohen nga njëri-tjetri, dhe del pas javësh si një barazim që
+  nuk mbyllet. Asgjë këtu nuk rregullohet më shpejt sesa zgjidhet, prandaj zgjidhet.
+
+  E njëjta rregull tani te të gjitha format që lëvizin para - transaksioni, pagesa e periodikja, kryerja
+  e një plani, pagesa e borxhit dhe importimi i një ekstrakti CSV - të cilat më parë zgjidhnin në
+  heshtje llogarinë e parë të listës. Përjashtim bëjnë dy rastet ku s'ka çka zgjidhet: kur është vetëm
+  një llogari aktive (ose është ndezur «një llogari kryesore»), dhe kur destinacioni i një transferi
+  është i ngulitur. Kujtesa përshkrim → kategori mbetet e paprekur - ajo propozon, nuk vendos, dhe
+  kategoria shihet aty ku shkruhet.
+
+### Rregulluar
+- **Sipërfaqet që zhdukeshin në temën e bardhë.** Disa gjendje ishin shkruar si e bardhë me 4-12%
+  tejdukshmëri - një hije vetëm mbi faqe të errët. Mbi faqen e bardhë e bardha mbi të bardhë nuk është
+  asgjë: kalimi i miut dukej i vdekur dhe - më keq - një opsion i zgjedhur brenda një dialogu (monedha,
+  llogaria) nuk tregonte shenjë se ishte zgjedhur. Tani janë dy ndryshore teme që errësohen mbi faqe të
+  çelët, prandaj e njëjta rregull vlen për të dyja temat.
+
 ## [2.23.0] - 2026-09-05
 
 ### Shtuar

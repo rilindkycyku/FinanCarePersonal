@@ -1,7 +1,15 @@
-/* Inter is declared in `src/index.css` and served from this origin - see the note there for why it
-   is not imported from fonts.googleapis.com. JetBrains Mono is gone with it: the only thing set in
-   it was the calculator's display, which already names `ui-monospace, monospace` after it, and
-   every platform's own monospace draws that line just as well as a second font download would. */
+/* Quicksand is declared in `src/index.css` and served from this origin - see the note there for why
+   it is not imported from fonts.googleapis.com.
+
+   Its axis stops at 700, so the whole app's weight scale was moved down one step when it replaced
+   Inter: what was 800 and 900 is now 700, what was 700 is now 600. Kept as real numbers rather than
+   left to clamp at load time, because clamping would have drawn 700, 800 and 900 identically - and
+   those three carried the difference between a label, a figure and a total on every card in the
+   app. Nothing here should ask for more than 700 again.
+
+   JetBrains Mono is gone: the only thing set in it was the calculator's display, which already
+   names `ui-monospace, monospace` after it, and every platform's own monospace draws that line just
+   as well as a second font download would. */
 
 /* ══════════════════════════════════════════════════════════════
    FINANCARE - Premium Core Theme System
@@ -15,6 +23,14 @@
 
   --sp-border:      rgba(255,255,255,0.10);
   --sp-border-glow: rgba(16,185,129,0.25);
+
+  /* The two tints a surface takes on when it is hovered or chosen. They used to be written inline
+     as white at 4-12% opacity, which is a tint only over a dark page: in the light theme white over
+     white is nothing at all, so a hover looked dead and - worse - a picked option in a dialog
+     (`.fcp-zgjedhje[aria-pressed="true"]`, how a currency or an account is selected) showed no sign
+     of having been picked. Tokens instead, so the same rule darkens on a pale page. */
+  --sp-tint:        rgba(255,255,255,0.06);
+  --sp-tint-strong: rgba(255,255,255,0.12);
 
   --sp-emerald:     #10b981;
   --sp-emerald-glow:rgba(16,185,129,0.15);
@@ -40,7 +56,7 @@
 body {
   background-color: var(--sp-bg) !important;
   color: var(--sp-text) !important;
-  font-family: 'Inter', sans-serif !important;
+  font-family: 'Quicksand', sans-serif !important;
   margin: 0;
   min-height: 100vh;
 }
@@ -145,7 +161,7 @@ code {
 
 .modal-title {
   color: #fff !important;
-  font-weight: 900 !important;
+  font-weight: 700 !important;
   letter-spacing: -0.02em !important;
 }
 
@@ -177,7 +193,7 @@ code {
 
 .sp-card-header h3 {
   font-size: 0.95rem;
-  font-weight: 800;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--sp-text-soft);
@@ -199,7 +215,7 @@ code {
   border: 1px solid var(--sp-border) !important;
   border-radius: var(--sp-radius-md) !important;
   box-shadow: 0 10px 30px rgba(0,0,0,0.5) !important;
-  font-family: 'Inter', sans-serif !important;
+  font-family: 'Quicksand', sans-serif !important;
   color: var(--sp-text) !important;
 }
 
@@ -213,7 +229,7 @@ code {
 .react-datepicker__current-month, 
 .react-datepicker__day-name {
   color: var(--sp-text-soft) !important;
-  font-weight: 700 !important;
+  font-weight: 600 !important;
 }
 
 .react-datepicker__day {
@@ -240,7 +256,7 @@ code {
 /* ── SP-INPUT & LABEL ────────────────────────────────────────── */
 .sp-label {
   color: var(--sp-text-soft) !important;
-  font-weight: 700 !important;
+  font-weight: 600 !important;
   margin-bottom: 0.5rem !important;
   display: block;
 }
@@ -287,7 +303,7 @@ code {
 
 .sp-modal .form-label {
   color: var(--sp-text-soft) !important;
-  font-weight: 700 !important;
+  font-weight: 600 !important;
 }
 
 .sp-modal .form-control {
@@ -312,7 +328,7 @@ code {
   background: var(--sp-surface-2) !important;
   color: var(--sp-text-muted) !important;
   font-size: 0.65rem !important;
-  font-weight: 800 !important;
+  font-weight: 700 !important;
   text-transform: uppercase !important;
   letter-spacing: 0.1em !important;
   padding: 1rem 1.25rem !important;
@@ -350,7 +366,7 @@ code {
   background: var(--sp-surface-2) !important;
   color: var(--sp-text-muted) !important;
   font-size: 0.65rem !important;
-  font-weight: 800 !important;
+  font-weight: 700 !important;
   text-transform: uppercase !important;
   letter-spacing: 0.1em !important;
   padding: 1rem 1.25rem !important;
@@ -388,7 +404,7 @@ code {
   color: var(--sp-text-soft) !important;
   border-radius: 6px !important;
   padding: 0.4rem 0.6rem !important;
-  font-weight: 700 !important;
+  font-weight: 600 !important;
   font-size: 0.75rem !important;
   min-width: 35px;
   text-align: center;
@@ -420,7 +436,7 @@ code {
 /* ── Premium Buttons ───────────────────────────────────────── */
 .btn-save {
   background: linear-gradient(135deg, var(--sp-emerald), var(--sp-cyan)) !important;
-  border: none !important; color: white !important; font-weight: 800 !important;
+  border: none !important; color: white !important; font-weight: 700 !important;
   border-radius: var(--sp-radius-md) !important;
   box-shadow: 0 4px 15px rgba(6, 182, 212, 0.2) !important;
 }
@@ -444,7 +460,7 @@ code {
   background: transparent !important;
   border: none !important;
   color: var(--sp-text-muted) !important;
-  font-weight: 800 !important;
+  font-weight: 700 !important;
   text-transform: uppercase;
   font-size: 0.75rem;
   letter-spacing: 0.1em;
@@ -544,7 +560,7 @@ code {
   background: linear-gradient(135deg, var(--sp-emerald) 0%, #059669 100%) !important;
   border: none !important;
   color: white !important;
-  font-weight: 800 !important;
+  font-weight: 700 !important;
   padding: 0.75rem 1.5rem !important;
   border-radius: 12px !important;
   box-shadow: 0 8px 15px var(--sp-emerald-glow) !important;
@@ -564,7 +580,7 @@ code {
   background: rgba(255, 255, 255, 0.05) !important;
   border: 1px solid var(--sp-border) !important;
   color: var(--sp-text-soft) !important;
-  font-weight: 700 !important;
+  font-weight: 600 !important;
   padding: 0.7rem 1.4rem !important;
   border-radius: 12px !important;
   transition: all 0.2s ease !important;
@@ -600,6 +616,9 @@ body.light-mode {
 
   --sp-border:      rgba(0, 0, 0, 0.08);
   --sp-border-glow: rgba(16, 185, 129, 0.35);
+
+  --sp-tint:        rgba(15, 23, 42, 0.05);
+  --sp-tint-strong: rgba(15, 23, 42, 0.10);
 
   --sp-emerald:     #059669;
   --sp-emerald-glow:rgba(5, 150, 105, 0.15);

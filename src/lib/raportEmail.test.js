@@ -400,6 +400,27 @@ describe("qëllimet dhe borxhet në raportin mujor", () => {
     expect(html).toContain("Asgjë e shtuar këtë muaj");
   });
 
+  it("tells the reader when the note ends at the pace the period itself showed", () => {
+    const { html, text } = mujori({ borxhet });
+    // 150 paid inside July, 750 still owed: five more months of the same, measured to the end of
+    // the period the report is about rather than to whenever it happens to be read.
+    expect(html).toContain("me këtë ritëm deri më dhjetor 2026");
+    expect(text).toContain("me këtë ritëm deri më dhjetor 2026");
+  });
+
+  it("says a debt is not shrinking rather than inventing a date for it", () => {
+    const { html } = mujori({
+      borxhet: [
+        {
+          id: "b2", emri: "Karta e shtrenjtë", lloji: "karte", vleraTotale: 5000, normaVjetore: 24,
+          pagesat: [{ id: "p1", data: "2026-07-15", lloji: "pagese", vlera: 40 }],
+        },
+      ],
+    });
+    // 4.960 € at 24% is about 99 € a month in interest alone, so 40 € is not a payment at all.
+    expect(html).toContain("me këtë ritëm nuk zvogëlohet");
+  });
+
   it("reports a debt note without folding it into any balance", () => {
     const { html, totalet } = mujori({ borxhet });
     expect(html).toContain("Borxhet");

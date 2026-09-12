@@ -7,9 +7,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   celesiRaportit, derguesiIVlefshem, ekzekutoRaportet, marresiIRaportit, muajiIRaportit, provoSerish,
-  raportiAktiv,
+  raportetNePritje, raportiAktiv,
 } from "./raporti";
-import { JAVOR, VJETOR } from "./raportet";
+import { JAVOR, MUJOR, VJETOR } from "./raportet";
 
 const ora = (iso) => new Date(iso).getTime();
 
@@ -56,6 +56,46 @@ describe("provoSerish", () => {
 
   it("gives up after five attempts rather than mailing the same error for ever", () => {
     expect(provoSerish({ gjendja: "deshtoi", prova: 5, kur: "2026-07-01T08:00:00Z" }, tani)).toBe(false);
+  });
+});
+
+describe("raportet në pritje", () => {
+  // 3 August: July closed as a month, and the week of 28 July - 3 August has not.
+  const sot = new Date(2026, 7, 3, 10, 0, 0);
+  const profile = { raportiMujor: true, raportiJavor: true };
+  const fillimi = "2026-01-05";
+
+  it("names the closed period that has not been sent", () => {
+    const pritja = raportetNePritje({ profile, shenjat: [], sot, fillimi });
+    const mujori = pritja.find((p) => p.lloji === MUJOR);
+    expect(mujori).toMatchObject({ periudha: "2026-07", gjendja: "pa-nisur" });
+  });
+
+  it("drops a period once its marker says it went out", () => {
+    const shenjat = [{ lloji: MUJOR, periudha: "2026-07", gjendja: "derguar" }];
+    expect(raportetNePritje({ profile, shenjat, sot, fillimi }).some((p) => p.lloji === MUJOR)).toBe(false);
+  });
+
+  it("keeps a failed period waiting, and carries its reason", () => {
+    const shenjat = [{ lloji: MUJOR, periudha: "2026-07", gjendja: "deshtoi", gabimi: "Resend: 401" }];
+    const mujori = raportetNePritje({ profile, shenjat, sot, fillimi }).find((p) => p.lloji === MUJOR);
+    expect(mujori).toMatchObject({ gjendja: "deshtoi", gabimi: "Resend: 401" });
+  });
+
+  it("says nothing about a kind that is switched off", () => {
+    const pritja = raportetNePritje({ profile: { raportiMujor: true }, shenjat: [], sot, fillimi });
+    expect(pritja.map((p) => p.lloji)).toEqual([MUJOR]);
+  });
+
+  it("does not owe a report for a period that ended before the ledger began", () => {
+    // First transaction on 1 August, so July is not a month this ledger can report on - while the
+    // week that closed on 2 August still is, because the ledger was already running inside it.
+    const pritja = raportetNePritje({ profile, shenjat: [], sot, fillimi: "2026-08-01" });
+    expect(pritja.map((p) => p.lloji)).toEqual([JAVOR]);
+    // A ledger that begins after both of them owes neither.
+    expect(raportetNePritje({ profile, shenjat: [], sot, fillimi: "2026-08-03" })).toEqual([]);
+    // And an empty ledger owes nothing at all.
+    expect(raportetNePritje({ profile, shenjat: [], sot, fillimi: null })).toEqual([]);
   });
 });
 

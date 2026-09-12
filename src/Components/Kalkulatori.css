@@ -109,7 +109,7 @@
 
 .fcp-calc-title {
   font-size: 0.9rem;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--sp-text);
 }
 
@@ -142,7 +142,7 @@
 .fcp-calc-expression {
   font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
   font-size: 1.35rem;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--sp-text);
   min-height: 1.9rem;
   word-break: break-all;
@@ -150,7 +150,7 @@
 
 .fcp-calc-result {
   font-size: 0.95rem;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--sp-emerald);
   margin-top: 0.15rem;
 }
@@ -161,7 +161,7 @@
 
 .fcp-calc-error {
   font-size: 0.75rem;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--sp-red);
   margin-bottom: 0.5rem;
 }
@@ -178,7 +178,7 @@
   justify-content: center;
   height: 50px;
   font-size: 1.1rem;
-  font-weight: 800;
+  font-weight: 700;
   border-radius: var(--sp-radius-md);
   border: 1px solid var(--sp-border);
   background: var(--sp-surface-3);
@@ -211,7 +211,7 @@
   grid-column: span 3;
   height: 50px;
   font-size: 0.95rem;
-  font-weight: 800;
+  font-weight: 700;
   border: none;
   border-radius: var(--sp-radius-md);
   background: var(--sp-emerald);

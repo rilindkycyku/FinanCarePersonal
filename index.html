@@ -11,7 +11,7 @@
          the stylesheet has been fetched and parsed; starting it here means it arrives with the
          first paint rather than one round trip behind it. Only the latin subset is worth
          preloading - latin-ext waits for a character that needs it. -->
-    <link rel="preload" href="/fonts/Inter-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/Quicksand-latin.woff2" as="font" type="font/woff2" crossorigin />
 
     <title>FinanCarePersonal - Ndjekës i Financave Personale, pa server</title>
     <meta
@@ -67,14 +67,21 @@
   </head>
   <body>
     <script>
-      // Applied before React mounts so there's no flash of the wrong theme on load.
+      // Applied before React mounts so there's no flash of the wrong theme on load. Must stay in
+      // step with ThemeContext.jsx: a stored "light"/"dark" is a choice the user made, and no
+      // stored value at all means follow the operating system.
       (function () {
         try {
-          if (localStorage.getItem("financarepersonal-theme") === "light") {
+          var ruajtur = localStorage.getItem("financarepersonal-theme");
+          var eBardhe =
+            ruajtur === "light" ||
+            (ruajtur !== "dark" && window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches);
+          if (eBardhe) {
             document.body.classList.add("light-mode");
+            document.querySelector('meta[name="theme-color"]').setAttribute("content", "#f1f5f9");
           }
         } catch (e) {
-          /* localStorage unavailable - default dark theme stands */
+          /* localStorage or matchMedia unavailable - default dark theme stands */
         }
       })();
     </script>

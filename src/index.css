@@ -1,34 +1,37 @@
-/* ── Inter, served from this origin ───────────────────────────────────────
-   Previously an `@import` of fonts.googleapis.com at the top of PremiumTheme.css. That is the one
-   place a font must never be declared: the browser cannot see it until the stylesheet has been
-   downloaded and parsed, so the font CSS and then the font files queue up behind it in a chain of
-   round trips, all of it blocking the first paint. It also contradicted two things the app claims
-   about itself - that it works offline, which it did not once the service worker had nothing to
-   serve for a third-party host, and that nothing about the user reaches anyone else, when every
-   page load announced them to Google.
+/* ── Quicksand, served from this origin ───────────────────────────────────
+   The interface font, and now the only one the app ships: the PDF statement has always been drawn
+   in Quicksand (`lib/exportPdf.js` embeds the two .ttf files next to these), so the screen and the
+   document a user hands to a bank finally read as the same product instead of two.
 
-   One variable file per subset covers the whole 400-900 range the interface uses, in place of the
-   six static weights the old import fetched. `unicode-range` keeps latin-ext out of the way until
-   a character actually needs it - Albanian's ë and ç live in the latin subset.
+   Served from here rather than `@import`ed from fonts.googleapis.com, which is the one place a font
+   must never be declared: the browser cannot see it until the stylesheet has been downloaded and
+   parsed, so the font CSS and then the font files queue up behind it in a chain of round trips, all
+   of it blocking the first paint. It also contradicted two things the app claims about itself -
+   that it works offline, which it did not once the service worker had nothing to serve for a
+   third-party host, and that nothing about the user reaches anyone else, when every page load
+   announced them to Google.
 
-   (The Quicksand files next to these are not declared here on purpose: nothing on screen is set in
-   them. `lib/exportPdf.js` fetches them by URL to embed in the PDF statement.) */
+   One variable file per subset, weight 300-700 in a single axis, in place of the static cuts an
+   import would fetch one by one. Inter reached 900 and the interface used the whole of it, so the
+   app's weight scale moved down a step to fit this one - see the note at the top of
+   `Pages/Styles/PremiumTheme.css`. `unicode-range` keeps latin-ext out of the way until a character
+   actually needs it - Albanian's ë and ç live in the latin subset. */
 @font-face {
-  font-family: "Inter";
+  font-family: "Quicksand";
   font-style: normal;
-  font-weight: 400 900;
+  font-weight: 300 700;
   font-display: swap;
-  src: url("/fonts/Inter-latin.woff2") format("woff2");
+  src: url("/fonts/Quicksand-latin.woff2") format("woff2");
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304,
     U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
 @font-face {
-  font-family: "Inter";
+  font-family: "Quicksand";
   font-style: normal;
-  font-weight: 400 900;
+  font-weight: 300 700;
   font-display: swap;
-  src: url("/fonts/Inter-latin-ext.woff2") format("woff2");
+  src: url("/fonts/Quicksand-latin-ext.woff2") format("woff2");
   unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308,
     U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113,
     U+2C60-2C7F, U+A720-A7FF;

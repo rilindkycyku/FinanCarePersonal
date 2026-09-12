@@ -32,7 +32,7 @@
 
 .welcome-hero h1 {
   font-size: 1.85rem;
-  font-weight: 900;
+  font-weight: 700;
   letter-spacing: -0.05em;
   color: white;
 }
@@ -43,7 +43,7 @@
   gap: 0.4rem;
   background: var(--sp-emerald);
   color: white;
-  font-weight: 800;
+  font-weight: 700;
   font-size: 0.85rem;
   padding: 0.5rem 1rem;
   border-radius: 10px;
@@ -98,7 +98,7 @@
 .modern-tabs .nav-link {
   border: none !important;
   color: var(--sp-text-muted);
-  font-weight: 800;
+  font-weight: 700;
   font-size: 0.72rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -140,7 +140,7 @@
 }
 
 .section-title {
-  font-weight: 900;
+  font-weight: 700;
   font-size: 1.05rem;
   color: var(--sp-text);
   margin-bottom: 1.25rem;
@@ -207,7 +207,7 @@
 
 .quick-action-card span {
   font-size: 0.85rem !important;
-  font-weight: 800;
+  font-weight: 700;
   line-height: 1.2;
 }
 
@@ -228,7 +228,7 @@
 
 .data-label {
   font-size: 0.62rem;
-  font-weight: 800;
+  font-weight: 700;
   text-transform: uppercase;
   color: var(--sp-text-muted);
   margin-bottom: 0.5rem;
@@ -240,7 +240,7 @@
 
 .data-value {
   font-size: 0.88rem;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--sp-text);
 }
 
@@ -320,7 +320,7 @@
 
 /* Categorized Shortcuts Title & Bullets */
 .category-subtitle {
-  font-weight: 800;
+  font-weight: 700;
   font-size: 0.85rem;
   color: var(--sp-text-muted);
   letter-spacing: 0.1em;
@@ -640,7 +640,7 @@ body.light-mode .hero-cta.ghost {
 
 .fcp-transfer-gjate span {
   font-size: 1.1rem;
-  font-weight: 900;
+  font-weight: 700;
   color: var(--sp-text);
 }
 
@@ -681,7 +681,7 @@ body.light-mode .hero-cta.ghost {
 .fcp-qr-plote-koka strong {
   display: block;
   font-size: 1.05rem;
-  font-weight: 900;
+  font-weight: 700;
 }
 
 .fcp-qr-plote-koka span {
@@ -763,7 +763,7 @@ body.light-mode .hero-cta.ghost {
   background: rgba(13, 33, 55, 0.04);
   color: inherit;
   font-size: 0.8rem;
-  font-weight: 800;
+  font-weight: 700;
   cursor: pointer;
 }
 
@@ -809,6 +809,6 @@ body.light-mode .hero-cta.ghost {
   background: none;
   color: var(--sp-text-muted);
   font-size: 0.68rem;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
 }

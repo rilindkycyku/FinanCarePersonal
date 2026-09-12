@@ -18,6 +18,7 @@ const BLANK = {
   kreditori: "",
   dataFillimit: todayISO(),
   dataMbarimit: "",
+  normaVjetore: "",
   kategoriaId: "",
   ngjyra: "#f43f5e",
   shenim: "",
@@ -46,6 +47,7 @@ function ShtoBorxhin({ show, onHide, initial, llojiFillestar }) {
             ...initial,
             vleraTotale: String(initial.vleraTotale ?? ""),
             dataMbarimit: initial.dataMbarimit || "",
+            normaVjetore: initial.normaVjetore ? String(initial.normaVjetore) : "",
             kategoriaId: initial.kategoriaId || "",
             kreditori: initial.kreditori || "",
             shenim: initial.shenim || "",
@@ -68,6 +70,11 @@ function ShtoBorxhin({ show, onHide, initial, llojiFillestar }) {
     if (debt.dataMbarimit && debt.dataFillimit && debt.dataMbarimit < debt.dataFillimit) {
       return setError("Afati i fundit nuk mund të jetë para datës së fillimit.");
     }
+    // Optional, but a typed rate has to be a real one: 150 is a slipped decimal point, and a
+    // negative rate is a debt that pays you.
+    if (debt.normaVjetore !== "" && !(toNumber(debt.normaVjetore) >= 0 && toNumber(debt.normaVjetore) <= 100)) {
+      return setError("Norma vjetore duhet të jetë mes 0 dhe 100 për qind.");
+    }
     setError("");
 
     await save(STORES.borxhet, {
@@ -78,6 +85,7 @@ function ShtoBorxhin({ show, onHide, initial, llojiFillestar }) {
       kreditori: debt.kreditori.trim(),
       dataFillimit: debt.dataFillimit || todayISO(),
       dataMbarimit: debt.dataMbarimit || null,
+      normaVjetore: debt.normaVjetore === "" ? null : toNumber(debt.normaVjetore),
       kategoriaId: debt.kategoriaId || null,
       ngjyra: debt.ngjyra,
       shenim: debt.shenim.trim(),
@@ -175,6 +183,25 @@ function ShtoBorxhin({ show, onHide, initial, llojiFillestar }) {
               />
             </Form.Group>
 
+            <Form.Group as={Col} md={6} controlId="debt-norma">
+              <Form.Label>Norma Vjetore e Kamatës (opsional)</Form.Label>
+              <Form.Control
+                type="number"
+                inputMode="decimal"
+                min="0"
+                max="100"
+                step="0.01"
+                placeholder="p.sh. 18"
+                value={debt.normaVjetore}
+                onChange={(e) => setField("normaVjetore", e.target.value)}
+              />
+              <div className="fcp-modal-hint">
+                {kerkese
+                  ? "Nëse hua-ja juaj ka kamatë. Lëreni bosh kur s'ka."
+                  : "Shkruajeni si në kontratë (18 për 18%). Me të, faqja e di sa nga çdo pagesë shkon te kamata dhe sa e zbret vërtet borxhin - pa të, llogaritet sikur borxhi të mos rritet vetë."}
+              </div>
+            </Form.Group>
+
             <Form.Group as={Col} md={6} controlId="debt-kategoriaid">
               <Form.Label>Kategoria e Parazgjedhur (opsional)</Form.Label>
               <ZgjedhesiKategorive
@@ -200,7 +227,7 @@ function ShtoBorxhin({ show, onHide, initial, llojiFillestar }) {
               <Form.Control
                 as="textarea"
                 rows={2}
-                placeholder="p.sh. kamata 6%, kësti minimal 50 € në muaj"
+                placeholder="p.sh. kësti minimal 50 € në muaj, dega ku u nënshkrua"
                 value={debt.shenim}
                 onChange={(e) => setField("shenim", e.target.value)}
               />

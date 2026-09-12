@@ -39,8 +39,15 @@ function RaportiAutomatik() {
   const heraEFundit = useRef(0);
   const aktiv = LLOJET_RAPORTIT.some((r) => profile?.[r.fusha]);
 
-  const provo = useCallback(() => {
-    if (Date.now() - heraEFundit.current < PERSERITJA) return;
+  /**
+   * `menjehere` skips the hourly throttle, for the one trigger where waiting is pointless: the
+   * connection has just come back. Everything this does needs the network - claiming the period in
+   * the cloud, then the Edge Function - so an attempt made while offline achieves nothing and
+   * leaves no marker behind either, and the throttle would otherwise hold the retry back for an
+   * hour after the moment it became possible.
+   */
+  const provo = useCallback((menjehere = false) => {
+    if (!menjehere && Date.now() - heraEFundit.current < PERSERITJA) return;
     heraEFundit.current = Date.now();
     ekzekutoRaportet(teDhenat.current).catch(() => {
       /* `ekzekutoRaportet` reports by returning; this is only here for the impossible case */
@@ -49,14 +56,20 @@ function RaportiAutomatik() {
 
   useEffect(() => {
     if (loading || !lidhur || !aktiv) return undefined;
-    const ora = setTimeout(provo, VONESA);
+    const ora = setTimeout(() => provo(), VONESA);
     const kthimi = () => {
       if (document.visibilityState === "visible") provo();
     };
+    // The app opened on a train with no signal is the ordinary case, not the exotic one: the whole
+    // pass fails silently and nothing would try again until the tab was hidden and shown, which on
+    // a phone left on one screen may be tomorrow.
+    const lidhja = () => provo(true);
     document.addEventListener("visibilitychange", kthimi);
+    window.addEventListener("online", lidhja);
     return () => {
       clearTimeout(ora);
       document.removeEventListener("visibilitychange", kthimi);
+      window.removeEventListener("online", lidhja);
     };
   }, [loading, lidhur, aktiv, provo]);
 

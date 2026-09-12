@@ -40,7 +40,8 @@ function KryejPlanin({ show, onHide, plani }) {
     setForm({
       data: todayISO(),
       vlera: String(plani.vlera ?? ""),
-      llogariaId: (njeLlogari ? llogariaKryesore?.id : aktive[0]?.id) || "",
+      // A single active account is not a choice, so it is still filled in; with more than one the field is left empty and asked for, the same way the transaction form does.
+      llogariaId: (njeLlogari ? llogariaKryesore?.id : aktive.length === 1 ? aktive[0].id : "") || "",
       // Falls back to the first expense category so the common case is one click from being saved.
       kategoriaId: plani.kategoriaId || kategorite[0]?.id || "",
       shenim: plani.shenim || "",

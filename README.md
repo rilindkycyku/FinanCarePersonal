@@ -61,7 +61,22 @@ sa shpenzohet, sa mbetet dhe sa po kursesh.
   ka rreshtat e vet - një *pagesë* e zbret dhe një *shtesë* (blerje e re me kartelë, kamatë, tarifë)
   e rrit - me ecuri, afat dhe arkivim. Pagesa mbetet vetëm shënim, përveç kur e shënjoni
   <em>&laquo;Zbrite edhe nga llogaria&raquo;</em>: atëherë krijohet edhe një transaksion i vërtetë,
-  sepse ato para dolën vërtet nga banka. Të dy anët mbahen në hap - heqja e shënjimit ose fshirja e
+  sepse ato para dolën vërtet nga banka.
+  <br />Çdo borxh mban edhe **normën vjetore të kamatës** (opsionale, shkruhet si në kontratë).
+  Me të, ritmi më poshtë e ndan pagesën në dysh - sa e zbret borxhin dhe sa shkon te kamata - dhe e
+  thotë rastin që nuk duket me sy: një pagesë më e vogël se kamata e muajit nuk e zvogëlon borxhin
+  fare. Parashikimi llogaritet si te banka, me kamatën që i shtohet asaj që mbetet.
+  <br />Nën çdo borxh të hapur qëndron **ritmi i shlyerjes**, nxjerrë nga historiku i vetë atij
+  shënimi: sa po paguhet mesatarisht në muaj dhe rreth kur mbyllet me atë ritëm - dhe kur ajo datë e
+  kalon afatin e rënë dakord, rreshti e thotë me kohë që afati nuk arrihet dhe **sa duhet paguar në
+  muaj** që të arrihet. Mesatarja matet mbi
+  muajt që ka zgjatur pagesa (jo mbi numrin e pagesave), dhe muajt pa asnjë pagesë numërohen deri
+  sot, sepse pikërisht ata e largojnë fundin. Shuma e këtyre ritmeve është **Ritmi Mujor** sipër
+  faqes: sa marrin borxhet aktive nga një muaj i zakonshëm.
+  <br />Me më shumë se një borxh të hapur del edhe **«Çfarë të paguhet e para»**, me dy renditje:
+  *kamata më e lartë e para* (kushton më pak gjithsej) ose *shuma më e vogël e para* (mbyll një
+  borxh më shpejt). Të dyja janë përgjigje të sakta për pyetje të ndryshme, prandaj zgjidhen - dhe
+  nën to shkruhet sa kushton gjithë grupi vetëm për të qëndruar në vend. Të dy anët mbahen në hap - heqja e shënjimit ose fshirja e
   rreshtit e heq edhe transaksionin.
   <br />Një pagesë e përsëritur mund të **lidhet me një borxh** (fusha *Zbrit nga një borxh*): kësti
   mujor i një kartele bonus ose i një kredie e ul borxhin vetë sa herë e konfirmoni, pa e shënuar dy
@@ -73,10 +88,14 @@ sa shpenzohet, sa mbetet dhe sa po kursesh.
   dhe me numërimin e përdorimit real të secilës. Çdo kategori mund të ketë **nënkategori** - p.sh.
   *Ushqim & Pije › Market*, *› Furra*, *› Pije & Ujë*, ose *Kafe & Restorant › Kafe*, *› Drekë në
   Punë*, *› Fast Food* - që i përgjigjen pyetjes që lista e sheshtë nuk e mbulonte: ishte market,
-  drekë në punë apo restorant? Lista e parazgjedhur vjen me nënkategori pothuajse për çdo kategori
-  kryesore - fatura sipas llojit, udhëtimi i ndarë në bileta, fjetje e transferë, sigurimet një nga
-  një - përveç atyre ku ndarja nuk do të shtonte asgjë (*Karburant*, *Këste të Kartelës*,
-  *Shpenzime të Tjera*). Lista mbetet **një nivel e thellë** me qëllim; një nivel i tretë nuk
+  drekë në punë apo restorant? Lista e parazgjedhur vjen me **183 nënkategori te 39 kategori
+  kryesore** - ushqimi i ndarë deri te bulmeti dhe të ngrirat, karburanti deri te benzina, nafta,
+  gazi e rikarikimi elektrik, riparimet deri te hidrauliku, elektricisti dhe bojaxhiu, fatura sipas
+  llojit, udhëtimi i ndarë në bileta, fjetje e transferë, sigurimet një nga një - dhe e njëjta gjë
+  vlen edhe për hyrjet, ku *Rroga* ndahet në pagë bazë, orë shtesë, shujta & transport, pagesa të
+  prapambetura, pushime e pagesë të 13-të, që të dallohet muaji i zakonshëm nga ai që kishte diçka
+  mbi të. Përjashtim bëjnë vetëm ato ku ndarja nuk do të shtonte asgjë (*Këste të Kartelës*,
+  *Shpenzime të Tjera*, *Hyrje të Tjera* dhe *Barazimi*). Lista mbetet **një nivel e thellë** me qëllim; një nivel i tretë nuk
   shton përgjigje të re, vetëm punë arkivimi. Në formularë kategoria zgjidhet me një **dritare të
   vetën, jo me listën e shfletuesit**: hapet vetëm me kategoritë kryesore, dhe ajo që ka nënkategori
   i *shfaq* ato kur e prekni - pra nuk shkarrisni dot mbi pesëdhjetë rreshta për të gjetur
@@ -247,6 +266,11 @@ sa shpenzohet, sa mbetet dhe sa po kursesh.
   shkurtër me qëllim - shtatë ditët, shpenzimi më i madh dhe pagesat që vijnë brenda javës tjetër.
   Secili raport e ka çelësin e vet të bashkëngjitjes, pra pasqyra i shtohet edhe javorit ose i hiqet
   muajit, sipas asaj që doni të gjeni në kuti postare.
+  <br />**Nëse një raport vonon**, kjo është arsyeja dhe ajo është me qëllim: nuk ka orar që i nis
+  vetë, sepse nuk ka server - një shfletues i mbyllur nuk ekzekuton asgjë - prandaj *hera e parë që
+  hapet aplikacioni* është vetë orari. Kur një periudhë ka mbyllur dhe emaili s'ka dalë, kartela e
+  raporteve e thotë me një rresht të vetin se cili raport pret, dhe **Dërgo tani** e niset atypëraty.
+  Kur aplikacioni hapet pa internet, provohet vetë sapo lidhja kthehet.
   Grafikët janë tabela me ngjyra, jo figura, prandaj emaili hapet i plotë edhe kur klienti i
   bllokon figurat. E vetmja figurë është logoja te koka, dhe ajo merret nga vetë faqja ku e keni
   ngritur aplikacionin - jo nga një server i jashtëm; kur nuk ngarkohet, në vend të saj shfaqet
@@ -265,7 +289,9 @@ sa shpenzohet, sa mbetet dhe sa po kursesh.
   gjejnë faqen edhe kur nuk dihet se cila është. Çdo skedë ka adresën e vet - `/udhezuesi/buxhetet`
   - dhe te koka e çdo faqeje ndodhet lidhja **«Si përdoret»**, e cila hap pikërisht udhëzimin e asaj
   faqeje: pyetja lind aty ku dikush ka ngecur, jo te një zë menuje larg saj.
-- **Tema e errët / e bardhë**, dizajn responsiv për telefon, dhe monedhë e konfigurueshme.
+- **Tema e errët / e bardhë**, me tri zgjedhje te Cilësimet → Pamja: *sipas pajisjes* (parazgjedhja
+  - ndjek atë që kërkon vetë telefoni ose kompjuteri, edhe kur ai ndërron vetë në mbrëmje), *e errët*
+  ose *e bardhë* të ngulitura. Dizajn responsiv për telefon, dhe monedhë e konfigurueshme.
 
 ## Konfigurimi
 
@@ -293,9 +319,10 @@ përfshirë fotot e faturave - asnjë foto nuk ngarkohet askund. Asgjë nuk dër
 dhe nuk kërkohet llogari. Pastrimi i të dhënave të faqes i fshin ato - përdorni
 **Eksporto / Importo** për të mbajtur një kopje JSON.
 
-As vetë faqja nuk kërkon gjë nga jashtë: shkronjat (Inter) shërbehen nga i njëjti domen si
-aplikacioni, jo nga Google Fonts, prandaj hapja e faqes nuk i tregon askujt se ju e hapët - dhe
-ndërfaqja duket njësoj edhe offline, ku më parë do të binte te shkronjat e sistemit.
+As vetë faqja nuk kërkon gjë nga jashtë: shkronjat (Quicksand - po ato me të cilat vizatohet edhe
+pasqyra PDF) shërbehen nga i njëjti domen si aplikacioni, jo nga Google Fonts, prandaj hapja e faqes
+nuk i tregon askujt se ju e hapët - dhe ndërfaqja duket njësoj edhe offline, ku më parë do të binte
+te shkronjat e sistemit.
 
 I vetmi rast kur diçka del nga shfletuesi është kur e vendosni vetë: te faqja **Sinkronizimi**
 lidhni një projekt Supabase **tuajin** dhe që nga ai çast libri i llogarive (jo fotot) shkon te
@@ -385,7 +412,7 @@ store:
 | --- | --- | --- | --- | --- | --- | --- |
 | `a1b2…` | `transactions` | `tx_m4f2k9x` | `2026-08-11 18:02:18+00` | `false` | `Chrome në Android` | `{"id":"tx_m4f2k9x","data":"2026-08-11","lloji":"shpenzim","vlera":12.34,…}` |
 
-Një libër me 800 transaksione, 6 llogari e 120 kategori (me nënkategoritë) bëhet rreth 930 rreshta,
+Një libër me 800 transaksione, 6 llogari e 222 kategori (me nënkategoritë) bëhet rreth 1.030 rreshta,
 plus një rresht për profilin. Fushat e vetë rekordit rrinë brenda kolonës `data` (jsonb) sepse tabela ndodhet te
 projekti **juaj**: po të kishte kolona të shtypura, çdo version i ri që shton një fushë do të
 kërkonte një `ALTER TABLE` te secili projekt përpara se aplikacioni të vazhdonte të punonte, dhe

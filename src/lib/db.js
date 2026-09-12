@@ -658,6 +658,36 @@ export function putProfile(record) {
     .then(() => stamped);
 }
 
+/**
+ * Fields the profile no longer has any code to read, removed the next time the app starts.
+ *
+ * `llogariaKategorive` and `llogariaEFundit` were the account-per-category and account-per-type
+ * memories. 2.24.0 stopped reading and writing them, which is the half of a removal that has to
+ * ship first; this is the other half. They are worth clearing rather than leaving: the profile is
+ * a synced record and one of them grows a key per category, so it would otherwise be carried
+ * between devices, into every JSON backup and onto every screen that prints the profile, for ever,
+ * meaning nothing.
+ *
+ * Written only when something is actually there, because `putProfile` stamps the record as this
+ * device's unsent change - an unconditional write would push a "new" profile from every device at
+ * every startup. A device still on an older release can write the keys back, and the next start
+ * here removes them again; that settles by itself once it updates, and until then the only cost is
+ * one small record moving.
+ */
+const FUSHAT_E_HEQURA = ["llogariaKategorive", "llogariaEFundit"];
+
+export async function pastroProfilin() {
+  const profile = await getProfile();
+  if (!profile) return false;
+  const perHeqje = FUSHAT_E_HEQURA.filter((f) => profile[f] !== undefined);
+  if (perHeqje.length === 0) return false;
+
+  const i_ri = { ...profile };
+  perHeqje.forEach((f) => delete i_ri[f]);
+  await putProfile(i_ri);
+  return true;
+}
+
 /** The profile as it came down from the cloud, keeping its own timestamp - see `putRaw`. */
 export function putProfileRaw(record) {
   return withStore(STORES.profile, "readwrite", (s) => s.put(record, PROFILE_KEY)).then(() => record);

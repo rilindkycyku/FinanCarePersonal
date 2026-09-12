@@ -35,7 +35,7 @@
   background: var(--sp-emerald-glow);
   border-color: var(--sp-emerald);
   color: var(--sp-emerald);
-  font-weight: 700;
+  font-weight: 600;
 }
 .check-box {
   width: 18px;
@@ -59,7 +59,7 @@
   border: none;
   color: var(--sp-emerald);
   font-size: 0.75rem;
-  font-weight: 700;
+  font-weight: 600;
   padding: 0;
   cursor: pointer;
 }
