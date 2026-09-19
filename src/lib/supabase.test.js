@@ -10,7 +10,8 @@
 
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
-  SQL_INSTALIMI, kontrolloCelesin, linkuSqlEditor, normalizoUrl, referencaProjektit, verifikoSkemen,
+  SQL_INSTALIMI, kontrolloCelesin, linkuSqlEditor, normalizoUrl, referencaProjektit,
+  shtegiRegjistrimit, verifikoSkemen,
 } from "./supabase";
 import { MIGRIMET, SKEMA_VERSIONI, TABELA } from "./skema";
 
@@ -191,5 +192,23 @@ describe("verifikoSkemen", () => {
 
     await expect(verifikoSkemen(SKEMA_VERSIONI)).resolves.toBe(SKEMA_VERSIONI);
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+});
+
+describe("shtegiRegjistrimit", () => {
+  it("names this app's address, so one project can serve three apps", () => {
+    // Without it the confirmation link goes to the project's Site URL - and when that project also
+    // holds GuestSeat or the card-game scorer, that address belongs to one of them. The user taps
+    // "create account" here and lands in another app, or on a page that is not expecting them.
+    expect(shtegiRegjistrimit("https://financare.shembull.com")).toBe(
+      "signup?redirect_to=https%3A%2F%2Ffinancare.shembull.com",
+    );
+  });
+
+  it("invents no address when there is none", () => {
+    // Then the project's own Site URL applies - exactly the behaviour there was until now.
+    expect(shtegiRegjistrimit("")).toBe("signup");
+    expect(shtegiRegjistrimit(null)).toBe("signup");
+    expect(shtegiRegjistrimit(undefined)).toBe("signup");
   });
 });

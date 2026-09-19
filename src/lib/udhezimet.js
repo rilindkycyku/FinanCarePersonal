@@ -934,7 +934,10 @@ export const UDHEZIMET = [
         teksti:
           "Krijoni një projekt Supabase (plani falas mjafton) dhe ekzekutoni skriptin SQL që jua jep vetë " +
           "faqja - një tabelë e vetme dhe rregulli RLS që lejon vetëm llogarinë tuaj. Faqja ju tregon edhe " +
-          "adresën që duhet vendosur te Site URL, me një buton për ta kopjuar.",
+          "adresën që duhet vendosur te Site URL, me një buton për ta kopjuar. I njëjti projekt mban edhe " +
+          "aplikacionet e tjera tuaja që sinkronizojnë kështu: secili e ka tabelën e vet dhe skripti nuk " +
+          "prek asgjë që gjendet aty. Nëse Site URL i takon një aplikacioni tjetër, lëreni ashtu dhe shtoni " +
+          "këtë adresë te Redirect URLs - linkun për këtu FinanCare e kërkon me emër.",
       },
       {
         titulli: "Sinkronizimi, Hapi 2 - lidhni pajisjen",

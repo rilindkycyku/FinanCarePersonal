@@ -398,10 +398,41 @@ tuaj: parazgjedhja e Supabase është `http://localhost:3000`, pra linku i konfi
 që nuk ekziston. Me adresën e duhur, ai link ju kthen te aplikacioni **tashmë të futur** - sesioni
 vjen brenda vetë linkut, merret në hapje dhe fshihet menjëherë nga adresa.
 
+Adresën e kësaj faqeje shtojeni edhe te **Redirect URLs** te e njëjta faqe. Regjistrimi e kërkon
+atë adresë me emër (`redirect_to`), prandaj linku i konfirmimit bie këtu edhe kur Site URL i takon
+një aplikacioni tjetër - shih më poshtë.
+
 Supabase-i e ka konfirmimin me email të ndezur si parazgjedhje, pra pajisja e parë duhet ta hapë
 linkun që i vjen para se të hyjë. Nëse doni ta kaloni atë hap, fikeni te **Authentication →
 Providers → Email**; nëse e lini ndezur, mbani mend se çdo pajisje e re pret konfirmimin e llogarisë,
 jo të vetes.
+
+### Një projekt i vetëm për disa aplikacione
+
+Nuk ju duhet një projekt për çdo aplikacion. FinanCare i shkruan rreshtat e vet **vetëm** te
+`financare_records`, dhe politika, trigger-i e indeksi e mbajnë emrin e asaj tabele - pra nuk
+përplasen dot me tabelën e një aplikacioni tjetër te e njëjta bazë. Skripti i konfigurimit krijon
+atë tabelë e nuk prek asgjë tjetër që gjendet aty, dhe ekzekutimi i dytë nuk ndryshon gjë.
+
+Praktikisht kjo do të thotë se një projekt i vetëm mban njëkohësisht FinanCare-n
+(`financare_records`), [GuestSeat](https://github.com/rilindkycyku/guestseat)
+(`guestseat_records`) dhe [Tavolinën](https://github.com/rilindkycyku/cardgametracker)
+(`tavolina_records`). Rreshtat ndahen nga kolona `user_id` dhe nga i njëjti rregull RLS, prandaj
+një llogari e vetme - i njëjti email e fjalëkalim - hyn te të tria. Te aplikacioni i parë shtypni
+«Krijo llogari», te dy të tjerët «Hyr».
+
+Dy gjëra duhen ditur:
+
+- **Site URL është e përbashkët**, dhe i takon atij aplikacioni që e zuri i pari. Mos ia prekni:
+  secili nga këta të tre e kërkon adresën e vet me emër te regjistrimi, prandaj mjafton ta shtoni
+  atë adresë te **Redirect URLs**.
+- **Skripti i secilit duhet ekzekutuar një herë**, nga vetë aplikacioni përkatës - «Konfiguro
+  projektin» te faqja e tij. Secili krijon vetëm tabelën e vet.
+
+Anash kësaj ka edhe një përfitim që nuk ka të bëjë me kodin: plani falas i Supabase-it e ndal një
+projekt që rri disa ditë pa u prekur. Një projekt që e përdorin disa aplikacione - dhe një libër
+llogarish preket pothuajse çdo ditë - nuk rri pa u prekur, prandaj edhe të dhënat e atyre
+aplikacioneve që hapen më rrallë rrinë gjallë bashkë me të.
 
 ### Çfarë ruhet te projekti juaj
 

@@ -295,13 +295,34 @@ export async function hyr({ email, password, url, anonKey }) {
 }
 
 /**
+ * Where the confirmation email should send the reader back to: this app, said explicitly.
+ *
+ * A project has exactly one **Site URL**, and that is where GoTrue sends a confirmation link when
+ * nobody says otherwise. That is fine for a project this app has to itself, and wrong the moment
+ * the project is shared with another app of the user's - say a seating planner or a card-game
+ * scorer already using it - because then the Site URL is that app's address and the link lands
+ * there instead of here. The reader follows it once; whoever loses their way there is left with an
+ * unconfirmed account and no sign of why.
+ *
+ * Naming the address closes that: Supabase honours `redirect_to` when the address is in the
+ * project's **Redirect URLs** allow-list, and quietly falls back to the Site URL when it is not. So
+ * this is safe to send always - at worst it changes nothing, and at best it makes one project serve
+ * three apps.
+ */
+export function shtegiRegjistrimit(origjina) {
+  const adresa = String(origjina ?? "").trim();
+  return adresa ? `signup?redirect_to=${encodeURIComponent(adresa)}` : "signup";
+}
+
+/**
  * Creates the account inside the user's own project. With email confirmation on (the Supabase
  * default) there is no session in the answer - the account exists but has to be confirmed first,
  * which is reported rather than treated as a failure.
  */
 export async function regjistrohu({ email, password, url, anonKey }) {
   const k = { ...lexoKonfigurimin(), ...(url ? { url } : {}), ...(anonKey ? { anonKey } : {}) };
-  const data = await fetchAuth(k, "signup", { email: email.trim(), password });
+  const origjina = typeof window === "undefined" ? "" : window.location.origin;
+  const data = await fetchAuth(k, shtegiRegjistrimit(origjina), { email: email.trim(), password });
   if (!data.access_token) return { konfirmim: true, konfigurimi: null };
   return {
     konfirmim: false,

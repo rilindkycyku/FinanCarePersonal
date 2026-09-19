@@ -9,6 +9,26 @@ e fundit kur rregullohet diçka, dhe e para vetëm kur ndryshon vetë forma e pr
 herë, te `2.0.0`, kur të dhënat mësuan të dalin nga shfletuesi. Datat janë ato të commit-it që e
 ngriti versionin.
 
+## [2.26.1] - 2026-09-19
+
+### Rregulluar
+- **Linku i konfirmimit kthehet këtu edhe kur projektin e ndani me një aplikacion tjetër.**
+  Regjistrimi e lë GoTrue-në ta dërgojë njeriun te **Site URL** i projektit, dhe ajo është një e
+  vetme për tërë projektin: nëse atje rri adresa e një aplikacioni tjetër tuajin, linku i
+  konfirmimit e çonte njeriun atje. Llogaria mbetej e pakonfirmuar, dhe asgjë në ekran nuk e thoshte
+  pse. Tani regjistrimi e kërkon adresën e vet me emër (`redirect_to`), të cilën Supabase e nderon
+  kur ajo rri te lista **Redirect URLs** e projektit dhe e shpërfill në heshtje kur nuk rri — pra në
+  rastin më të keq nuk ndryshon asgjë. Llogaritë e krijuara deri tani nuk preken; llogaritja e
+  pikëve, e buxheteve dhe e gjithçkaje tjetër rri fjalë për fjalë ashtu si ishte.
+
+### Ndryshuar
+- **Faqja e sinkronizimit e thotë se një projekt mjafton për disa aplikacione.** FinanCare i shkruan
+  rreshtat e vet vetëm te `financare_records`, prandaj aplikacionet e tjera që sinkronizojnë kështu
+  rrinë krah tij pa u prekur — e njëjta llogari, i njëjti rregull sigurie, tabela e vet secili. Kjo
+  rrinte e vërtetë edhe më parë, por askund e shkruar: kush hapte skriptin SQL nuk e dinte se çka do
+  t'i bënte një baze që e përdorte tashmë për diçka tjetër. Hapi 1 dhe udhëzimi i faqes e thonë tani,
+  bashkë me këshillën për Site URL-në dhe Redirect URLs. Shkruar edhe te README.
+
 ## [2.26.0] - 2026-09-12
 
 ### Shtuar

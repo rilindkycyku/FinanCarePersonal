@@ -729,6 +729,12 @@ function PanelaSinkronizimit() {
                 Parazgjedhja e Supabase është <code>http://localhost:3000</code>, pra linku i
                 konfirmimit do të hapte një faqe që nuk ekziston. Me adresën e duhur, ai link ju
                 kthen këtu tashmë të futur.
+                <div className="mt-2">
+                  A e mban ky projekt edhe një aplikacion tjetër tuajin? Atëherë{" "}
+                  <strong>mos ia prekni Site URL-në</strong> - ajo i takon atij - dhe shtojeni këtë
+                  adresë te <strong>Redirect URLs</strong> pak më poshtë te e njëjta faqe. Linkun
+                  për këtu FinanCare e kërkon me emër, prandaj një Site URL e huaj nuk e prish.
+                </div>
               </li>
               <li>
                 Te <strong>Project Settings</strong> merrni <strong>Project URL</strong> (te{" "}
@@ -745,6 +751,16 @@ function PanelaSinkronizimit() {
                 kjo është mbrojtje, jo mangësi.
               </li>
             </ol>
+            <p className="text-muted small mb-3">
+              <strong>Një projekt mjafton për të gjitha aplikacionet tuaja.</strong> FinanCare i
+              shkruan rreshtat e vet te tabela <code>financare_records</code>, dhe aplikacionet e
+              tjera që e ndajnë të njëjtin stil sinkronizimi kanë secili tabelën e vet - pra rrinë
+              krah njëri-tjetrit pa u prekur, nën të njëjtën llogari dhe të njëjtin rregull
+              sigurie. Ky skript e krijon vetëm tabelën e FinanCare-së dhe nuk prek asgjë tjetër që
+              gjendet aty; përsëritja nuk prish gjë. Përfitimi është edhe praktik: plani falas e
+              ndal një projekt që rri pa u prekur, dhe një projekt që e përdorni për disa gjëra
+              nuk rri pa u prekur.
+            </p>
             <div>
               <Button className="btn-primary" onClick={() => setSqlHapur(true)}>
                 <Wand2 size={16} className="me-1" /> Konfiguro projektin
