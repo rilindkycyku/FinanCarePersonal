@@ -156,6 +156,11 @@ Read the header comments of `sinkronizimi.js`, `db.js` and `skema.js` before cha
   pulls and never pushes until the user has decided what to do with what is in the cloud.
 - Photos never sync (ZIP backup is the way to move them).
 - `SINK_STORES` lists the synced stores; new stores must be added there consciously.
+- A project may be **shared with the user's other apps** (GuestSeat, Tavolina). FinanCare owns
+  `financare_records` and nothing else: the policy, trigger and index are all named after it, and the
+  setup script must never touch anything outside it. Sign-up sends an explicit `redirect_to`
+  (`shtegiRegjistrimit`) because **Site URL** is the one project-wide setting and it belongs to
+  whichever app claimed it first.
 - `skema.js` migrations are **append-only, idempotent and additive**. A shipped migration has
   already run on other people's databases — fix mistakes by adding the next number, never by
   editing. Removing a column ships as two releases (stop writing it, then drop it).

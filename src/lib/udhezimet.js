@@ -932,9 +932,13 @@ export const UDHEZIMET = [
       {
         titulli: "Sinkronizimi, Hapi 1 - projekti dhe tabela",
         teksti:
-          "Krijoni një projekt Supabase (plani falas mjafton) dhe ekzekutoni skriptin SQL që jua jep vetë " +
+          "Krijoni një projekt Supabase (plani falas mjafton) - ose përdorni një që e keni tashmë nga një " +
+          "aplikacion tjetër i juaji, sepse secili shkruan te tabela e vet - dhe ekzekutoni skriptin SQL që jua jep vetë " +
           "faqja - një tabelë e vetme dhe rregulli RLS që lejon vetëm llogarinë tuaj. Faqja ju tregon edhe " +
-          "adresën që duhet vendosur te Site URL, me një buton për ta kopjuar.",
+          "adresën që duhet vendosur te Site URL, me një buton për ta kopjuar. I njëjti projekt mban edhe " +
+          "aplikacionet e tjera tuaja që sinkronizojnë kështu: secili e ka tabelën e vet dhe skripti nuk " +
+          "prek asgjë që gjendet aty. Nëse Site URL i takon një aplikacioni tjetër, lëreni ashtu dhe shtoni " +
+          "këtë adresë te Redirect URLs - linkun për këtu FinanCare e kërkon me emër.",
       },
       {
         titulli: "Sinkronizimi, Hapi 2 - lidhni pajisjen",
@@ -942,7 +946,11 @@ export const UDHEZIMET = [
           "Vendosni adresën e projektit dhe çelësin publik publishable (ose anon-in e vjetër). Pastaj, në " +
           "pajisjen e parë, shkruani një email e fjalëkalim dhe shtypni «Krijo llogari» - llogaria krijohet " +
           "brenda projektit tuaj. Në çdo pajisje tjetër shkruani të njëjtat dhe shtypni «Hyr dhe " +
-          "sinkronizo».",
+          "sinkronizo». Llogaria i takon projektit e jo aplikacionit, prandaj është një e vetme për të " +
+          "gjitha aplikacionet tuaja që e ndajnë atë projekt: krijojeni një herë, te cilido prej tyre, dhe " +
+          "te të tjerat shtypni «Hyr». Linku i konfirmimit kthehet vetëm te një adresë - ajo e aplikacionit " +
+          "që e zuri i pari Site URL-në - pra mund t'ju hapë një aplikacion tjetër tuajin; llogaria mbetet e " +
+          "konfirmuar gjithsesi, sepse atë e konfirmon Supabase para se t'ju dërgojë diku.",
       },
       {
         titulli: "Automatik apo me buton",
