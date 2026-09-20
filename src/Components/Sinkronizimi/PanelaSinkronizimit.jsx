@@ -778,6 +778,21 @@ function PanelaSinkronizimit() {
               dhe fjalëkalim në çdo pajisje që doni të mbani në hap. Herën e parë shtypni{" "}
               <strong>Krijo llogari</strong>, në pajisjet e tjera <strong>Hyr</strong>.
             </p>
+            <p className="text-muted small mb-3">
+              Llogaria i takon projektit, jo aplikacionit - pra është <strong>një e vetme</strong>{" "}
+              për të gjitha aplikacionet tuaja që e ndajnë atë projekt (FinanCarePersonal,
+              GuestSeat, Tavolina). Krijojeni një herë, te cilido prej tyre, dhe te të tjerat
+              shtypni <strong>Hyr</strong>.
+            </p>
+            <p className="text-muted small mb-3">
+              Prandaj edhe linku i konfirmimit kthehet vetëm te <strong>një</strong> adresë - ajo e
+              aplikacionit që e zuri i pari <strong>Site URL</strong>-në - dhe mund t&apos;ju hapë
+              një aplikacion tjetër tuajin e jo atë ku shtypët <strong>Krijo llogari</strong>. Kjo
+              nuk është prishje: llogarinë e konfirmon vetë Supabase para se t&apos;ju dërgojë
+              diku, pra ajo mbetet e konfirmuar - kthehuni këtu dhe shtypni <strong>Hyr</strong>.
+              Që linku të bjerë te vendi i duhur, shtoni adresën e secilit aplikacion te{" "}
+              <strong>Redirect URLs</strong> (Hapi 1).
+            </p>
             <Form
               onSubmit={(e) => {
                 e.preventDefault();
