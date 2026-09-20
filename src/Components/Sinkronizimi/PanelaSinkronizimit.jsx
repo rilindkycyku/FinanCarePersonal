@@ -716,7 +716,7 @@ function PanelaSinkronizimit() {
               vetëm i mban të gjitha aplikacionet tuaja, secili me tabelën e vet.
             </p>
             <p className="mb-3">
-              <a href="https://supabase.rilindkycyku.dev" target="_blank" rel="noreferrer">
+              <a href="https://supabase-hub.rilindkycyku.dev" target="_blank" rel="noreferrer">
                 Si ngrihet projekti - udhëzimi i plotë <ExternalLink size={12} />
               </a>
             </p>
