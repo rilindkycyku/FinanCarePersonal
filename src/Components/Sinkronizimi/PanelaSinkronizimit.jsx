@@ -713,8 +713,9 @@ function PanelaSinkronizimit() {
                 <a href="https://supabase.com/dashboard" target="_blank" rel="noreferrer">
                   supabase.com/dashboard <ExternalLink size={12} />
                 </a>{" "}
-                dhe krijoni një projekt të ri (plani falas mjafton - një vit transaksionesh zë
-                disa megabajt).
+                dhe krijoni një projekt të ri - ose, më mirë,{" "}
+                <strong>përdorni një që e keni tashmë</strong> nga një aplikacion tjetër i juaji.
+                Plani falas mjafton: një vit transaksionesh zë disa megabajt.
               </li>
               <li>
                 Te <strong>Authentication → URL Configuration</strong> vendosni{" "}

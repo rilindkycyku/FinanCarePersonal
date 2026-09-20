@@ -932,7 +932,8 @@ export const UDHEZIMET = [
       {
         titulli: "Sinkronizimi, Hapi 1 - projekti dhe tabela",
         teksti:
-          "Krijoni një projekt Supabase (plani falas mjafton) dhe ekzekutoni skriptin SQL që jua jep vetë " +
+          "Krijoni një projekt Supabase (plani falas mjafton) - ose përdorni një që e keni tashmë nga një " +
+          "aplikacion tjetër i juaji, sepse secili shkruan te tabela e vet - dhe ekzekutoni skriptin SQL që jua jep vetë " +
           "faqja - një tabelë e vetme dhe rregulli RLS që lejon vetëm llogarinë tuaj. Faqja ju tregon edhe " +
           "adresën që duhet vendosur te Site URL, me një buton për ta kopjuar. I njëjti projekt mban edhe " +
           "aplikacionet e tjera tuaja që sinkronizojnë kështu: secili e ka tabelën e vet dhe skripti nuk " +
