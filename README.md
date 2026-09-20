@@ -429,6 +429,15 @@ Dy gjëra duhen ditur:
 - **Skripti i secilit duhet ekzekutuar një herë**, nga vetë aplikacioni përkatës - «Konfiguro
   projektin» te faqja e tij. Secili krijon vetëm tabelën e vet.
 
+**Cili rresht i kujt është** e thotë vetë emri i tabelës, prandaj asnjë aplikacion nuk mban një
+kolonë që e përsërit — do të ishte vlerë e derivuar e ruajtur. Kur ajo kolonë duhet vërtet, për ta
+lexuar bazën si një e tërë, `sql/tri-aplikacionet.sql` e nxjerr kur lexohet: dy pamje
+(`regjistrat_e_aplikacioneve` me kolonën `app`, dhe `aktiviteti_i_aplikacioneve` që thotë cili
+aplikacion e preku projektin së fundi). Ekzekutohet një herë te SQL Editor-i, nuk prek asnjë rresht,
+i lë jashtë tabelat që s'i keni ngritur ende, dhe hiqet me dy rreshta. Të dyja pamjet rrinë me
+`security_invoker`, pra u nënshtrohen të njëjtave rregulla RLS si tabelat poshtë tyre — pa të, një
+llogari do t'i shihte rreshtat e një tjetre.
+
 Anash kësaj ka edhe një përfitim që nuk ka të bëjë me kodin: plani falas i Supabase-it e ndal një
 projekt që rri disa ditë pa u prekur. Një projekt që e përdorin disa aplikacione - dhe një libër
 llogarish preket pothuajse çdo ditë - nuk rri pa u prekur, prandaj edhe të dhënat e atyre
