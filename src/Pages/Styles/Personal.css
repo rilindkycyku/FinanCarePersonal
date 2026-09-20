@@ -718,6 +718,57 @@ body.light-mode .fcp-detaje-tabs .fcp-faqe-tab.active {
   font-size: 0.8rem;
 }
 
+/* An explanation folded away beside the control it explains.
+
+   The setup screen answers two questions that are read once, if at all - "can this project hold my
+   other apps too?" and "Create account, or Hyr?" - while the steps around them are read on every
+   new device. Left open they pushed the form off a phone screen; collapsed they cost a line each
+   and stay one tap away. The same reasoning as the report panels below: space is paid every time,
+   the reading happens once.
+
+   `list-style: none` on both selectors because Safari draws the marker through the WebKit
+   pseudo-element, and Firefox through the ordinary one. */
+.fcp-shpjegim {
+  border: 1px solid var(--sp-border);
+  border-radius: var(--sp-radius-md, 12px);
+  background: var(--sp-surface-2);
+  padding: 0.5rem 0.65rem;
+}
+
+.fcp-shpjegim > summary {
+  cursor: pointer;
+  list-style: none;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--sp-text-2, inherit);
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.fcp-shpjegim > summary::-webkit-details-marker {
+  display: none;
+}
+
+/* The arrow is drawn here rather than shipped as an icon: one glyph, and it has to turn. */
+.fcp-shpjegim > summary::before {
+  content: "›";
+  display: inline-block;
+  font-size: 1.05rem;
+  line-height: 1;
+  transition: transform 0.15s ease;
+}
+
+.fcp-shpjegim[open] > summary::before {
+  transform: rotate(90deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fcp-shpjegim > summary::before {
+    transition: none;
+  }
+}
+
 /* ── The four email reports ───────────────────────────────────
    Four switches that share one setup, so they are rows of a single list rather than four cards.
    The separators are borders on the rows themselves and not on the container: a rule under the

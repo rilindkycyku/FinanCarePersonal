@@ -729,12 +729,7 @@ function PanelaSinkronizimit() {
                 Parazgjedhja e Supabase është <code>http://localhost:3000</code>, pra linku i
                 konfirmimit do të hapte një faqe që nuk ekziston. Me adresën e duhur, ai link ju
                 kthen këtu tashmë të futur.
-                <div className="mt-2">
-                  A e mban ky projekt edhe një aplikacion tjetër tuajin? Atëherë{" "}
-                  <strong>mos ia prekni Site URL-në</strong> - ajo i takon atij - dhe shtojeni këtë
-                  adresë te <strong>Redirect URLs</strong> pak më poshtë te e njëjta faqe. Linkun
-                  për këtu FinanCare e kërkon me emër, prandaj një Site URL e huaj nuk e prish.
-                </div>
+
               </li>
               <li>
                 Te <strong>Project Settings</strong> merrni <strong>Project URL</strong> (te{" "}
@@ -751,16 +746,32 @@ function PanelaSinkronizimit() {
                 kjo është mbrojtje, jo mangësi.
               </li>
             </ol>
-            <p className="text-muted small mb-3">
-              <strong>Një projekt mjafton për të gjitha aplikacionet tuaja.</strong> FinanCare i
-              shkruan rreshtat e vet te tabela <code>financare_records</code>, dhe aplikacionet e
-              tjera që e ndajnë të njëjtin stil sinkronizimi kanë secili tabelën e vet - pra rrinë
-              krah njëri-tjetrit pa u prekur, nën të njëjtën llogari dhe të njëjtin rregull
-              sigurie. Ky skript e krijon vetëm tabelën e FinanCare-së dhe nuk prek asgjë tjetër që
-              gjendet aty; përsëritja nuk prish gjë. Përfitimi është edhe praktik: plani falas e
-              ndal një projekt që rri pa u prekur, dhe një projekt që e përdorni për disa gjëra
-              nuk rri pa u prekur.
-            </p>
+            {/* Read once, if at all, while the steps above are read on every new device - so it
+                costs one line here instead of ten (the same reason the prediction assumptions sit
+                in a panel). */}
+            <details className="fcp-shpjegim mb-3">
+              <summary>A e mban ky projekt edhe aplikacionet e tjera?</summary>
+              <div className="text-muted small mt-2">
+                <p className="mb-2">
+                  <strong>Një projekt mjafton për të gjitha aplikacionet tuaja.</strong> FinanCare i
+                  shkruan rreshtat e vet te tabela <code>financare_records</code>, dhe aplikacionet e
+                  tjera që e ndajnë të njëjtin stil sinkronizimi kanë secili tabelën e vet - pra rrinë
+                  krah njëri-tjetrit pa u prekur, nën të njëjtën llogari dhe të njëjtin rregull
+                  sigurie. Ky skript e krijon vetëm tabelën e FinanCare-së dhe nuk prek asgjë tjetër që
+                  gjendet aty; përsëritja nuk prish gjë.
+                </p>
+                <p className="mb-2">
+                  Te <strong>Authentication → URL Configuration</strong>, nëse Site URL i takon një
+                  aplikacioni tjetër, <strong>lëreni si është</strong> dhe shtoni adresën e kësaj
+                  faqeje te <strong>Redirect URLs</strong>: linkun për këtu FinanCare e kërkon me
+                  emër, prandaj një Site URL e huaj nuk e prish.
+                </p>
+                <p className="mb-0">
+                  Përfitimi është edhe praktik: plani falas e ndal një projekt që rri pa u prekur,
+                  dhe një projekt që e përdorni për disa gjëra nuk rri pa u prekur.
+                </p>
+              </div>
+            </details>
             <div>
               <Button className="btn-primary" onClick={() => setSqlHapur(true)}>
                 <Wand2 size={16} className="me-1" /> Konfiguro projektin
@@ -778,21 +789,28 @@ function PanelaSinkronizimit() {
               dhe fjalëkalim në çdo pajisje që doni të mbani në hap. Herën e parë shtypni{" "}
               <strong>Krijo llogari</strong>, në pajisjet e tjera <strong>Hyr</strong>.
             </p>
-            <p className="text-muted small mb-3">
-              Llogaria i takon projektit, jo aplikacionit - pra është <strong>një e vetme</strong>{" "}
-              për të gjitha aplikacionet tuaja që e ndajnë atë projekt (FinanCarePersonal,
-              GuestSeat, Tavolina). Krijojeni një herë, te cilido prej tyre, dhe te të tjerat
-              shtypni <strong>Hyr</strong>.
-            </p>
-            <p className="text-muted small mb-3">
-              Prandaj edhe linku i konfirmimit kthehet vetëm te <strong>një</strong> adresë - ajo e
-              aplikacionit që e zuri i pari <strong>Site URL</strong>-në - dhe mund t&apos;ju hapë
-              një aplikacion tjetër tuajin e jo atë ku shtypët <strong>Krijo llogari</strong>. Kjo
-              nuk është prishje: llogarinë e konfirmon vetë Supabase para se t&apos;ju dërgojë
-              diku, pra ajo mbetet e konfirmuar - kthehuni këtu dhe shtypni <strong>Hyr</strong>.
-              Që linku të bjerë te vendi i duhur, shtoni adresën e secilit aplikacion te{" "}
-              <strong>Redirect URLs</strong> (Hapi 1).
-            </p>
+            {/* Both answers to "which button?" - and both read once. Collapsed next to the two
+                buttons that raise the question rather than stacked above the form. */}
+            <details className="fcp-shpjegim mb-3">
+              <summary>Krijo llogari, apo Hyr?</summary>
+              <div className="text-muted small mt-2">
+                <p className="mb-2">
+                  Llogaria i takon projektit, jo aplikacionit - pra është <strong>një e vetme</strong>{" "}
+                  për të gjitha aplikacionet tuaja që e ndajnë atë projekt (FinanCarePersonal,
+                  GuestSeat, Tavolina). Krijojeni një herë, te cilido prej tyre, dhe te të tjerat
+                  shtypni <strong>Hyr</strong>.
+                </p>
+                <p className="mb-0">
+                  Prandaj edhe linku i konfirmimit kthehet vetëm te <strong>një</strong> adresë - ajo e
+                  aplikacionit që e zuri i pari <strong>Site URL</strong>-në - dhe mund t&apos;ju hapë
+                  një aplikacion tjetër tuajin e jo atë ku shtypët <strong>Krijo llogari</strong>. Kjo
+                  nuk është prishje: llogarinë e konfirmon vetë Supabase para se t&apos;ju dërgojë
+                  diku, pra ajo mbetet e konfirmuar - kthehuni këtu dhe shtypni <strong>Hyr</strong>.
+                  Që linku të bjerë te vendi i duhur, shtoni adresën e secilit aplikacion te{" "}
+                  <strong>Redirect URLs</strong> (Hapi 1).
+                </p>
+              </div>
+            </details>
             <Form
               onSubmit={(e) => {
                 e.preventDefault();
