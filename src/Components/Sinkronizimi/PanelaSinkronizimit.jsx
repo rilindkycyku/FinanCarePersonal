@@ -707,72 +707,40 @@ function PanelaSinkronizimit() {
               <Database size={18} className="me-2 text-primary" />
               Hapi 1 - Krijoni projektin dhe tabelën
             </h2>
-            <ol className="text-muted small ps-3 mb-3" style={{ lineHeight: 1.9 }}>
-              <li>
-                Hapni{" "}
-                <a href="https://supabase.com/dashboard" target="_blank" rel="noreferrer">
-                  supabase.com/dashboard <ExternalLink size={12} />
-                </a>{" "}
-                dhe krijoni një projekt të ri - ose, më mirë,{" "}
-                <strong>përdorni një që e keni tashmë</strong> nga një aplikacion tjetër i juaji.
-                Plani falas mjafton: një vit transaksionesh zë disa megabajt.
-              </li>
-              <li>
-                Te <strong>Authentication → URL Configuration</strong> vendosni{" "}
-                <strong>Site URL</strong> te adresa e këtij aplikacioni - domethënë kjo:
-                <div className="fcp-adresa-faqes">
-                  <code>{adresaEFaqes}</code>
-                  <Button variant="outline-light" size="sm" onClick={kopjoAdresen}>
-                    {adresaKopjuar ? <Check size={14} className="me-1" /> : <Copy size={14} className="me-1" />}
-                    {adresaKopjuar ? "U kopjua" : "Kopjo"}
-                  </Button>
-                </div>
-                Parazgjedhja e Supabase është <code>http://localhost:3000</code>, pra linku i
-                konfirmimit do të hapte një faqe që nuk ekziston. Me adresën e duhur, ai link ju
-                kthen këtu tashmë të futur.
+            {/* Udhëzimi i plotë — krijimi i projektit, çelësat, Site URL — rrinte këtu dhe
+                po aq te tri aplikacionet e tjera: të njëjtat fjalë te katër vende, që
+                zhvendoseshin veç e veç. Tani rri te një i vetëm. Këtu mbetet vetëm ajo që askush
+                tjetër nuk e thotë dot për këtë aplikacion: adresa e vet, dhe skripti i vet. */}
+            <p className="text-muted small mb-2">
+              Ngritja bëhet një herë, te një projekt Supabase që e zotëroni ju - dhe një projekt i
+              vetëm i mban të gjitha aplikacionet tuaja, secili me tabelën e vet.
+            </p>
+            <p className="mb-3">
+              <a href="https://supabase.rilindkycyku.dev" target="_blank" rel="noreferrer">
+                Si ngrihet projekti - udhëzimi i plotë <ExternalLink size={12} />
+              </a>
+            </p>
 
-              </li>
-              <li>
-                Te <strong>Project Settings</strong> merrni <strong>Project URL</strong> (te{" "}
-                <em>Data API</em>) dhe çelësin <strong>publishable</strong> -{" "}
-                <code>sb_publishable_…</code> te <em>API Keys</em>. Nëse projekti juaj ka ende
-                çelësin e vjetër <em>anon</em> te skeda <em>Legacy</em>, edhe ai punon; i riu është
-                ai që Supabase rekomandon dhe ai që mund ta zëvendësoni vetëm atë kur t&apos;ju
-                duhet. Çelësat <em>secret</em> / <em>service_role</em> mos i kopjoni kurrë këtu.
-              </li>
-              <li>
-                Shtypni <strong>Konfiguro projektin</strong> këtu poshtë: hapet redaktori i
-                projektit tuaj me skriptin brenda dhe mjafton <strong>Run</strong>. Tabelën nuk e
-                krijon dot çelësi që ngjitni te Hapi 2 - Supabase nuk ia lejon atij këtë punë, dhe
-                kjo është mbrojtje, jo mangësi.
-              </li>
-            </ol>
-            {/* Read once, if at all, while the steps above are read on every new device - so it
-                costs one line here instead of ten (the same reason the prediction assumptions sit
-                in a panel). */}
-            <details className="fcp-shpjegim mb-3">
-              <summary>A e mban ky projekt edhe aplikacionet e tjera?</summary>
-              <div className="text-muted small mt-2">
-                <p className="mb-2">
-                  <strong>Një projekt mjafton për të gjitha aplikacionet tuaja.</strong> FinanCare i
-                  shkruan rreshtat e vet te tabela <code>financare_records</code>, dhe aplikacionet e
-                  tjera që e ndajnë të njëjtin stil sinkronizimi kanë secili tabelën e vet - pra rrinë
-                  krah njëri-tjetrit pa u prekur, nën të njëjtën llogari dhe të njëjtin rregull
-                  sigurie. Ky skript e krijon vetëm tabelën e FinanCare-së dhe nuk prek asgjë tjetër që
-                  gjendet aty; përsëritja nuk prish gjë.
-                </p>
-                <p className="mb-2">
-                  Te <strong>Authentication → URL Configuration</strong>, nëse Site URL i takon një
-                  aplikacioni tjetër, <strong>lëreni si është</strong> dhe shtoni adresën e kësaj
-                  faqeje te <strong>Redirect URLs</strong>: linkun për këtu FinanCare e kërkon me
-                  emër, prandaj një Site URL e huaj nuk e prish.
-                </p>
-                <p className="mb-0">
-                  Përfitimi është edhe praktik: plani falas e ndal një projekt që rri pa u prekur,
-                  dhe një projekt që e përdorni për disa gjëra nuk rri pa u prekur.
-                </p>
-              </div>
-            </details>
+            <p className="text-muted small mb-1">
+              Shtoni adresën e këtij aplikacioni te <strong>Redirect URLs</strong> te projekti juaj
+              (<strong>Authentication → URL Configuration</strong>). Site URL-në lëreni atij
+              aplikacioni që e zuri i pari - regjistrimi e kërkon këtë adresë me emër:
+            </p>
+            <div className="fcp-adresa-faqes">
+              <code>{adresaEFaqes}</code>
+              <Button variant="outline-light" size="sm" onClick={kopjoAdresen}>
+                {adresaKopjuar ? <Check size={14} className="me-1" /> : <Copy size={14} className="me-1" />}
+                {adresaKopjuar ? "U kopjua" : "Kopjo"}
+              </Button>
+            </div>
+
+            <p className="text-muted small mb-3">
+              Pastaj shtypni <strong>Konfiguro projektin</strong>: hapet redaktori juaj SQL me
+              skriptin e këtij aplikacioni brenda dhe mjafton <strong>Run</strong>. Krijon vetëm{" "}
+              <code>financare_records</code> dhe nuk prek asgjë tjetër; përsëritja nuk prish gjë. Tabelën
+              nuk e krijon dot çelësi që ngjitni te Hapi 2 - dhe kjo është mbrojtje, jo mangësi.
+            </p>
+
             <div>
               <Button className="btn-primary" onClick={() => setSqlHapur(true)}>
                 <Wand2 size={16} className="me-1" /> Konfiguro projektin
