@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button, Alert, Row, Col, Card, Form, Spinner } from "react-bootstrap";
 import { Download, Upload, DatabaseBackup, ShieldCheck, FileText, Sheet, GitMerge, FileSpreadsheet,
@@ -19,9 +19,8 @@ import { useDialog } from "../Context/DialogContext";
 import { exportAllData, exportZipData, hapesiraRuajtjes, importAllData, importZipData,
   kerkoRuajtjeQendrueshme, ringjeshFaturat, ruajtjaEshteQendrueshme, shenoKopjen } from "../lib/db";
 import { eshteZip } from "../lib/zip";
-import { exportListExcel, exportStatementExcel } from "../lib/exportExcel";
-import { exportStatementPdf, statementFilename } from "../lib/exportPdf";
-import PdfViewerModal from "../Components/PdfViewerModal";
+
+const PdfViewerModal = lazy(() => import("../Components/PdfViewerModal"));
 import { backupStatus, periodBounds, sortByDateDesc } from "../lib/finance";
 import { formatDate, plainAmount, todayISO } from "../lib/format";
 import { emriIPlote } from "../lib/kategorite";
@@ -228,6 +227,7 @@ function TeDhena() {
       [`Vlera (${simboli})`]: plainAmount(tx.lloji === "shpenzim" ? -tx.vlera : tx.vlera),
     }));
     try {
+      const { exportListExcel } = await import("../lib/exportExcel");
       await exportListExcel(
         "Transaksionet",
         Object.keys(rows[0]),
@@ -248,6 +248,7 @@ function TeDhena() {
     setDuke("pdf");
     const { start, end } = periodBounds(periudha);
     try {
+      const { exportStatementPdf, statementFilename } = await import("../lib/exportPdf");
       const pasqyra = await exportStatementPdf({
         kthejBlob: true,
         profile,
@@ -274,6 +275,7 @@ function TeDhena() {
     setDuke("excel");
     const { start, end } = periodBounds(periudha);
     try {
+      const { exportStatementExcel } = await import("../lib/exportExcel");
       const emri = await exportStatementExcel({
         profile,
         accounts,
@@ -711,13 +713,17 @@ function TeDhena() {
 
       <Footer />
 
-      <PdfViewerModal
-        show={Boolean(pdf)}
-        blob={pdf?.blob}
-        filename={pdf?.filename}
-        title="Pasqyra"
-        onHide={() => setPdf(null)}
-      />
+      {pdf && (
+        <Suspense fallback={null}>
+          <PdfViewerModal
+            show={Boolean(pdf)}
+            blob={pdf?.blob}
+            filename={pdf?.filename}
+            title="Pasqyra"
+            onHide={() => setPdf(null)}
+          />
+        </Suspense>
+      )}
     </div>
   );
 }

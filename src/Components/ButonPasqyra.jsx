@@ -1,14 +1,14 @@
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import { Button, Form, Modal, Spinner } from "react-bootstrap";
 import { FileText, Loader2 } from "lucide-react";
 import { useData } from "../Context/DataContext";
 import Zgjedhesi from "./Zgjedhesi";
 import { opsionetEThjeshta, opsionetLlogarive } from "../lib/opsionet";
 import { useDialog } from "../Context/DialogContext";
-import { exportStatementPdf, statementFilename } from "../lib/exportPdf";
 import { periodBounds } from "../lib/finance";
 import { STATEMENT_PERIODS } from "../lib/options";
-import PdfViewerModal from "./PdfViewerModal";
+
+const PdfViewerModal = lazy(() => import("./PdfViewerModal"));
 
 /**
  * The statement, from the places you would look for it rather than go hunting: the dashboard and
@@ -34,6 +34,7 @@ function ButonPasqyra({ variant = "buton", className = "" }) {
     setDuke(true);
     try {
       const { start, end } = periodBounds(periudha);
+      const { exportStatementPdf, statementFilename } = await import("../lib/exportPdf");
       const pasqyra = await exportStatementPdf({
         kthejBlob: true,
         profile,
@@ -114,15 +115,17 @@ function ButonPasqyra({ variant = "buton", className = "" }) {
     </Modal>
   );
 
-  const viewer = (
-    <PdfViewerModal
-      show={Boolean(pdf)}
-      blob={pdf?.blob}
-      filename={pdf?.filename}
-      title="Pasqyra"
-      onHide={() => setPdf(null)}
-    />
-  );
+  const viewer = pdf ? (
+    <Suspense fallback={null}>
+      <PdfViewerModal
+        show={Boolean(pdf)}
+        blob={pdf?.blob}
+        filename={pdf?.filename}
+        title="Pasqyra"
+        onHide={() => setPdf(null)}
+      />
+    </Suspense>
+  ) : null;
 
   const Ikona = duke ? Loader2 : FileText;
 

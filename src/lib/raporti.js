@@ -45,6 +45,7 @@ import { kufijtePeriudhes, titulliPeriudhes } from "./periudhat";
 import { dataEParaERegjistruar } from "./finance";
 import { STORI_META, TABELA } from "./skema";
 import { eshteLidhur, lexoKonfigurimin, rest, siguroSesionin, thirrFunksionin } from "./supabase";
+import { blobNeDataUrl } from "./images";
 
 export { PREFIKSI_RAPORTIT };
 /** The marker id of a monthly report - kept under its old name because that is what it has always
@@ -233,10 +234,7 @@ export async function gjendjaFunksionit() {
  * `pasqyra-e-periudhes.pdf`, which in an inbox is an attachment nobody can tell from the last one. */
 async function pdfBase64({ lloji, periudha, profile, accounts, categories, transactions, recurring }) {
   try {
-    const [{ exportStatementPdf, statementFilenameFromTitle }, { blobNeDataUrl }] = await Promise.all([
-      import("./exportPdf"),
-      import("./images"),
-    ]);
+    const { exportStatementPdf, statementFilenameFromTitle } = await import("./exportPdf");
     const { start, end } = kufijtePeriudhes(lloji, periudha);
     const { blob, filename } = await exportStatementPdf({
       profile, accounts, categories, transactions, recurring, start, end, kthejBlob: true,

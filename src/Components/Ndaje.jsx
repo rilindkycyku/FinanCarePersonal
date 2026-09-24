@@ -4,8 +4,6 @@ import { QrCode, Copy, Check, Share2, FileText, Sheet, DatabaseBackup, MessageSq
 import { saveAs } from "file-saver";
 import { useData } from "../Context/DataContext";
 import { exportAllData, shenoKopjen } from "../lib/db";
-import { exportStatementPdf } from "../lib/exportPdf";
-import { exportStatementExcel } from "../lib/exportExcel";
 import TransferoQr from "./TransferoQr";
 import { cashflow, filterByRange, monthBounds, totalBalance } from "../lib/finance";
 import { formatMoney, monthKey, monthLabel, todayISO } from "../lib/format";
@@ -110,6 +108,7 @@ function Ndaje() {
 
   const ndajPdf = () =>
     puno("pdf", async () => {
+      const { exportStatementPdf } = await import("../lib/exportPdf");
       const file = await exportStatementPdf({
         profile, accounts, categories, transactions, recurring, start, end, kthejBlob: true,
       });
@@ -118,6 +117,7 @@ function Ndaje() {
 
   const ndajExcel = () =>
     puno("excel", async () => {
+      const { exportStatementExcel } = await import("../lib/exportExcel");
       const file = await exportStatementExcel({
         profile, accounts, categories, transactions, recurring, start, end, kthejBlob: true,
       });
