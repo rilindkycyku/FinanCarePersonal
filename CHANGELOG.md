@@ -43,7 +43,20 @@ ngriti versionin.
   pikën, dhe secila pajisje i mban pikat që i ka shënuar vetë — edhe kur një pajisje tjetër e ndryshon
   të njëjtin transaksion. Asnjë funksion i bilancit nuk e lexon as grupin as vendndodhjen.
 
+- **Një version i ri nuk instalohet më vetë — së pari tregon çka ndryshon.** Deri tani aplikacioni
+  kalonte në versionin e ri sapo e shkarkonte, në mes të punës dhe pa thënë asgjë; numri te fundi i
+  faqes ndryshonte dhe kaq. Tani versioni i ri shkarkohet në sfond dhe **pret**: del një dritare me
+  shënimet e çdo versioni që keni kaluar (të marra nga ky histori), dhe instalohet vetëm kur shtypni
+  **«Përditëso tani»**. «Më vonë» e mbyll dritaren dhe lë një buton të vogël në qoshe; hapja e radhës
+  e pyet sërish. Një aplikacion i lënë hapur për ditë kontrollon vetë një herë në orë. Të dhënat nuk
+  preken nga përditësimi — ato rrinë në shfletues, jo në aplikacion.
+  <br />Edhe numri i versionit te fundi i faqes hapet tani: **«Çka ka të re»** tregon pesë versionet e
+  fundit.
+
 ### Ndryshuar
+- Pajisjet që kanë një version më të vjetër se ky e marrin këtë një herë në mënyrën e vjetër — pasi
+  të mbyllen të gjitha dritaret e aplikacionit — sepse ato ende nuk e njohin dritaren e re. Nga ky
+  version e tutje, çdo përditësim pyet.
 - Baza lokale kalon në versionin 6 me stor-in e ri `grupet`, i cili sinkronizohet, hyn në kopjet
   JSON/ZIP dhe numërohet te faqja e të dhënave. Tabela në projektin tuaj Supabase nuk ndryshon.
 

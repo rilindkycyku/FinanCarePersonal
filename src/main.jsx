@@ -11,6 +11,7 @@ import GabimIPapritur from "./Components/GabimIPapritur";
 import ImportoNgaLinku from "./Components/ImportoNgaLinku";
 import RaportiAutomatik from "./Components/RaportiAutomatik";
 import Paralajmerimet from "./Components/Paralajmerimet";
+import PerditesimiIRi from "./Components/PerditesimiIRi";
 import { BrowserRouter } from "react-router-dom";
 import { ThemeProvider } from "./Context/ThemeContext";
 import { DialogProvider } from "./Context/DialogContext";
@@ -44,6 +45,8 @@ root.render(
               <RaportiAutomatik />
               {/* Reminders that belong to opening the app, not to saving something. */}
               <Paralajmerimet />
+              {/* A new version waits for the user: its changelog first, then «Përditëso tani». */}
+              <PerditesimiIRi />
               {/* Page views only - no financial data leaves the browser, since every figure lives in
                   IndexedDB and none of it is passed to the tracker. Inside the router so client-side
                   navigations between the pages are counted too. */}

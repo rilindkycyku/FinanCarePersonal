@@ -31,7 +31,7 @@ npm run dev       # vite --host
 npm run build
 npm run preview
 npm run lint      # eslint . — must stay at 0 errors (4 pre-existing warnings)
-npm test          # vitest run — 29 files, 677 tests, all green
+npm test          # vitest run — 30 files, 689 tests, all green
 npm run test:watch
 npm run ikonat    # regenerates the icons and the two wordmark PNGs from Logo.svg (Playwright)
 ```
@@ -102,6 +102,7 @@ imports, so keep doing that unless you are converting deliberately.
 | `vendndodhjet.js` | Transaction location pins: cleaning, clustering into places, renaming, the sync opt-out strip/keep |
 | `viti.js` | Year-vs-previous-year page |
 | `udhezimet.js` | Text of the in-app guide, one entry per page, keyed by route |
+| `ndryshimet.js` | CHANGELOG.md parser + safe mini-Markdown renderer for the update prompt and «Çka ka të re» |
 | `images.js` / `zip.js` | In-browser photo re-encoding; hand-written ZIP writer/reader |
 | `exportExcel.js` / `exportPdf.js` | Excel export and the bank-style PDF statement |
 | `calc.js` | Recursive-descent arithmetic parser for the amount fields (never `eval`) |
@@ -239,7 +240,7 @@ version — and note that an upgrade blocked by another open tab is surfaced thr
 
 - Vitest, no DOM environment, no jsdom setup file. Tests sit next to the code as `*.test.js`.
 - Everything tested is pure: `finance`, `csv`, `sinkronizimi`, `kategorite`, `etiketat`, `format`,
-  `grupet`, `vendndodhjet`,
+  `grupet`, `vendndodhjet`, `ndryshimet`,
   `options`, `calc`, `periudhat`, `raportet`, `raporti`, `raportFigurat`, `raportGrafike`,
   `raportEmail`, `paralajmerimet`, `njoftimet`, `abonimet`, `viti`, `zerat`, `skema`, `supabase`,
   `transferQr`, `pajisja`, `instalimi`, `udhezimet`, plus the naming half of `exportPdf`
@@ -261,6 +262,14 @@ shows it at the bottom of every page. When a change is user-visible:
    under `### Shtuar` / `### Ndryshuar` / `### Rregulluar`, written in the existing narrative
    voice (what the problem was, what changed, what the calculation still does).
 3. Update `README.md` if the feature list or the sync/privacy story changed.
+
+The changelog is also **shown to users**: the build parses it (`lib/ndryshimet.js`, a small plugin
+in `vite.config.js`) into `/ndryshimet.json`, and the service worker runs in `prompt` mode — a new
+version waits while `Components/PerditesimiIRi.jsx` lists every release newer than the running one
+and asks before `updateServiceWorker(true)`. So write entries for the person reading that dialog,
+keep the heading format exact, and keep the newest version at the top: `ndryshimet.test.js` fails
+when the first entry is not `package.json`'s version. `/ndryshimet.json` must stay out of the
+precache, or a waiting version would be described by the old copy.
 
 ## Gotchas
 

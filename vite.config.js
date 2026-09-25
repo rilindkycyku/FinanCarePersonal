@@ -2,16 +2,46 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 import path from 'path';
+import { readFileSync } from 'fs';
+import { lexoNdryshimet } from './src/lib/ndryshimet.js';
+
+/**
+ * CHANGELOG.md as `/ndryshimet.json`, for the update dialog (Components/PerditesimiIRi.jsx). Read
+ * from the file at build time rather than imported into the bundle: the dialog needs the list of
+ * the version that is *waiting*, and only the server has that one - the running bundle only knows
+ * its own past. Not in the precache (`json` is not in `globPatterns`) for the same reason.
+ */
+function ndryshimetJson() {
+  const permbajtja = () =>
+    JSON.stringify(lexoNdryshimet(readFileSync(path.resolve(__dirname, 'CHANGELOG.md'), 'utf8')));
+  return {
+    name: 'fcp-ndryshimet',
+    configureServer(server) {
+      server.middlewares.use('/ndryshimet.json', (_req, res) => {
+        res.setHeader('Content-Type', 'application/json; charset=utf-8');
+        res.end(permbajtja());
+      });
+    },
+    generateBundle() {
+      this.emitFile({ type: 'asset', fileName: 'ndryshimet.json', source: permbajtja() });
+    },
+  };
+}
 
 export default defineConfig({
   plugins: [
     react(),
+    ndryshimetJson(),
     // The app already runs entirely offline - the data never leaves IndexedDB - so the only thing
     // between it and working on a plane was fetching the assets. `public/site.webmanifest` stays
     // the manifest of record (`manifest: false`); this only adds the service worker.
+    //
+    // `prompt`, not `autoUpdate`: a new version waits until the user has read what it changes and
+    // pressed «Përditëso» (Components/PerditesimiIRi.jsx, which registers the worker itself - hence
+    // no injected register script).
     VitePWA({
-      registerType: 'autoUpdate',
-      injectRegister: 'auto',
+      registerType: 'prompt',
+      injectRegister: false,
       manifest: false,
       workbox: {
         // `woff2` is Inter, the interface font: without it here the app came back offline set in

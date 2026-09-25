@@ -334,6 +334,10 @@ pasqyra PDF) shërbehen nga i njëjti domen si aplikacioni, jo nga Google Fonts,
 nuk i tregon askujt se ju e hapët - dhe ndërfaqja duket njësoj edhe offline, ku më parë do të binte
 te shkronjat e sistemit.
 
+Një version i ri i aplikacionit nuk instalohet vetë: shkarkohet në sfond dhe pret, me një dritare që
+tregon çka ndryshon (nga `CHANGELOG.md`, që ndërtimi e publikon si `/ndryshimet.json`) dhe një buton
+**«Përditëso tani»**. Numri i versionit te fundi i faqes hap **«Çka ka të re»**.
+
 I vetmi rast kur diçka del nga shfletuesi është kur e vendosni vetë: te faqja **Sinkronizimi**
 lidhni një projekt Supabase **tuajin** dhe që nga ai çast libri i llogarive (jo fotot) shkon te
 *baza juaj*, në rajonin që zgjidhni ju, përmes HTTPS. Projekti, çelësi publik dhe sesioni ruhen në
