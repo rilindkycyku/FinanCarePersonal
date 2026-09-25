@@ -12,7 +12,7 @@ import { krijoZip, lexoZip } from "./zip";
 import { pastroKonfigurimin, ruajKonfigurimin } from "./supabase";
 
 const DB_NAME = "financarepersonal";
-const DB_VERSION = 5;
+const DB_VERSION = 6;
 
 export const STORES = {
   profile: "profile",
@@ -29,6 +29,9 @@ export const STORES = {
   // debts they are not transactions, so they never move a balance - they only reserve part of the
   // month's money so the daily allowance stops handing it out (finance.js).
   planet: "planet",
+  // Shared-expense groups (a trip, a flat): the members, the bills and how each was split - see
+  // lib/grupet.js. Off-ledger like the debt notes: only the transactions a group books move money.
+  grupet: "grupet",
   // Invoice photos, split in two on purpose: `faturat` holds only the small metadata record (name,
   // size, thumbnail, which transaction it belongs to) and is loaded with everything else, while the
   // full-size image sits in `faturaSkedaret` keyed by the same id and is read only when a picture is
@@ -61,6 +64,7 @@ export const SINK_STORES = [
   STORES.recurring,
   STORES.borxhet,
   STORES.planet,
+  STORES.grupet,
 ];
 
 export const SINK_PROFILE_ID = PROFILE_KEY;
@@ -126,7 +130,7 @@ function openDb() {
       return;
     }
     const req = indexedDB.open(DB_NAME, DB_VERSION);
-    req.onupgradeneeded = () => {
+    req.onupgradeneeded = (e) => {
       const db = req.result;
       if (!db.objectStoreNames.contains(STORES.profile)) {
         db.createObjectStore(STORES.profile);
@@ -178,6 +182,15 @@ function openDb() {
       // Added in DB_VERSION 5, for sync. A database that never syncs simply keeps an empty store.
       if (!db.objectStoreNames.contains(STORES.fshirjet)) {
         db.createObjectStore(STORES.fshirjet, { keyPath: "celesi" });
+      }
+      // Added in DB_VERSION 6, for shared-expense groups. Same guard as every store above.
+      if (!db.objectStoreNames.contains(STORES.grupet)) {
+        db.createObjectStore(STORES.grupet, { keyPath: "id" });
+        // A database that existed before this store may have been syncing with a device already on
+        // the newer release. Its older copy skipped the `grupet` rows it could not store, and its
+        // pull watermark has moved past them since - so an incremental pull would never bring
+        // them. One full download does, and costs nothing on a device that has never synced.
+        if (e.oldVersion > 0) kerkoShkarkimTePlote();
       }
     };
     // The request keeps waiting either way; these only decide whether the user is told about it.
@@ -505,10 +518,11 @@ export function getAllData() {
     getAll(STORES.recurring),
     getAll(STORES.borxhet),
     getAll(STORES.planet),
+    getAll(STORES.grupet),
     // Metadata only - the pictures themselves stay on disk until one is opened.
     getAll(STORES.faturat),
   ]).then(
-    ([profile, accounts, categories, transactions, budgets, goals, recurring, borxhet, planet, faturat]) => ({
+    ([profile, accounts, categories, transactions, budgets, goals, recurring, borxhet, planet, grupet, faturat]) => ({
       profile: profile ?? {},
       accounts,
       categories,
@@ -518,6 +532,7 @@ export function getAllData() {
       recurring,
       borxhet,
       planet,
+      grupet,
       faturat,
     })
   );
@@ -731,6 +746,7 @@ export async function exportAllData({ perfshiFaturat = false } = {}) {
     recurring: data.recurring,
     borxhet: data.borxhet,
     planet: data.planet,
+    grupet: data.grupet,
     faturat,
   };
 }
@@ -813,6 +829,7 @@ const IMPORT_STORES = [
   // into "none" rather than a failed import.
   [STORES.borxhet, "borxhet"],
   [STORES.planet, "planet"],
+  [STORES.grupet, "grupet"],
 ];
 
 /**

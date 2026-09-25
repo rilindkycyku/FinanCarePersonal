@@ -84,6 +84,16 @@ sa shpenzohet, sa mbetet dhe sa po kursesh.
   tuaja, një hyrje e përsëritur me ato që ju kanë borxh. Borxhi zbritet me vlerën që u pagua
   vërtet, jo me atë të planifikuar, pra bonuset e zbritura nga kësti reflektohen saktë; dhe kjo
   vlen njësoj kur konfirmoni një pagesë të vetme apo të gjitha përnjëherë.
+- **Grupet** - shpenzime të përbashkëta si te Splitwise: udhëtime, banesë, darka me shokët. Kush
+  pagoi çdo faturë dhe si ndahet (barabartë, me pjesë ose me shuma të sakta), sa ju ka borxh secili
+  ose sa i keni ju, dhe borxhet mes të tjerëve të përmbledhura në sa më pak pagesa. **«Kalo te
+  Borxhet»** e çon pjesën tuaj te **Borxhet & Kartelat** si *Hua e Dhënë* ose *Borxh Personal* -
+  herën tjetër vetëm diferencën e re - ku kthimet regjistrohen si zakonisht. Fatura që e paguani ju
+  mund të regjistrohet edhe si shpenzim në llogari.
+- **Vendet** - vendndodhja opsionale e një transaksioni, e marrë vetëm kur shtypni butonin, me emrin
+  që i vini vetë (vizita e radhës aty e merr vetë). Faqja **Vendet** i bashkon pikat në vende, me
+  shpenzimet e secilit, dhe i riemërton; lidhja «Hap në hartë» ju çon te Google Maps vetëm kur e
+  prekni - aplikacioni nuk ngarkon harta dhe nuk kërkon adresa askund.
 - **Kategoritë & nënkategoritë** - kategori të veçanta për hyrje dhe shpenzime, me ngjyrë e ikonë,
   dhe me numërimin e përdorimit real të secilës. Çdo kategori mund të ketë **nënkategori** - p.sh.
   *Ushqim & Pije › Market*, *› Furra*, *› Pije & Ujë*, ose *Kafe & Restorant › Kafe*, *› Drekë në
@@ -562,6 +572,9 @@ përditësohet. Kjo ishte arsyeja pse kolona është `jsonb` që në fillim.
   kohë aplikacioni rri i hapur, dhe kthehet herën tjetër sepse mbetet e vërtetë.
 - **Fotot e faturave nuk sinkronizohen**: janë binare dhe pjesa më e madhe e hapësirës, pra do të
   kërkonin Supabase Storage. Për t&apos;i çuar diku tjetër mbetet arkivi ZIP.
+- **Vendndodhjet e transaksioneve** sinkronizohen si çdo fushë tjetër, përveç nëse te faqja **Vendet**
+  ndizet «Mos i dërgo vendndodhjet në cloud»: atëherë transaksioni shkon pa pikën dhe secila pajisje
+  mban pikat e veta, edhe kur transaksionin e ndryshon një pajisje tjetër.
 
 Rregullat e mësipërme janë funksione të pastra në `src/lib/sinkronizimi.js` dhe mbulohen me teste në
 `src/lib/sinkronizimi.test.js` - çfarë dërgohet, çfarë aplikohet, cila kopje fiton dhe si udhëton një
@@ -582,11 +595,12 @@ src/
               zip.js (arkivi i kopjes së plotë), calc.js (llogaritësi i fushave të vlerës),
               supabase.js (klienti i vogël i projektit tuaj), sinkronizimi.js (rregullat e bashkimit),
               format.js, options.js, exportExcel.js,
-              udhezimet.js (teksti i Udhëzuesit: një udhëzim për çdo faqe, i kërkueshëm)
+              udhezimet.js (teksti i Udhëzuesit: një udhëzim për çdo faqe, i kërkueshëm),
+              grupet.js (ndarja e faturave dhe kalimi te borxhet), vendndodhjet.js (vendet)
   Components/ NavBar, Footer, Tabela (kërkim/renditje/eksport), modalet e shtimit, Ui.jsx,
               ZgjedhesiKategorive (zgjedhësi me dritare i çdo fushe kategorie),
               Faturat/ (fusha e fotove, galeria e një transaksioni, shikuesi)
-  Pages/      Paneli, Transaksionet, Llogaritë, Borxhet & Kartelat, Kategoritë, Buxhetet,
+  Pages/      Paneli, Transaksionet, Llogaritë, Borxhet & Kartelat, Grupet, Vendet, Kategoritë, Buxhetet,
               Qëllimet, Shpenzimet e Planifikuara, Pagesat e Përsëritura, Statistikat,
               Cilësimet, Të dhënat (Sinkronizimi + Eksporto/Importo, një faqe me dy gjysma
               te /sinkronizimi dhe /te-dhena), Importo nga CSV, Udhëzuesi

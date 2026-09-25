@@ -14,6 +14,7 @@ const EMRAT = {
   recurring: ["pagesë e përsëritur", "pagesa të përsëritura"],
   borxhet: ["borxh", "borxhe"],
   planet: ["plan", "plane"],
+  grupet: ["grup", "grupe"],
   profile: ["profil", "profili"],
 };
 
@@ -28,7 +29,7 @@ export function emriStorit(store, shume = false) {
 /** The stores a comparison lists, in the order a person thinks about them - transactions first,
  * because that is the ledger; the rest in descending order of how often anybody looks. */
 export const RENDI_STOREVE = [
-  "transactions", "categories", "accounts", "borxhet", "planet", "budgets", "goals", "recurring",
+  "transactions", "categories", "accounts", "borxhet", "planet", "grupet", "budgets", "goals", "recurring",
   "profile",
 ];
 

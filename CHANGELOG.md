@@ -9,6 +9,44 @@ e fundit kur rregullohet diçka, dhe e para vetëm kur ndryshon vetë forma e pr
 herë, te `2.0.0`, kur të dhënat mësuan të dalin nga shfletuesi. Datat janë ato të commit-it që e
 ngriti versionin.
 
+## [2.27.0] - 2026-09-25
+
+### Shtuar
+- **Grupet: shpenzime të përbashkëta, si Splitwise, që përfundojnë te Borxhet.** Një udhëtim, një
+  banesë e përbashkët, një darkë me shokët: deri tani çdo gjë e tillë shënohej si hua e dhënë me dorë,
+  person për person, pas llogaritjeve në letër. Faqja e re **Grupet** (te *Financat*) mban personat,
+  çdo faturë, kush e pagoi dhe si ndahet — në mënyrë të barabartë, me pjesë (2 : 1 : 1) ose me shuma
+  të sakta, me centët e tepërt të ndarë që shuma të dalë gjithmonë e plotë. Për secilin person faqja
+  thotë sa ju ka borxh ose sa i keni ju; borxhet e kundërta me të njëjtin njeri anulohen vetë.
+  <br />**«Kalo te Borxhet»** e shndërron këtë në shënime te faqja Borxhet: një *Hua e Dhënë* për kë
+  ju ka borxh, një *Borxh Personal* për kë i keni. Me qëllim nuk bëhet vetvetiu pas çdo fature: një
+  faturë e ndryshuar më vonë do t'i rishkruante shënimet që janë paguar tashmë përgjysmë. Kalon vetëm
+  diferenca që nga hera e fundit, si rresht i ri te i njëjti shënim, dhe kur drejtimi kthehet së pari
+  zbret shënimin e kundërt. Kthimet regjistrohen pastaj si çdo kthim tjetër, me ose pa llogari.
+  <br />Fatura që e paguani ju regjistrohet, nëse e doni, si shpenzim në llogari — me gjithë shumën,
+  sepse aq doli nga llogaria; pjesët e të tjerëve kthehen si hyrje kur t'jua kthejnë. Fatura që e
+  paguan dikush tjetër nuk prek asgjë derisa t'ia ktheni. Borxhet mes të tjerëve, pa ju, përmblidhen
+  në sa më pak pagesa dhe shënohen si të shlyera vetëm te grupi. Grupi është vetëm te ju — shokët nuk
+  e shohin, sepse nuk ka server që t'jua tregojë.
+- **Vendndodhja e transaksionit, dhe faqja Vendet.** Te formulari i transaksionit, «Ruaj
+  vendndodhjen aktuale» e ruan pikën ku jeni — vetëm kur e shtypni, kurrë në sfond. Emrin e vendit e
+  shkruani ju (p.sh. *Pizzeria Napoli*), dhe vizita e radhës brenda rreth 120 metrave e merr vetë.
+  Transaksionet kanë kolonën **Vendi**, që hap Google Maps në atë pikë. Faqja e re **Vendet** (te *Më
+  Shumë*) i bashkon pikat afër njëra-tjetrës në vende, me sa keni shpenzuar dhe sa herë keni qenë në
+  secilin; aty riemërtohen — emri shkon te çdo vizitë, edhe te të vjetrat pa emër — ose hiqen.
+  <br />Aplikacioni nuk ngarkon asnjë hartë dhe nuk kërkon adresa askund: një hartë ose një emër
+  adrese i marrë automatikisht do të kërkonte serverin e dikujt tjetër, pra vendndodhja juaj do të
+  dilte nga shfletuesi në çdo hapje dhe faqja nuk do të punonte pa internet. Lidhja e hartës hapet
+  vetëm kur e prekni ju.
+  <br />Me sinkronizimin e lidhur vendndodhja udhëton si çdo fushë tjetër, përveç nëse ndizni **«Mos i
+  dërgo vendndodhjet në cloud»** te faqja Vendet: atëherë transaksionet shkojnë te projekti juaj pa
+  pikën, dhe secila pajisje i mban pikat që i ka shënuar vetë — edhe kur një pajisje tjetër e ndryshon
+  të njëjtin transaksion. Asnjë funksion i bilancit nuk e lexon as grupin as vendndodhjen.
+
+### Ndryshuar
+- Baza lokale kalon në versionin 6 me stor-in e ri `grupet`, i cili sinkronizohet, hyn në kopjet
+  JSON/ZIP dhe numërohet te faqja e të dhënave. Tabela në projektin tuaj Supabase nuk ndryshon.
+
 ## [2.26.1] - 2026-09-19
 
 ### Rregulluar

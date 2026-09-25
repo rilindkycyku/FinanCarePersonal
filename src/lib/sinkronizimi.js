@@ -49,6 +49,7 @@ import {
 import { TABELA, lexoKonfigurimin, rest, ruajKonfigurimin, siguroSesionin } from "./supabase";
 import { PREFIKSI_PAJISJES, STORI_META } from "./skema";
 import { pajisjaKjo, stampaPajisjes } from "./pajisja";
+import { paVendndodhje, ruajVendndodhjenLokale } from "./vendndodhjet";
 
 export { KOHA_PARA_SINKRONIZIMIT } from "./db";
 
@@ -226,12 +227,15 @@ export function planiIAplikimit(rreshtat, { kohet, pezull = new Set() }, { cloud
 /** The table's columns. `user_id` is sent rather than left to the column default, because a bulk
  * insert through PostgREST fills omitted keys with NULL unless asked otherwise - and NULL is the
  * one value the row-level-security check will refuse. */
-export function rreshtiPerServer(rr, userId, pajisja = null) {
+export function rreshtiPerServer(rr, userId, pajisja = null, { paVendndodhje: pa = false } = {}) {
   // `sinkPezull` is this device's own bookkeeping - "not sent yet" - and sending it would tell the
   // next device to send it again, for ever. `updated_at` is sent for a project whose setup script
   // predates the timestamp trigger; where the trigger exists it overrides this with the server's
   // own clock, which is the entire point of it.
-  const teDhenat = { ...(rr.data ?? {}) };
+  //
+  // `paVendndodhje` is the user's "keep locations on my devices" setting: the transaction goes up
+  // without its pin, and `apliko` keeps the local pin when that copy comes back down.
+  const teDhenat = { ...((pa ? paVendndodhje(rr.store, rr.data) : rr.data) ?? {}) };
   delete teDhenat.sinkPezull;
   return {
     user_id: userId,
@@ -244,6 +248,17 @@ export function rreshtiPerServer(rr, userId, pajisja = null) {
     // naming them would have PostgREST refuse the whole batch.
     ...(pajisja ? { device_id: pajisja.id, device_name: pajisja.emri } : {}),
   };
+}
+
+/**
+ * Whether this sync keeps locations off the cloud. The setting lives on the profile, which syncs -
+ * so it is read from the profile coming down in this very batch as well as from the local one. A
+ * device that learns of the setting in the same pull as the stripped transactions would otherwise
+ * apply them as they are, and lose every pin it had recorded.
+ */
+export function vendndodhjetVetemLokale(profili, shkruaj = []) {
+  if (profili?.vendndodhjaVetemPajisje) return true;
+  return shkruaj.some((rr) => rr.store === STORI_PROFILIT && rr.data?.vendndodhjaVetemPajisje);
 }
 
 export function rreshtiNgaServeri(row) {
@@ -371,7 +386,7 @@ function sipasStoreve(rreshtat) {
   return grupet;
 }
 
-async function apliko({ shkruaj, fshi }) {
+async function apliko({ shkruaj, fshi }, { vendndodhjetLokale = null } = {}) {
   for (const [store, rreshtat] of sipasStoreve(shkruaj)) {
     // Arrived from the cloud, so by definition it is not waiting to go to the cloud.
     if (store === STORI_PROFILIT) {
@@ -384,7 +399,13 @@ async function apliko({ shkruaj, fshi }) {
     // merge was decided on, so a payload disagreeing with it must not create a second record.
     await putRawShume(
       store,
-      rreshtat.map((rr) => ({ ...rr.data, id: rr.id, perditesuar: rr.perditesuar, sinkPezull: false }))
+      rreshtat.map((rr) => {
+        const data =
+          vendndodhjetLokale && store === "transactions"
+            ? ruajVendndodhjenLokale(rr.data, vendndodhjetLokale.get(rr.id))
+            : rr.data;
+        return { ...data, id: rr.id, perditesuar: rr.perditesuar, sinkPezull: false };
+      })
     );
   }
   for (const [store, rreshtat] of sipasStoreve(fshi)) {
@@ -766,7 +787,7 @@ async function upsertRreshtat(pjesa) {
   });
 }
 
-async function dergoRreshtat(rreshtat, k) {
+async function dergoRreshtat(rreshtat, k, opsionet = {}) {
   const kohet = new Map();
   // Left off from the start for a project already known not to have the columns; discovered the
   // hard way (once) for a project nobody has asked about yet.
@@ -777,7 +798,7 @@ async function dergoRreshtat(rreshtat, k) {
     const copa = rreshtat.slice(i, i + KUFIRI_DERGIMIT);
     let pergjigja;
     try {
-      pergjigja = await upsertRreshtat(copa.map((rr) => rreshtiPerServer(rr, k.userId, pajisja)));
+      pergjigja = await upsertRreshtat(copa.map((rr) => rreshtiPerServer(rr, k.userId, pajisja, opsionet)));
     } catch (err) {
       if (!pajisja || !koloneQeMungon(err)) throw err;
       // Remembered, so the next push does not spend a failed request finding this out again. The
@@ -785,7 +806,7 @@ async function dergoRreshtat(rreshtat, k) {
       ruajKonfigurimin({ pajisjeKolona: false });
       pajisja = null;
       dihet = true;
-      pergjigja = await upsertRreshtat(copa.map((rr) => rreshtiPerServer(rr, k.userId, null)));
+      pergjigja = await upsertRreshtat(copa.map((rr) => rreshtiPerServer(rr, k.userId, null, opsionet)));
     }
     for (const row of Array.isArray(pergjigja) ? pergjigja : []) {
       const ts = Date.parse(row?.updated_at);
@@ -1052,7 +1073,12 @@ async function ekzekuto({ ngaFillimi: kerkuar = false, menyra = null } = {}) {
     // this browser happened to write before it had anywhere to send it.
     const cloudFiton = menyra === MENYRAT.MERR || menyra === MENYRAT.BASHKO;
     const plani = planiIAplikimit(rreshtat, gjendjaLokale(gjendja), { cloudFiton });
-    await apliko(plani);
+    const vetemLokale = vendndodhjetVetemLokale(gjendja.profili, plani.shkruaj);
+    await apliko(plani, {
+      vendndodhjetLokale: vetemLokale
+        ? new Map((gjendja.storet.transactions ?? []).filter((t) => t.vendndodhja).map((t) => [t.id, t]))
+        : null,
+    });
 
     const riparuar = await riparoNeseMungon(gjendja, k, ngaFillimi || paVendim);
 
@@ -1076,7 +1102,7 @@ async function ekzekuto({ ngaFillimi: kerkuar = false, menyra = null } = {}) {
             gjithcka: ngaFillimi,
             perjashto,
           });
-    const kohetServerit = await dergoRreshtat(perDergim, k);
+    const kohetServerit = await dergoRreshtat(perDergim, k, { paVendndodhje: vetemLokale });
     await shenoTeDerguarat(perDergim, kohetServerit);
     const oraServerit = zbulojOrenELServerit(perDergim, kohetServerit);
 

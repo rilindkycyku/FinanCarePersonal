@@ -30,8 +30,8 @@ npm install
 npm run dev       # vite --host
 npm run build
 npm run preview
-npm run lint      # eslint . — must stay at 0 errors (5 pre-existing warnings)
-npm test          # vitest run — 27 files, 611 tests, all green
+npm run lint      # eslint . — must stay at 0 errors (4 pre-existing warnings)
+npm test          # vitest run — 29 files, 677 tests, all green
 npm run test:watch
 npm run ikonat    # regenerates the icons and the two wordmark PNGs from Logo.svg (Playwright)
 ```
@@ -98,6 +98,8 @@ imports, so keep doing that unless you are converting deliberately.
 | `raportEmail.js` | The report emails themselves - HTML and plain-text |
 | `paralajmerimet.js` / `njoftimet.js` | Crossing-based notifications |
 | `abonimet.js` | Detects repeating payments already in the history |
+| `grupet.js` | Shared-expense groups: bill splitting in cents, pairwise balances, fewest transfers, the delta carried into `borxhet` |
+| `vendndodhjet.js` | Transaction location pins: cleaning, clustering into places, renaming, the sync opt-out strip/keep |
 | `viti.js` | Year-vs-previous-year page |
 | `udhezimet.js` | Text of the in-app guide, one entry per page, keyed by route |
 | `images.js` / `zip.js` | In-browser photo re-encoding; hand-written ZIP writer/reader |
@@ -132,8 +134,8 @@ That reload is the single refresh point — never mutate `data` locally to "avoi
 
 ### 3. Debts, plans and invoice photos are deliberately outside the balance
 
-`borxhet` (debt notes) and `planet` (planned purchases) are their own stores and **no balance
-function reads them**. A card with 900 € outstanding must not darken the total balance; a plan only
+`borxhet` (debt notes), `planet` (planned purchases) and `grupet` (shared-expense groups) are their
+own stores and **no balance function reads them**. A card with 900 € outstanding must not darken the total balance; a plan only
 *reserves* money from the daily allowance. Keep it that way.
 
 Invoice photos are split in two stores on purpose: `faturat` holds small metadata + thumbnail
@@ -193,10 +195,10 @@ Read the header comments of `sinkronizimi.js`, `db.js` and `skema.js` before cha
 3. Add a guide entry in `lib/udhezimet.js` with the matching `shtegu` — `ButoniUdhezimit` finds
    the guide by route, so a page without one silently shows no help button.
 
-## Data model (IndexedDB `financarepersonal`, version 5)
+## Data model (IndexedDB `financarepersonal`, version 6)
 
 Stores are declared in `STORES` in `db.js`. Ids are `makeId(prefix)` → `tx_…`, `acc_…`, `cat_…`,
-`goal_…`, `rec_…`, `debt_…`, `plan_…`.
+`goal_…`, `rec_…`, `debt_…`, `plan_…`, `grp_…`.
 
 - `profile` (single record, key `main`): `emri`, `monedha`, `teArdhuratMujore`,
   `objektiviKursimit`, `limitiDitor`, `njoftimeLimiti|Buxheti|Qellimi|Pagesa`, `cilesiaFaturave`,
@@ -207,7 +209,9 @@ Stores are declared in `STORES` in `db.js`. Ids are `makeId(prefix)` → `tx_…
   `ngjyra`, `ikona`, `arkivuar`.
 - `transactions`: `data` (ISO `yyyy-MM-dd`), `lloji` (`hyrje|shpenzim|transfer`), `vlera`,
   `llogariaId`, `llogariaDestinacionId`, `kategoriaId`, `pershkrimi`, `shenim`, `etiketat[]`,
-  `qellimiId`, `perseritjaId`, `borxhiId`, `planiId`, `krijuar` (set once — it orders same-day
+  `qellimiId`, `perseritjaId`, `borxhiId`, `planiId`, `grupiId`, `vendndodhja` (`{ lat, lng, saktesia,
+  emri }` or null - see `vendndodhjet.js`; stripped from pushes when the profile has
+  `vendndodhjaVetemPajisje`), `krijuar` (set once — it orders same-day
   rows), `ritmi` (`"mujor"` = spread over the month instead of charged to today; legacy
   `jashteLimitit` is still read), plus optional `monedhaOrigjinale`/`vleraOrigjinale`/`kursi`.
 - `budgets`: `kategoriaId`, `vlera`, `muaji` (null = standing limit, `YYYY-MM` = that month only),
@@ -219,6 +223,10 @@ Stores are declared in `STORES` in `db.js`. Ids are `makeId(prefix)` → `tx_…
   `arkivuar`. Direction comes from `DEBT_TYPES[].drejtimi` (`detyrim` vs `kerkese`).
 - `planet`: `emri`, `vlera`, `kategoriaId`, `muaji`, `afati`, `prioriteti`, `kryer`,
   `transaksioniId`.
+- `grupet`: `emri`, `ngjyra`, `kategoriaId`, `anetaret[]` (`{ id, emri }`, the user is the implicit
+  `UNE`), `shpenzimet[]` (`paguesi`, `ndarja`, `pjesemarresit`, `pjeset`, `transaksioniId`),
+  `shlyerjet[]` (between two *other* members only), `kaluarNeBorxhe` (per member, what has already
+  been carried into debt notes; notes carry `grupiId` + `anetariId`), `arkivuar`.
 - `faturat` / `faturaSkedaret`: photo metadata + full blobs.
 - `fshirjet`: tombstones keyed `${store}:${id}`.
 
@@ -231,6 +239,7 @@ version — and note that an upgrade blocked by another open tab is surfaced thr
 
 - Vitest, no DOM environment, no jsdom setup file. Tests sit next to the code as `*.test.js`.
 - Everything tested is pure: `finance`, `csv`, `sinkronizimi`, `kategorite`, `etiketat`, `format`,
+  `grupet`, `vendndodhjet`,
   `options`, `calc`, `periudhat`, `raportet`, `raporti`, `raportFigurat`, `raportGrafike`,
   `raportEmail`, `paralajmerimet`, `njoftimet`, `abonimet`, `viti`, `zerat`, `skema`, `supabase`,
   `transferQr`, `pajisja`, `instalimi`, `udhezimet`, plus the naming half of `exportPdf`

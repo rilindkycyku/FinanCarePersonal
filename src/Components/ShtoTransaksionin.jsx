@@ -9,6 +9,7 @@ import ZgjedhesiKategorive from "./ZgjedhesiKategorive";
 import Zgjedhesi from "./Zgjedhesi";
 import { opsionetLlogarive } from "../lib/opsionet";
 import FaturaFusha from "./Faturat/FaturaFusha";
+import VendndodhjaFusha from "./VendndodhjaFusha";
 import { makeId, sinkronizoFaturat, STORES } from "../lib/db";
 import { currencySymbol, formatMoney, toNumber, todayISO } from "../lib/format";
 import { etiketatE, pastroEtiketat, perdorimiEtiketave } from "../lib/etiketat";
@@ -17,6 +18,7 @@ import { njofto, njoftoListen } from "../lib/njoftimet";
 import { mesoRregullen, sugjeroKategorine } from "../lib/rregullat";
 import { paralajmerimetPasTransaksionit } from "../lib/paralajmerimet";
 import { kategoriTeHapura } from "../lib/kategorite";
+import { pastroVendndodhjen } from "../lib/vendndodhjet";
 import "./ModalForms.css";
 
 const TYPE_BUTTONS = [
@@ -40,6 +42,8 @@ const blank = (lloji = "shpenzim") => ({
   kursi: "",
   // Only ever set to "mujor"; daily is the default and is not worth storing.
   ritmi: null,
+  // `{ lat, lng, saktesia, emri }` once the user presses the location button - see vendndodhjet.js.
+  vendndodhja: null,
 });
 
 /**
@@ -95,6 +99,7 @@ function ShtoTransaksionin({
         etiketat: etiketatE(initial),
         // `jashteLimitit` is the name this shipped under for two releases.
         ritmi: initial.ritmi || (initial.jashteLimitit === true ? RITMI_MUJOR : null),
+        vendndodhja: pastroVendndodhjen(initial.vendndodhja),
       });
       return;
     }
@@ -347,6 +352,10 @@ function ShtoTransaksionin({
       // entered (finance.js), so re-stamping this on an edit would move an old row to the top.
       krijuar: tx.krijuar || new Date().toISOString(),
       ritmi: tx.ritmi === RITMI_MUJOR ? RITMI_MUJOR : null,
+      vendndodhja: pastroVendndodhjen(tx.vendndodhja),
+      // Carried through like the debt link above, so editing a bill's transaction from here keeps
+      // it attached to its shared-expense group.
+      grupiId: tx.grupiId || null,
       ...monedhat,
     };
 
@@ -667,6 +676,16 @@ function ShtoTransaksionin({
                 onChange={(e) => setField("shenim", e.target.value)}
               />
             </Form.Group>
+
+            <Col md={12}>
+              <Form.Label>Vendndodhja</Form.Label>
+              <VendndodhjaFusha
+                value={tx.vendndodhja}
+                onChange={(v) => setField("vendndodhja", v)}
+                transactions={transactions}
+                ekskludoId={tx.id}
+              />
+            </Col>
 
             <Col md={12}>
               <Form.Label>Faturat (foto)</Form.Label>

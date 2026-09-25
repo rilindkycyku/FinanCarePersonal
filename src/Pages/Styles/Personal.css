@@ -2117,3 +2117,34 @@ body.light-mode .card.profile-card.fcp-zona-rrezik:hover {
   border-color: var(--sp-emerald);
   color: var(--sp-emerald);
 }
+
+/* Grupet: a whole group card is the button that opens it, so it has to look like the other cards
+   rather than like a browser button. */
+.fcp-grupi-karta {
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.fcp-grupi-karta:hover {
+  border-color: var(--sp-emerald);
+}
+
+/* Vendndodhja: the pin on a transaction row, and the field in the form. */
+.fcp-vendi-link {
+  color: var(--sp-text);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.fcp-vendi-link:hover {
+  color: var(--sp-emerald);
+  text-decoration: underline;
+}
+
+.fcp-vendi-fusha {
+  border: 1px solid var(--sp-border);
+  border-radius: 12px;
+  padding: 0.6rem 0.75rem;
+  background: var(--sp-surface-2);
+}
