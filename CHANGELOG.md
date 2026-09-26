@@ -9,6 +9,17 @@ e fundit kur rregullohet diçka, dhe e para vetëm kur ndryshon vetë forma e pr
 herë, te `2.0.0`, kur të dhënat mësuan të dalin nga shfletuesi. Datat janë ato të commit-it që e
 ngriti versionin.
 
+## [2.28.1] - 2026-09-26
+
+### Rregulluar
+- **Numëruesi «Sa Mund të Shpenzoj Sot» mbetet në ekran edhe kur objektivi i kursimit është kaluar.**
+  Në 2.28.0, një muaj që e kishte kaluar objektivin e kthente kartën në një paragraf të gjatë, pa
+  shifrën që shikohet çdo ditë. Tani shifra mbetet — 0,00 € kufi ditor, me sa keni shpenzuar sot
+  përballë tij dhe me shiritin — dhe shpjegimi rri poshtë saj. Poshtë, te ndarja, shihen edhe dy
+  rreshta të rinj sa herë keni objektiv: **sa mbetet sipas objektivit** këtë muaj (në minus kur është
+  kaluar) dhe **sa do të lejonte bilanci në ditë** — dy shifrat nga të cilat kufiri merr më të ulëtën.
+  Llogaritja nuk ndryshoi.
+
 ## [2.28.0] - 2026-09-26
 
 ### Shtuar
