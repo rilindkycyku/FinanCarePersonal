@@ -1,7 +1,13 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useTheme } from "../Context/ThemeContext";
 import { version as APP_VERSION } from "../../package.json";
+import DritarjaENdryshimeve from "./DritarjaENdryshimeve";
+import { krahasoVersionet } from "../lib/ndryshimet";
 import "./Footer.css";
+
+/** How far back «Çka ka të re» reaches - the recent story, not the whole file. */
+const VERSIONET_E_FUNDIT = 5;
 
 const LIDHJET = [
   { to: "/transaksionet", label: "Transaksionet" },
@@ -13,6 +19,29 @@ const LIDHJET = [
 
 function Footer() {
   const { theme } = useTheme();
+  const [hapur, setHapur] = useState(false);
+  const [versionet, setVersionet] = useState(null);
+  const [gabim, setGabim] = useState(false);
+
+  // Read on demand, from the same file the update prompt uses. Only the versions up to the running
+  // one: a newer version that is waiting is announced by the prompt, not listed here as if installed.
+  const hapNdryshimet = () => {
+    setHapur(true);
+    if (versionet) return;
+    fetch("/ndryshimet.json", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
+      .then((lista) =>
+        setVersionet(
+          (Array.isArray(lista) ? lista : [])
+            .filter((v) => krahasoVersionet(v.versioni, APP_VERSION) <= 0)
+            .slice(0, VERSIONET_E_FUNDIT)
+        )
+      )
+      .catch(() => {
+        setGabim(true);
+        setVersionet([]);
+      });
+  };
 
   return (
     <footer className="fcp-footer">
@@ -48,8 +77,18 @@ function Footer() {
             Rilind Kyçyku
           </a>
         </span>
-        <span className="fcp-footer-version">v{APP_VERSION}</span>
+        <button type="button" className="fcp-footer-version" onClick={hapNdryshimet} title="Çka ka të re">
+          v{APP_VERSION}
+        </button>
       </div>
+
+      <DritarjaENdryshimeve
+        show={hapur}
+        onHide={() => setHapur(false)}
+        titulli="Çka ka të re"
+        versionet={versionet}
+        gabim={gabim}
+      />
     </footer>
   );
 }

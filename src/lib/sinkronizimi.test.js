@@ -12,7 +12,7 @@ import { describe, expect, it } from "vitest";
 import {
   KOHA_PARA_SINKRONIZIMIT, STORI_PROFILIT, celesiRreshtit, gjendjaLokale, mungojneNeCloud,
   ndryshimetLokale, numriLokal, pajisjaPaTeDhena, pastampuarat, planiIAplikimit, rreshtiNgaServeri,
-  rreshtiPerServer, sipasStorit,
+  rreshtiPerServer, sipasStorit, vendndodhjetVetemLokale,
 } from "./sinkronizimi";
 import { emriIPlote, pemaKategorive } from "./kategorite";
 
@@ -284,6 +284,19 @@ describe("përkthimi i rreshtave", () => {
     );
     expect(server.data).not.toHaveProperty("sinkPezull");
     expect(server.data.id).toBe("t1");
+  });
+
+  it("leaves a transaction's location behind when the user keeps locations on their devices", () => {
+    const rr = {
+      store: "transactions",
+      id: "t1",
+      perditesuar: 5,
+      fshire: false,
+      data: { id: "t1", vlera: 4, vendndodhja: { lat: 42.66, lng: 21.16, emri: "Kafe" } },
+    };
+    expect(rreshtiPerServer(rr, "user-1", null, { paVendndodhje: true }).data).toEqual({ id: "t1", vlera: 4 });
+    // Off by default: the pin travels like any other field.
+    expect(rreshtiPerServer(rr, "user-1").data.vendndodhja).toEqual({ lat: 42.66, lng: 21.16, emri: "Kafe" });
   });
 
   it("carries a subcategory's parent without a change to the user's table", () => {
@@ -576,5 +589,22 @@ describe("kthimi i listave të parazgjedhura në një pajisje që sinkronizohet 
     expect(ndryshimetLokale({ ...gjendja, perjashto: plani.celesat }).map((r) => r.id)).toEqual([
       "cat_ushqim",
     ]);
+  });
+});
+
+describe("vendndodhjetVetemLokale", () => {
+  it("reads the setting from the local profile", () => {
+    expect(vendndodhjetVetemLokale({ vendndodhjaVetemPajisje: true })).toBe(true);
+    expect(vendndodhjetVetemLokale({})).toBe(false);
+    expect(vendndodhjetVetemLokale(null)).toBe(false);
+  });
+
+  it("also from a profile arriving in the same batch, so the pins are kept on that very pull", () => {
+    const zbritur = [
+      { store: "transactions", id: "t1", data: { id: "t1" } },
+      { store: STORI_PROFILIT, id: "main", data: { vendndodhjaVetemPajisje: true } },
+    ];
+    expect(vendndodhjetVetemLokale({}, zbritur)).toBe(true);
+    expect(vendndodhjetVetemLokale({}, zbritur.slice(0, 1))).toBe(false);
   });
 });

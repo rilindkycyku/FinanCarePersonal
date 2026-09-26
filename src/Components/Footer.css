@@ -93,6 +93,12 @@
   border-radius: 999px;
   padding: 0.15rem 0.55rem;
   font-family: monospace;
+  cursor: pointer;
+}
+
+.fcp-footer-version:hover {
+  color: var(--sp-emerald);
+  border-color: var(--sp-emerald);
 }
 
 body.light-mode .fcp-footer {

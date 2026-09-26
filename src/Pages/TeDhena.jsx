@@ -82,7 +82,7 @@ const SEKSIONI = {
 };
 
 function TeDhena() {
-  const { profile, accounts, categories, transactions, budgets, goals, recurring, borxhet, planet, faturat, reload,
+  const { profile, accounts, categories, transactions, budgets, goals, recurring, borxhet, planet, grupet, faturat, reload,
     simboli, loading, njeLlogari } = useData();
   const dialog = useDialog();
   const { pathname } = useLocation();
@@ -334,7 +334,7 @@ function TeDhena() {
       bashko
         ? "Bashkimi shton vetëm rreshtat që mungojnë këtu dhe nuk prek asgjë ekzistuese - as profilin, monedhën apo objektivat. Një kopje e vjetër, pra, nuk mund t'ju fshijë punën e muajve të fundit. Vazhdo?"
         : "Importimi zëvendëson TË GJITHA të dhënat aktuale (llogaritë, kategoritë, transaksionet, buxhetet, " +
-          "qëllimet, pagesat e përsëritura, borxhet dhe shpenzimet e planifikuara). Fotot e faturave " +
+          "qëllimet, pagesat e përsëritura, borxhet, shpenzimet e planifikuara dhe grupet). Fotot e faturave " +
           "zëvendësohen vetëm nëse skedari i sjell vetë (arkivi ZIP); një JSON pa foto i lë fotot ekzistuese aty " +
           "ku janë. Nëse skedari është i vjetër, gjithçka e regjistruar pas tij humbet - për atë rast përdorni " +
           "Bashko. Vazhdo?",
@@ -378,6 +378,7 @@ function TeDhena() {
     ["Pagesa të përsëritura", recurring.length],
     ["Borxhe & kartela", borxhet.length],
     ["Shpenzime të planifikuara", planet.length],
+    ["Grupe të përbashkëta", grupet.length],
     ["Fatura (foto)", faturat.length],
   ];
 
@@ -527,7 +528,7 @@ function TeDhena() {
                   <Card className="profile-card border-0 p-4 h-100">
                     <h2 className="fcp-card-title fw-bold mb-2">Vetëm Të Dhënat (JSON)</h2>
                     <p className="text-muted small">
-                      Profili, llogaritë, kategoritë, transaksionet, buxhetet, qëllimet, pagesat e përsëritura dhe borxhet -
+                      Profili, llogaritë, kategoritë, transaksionet, buxhetet, qëllimet, pagesat e përsëritura, borxhet dhe grupet -
                       pa fotot. Skedar i vogël dhe i shpejtë, i mjaftueshëm kur doni vetëm librin e llogarive në një pajisje
                       tjetër. Importohet po ashtu me butonin ngjitur.
                     </p>

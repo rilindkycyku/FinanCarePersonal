@@ -34,6 +34,7 @@ const EMPTY = {
   recurring: [],
   borxhet: [],
   planet: [],
+  grupet: [],
   faturat: [],
 };
 

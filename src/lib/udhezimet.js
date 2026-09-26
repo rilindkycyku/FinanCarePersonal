@@ -365,6 +365,65 @@ export const UDHEZIMET = [
   },
 
   {
+    id: "grupet",
+    grupi: "Financat",
+    etiketa: "Grupet",
+    titulli: "Grupet - shpenzime të përbashkëta",
+    ikona: "Users",
+    shtegu: "/grupet",
+    permbledhje:
+      "Udhëtime, banesa e përbashkët, darka me shokët: kush pagoi çfarë, si ndahet çdo faturë dhe kush kujt i ka " +
+      "borxh. Pjesa juaj kalon te Borxhet me një prekje, ku kthimet regjistrohen si zakonisht.",
+    hapat: [
+      {
+        titulli: "Krijoni grupin",
+        teksti:
+          "Shtypni «Grup i Ri», jepini një emër (p.sh. Pushimet në Durrës) dhe shtoni personat e tjerë. Ju jeni " +
+          "gjithmonë në grup, prandaj nuk ju duhet ta shtoni veten. Kategoria e parazgjedhur (p.sh. Udhëtime) " +
+          "propozohet për shpenzimet që i paguani vetë.",
+      },
+      {
+        titulli: "Shtoni çdo faturë",
+        teksti:
+          "Kush pagoi, sa, dhe mes kujt ndahet: në mënyrë të barabartë, me pjesë (2 : 1 : 1 kur dikush hëngri dyfish) " +
+          "ose me shuma të sakta. Pjesa e secilit shfaqet ndërsa shkruani, dhe centët e tepërt ndahen që shuma të " +
+          "dalë gjithmonë e plotë.",
+      },
+      {
+        titulli: "Kur paguani ju",
+        teksti:
+          "Fatura regjistrohet edhe si shpenzim në llogarinë tuaj - me gjithë shumën, sepse aq doli nga llogaria. " +
+          "Pjesët e të tjerëve nuk janë humbur: ato ju kthehen si hyrje kur t'i regjistroni te Borxhet. Nëse nuk e " +
+          "doni në llogari, hiqeni shënjimin te formulari.",
+      },
+      {
+        titulli: "Lexoni «Ju dhe të Tjerët»",
+        teksti:
+          "Për secilin person: sa ju ka borxh, ose sa i keni ju, nga të gjitha faturat e grupit bashkë. Borxhet e " +
+          "kundërta me të njëjtin person anulohen vetë - nëse ju paguat darkën dhe ai benzinën, mbetet vetëm diferenca.",
+      },
+      {
+        titulli: "Kalo te Borxhet",
+        teksti:
+          "Kur të doni, shtypni «Kalo te Borxhet»: kush ju ka borxh merr një «Hua e Dhënë», kujt i keni borxh merr një " +
+          "«Borxh Personal». Herën tjetër kalon vetëm diferenca e re, si rresht te i njëjti shënim, pa prekur kthimet " +
+          "që janë regjistruar tashmë. Asgjë nuk prek llogaritë derisa të regjistroni një kthim te Borxhet.",
+      },
+      {
+        titulli: "Borxhet mes të tjerëve",
+        teksti:
+          "Kush u ka borxh kujt mes shokëve, pa ju, përmblidhet në sa më pak pagesa. Kur dikush ia kthen tjetrit, " +
+          "shtypni «Shëno të shlyer» - kjo shënohet vetëm te grupi dhe nuk prek asgjë tuajën.",
+      },
+    ],
+    keshilla: [
+      "Grupi është vetëm te ju - shokët nuk e shohin. Për t'u dërguar gjendjen, një foto e ekranit mjafton.",
+      "Kur udhëtimi mbaron dhe gjithçka është kaluar te Borxhet, arkivojeni grupin që lista të mbetet e pastër.",
+    ],
+    shihEdhe: ["borxhet", "transaksionet"],
+  },
+
+  {
     id: "kategorite",
     grupi: "Financat",
     etiketa: "Kategoritë",
@@ -781,6 +840,55 @@ export const UDHEZIMET = [
       "Për listën e plotë të lëvizjeve të vitit, pasqyra PDF me periudhën «Viti» e nxjerr rresht për rresht.",
     ],
     shihEdhe: ["statistikat", "buxhetet", "te-dhena"],
+  },
+
+  {
+    id: "vendet",
+    grupi: "Më shumë",
+    etiketa: "Vendet",
+    titulli: "Vendet - ku i shpenzuat",
+    ikona: "MapPin",
+    shtegu: "/vendet",
+    permbledhje:
+      "Vendi ku ndodhi një transaksion, i ruajtur kur e kërkoni ju, dhe vendet që këto pika formojnë - me emrat " +
+      "që u vini vetë dhe me sa keni shpenzuar në secilin. Asgjë nuk dërgohet te ndonjë hartë.",
+    hapat: [
+      {
+        titulli: "Ruani vendndodhjen te transaksioni",
+        teksti:
+          "Te formulari i transaksionit shtypni «Ruaj vendndodhjen aktuale» - p.sh. sapo të paguani në një restorant. " +
+          "Shfletuesi ju pyet herën e parë nëse e lejoni. Vendndodhja merret vetëm kur e shtypni butonin, kurrë në sfond.",
+      },
+      {
+        titulli: "Jepini një emër",
+        teksti:
+          "Shkruani emrin e vendit poshtë pikës (p.sh. Pizzeria Napoli). Herën tjetër që jeni aty, emri vjen vetë, " +
+          "sepse çdo pikë brenda rreth 120 metrave nga një vend me emër e merr atë emër.",
+      },
+      {
+        titulli: "Hapeni në hartë",
+        teksti:
+          "Te lista e transaksioneve kolona «Vendi» dhe te kjo faqe butoni i hartës hapin Google Maps në atë pikë. " +
+          "Aplikacioni vetë nuk ngarkon asnjë hartë: lidhja hapet vetëm kur e prekni ju.",
+      },
+      {
+        titulli: "Riemërtoni dhe bashkoni",
+        teksti:
+          "Pikat afër njëra-tjetrës dalin këtu si një vend. Riemërtimi e shkruan emrin te çdo transaksion i atij " +
+          "vendi, edhe te vizitat e vjetra pa emër. Nëse një vend ka marrë dy emra, faqja jua thotë që t'i bëni një.",
+      },
+      {
+        titulli: "Vendosni nëse sinkronizohen",
+        teksti:
+          "Me «Mos i dërgo vendndodhjet në cloud» transaksionet shkojnë te projekti juaj Supabase pa pikën, dhe secila " +
+          "pajisje i mban vetëm vendndodhjet që i ka shënuar vetë. Pa të, pika udhëton si çdo fushë tjetër.",
+      },
+    ],
+    keshilla: [
+      "Saktësia e telefonit brenda një ndërtese është shpesh 30-80 metra - nëse del «saktësi e dobët», provoni «Merre sërish» afër dritares.",
+      "Heqja e vendndodhjes nga një vend i lë transaksionet të paprekura; hiqet vetëm pika.",
+    ],
+    shihEdhe: ["transaksionet", "statistikat"],
   },
 
   {

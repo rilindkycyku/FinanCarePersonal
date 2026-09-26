@@ -23,6 +23,7 @@ import { STORES } from "../lib/db";
 import { RITMI_MUJOR, cashflow, eshteMujore, reassignAccount, sortByDateDesc } from "../lib/finance";
 import { etiketatE, kaEtiketen, ngjyraEtiketes, perdorimiEtiketave } from "../lib/etiketat";
 import { emriIPlote, familjaSet } from "../lib/kategorite";
+import { lidhjaHartes, vendndodhjaE } from "../lib/vendndodhjet";
 import { escapeHtml, formatMoney, formatPercent, markup, plainAmount, todayISO, toNumber } from "../lib/format";
 import { TRANSACTION_TYPE_LABELS } from "../lib/options";
 import "./Styles/PremiumTheme.css";
@@ -197,6 +198,18 @@ function Transaksionet() {
               etiketat.join(" ")
             )
           : "-",
+        // A link the user taps to leave for a maps site - the app itself never contacts one. The
+        // plain text is the place's name, which is what the search and the export read.
+        Vendi: (() => {
+          const v = vendndodhjaE(tx);
+          if (!v) return "-";
+          return markup(
+            `<a class="fcp-vendi-link" href="${escapeHtml(lidhjaHartes(v))}" target="_blank" rel="noopener noreferrer">📍 ${escapeHtml(
+              v.emri || "Harta"
+            )}</a>`,
+            v.emri || "📍"
+          );
+        })(),
         // Its own column rather than a marker glued to the description, so the count stays a plain
         // number in the Excel/PDF export.
         Fatura: numriFaturave[tx.id]
