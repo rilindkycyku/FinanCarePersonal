@@ -1,9 +1,9 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Button, Form } from "react-bootstrap";
 import { AlertTriangle, ExternalLink, LocateFixed, MapPin, X } from "lucide-react";
 import {
-  SAKTESIA_E_DOBET, emriIVenditAfer, formatoDistancen, grupoVendet, lidhjaHartes, normalizoEmrin,
-  pastroVendndodhjen,
+  SAKTESIA_E_DOBET, celesiEmrit, emriIVenditAfer, formatoDistancen, grupoVendet, lidhjaHartes,
+  normalizoEmrin, pastroVendndodhjen, rrezjaPerLexim, vendetAfer,
 } from "../lib/vendndodhjet";
 import Ndihme from "./Ndihme";
 
@@ -19,26 +19,29 @@ function mesazhiIGabimit(err) {
 /**
  * The optional "where was this" pin on a transaction.
  *
- * The position is read once, only when the button is pressed - never in the background and never
- * when the form opens, so nothing is recorded that the user did not ask for. What comes back is
- * the device's own reading; nothing is sent anywhere to look up an address (see vendndodhjet.js),
- * so the name is typed by the user - or inherited from a place already named within ~100 m, which
- * is what makes the second visit to the same restaurant a single tap.
+ * The position is read once, when the button is pressed - or, when the user has switched on
+ * «Merre vetë» on the Vendet page (`automatike`), once as a *new* transaction's form opens; never in the background and
+ * never on an edit. What comes back is the device's own reading; nothing is sent anywhere to look up
+ * an address (see vendndodhjet.js), so names are the user's: typed once, then inherited by any later
+ * pin close to a named place (and said so, so the name is not a mystery), or offered as a tap
+ * among the named places nearby when the phone put this visit a little further off.
  */
-function VendndodhjaFusha({ value, onChange, transactions = [], ekskludoId }) {
+function VendndodhjaFusha({ value, onChange, transactions = [], ekskludoId, automatike = false }) {
   const [duke, setDuke] = useState(false);
   const [gabim, setGabim] = useState("");
+  // The name that came from an earlier visit rather than from the keyboard, for the note under it.
+  const [emriINgaVizita, setEmriINgaVizita] = useState(null);
 
   const v = pastroVendndodhjen(value);
+  const tjerat = useMemo(() => transactions.filter((t) => t.id !== ekskludoId), [transactions, ekskludoId]);
+  const afer = useMemo(() => (v ? vendetAfer(v, tjerat) : []), [v?.lat, v?.lng, tjerat]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // The names already given to places, for the suggestions under the name field - the same
   // restaurant spelled the same way twice is what lets the Vendet page count it as one.
   const emratEVendeve = useMemo(
     () =>
-      [...new Set(grupoVendet(transactions.filter((t) => t.id !== ekskludoId)).map((g) => g.emri).filter(Boolean))].sort(
-        (a, b) => a.localeCompare(b, "sq")
-      ),
-    [transactions, ekskludoId]
+      [...new Set(grupoVendet(tjerat).map((g) => g.emri).filter(Boolean))].sort((a, b) => a.localeCompare(b, "sq")),
+    [tjerat]
   );
 
   const merr = () => {
@@ -61,9 +64,10 @@ function VendndodhjaFusha({ value, onChange, transactions = [], ekskludoId }) {
           saktesia: poz.coords.accuracy,
         };
         // A name already typed on this pin survives a re-read; otherwise the nearest named place
-        // lends it its name.
-        const emri = v?.emri || emriIVenditAfer(pika, transactions.filter((t) => t.id !== ekskludoId));
-        onChange(pastroVendndodhjen({ ...pika, emri }));
+        // lends it its name - over a wider radius when the reading itself is less sure.
+        const trashegim = v?.emri ? null : emriIVenditAfer(pika, tjerat, rrezjaPerLexim(pika.saktesia));
+        setEmriINgaVizita(trashegim);
+        onChange(pastroVendndodhjen({ ...pika, emri: v?.emri || trashegim }));
       },
       (err) => {
         setDuke(false);
@@ -72,6 +76,15 @@ function VendndodhjaFusha({ value, onChange, transactions = [], ekskludoId }) {
       { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
     );
   };
+
+  // «Merre vetë»: once per opened form, and only for a new transaction with no pin yet.
+  const kerkuar = useRef(false);
+  useEffect(() => {
+    if (!automatike || kerkuar.current || v) return;
+    kerkuar.current = true;
+    merr();
+  }, [automatike]); // eslint-disable-line react-hooks/exhaustive-deps
+
 
   if (!v) {
     return (
@@ -84,10 +97,11 @@ function VendndodhjaFusha({ value, onChange, transactions = [], ekskludoId }) {
           <div className="fcp-modal-hint text-danger mt-1">{gabim}</div>
         ) : (
           <Ndihme className="mt-1">
-            Opsionale. Merret vetëm kur e shtypni dhe ruhet vetëm te ky transaksion - aplikacioni nuk e dërgon askund.
+            Opsionale. Merret vetëm kur e shtypni dhe ruhet vetëm te ky transaksion - aplikacioni nuk e dërgon
+            askund. Te faqja Vendet mund ta ndizni që të merret vetë te çdo transaksion i ri.
           </Ndihme>
         )}
-      </div>
+              </div>
     );
   }
 
@@ -106,7 +120,10 @@ function VendndodhjaFusha({ value, onChange, transactions = [], ekskludoId }) {
           value={value?.emri || ""}
           list="fcp-vendet-e-njohura"
           maxLength={60}
-          onChange={(e) => onChange({ ...value, emri: e.target.value })}
+          onChange={(e) => {
+            setEmriINgaVizita(null);
+            onChange({ ...value, emri: e.target.value });
+          }}
           onBlur={(e) => onChange({ ...v, emri: normalizoEmrin(e.target.value) || null })}
           aria-label="Emri i vendit"
         />
@@ -132,6 +149,32 @@ function VendndodhjaFusha({ value, onChange, transactions = [], ekskludoId }) {
           {duke ? "Duke e gjetur..." : "Merre sërish"}
         </button>
       </div>
+      {emriINgaVizita && v.emri === emriINgaVizita && (
+        <div className="fcp-modal-hint mt-1">Emri u mor nga vizitat e mëparshme këtu.</div>
+      )}
+      {/* The named places nearby, as taps - for the reading that landed across the street. The one
+          already on the pin is left out. */}
+      {afer.filter((a) => celesiEmrit(a.emri) !== celesiEmrit(v.emri || "")).length > 0 && (
+        <div className="fcp-vendet-afer mt-2">
+          {afer
+            .filter((a) => celesiEmrit(a.emri) !== celesiEmrit(v.emri || ""))
+            .map((a) => (
+              <button
+                key={a.emri}
+                type="button"
+                className="fcp-vendi-chip"
+                onClick={() => {
+                  setEmriINgaVizita(null);
+                  onChange({ ...v, emri: a.emri });
+                }}
+              >
+                <MapPin size={12} />
+                {a.emri}
+                <span>{formatoDistancen(a.distanca)}</span>
+              </button>
+            ))}
+        </div>
+      )}
       {dobet && (
         <div className="fcp-modal-hint mt-1">
           <AlertTriangle size={12} className="me-1" />
@@ -139,7 +182,7 @@ function VendndodhjaFusha({ value, onChange, transactions = [], ekskludoId }) {
         </div>
       )}
       {gabim && <div className="fcp-modal-hint text-danger mt-1">{gabim}</div>}
-    </div>
+          </div>
   );
 }
 

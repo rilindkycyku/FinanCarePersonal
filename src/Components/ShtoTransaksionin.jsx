@@ -528,7 +528,13 @@ function ShtoTransaksionin({
               <Form.Label>
                 Data <span className="text-danger">*</span>
               </Form.Label>
-              <Form.Control type="date" value={tx.data} onChange={(e) => setField("data", e.target.value)} required />
+              <Form.Control
+                type="date"
+                className="fcp-krah-vleres"
+                value={tx.data}
+                onChange={(e) => setField("data", e.target.value)}
+                required
+              />
             </Form.Group>
 
             {/* Single-account mode books everything into the main account, so the pickers are
@@ -683,10 +689,14 @@ function ShtoTransaksionin({
             <Col md={12}>
               <Form.Label>Vendndodhja</Form.Label>
               <VendndodhjaFusha
+                // Remounted per opened form, so «Merre vetë» reads the position once per new
+                // transaction rather than once per session.
+                key={`${show}-${initial?.id || "i-ri"}`}
                 value={tx.vendndodhja}
                 onChange={(v) => setField("vendndodhja", v)}
                 transactions={transactions}
                 ekskludoId={tx.id}
+                automatike={Boolean(profile.vendndodhjaAutomatike) && !initial?.id && show}
               />
             </Col>
 

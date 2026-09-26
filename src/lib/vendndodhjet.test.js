@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  distancaMetra, emriIVenditAfer, formatoDistancen, grupoVendet, hiqVendin, lidhjaHartes,
+  distancaMetra, emriIVenditAfer, rrezjaPerLexim, vendetAfer, formatoDistancen, grupoVendet, hiqVendin, lidhjaHartes,
   paVendndodhje, pastroVendndodhjen, riemertoVendin, ruajVendndodhjenLokale,
 } from "./vendndodhjet";
 
@@ -138,5 +138,36 @@ describe("sinkronizimi pa vendndodhje", () => {
     const meTeVeten = { id: "1", vendndodhja: larg(1) };
     expect(ruajVendndodhjenLokale(meTeVeten, { vendndodhja: P })).toBe(meTeVeten);
     expect(ruajVendndodhjenLokale({ id: "1" }, undefined)).toEqual({ id: "1" });
+  });
+});
+
+describe("vendetAfer", () => {
+  it("jep vendet me emër afër pikës, një për emër, më i afërti i pari", () => {
+    const lista = [
+      tx("1", { ...larg(0.002), emri: "Kafe Rio" }),
+      tx("2", { ...larg(0.0005), emri: "Pizzeria" }),
+      tx("3", { ...larg(0.0006), emri: "pizzeria" }),
+      tx("4", { ...larg(0.01), emri: "Larg" }),
+      tx("5", larg(0.0001)),
+    ];
+    const afer = vendetAfer(P, lista);
+    expect(afer.map((v) => v.emri)).toEqual(["Pizzeria", "Kafe Rio"]);
+    expect(afer[0].distanca).toBeGreaterThan(50);
+    expect(afer[0].distanca).toBeLessThan(60);
+  });
+
+  it("kufizohet te sa kërkohen dhe s'jep asgjë pa pikë", () => {
+    const lista = [1, 2, 3, 4, 5, 6].map((i) => tx(String(i), { ...larg(i * 0.0003), emri: "V" + i }));
+    expect(vendetAfer(P, lista, { sa: 3 })).toHaveLength(3);
+    expect(vendetAfer(null, lista)).toEqual([]);
+  });
+});
+
+describe("rrezjaPerLexim", () => {
+  it("zgjerohet me pasaktësinë e leximit, deri në një kufi", () => {
+    expect(rrezjaPerLexim(10)).toBe(120);
+    expect(rrezjaPerLexim(200)).toBe(200);
+    expect(rrezjaPerLexim(2000)).toBe(300);
+    expect(rrezjaPerLexim(null)).toBe(120);
   });
 });

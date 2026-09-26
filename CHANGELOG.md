@@ -9,6 +9,22 @@ e fundit kur rregullohet diçka, dhe e para vetëm kur ndryshon vetë forma e pr
 herë, te `2.0.0`, kur të dhënat mësuan të dalin nga shfletuesi. Datat janë ato të commit-it që e
 ngriti versionin.
 
+## [2.29.0] - 2026-09-26
+
+### Shtuar
+- **Vendndodhja merret vetë, dhe emrat e vendeve kujtohen më mirë.** Te faqja **Vendet** ka tani një
+  çelës të ri, **«Merre vendndodhjen vetë te çdo transaksion i ri»**: sapo hapet formulari i një
+  transaksioni të ri, pika merret një herë — kurrë në sfond dhe kurrë kur ndryshoni një transaksion
+  të vjetër. Nëse jeni pranë një vendi që ia keni vënë emrin një herë, emri plotësohet vetë, dhe
+  poshtë shkruhet «Emri u mor nga vizitat e mëparshme këtu», që të dihet nga erdhi. Kur telefoni e
+  vendos pikën pak më larg (brenda ndërtesës, p.sh.), rrezja zgjerohet sipas saktësisë së leximit,
+  dhe vendet e tjera me emër përreth (deri në 400 m) dalin si butona me largësinë — «Besa Një
+  Sh.P.K. · 178 m» — që zgjidhen me një prekje. Kështu një emër shkruhet vetëm herën e parë.
+
+### Rregulluar
+- **Data rri në të njëjtën lartësi me vlerën** te formulari i transaksionit, në vend që të dukej më
+  e shkurtër krah saj.
+
 ## [2.28.2] - 2026-09-26
 
 ### Rregulluar

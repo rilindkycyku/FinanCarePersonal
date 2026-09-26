@@ -1062,3 +1062,15 @@ body.light-mode .fcp-cat-trigger {
     font-size: 0.75rem;
   }
 }
+
+/* A date beside the amount field: the same height, so the two boxes in one row line up. The height
+   is the amount field's own - its font size times the line height, plus its padding and border. */
+.fcp-krah-vleres {
+  min-height: calc(1.35rem * 1.5 + 1.2rem + 2px);
+}
+
+@media (max-width: 575.98px) {
+  .fcp-krah-vleres {
+    min-height: calc(1.1rem * 1.5 + 1rem + 2px);
+  }
+}
