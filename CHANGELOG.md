@@ -9,6 +9,17 @@ e fundit kur rregullohet diçka, dhe e para vetëm kur ndryshon vetë forma e pr
 herë, te `2.0.0`, kur të dhënat mësuan të dalin nga shfletuesi. Datat janë ato të commit-it që e
 ngriti versionin.
 
+## [2.28.2] - 2026-09-26
+
+### Rregulluar
+- **Hapësirat në telefon, faqe për faqe.** Disa lista i kishin shumat ngjitur me skajin e kartës:
+  «Çfarë të paguhet e para» te Borxhet dhe listat te faqja e një grupi. Tani kanë hapësirën e kartave
+  të tjera. Titulli i seksionit pas kartave të numrave nuk ngjitet më me to, në asnjë faqe. Te
+  kartat me butona — borxhet, qëllimet, buxhetet, pagesat, planet, vendet — butonat zbresin në
+  rreshtin e tyre në telefon, që emri të shihet i plotë në vend që të prehej pas dhjetë
+  shkronjash. Tabela në fund të faqes rri tani në të njëjtën vijë me gjithçka sipër saj. Në
+  kompjuter nuk ndryshon asgjë përveç hapësirave të listave.
+
 ## [2.28.1] - 2026-09-26
 
 ### Rregulluar

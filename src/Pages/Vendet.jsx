@@ -156,11 +156,11 @@ function Vendet() {
                   <MapPin size={20} className="text-primary" />
                   Vendet e Mia
                 </h2>
-                <div className="d-flex align-items-center gap-2" style={{ minWidth: "14rem" }}>
+                <div className="d-flex align-items-center gap-2 flex-grow-1" style={{ minWidth: "12rem", maxWidth: "20rem" }}>
                   <Search size={14} />
                   <Form.Control
                     size="sm"
-                    placeholder="Kërko vendin ose përshkrimin"
+                    placeholder="Kërko vendin..."
                     value={kerkimi}
                     onChange={(e) => setKerkimi(e.target.value)}
                   />
