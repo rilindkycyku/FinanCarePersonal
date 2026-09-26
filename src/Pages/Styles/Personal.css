@@ -2239,3 +2239,29 @@ body.light-mode .card.profile-card.fcp-zona-rrezik:hover {
   margin-top: 0.3rem;
   color: var(--sp-text-muted);
 }
+
+/* Rows placed straight in a panel, with no .fcp-panel-body around them (the "what to pay first"
+   list, the group pages): .fcp-row only pads top and bottom, because inside a panel body the body
+   pads the sides - here nothing did, and the amounts sat on the card's edge. */
+.fcp-panel > .fcp-row {
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+/* The KPI row is followed straight by a section heading on most pages; the column margin alone left
+   the heading sitting on the cards. */
+.row:has(> .fcp-kpi-col) {
+  margin-bottom: 0.75rem;
+}
+
+@media (max-width: 575.98px) {
+  /* Five action buttons beside a name leave the name about ten characters on a phone. They drop to
+     their own line instead, under the name, and the name gets the whole width. */
+  .fcp-tracked-head {
+    flex-wrap: wrap;
+  }
+  .fcp-tracked-actions {
+    flex-basis: 100%;
+    justify-content: flex-end;
+  }
+}
