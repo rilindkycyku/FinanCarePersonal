@@ -2215,3 +2215,27 @@ body.light-mode .card.profile-card.fcp-zona-rrezik:hover {
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
   cursor: pointer;
 }
+
+.fcp-ndryshimet-zeri > summary {
+  cursor: pointer;
+  list-style: none;
+}
+
+.fcp-ndryshimet-zeri > summary::-webkit-details-marker {
+  display: none;
+}
+
+.fcp-ndryshimet-zeri > summary::after {
+  content: " ▾";
+  color: var(--sp-emerald);
+  font-size: 0.75em;
+}
+
+.fcp-ndryshimet-zeri[open] > summary::after {
+  content: " ▴";
+}
+
+.fcp-ndryshimet-zeri > div {
+  margin-top: 0.3rem;
+  color: var(--sp-text-muted);
+}

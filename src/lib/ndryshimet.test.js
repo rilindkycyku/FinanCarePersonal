@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { krahasoVersionet, lexoNdryshimet, ndryshimetPas, zeriNeHtml } from "./ndryshimet";
+import { krahasoVersionet, lexoNdryshimet, ndajZerin, ndryshimetPas, zeriNeHtml } from "./ndryshimet";
 import { version as VERSIONI } from "../../package.json";
 
 const MD = `# Historiku i ndryshimeve
@@ -113,5 +113,23 @@ describe("zeriNeHtml", () => {
 
   it("e kthen &apos; në apostrof", () => {
     expect(zeriNeHtml("t&apos;i")).toBe("t'i");
+  });
+});
+
+describe("ndajZerin", () => {
+  it("merr fjalinë me të zeza si titull", () => {
+    expect(ndajZerin("**Grupet: si Splitwise.** Deri tani çdo gjë.\n- nën")).toEqual({
+      titulli: "**Grupet: si Splitwise.**",
+      trupi: "Deri tani çdo gjë.\n- nën",
+    });
+  });
+
+  it("pa të zeza, titulli është fjalia e parë", () => {
+    expect(ndajZerin("Linku u ndreq. Tani punon kudo.")).toEqual({ titulli: "Linku u ndreq.", trupi: "Tani punon kudo." });
+  });
+
+  it("një zë i shkurtër nuk ka çka të hapë", () => {
+    expect(ndajZerin("Një rregullim.")).toEqual({ titulli: "Një rregullim.", trupi: "" });
+    expect(ndajZerin("**Vetëm titull.**")).toEqual({ titulli: "**Vetëm titull.**", trupi: "" });
   });
 });

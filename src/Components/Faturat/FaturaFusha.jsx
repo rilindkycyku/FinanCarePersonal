@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import Ndihme from "../Ndihme";
 import { Alert, Spinner } from "react-bootstrap";
 import { Camera, ImagePlus, X } from "lucide-react";
 import FaturaViewer from "./FaturaViewer";
@@ -153,7 +154,7 @@ function FaturaFusha({ faturat = [], onChange, ndihma }) {
       <input ref={galeriaRef} type="file" accept={PRANO_FOTO} multiple hidden onChange={shtoSkedaret} />
       <input ref={kameraRef} type="file" accept="image/*" capture="environment" hidden onChange={shtoSkedaret} />
 
-      <div className="fcp-modal-hint">
+      <Ndihme>
         {faturat.length > 0 ? (
           <>
             {faturat.length} foto · {formatBytes(totali)} - ruhen vetëm në këtë shfletues.
@@ -161,7 +162,7 @@ function FaturaFusha({ faturat = [], onChange, ndihma }) {
         ) : (
           ndihma || "Fotoja e faturës zvogëlohet dhe ruhet bashkë me transaksionin, në këtë pajisje."
         )}
-      </div>
+      </Ndihme>
 
       <FaturaViewer
         show={hapur >= 0}

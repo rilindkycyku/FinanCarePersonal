@@ -413,6 +413,20 @@ export function eshteMujore(tx) {
  *    it to the day it was bought reports a blown day that never happened. Monthly spending still
  *    leaves the balance, so it makes every remaining day of the month a little tighter - which is
  *    exactly what it does in real life.
+ *
+ * **The savings goal is a second ceiling.** The balance alone answers "how much can I spend before
+ * the money runs out", and a balance carried over from earlier months happily answers "109 € a day"
+ * in a month that has already spent 330 € more than it earned. With `objektiviKursimit` set (the
+ * percentage in Cilësimet), the pool is also capped at what the month can still spend and end on
+ * that rate: its income (booked, plus recurring income still expected) minus its spending up to the
+ * start of today, minus the commitments above, minus the goal's share of that income. Whichever of
+ * the two is lower wins, so the goal can only ever tighten the figure - never loosen what the
+ * balance allows. `kursimi.kufizon` says when it is the goal that decided.
+ *
+ * The month is measured the way the dashboard's "Kursimi i Muajit" measures it (`sipasPeriudhes`),
+ * so the two cards cannot disagree. Before any income has arrived or is expected this month there is
+ * no rate to measure against, and the ceiling stays off rather than zeroing the first days of every
+ * month for someone paid on the 10th.
  */
 export function dailyLimit({
   accounts = [],
@@ -421,6 +435,8 @@ export function dailyLimit({
   recurring = [],
   today = format(new Date(), "yyyy-MM-dd"),
   limitiManual = 0,
+  objektiviKursimit = 0,
+  sipasPeriudhes = false,
 } = {}) {
   const { start, end } = monthBounds(today);
   const key = today.slice(0, 7);
@@ -455,7 +471,20 @@ export function dailyLimit({
     .reduce((sum, p) => sum + toNumber(p.vlera), 0);
 
   const bilanci = spendableBalance(accounts, transactions);
-  const disponueshme = bilanci + shpenzuarSot + hyrjePritura - perseritjePritura - planePritura;
+  const ngaBilanci = bilanci + shpenzuarSot + hyrjePritura - perseritjePritura - planePritura;
+
+  const objektivi = Math.min(Math.max(toNumber(objektiviKursimit), 0), 100);
+  const muaji = cashflow(filterByRange(transactions, start, end, { sipasPeriudhes }));
+  const teArdhurat = muaji.hyrjet + hyrjePritura;
+  const kaSynim = objektivi > 0 && teArdhurat > 0;
+  const synimi = kaSynim ? (teArdhurat * objektivi) / 100 : 0;
+  // Today's day-to-day spending is added back for the same reason as above: it belongs to today's
+  // allowance, not to the pool the remaining days share.
+  const ngaKursimi = kaSynim
+    ? teArdhurat - (muaji.shpenzimet - shpenzuarSot) - perseritjePritura - planePritura - synimi
+    : null;
+  const kufizon = ngaKursimi !== null && ngaKursimi < ngaBilanci;
+  const disponueshme = kufizon ? ngaKursimi : ngaBilanci;
 
   const manual = toNumber(limitiManual);
   const limiti = manual > 0 ? manual : disponueshme / ditetMbetura;
@@ -474,6 +503,17 @@ export function dailyLimit({
     ditetMbetura,
     ditetGjithsej,
     disponueshme,
+    // What the balance alone would have allowed, and the savings ceiling - for the card to say
+    // which of the two it is showing and why.
+    ngaBilanci,
+    kursimi: {
+      objektivi,
+      synimi,
+      kufiri: ngaKursimi,
+      kufizon,
+      teArdhurat,
+      shpenzimet: muaji.shpenzimet,
+    },
     // The parts the pool was built from, so the card can show its working.
     bilanci,
     hyrjePritura,

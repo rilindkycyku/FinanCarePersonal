@@ -50,8 +50,26 @@ ngriti versionin.
   **«Përditëso tani»**. «Më vonë» e mbyll dritaren dhe lë një buton të vogël në qoshe; hapja e radhës
   e pyet sërish. Një aplikacion i lënë hapur për ditë kontrollon vetë një herë në orë. Të dhënat nuk
   preken nga përditësimi — ato rrinë në shfletues, jo në aplikacion.
-  <br />Edhe numri i versionit te fundi i faqes hapet tani: **«Çka ka të re»** tregon pesë versionet e
-  fundit.
+  <br />Faqja e re **«Çka ka të re»** (te *Më Shumë*, ose duke shtypur numrin e versionit te fundi i
+  faqes) e tregon këtë histori brenda aplikacionit, edhe pa internet: çdo zë shfaq vetëm titullin e
+  vet dhe hapet me një prekje, që të mos lexohet si mur teksti në telefon.
+
+### Rregulluar
+- **«Sa mund të shpenzoj sot» nuk ju fton më të shpenzoni kur muaji është në minus.** Shifra dilte
+  vetëm nga bilanci që keni: 547 € të mbetura nga muajt e kaluar, ndarë në pesë ditë, jepnin 109 € në
+  ditë — në një muaj që kishte shpenzuar tashmë 330 € më shumë se sa kishte fituar, me objektivin e
+  kursimit 30% që ishte vendosur pikërisht për këtë. Tani, kur keni një objektiv kursimi, ai është
+  kufiri i dytë: sa mund të shpenzojë ende muaji (të ardhurat e tij, bashkë me hyrjet e përsëritura
+  që priten, minus shpenzimet dhe detyrimet, minus pjesa e objektivit) dhe fiton më i ulëti prej të
+  dyve. Kur objektivi është ai që vendos, karta e thotë hapur — dhe kur muaji e ka kaluar tashmë, ajo
+  nuk tregon 0 € pa shpjegim, por sa ka shpenzuar mbi objektiv dhe se çdo shpenzim tani vjen nga
+  kursimet. Pa objektiv, ose para se të vijnë të ardhurat e muajit, gjithçka mbetet si më parë; një
+  limit fiks nga Cilësimet ka ende fjalën e fundit.
+- **Formulari i transaksionit në telefon.** Hapet në tërë ekranin, me butonin «Ruaj» gjithmonë
+  poshtë në vend që të fshihej në fund të rrëshqitjes. Vlera me datën dhe llogaria me kategorinë rrinë
+  krah për krah, shpjegimet nën fusha palosen në një rresht (një prekje i hap), etiketat e përdorura
+  më parë rrëshqasin në një rresht të vetëm dhe butonat e fotove janë më të vegjël. Asnjë fushë nuk u
+  hoq; në kompjuter formulari mbetet si ishte.
 
 ### Ndryshuar
 - Pajisjet që kanë një version më të vjetër se ky e marrin këtë një herë në mënyrën e vjetër — pasi

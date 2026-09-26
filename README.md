@@ -336,7 +336,8 @@ te shkronjat e sistemit.
 
 Një version i ri i aplikacionit nuk instalohet vetë: shkarkohet në sfond dhe pret, me një dritare që
 tregon çka ndryshon (nga `CHANGELOG.md`, që ndërtimi e publikon si `/ndryshimet.json`) dhe një buton
-**«Përditëso tani»**. Numri i versionit te fundi i faqes hap **«Çka ka të re»**.
+**«Përditëso tani»**. Faqja **«Çka ka të re»** (te *Më Shumë*, ose nga numri i versionit te fundi i
+faqes) e tregon historinë edhe pa internet.
 
 I vetmi rast kur diçka del nga shfletuesi është kur e vendosni vetë: te faqja **Sinkronizimi**
 lidhni një projekt Supabase **tuajin** dhe që nga ai çast libri i llogarive (jo fotot) shkon te

@@ -1,4 +1,5 @@
 import { Form, Col, Row } from "react-bootstrap";
+import Ndihme from "./Ndihme";
 import { useData } from "../Context/DataContext";
 import { convertedAmount } from "../lib/finance";
 import { currencySymbol, formatMoney, toNumber } from "../lib/format";
@@ -76,12 +77,12 @@ function MonedhaTjeter({ monedhaOrigjinale, kursi, vlera, onChange }) {
           </Form.Group>
 
           <Col md={12}>
-            <div className="fcp-modal-hint">
+            <Ndihme>
               {toNumber(vlera) > 0 && toNumber(kursi) > 0
                 ? `${formatMoney(vlera, monedhaOrigjinale)} ruhet si ${formatMoney(baza, monedha)}.`
                 : `Shkruani vlerën dhe kursin - ruhet vlera e kthyer në ${currencySymbol(monedha)}.`}{" "}
               Kursi i fundit për këtë monedhë mbahet mend për herën tjetër.
-            </div>
+            </Ndihme>
           </Col>
         </Row>
       )}

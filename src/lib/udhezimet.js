@@ -892,6 +892,42 @@ export const UDHEZIMET = [
   },
 
   {
+    id: "ndryshimet",
+    grupi: "Më shumë",
+    etiketa: "Çka ka të re",
+    titulli: "Çka ka të re - versionet",
+    ikona: "Sparkles",
+    shtegu: "/ndryshimet",
+    permbledhje:
+      "Historiku i çdo versioni të aplikacionit, i riu më lart: çka u shtua, çka ndryshoi dhe çka u rregullua. " +
+      "E njëjta listë del edhe kur vjen një version i ri, para se ta instaloni.",
+    hapat: [
+      {
+        titulli: "Shihni versionin që keni",
+        teksti:
+          "Numri sipër faqes - dhe ai te fundi i çdo faqeje - është versioni që po punon në këtë pajisje. Shtypja " +
+          "e numrit te fundi i faqes ju sjell këtu.",
+      },
+      {
+        titulli: "Kur vjen një version i ri",
+        teksti:
+          "Aplikacioni e shkarkon në sfond dhe nuk e instalon vetë: del një dritare me ndryshimet e çdo versioni që " +
+          "keni kaluar, dhe instalohet vetëm kur shtypni «Përditëso tani». Të dhënat nuk preken nga përditësimi.",
+      },
+      {
+        titulli: "«Më vonë»",
+        teksti:
+          "E mbyll dritaren dhe lë butonin «Version i ri gati» në qoshen e ekranit. Hapja e radhës e aplikacionit " +
+          "ju pyet sërish, dhe një aplikacion i lënë hapur kontrollon vetë një herë në orë.",
+      },
+    ],
+    keshilla: [
+      "Faqja punon edhe pa internet - lista është pjesë e vetë versionit që keni.",
+    ],
+    shihEdhe: ["te-dhena", "cilesimet"],
+  },
+
+  {
     id: "cilesimet",
     grupi: "Më shumë",
     etiketa: "Cilësimet",

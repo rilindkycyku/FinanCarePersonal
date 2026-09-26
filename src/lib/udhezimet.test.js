@@ -28,6 +28,7 @@ const SHTIGJET = [
   "/te-perseritura",
   "/statistikat",
   "/vendet",
+  "/ndryshimet",
   "/cilesimet",
   "/te-dhena",
   "/sinkronizimi",

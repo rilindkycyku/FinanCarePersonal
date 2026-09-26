@@ -17,7 +17,7 @@ import "../Pages/Styles/Personal.css";
  * All the maths is `dailyLimit()` in finance.js; this only renders it.
  */
 function ShpenzimiDitor({ action = "Planifiko", actionTo = "/planifikuara" }) {
-  const { accounts, transactions, planet, recurring, categories, profile, money, signedMoney } = useData();
+  const { accounts, transactions, planet, recurring, categories, profile, money, signedMoney, sipasPeriudhes } = useData();
   const sot = todayISO();
 
   const d = useMemo(
@@ -29,9 +29,13 @@ function ShpenzimiDitor({ action = "Planifiko", actionTo = "/planifikuara" }) {
         recurring,
         today: sot,
         limitiManual: profile.limitiDitor,
+        objektiviKursimit: profile.objektiviKursimit,
+        sipasPeriudhes,
       }),
-    [accounts, transactions, planet, recurring, sot, profile.limitiDitor]
+    [accounts, transactions, planet, recurring, sot, profile.limitiDitor, profile.objektiviKursimit, sipasPeriudhes]
   );
+
+  const k = d.kursimi;
 
   /**
    * The one purchase that blew the day on its own - a tank of fuel, a coat - where its category is
@@ -81,6 +85,13 @@ function ShpenzimiDitor({ action = "Planifiko", actionTo = "/planifikuara" }) {
             </div>
           )}
           <ProgressBar value={d.perqindja} color="var(--sp-cyan)" over={d.tejkaluar} />
+          {k.kufizon && !d.manual && (
+            <div className="fcp-daily-note">
+              Kufizuar nga objektivi i kursimit {k.objektivi}%: bilanci do të lejonte{" "}
+              {money(d.ngaBilanci / d.ditetMbetura)} në ditë, por këtë muaj duhen mbajtur{" "}
+              {money(k.synimi)} nga {money(k.teArdhurat)} të ardhura.
+            </div>
+          )}
           <div className="fcp-daily-note">
             {d.tejkaluar
               ? `Kufiri i sotëm u tejkalua me ${money(Math.abs(d.mbetur))} - nesër fondi ndahet nga e para.`
@@ -102,7 +113,14 @@ function ShpenzimiDitor({ action = "Planifiko", actionTo = "/planifikuara" }) {
         </div>
       ) : (
         <Empty>
-          {d.disponueshme < 0 ? (
+          {k.kufizon ? (
+            <>
+              Këtë muaj keni shpenzuar <strong>{money(Math.abs(k.kufiri))}</strong> më shumë se sa lejon objektivi i
+              kursimit {k.objektivi}% ({money(k.synimi)} nga {money(k.teArdhurat)} të ardhura). Bilanci ju lejon ende{" "}
+              {money(Math.max(d.ngaBilanci, 0) / d.ditetMbetura)} në ditë, por çdo shpenzim tani vjen nga kursimet e
+              muajve të kaluar. Objektivin e ndryshoni te <Link to="/cilesimet">Cilësimet</Link>.
+            </>
+          ) : d.disponueshme < 0 ? (
             <>
               Detyrimet e këtij muaji - pagesat e përsëritura dhe planet - kalojnë me{" "}
               <strong>{money(Math.abs(d.disponueshme))}</strong> paratë që keni. Zhvendosni ndonjë plan për muajin

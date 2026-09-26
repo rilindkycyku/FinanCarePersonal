@@ -1,12 +1,59 @@
 import { Modal } from "react-bootstrap";
 import { formatDate } from "../lib/format";
-import { zeriNeHtml } from "../lib/ndryshimet";
+import { ndajZerin, zeriNeHtml } from "../lib/ndryshimet";
 import "../Pages/Styles/Personal.css";
 
 /**
- * A list of releases out of CHANGELOG.md (lib/ndryshimet.js), in a modal. Used twice: by the update
- * prompt, for the versions waiting to be installed, and by the version number in the footer, for
- * what the running one brought. The buttons are the caller's, passed in as `footer`.
+ * One item: its headline always, the rest behind a tap. The changelog is written as paragraphs,
+ * which is right for reading one release and a wall of text on a phone listing eight of them.
+ * Everything that reaches the page has been escaped by zeriNeHtml before any markup is put back.
+ */
+function Zeri({ tekst }) {
+  const { titulli, trupi } = ndajZerin(tekst);
+  if (!trupi) return <li dangerouslySetInnerHTML={{ __html: zeriNeHtml(titulli) }} />;
+  return (
+    <li>
+      <details className="fcp-ndryshimet-zeri">
+        <summary dangerouslySetInnerHTML={{ __html: zeriNeHtml(titulli) }} />
+        <div dangerouslySetInnerHTML={{ __html: zeriNeHtml(trupi) }} />
+      </details>
+    </li>
+  );
+}
+
+/** The releases themselves, as the modal and the Çka ka të re page both draw them. */
+export function ListaENdryshimeve({ versionet }) {
+  return (
+    <div className="fcp-ndryshimet">
+      {versionet.map((v) => (
+        <section key={v.versioni} className="fcp-ndryshimet-versioni">
+          <h3>
+            v{v.versioni}
+            {v.data && <span>{formatDate(v.data)}</span>}
+          </h3>
+          {v.hyrja.map((t, i) => (
+            <p key={i} dangerouslySetInnerHTML={{ __html: zeriNeHtml(t) }} />
+          ))}
+          {v.seksionet.map((s) => (
+            <div key={s.titulli}>
+              <h4>{s.titulli}</h4>
+              <ul>
+                {s.zerat.map((z, i) => (
+                  <Zeri key={i} tekst={z} />
+                ))}
+              </ul>
+            </div>
+          ))}
+        </section>
+      ))}
+    </div>
+  );
+}
+
+/**
+ * A list of releases out of CHANGELOG.md (lib/ndryshimet.js), in a modal. Used by the update
+ * prompt, for the versions waiting to be installed.
+ * The buttons are the caller's, passed in as `footer`.
  */
 function DritarjaENdryshimeve({ show, onHide, titulli, hyrja, versionet, gabim, footer, mbyllet = true }) {
   return (
@@ -30,34 +77,11 @@ function DritarjaENdryshimeve({ show, onHide, titulli, hyrja, versionet, gabim, 
         ) : versionet.length === 0 ? (
           <p className="fcp-row-sub mb-0">
             {gabim
-              ? "Lista e ndryshimeve nuk u ngarkua - ndoshta jeni pa internet. Historiku i plotë është te CHANGELOG.md."
+              ? "Lista e ndryshimeve nuk u ngarkua - ndoshta jeni pa internet. Historiku i versionit që keni është te faqja «Çka ka të re»."
               : "Nuk ka shënime për këtë version."}
           </p>
         ) : (
-          <div className="fcp-ndryshimet">
-            {versionet.map((v) => (
-              <section key={v.versioni} className="fcp-ndryshimet-versioni">
-                <h3>
-                  v{v.versioni}
-                  {v.data && <span>{formatDate(v.data)}</span>}
-                </h3>
-                {v.hyrja.map((t, i) => (
-                  <p key={i} dangerouslySetInnerHTML={{ __html: zeriNeHtml(t) }} />
-                ))}
-                {v.seksionet.map((s) => (
-                  <div key={s.titulli}>
-                    <h4>{s.titulli}</h4>
-                    <ul>
-                      {s.zerat.map((z, i) => (
-                        // Escaped by zeriNeHtml before any markup is put back.
-                        <li key={i} dangerouslySetInnerHTML={{ __html: zeriNeHtml(z) }} />
-                      ))}
-                    </ul>
-                  </div>
-                ))}
-              </section>
-            ))}
-          </div>
+          <ListaENdryshimeve versionet={versionet} />
         )}
       </Modal.Body>
       {footer && <Modal.Footer>{footer}</Modal.Footer>}
