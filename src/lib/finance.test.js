@@ -1397,6 +1397,42 @@ describe("dailyLimit", () => {
       expect(paSynim.disponueshme).toBe(2100);
     });
 
+    it("measures the goal on the planned income when that is more than what came in", () => {
+      // The screenshot case: 1806,50 planned, 1674,50 in, 2004,17 out, 30%.
+      const limit = dailyLimit({
+        ...meSynim,
+        teArdhuratPlanifikuara: 1806.5,
+        transactions: [
+          tx("r", { data: "2026-08-01", lloji: "hyrje", vlera: 1674.5 }),
+          tx("s", { data: "2026-08-05", vlera: 2004.17 }),
+        ],
+      });
+      expect(limit.kursimi.teArdhurat).toBe(1806.5);
+      expect(limit.kursimi.ngaPlani).toBe(true);
+      expect(limit.kursimi.synimi).toBeCloseTo(541.95);
+      expect(limit.kursimi.kufiri).toBeCloseTo(1806.5 - 541.95 - 2004.17);
+      expect(limit.caktuar).toBe(false);
+    });
+
+    it("gives the first days of the month a budget before the salary lands", () => {
+      const limit = dailyLimit({
+        ...meSynim,
+        today: "2026-08-03",
+        teArdhuratPlanifikuara: 1000,
+        transactions: [tx("s", { data: "2026-08-01", vlera: 100 })],
+      });
+      // 1000 − 30% − 100 already spent = 600, below the 1900 the balance would allow.
+      expect(limit.disponueshme).toBe(600);
+      expect(limit.kursimi.kufizon).toBe(true);
+    });
+
+    it("a month that earns more than planned saves its share of the extra too", () => {
+      const limit = dailyLimit({ ...meSynim, teArdhuratPlanifikuara: 800, transactions: [rroga] });
+      expect(limit.kursimi.teArdhurat).toBe(1000);
+      expect(limit.kursimi.ngaPlani).toBe(false);
+      expect(limit.kursimi.synimi).toBe(300);
+    });
+
     it("a fixed limit from Cilësimet still wins", () => {
       const limit = dailyLimit({
         ...meSynim,

@@ -59,9 +59,11 @@ ngriti versionin.
   vetëm nga bilanci që keni: 547 € të mbetura nga muajt e kaluar, ndarë në pesë ditë, jepnin 109 € në
   ditë — në një muaj që kishte shpenzuar tashmë 330 € më shumë se sa kishte fituar, me objektivin e
   kursimit 30% që ishte vendosur pikërisht për këtë. Tani, kur keni një objektiv kursimi, ai është
-  kufiri i dytë: sa mund të shpenzojë ende muaji (të ardhurat e tij, bashkë me hyrjet e përsëritura
-  që priten, minus shpenzimet dhe detyrimet, minus pjesa e objektivit) dhe fiton më i ulëti prej të
-  dyve. Kur objektivi është ai që vendos, karta e thotë hapur — dhe kur muaji e ka kaluar tashmë, ajo
+  kufiri i dytë: sa mund të shpenzojë ende muaji (të ardhurat e tij minus shpenzimet dhe detyrimet,
+  minus pjesa e objektivit) dhe fiton më i ulëti prej të dyve. Të ardhurat janë **Të Ardhurat Mujore
+  të Planifikuara** nga Cilësimet — ose ato që kanë hyrë vërtet bashkë me hyrjet e përsëritura që
+  priten, kur janë më shumë — pra muaji ka buxhet që ditën e parë, para se të vijë rroga. Te
+  Cilësimet, nën objektivin, shihet tani edhe si shumë: «= 541,95 € në muaj nga 1.806,50 €». Kur objektivi është ai që vendos, karta e thotë hapur — dhe kur muaji e ka kaluar tashmë, ajo
   nuk tregon 0 € pa shpjegim, por sa ka shpenzuar mbi objektiv dhe se çdo shpenzim tani vjen nga
   kursimet. Pa objektiv, ose para se të vijnë të ardhurat e muajit, gjithçka mbetet si më parë; një
   limit fiks nga Cilësimet ka ende fjalën e fundit.

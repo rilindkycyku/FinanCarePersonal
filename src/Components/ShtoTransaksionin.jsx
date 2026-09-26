@@ -369,7 +369,8 @@ function ShtoTransaksionin({
       const tjeret = transactions.filter((t) => t.id !== rekordi.id);
       const bazat = {
         accounts, plans: planet, recurring, today: sot, limitiManual: profile.limitiDitor,
-        objektiviKursimit: profile.objektiviKursimit, sipasPeriudhes,
+        objektiviKursimit: profile.objektiviKursimit,
+        teArdhuratPlanifikuara: profile.teArdhuratMujore, sipasPeriudhes,
       };
       const para = dailyLimit({ ...bazat, transactions: tjeret });
       const pas = dailyLimit({ ...bazat, transactions: [...tjeret, rekordi] });

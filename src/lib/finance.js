@@ -418,15 +418,21 @@ export function eshteMujore(tx) {
  * the money runs out", and a balance carried over from earlier months happily answers "109 € a day"
  * in a month that has already spent 330 € more than it earned. With `objektiviKursimit` set (the
  * percentage in Cilësimet), the pool is also capped at what the month can still spend and end on
- * that rate: its income (booked, plus recurring income still expected) minus its spending up to the
- * start of today, minus the commitments above, minus the goal's share of that income. Whichever of
- * the two is lower wins, so the goal can only ever tighten the figure - never loosen what the
- * balance allows. `kursimi.kufizon` says when it is the goal that decided.
+ * that rate: its income minus its spending up to the start of today, minus the commitments above,
+ * minus the goal's share of that income. Whichever of the two is lower wins, so the goal can only
+ * ever tighten the figure - never loosen what the balance allows. `kursimi.kufizon` says when it is
+ * the goal that decided.
+ *
+ * "Its income" is the planned monthly income from Cilësimet (`teArdhuratPlanifikuara`), or what
+ * has actually come in plus recurring income still expected when that is more - a month with a
+ * bonus saves its share of the bonus too. Counting the plan is what gives the first days of the
+ * month a budget before the salary lands, instead of a goal measured against nothing; the balance
+ * ceiling still stops it from handing out money that is not there yet.
  *
  * The month is measured the way the dashboard's "Kursimi i Muajit" measures it (`sipasPeriudhes`),
- * so the two cards cannot disagree. Before any income has arrived or is expected this month there is
- * no rate to measure against, and the ceiling stays off rather than zeroing the first days of every
- * month for someone paid on the 10th.
+ * so the two cards cannot disagree. With no planned income and nothing booked or expected yet there
+ * is no rate to measure against, and the ceiling stays off rather than zeroing the first days of
+ * every month for someone paid on the 10th.
  */
 export function dailyLimit({
   accounts = [],
@@ -436,6 +442,7 @@ export function dailyLimit({
   today = format(new Date(), "yyyy-MM-dd"),
   limitiManual = 0,
   objektiviKursimit = 0,
+  teArdhuratPlanifikuara = 0,
   sipasPeriudhes = false,
 } = {}) {
   const { start, end } = monthBounds(today);
@@ -475,7 +482,7 @@ export function dailyLimit({
 
   const objektivi = Math.min(Math.max(toNumber(objektiviKursimit), 0), 100);
   const muaji = cashflow(filterByRange(transactions, start, end, { sipasPeriudhes }));
-  const teArdhurat = muaji.hyrjet + hyrjePritura;
+  const teArdhurat = Math.max(toNumber(teArdhuratPlanifikuara), muaji.hyrjet + hyrjePritura);
   const kaSynim = objektivi > 0 && teArdhurat > 0;
   const synimi = kaSynim ? (teArdhurat * objektivi) / 100 : 0;
   // Today's day-to-day spending is added back for the same reason as above: it belongs to today's
@@ -512,6 +519,7 @@ export function dailyLimit({
       kufiri: ngaKursimi,
       kufizon,
       teArdhurat,
+      ngaPlani: toNumber(teArdhuratPlanifikuara) > 0 && teArdhurat === toNumber(teArdhuratPlanifikuara),
       shpenzimet: muaji.shpenzimet,
     },
     // The parts the pool was built from, so the card can show its working.

@@ -19,7 +19,7 @@ import { useSync } from "../Context/SyncContext";
 import { seedDefaults, wipeAllData } from "../lib/db";
 import { DEFAULT_CURRENCY } from "../lib/options";
 import { pastroRregullat } from "../lib/rregullat";
-import { currencySymbol, toNumber } from "../lib/format";
+import { currencySymbol, formatMoney, toNumber } from "../lib/format";
 import VleraInput from "../Components/VleraInput";
 import { kerkoLeje, lejaAktuale } from "../lib/njoftimet";
 import { CILESITE_FATURAVE, CILESIA_PARAZGJEDHUR } from "../lib/images";
@@ -280,6 +280,15 @@ function Cilesimet() {
                     value={form.objektiviKursimit}
                     onChange={(e) => setField("objektiviKursimit", e.target.value)}
                   />
+                  {/* The goal as the amount it means, since "30%" is not what anyone budgets in. */}
+                  {toNumber(form.objektiviKursimit) > 0 && (
+                    <div className="fcp-row-sub mt-1">
+                      {toNumber(form.teArdhuratMujore) > 0
+                        ? `= ${formatMoney((toNumber(form.teArdhuratMujore) * toNumber(form.objektiviKursimit)) / 100, form.monedha)} në muaj nga ${formatMoney(toNumber(form.teArdhuratMujore), form.monedha)} të planifikuara, ose më shumë kur hyn më shumë. `
+                        : "Shkruani të ardhurat e planifikuara për ta parë si shumë. "}
+                      Limiti ditor nuk ju lejon të shpenzoni përtej tij.
+                    </div>
+                  )}
                 </Form.Group>
 
                 <Form.Group as={Col} md={6} controlId="form-limitiditor">
@@ -295,7 +304,8 @@ function Cilesimet() {
                   <div className="fcp-row-sub mt-1">
                     Lëreni bosh dhe limiti llogaritet vetë: bilanci që keni për të shpenzuar (pa kursimet e
                     investimet), plus hyrjet që priten këtë muaj, minus pagesat e përsëritura të pakonfirmuara dhe
-                    shpenzimet e planifikuara - të ndara mbi ditët që kanë mbetur.
+                    shpenzimet e planifikuara - të ndara mbi ditët që kanë mbetur. Me objektiv kursimi, nuk kalon
+                    as atë që muaji mund të shpenzojë pa e prishur objektivin.
                   </div>
                 </Form.Group>
 

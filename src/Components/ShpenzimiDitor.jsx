@@ -30,9 +30,10 @@ function ShpenzimiDitor({ action = "Planifiko", actionTo = "/planifikuara" }) {
         today: sot,
         limitiManual: profile.limitiDitor,
         objektiviKursimit: profile.objektiviKursimit,
+        teArdhuratPlanifikuara: profile.teArdhuratMujore,
         sipasPeriudhes,
       }),
-    [accounts, transactions, planet, recurring, sot, profile.limitiDitor, profile.objektiviKursimit, sipasPeriudhes]
+    [accounts, transactions, planet, recurring, sot, profile.limitiDitor, profile.objektiviKursimit, profile.teArdhuratMujore, sipasPeriudhes]
   );
 
   const k = d.kursimi;
@@ -89,7 +90,7 @@ function ShpenzimiDitor({ action = "Planifiko", actionTo = "/planifikuara" }) {
             <div className="fcp-daily-note">
               Kufizuar nga objektivi i kursimit {k.objektivi}%: bilanci do të lejonte{" "}
               {money(d.ngaBilanci / d.ditetMbetura)} në ditë, por këtë muaj duhen mbajtur{" "}
-              {money(k.synimi)} nga {money(k.teArdhurat)} të ardhura.
+              {money(k.synimi)} nga {money(k.teArdhurat)} të ardhura{k.ngaPlani ? " të planifikuara" : ""}.
             </div>
           )}
           <div className="fcp-daily-note">
@@ -116,7 +117,8 @@ function ShpenzimiDitor({ action = "Planifiko", actionTo = "/planifikuara" }) {
           {k.kufizon ? (
             <>
               Këtë muaj keni shpenzuar <strong>{money(Math.abs(k.kufiri))}</strong> më shumë se sa lejon objektivi i
-              kursimit {k.objektivi}% ({money(k.synimi)} nga {money(k.teArdhurat)} të ardhura). Bilanci ju lejon ende{" "}
+              kursimit {k.objektivi}% ({money(k.synimi)} nga {money(k.teArdhurat)} të ardhura
+              {k.ngaPlani ? " të planifikuara" : ""}). Bilanci ju lejon ende{" "}
               {money(Math.max(d.ngaBilanci, 0) / d.ditetMbetura)} në ditë, por çdo shpenzim tani vjen nga kursimet e
               muajve të kaluar. Objektivin e ndryshoni te <Link to="/cilesimet">Cilësimet</Link>.
             </>
