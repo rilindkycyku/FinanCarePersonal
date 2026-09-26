@@ -37,6 +37,15 @@ function ShpenzimiDitor({ action = "Planifiko", actionTo = "/planifikuara" }) {
   );
 
   const k = d.kursimi;
+  // The savings goal has used up the month: the counter stays on screen - at zero, with what was
+  // spent today against it - rather than turning into a paragraph. The number is the habit people
+  // check; the explanation sits under it.
+  const ngaObjektivi = !d.caktuar && k.kufizon && !d.manual;
+  const shfaqNumeruesin = d.caktuar || ngaObjektivi;
+  const limiti = Math.max(d.limiti, 0);
+  const mbetur = limiti - d.shpenzuarSot;
+  const tejkaluar = mbetur < 0;
+  const perqindja = limiti > 0 ? d.perqindja : d.shpenzuarSot > 0 ? 100 : 0;
 
   /**
    * The one purchase that blew the day on its own - a tank of fuel, a coat - where its category is
@@ -68,14 +77,22 @@ function ShpenzimiDitor({ action = "Planifiko", actionTo = "/planifikuara" }) {
     ["Pagesa të përsëritura", -d.perseritjePritura, "neg"],
     ["Plane të pablera", -d.planePritura, "neg"],
   ].filter(([, vlera], i) => i === 0 || vlera !== 0);
+  // With a savings goal: what the month can still spend and keep it (negative once past it), and
+  // what the balance alone would hand out per day - the two figures the limit is the lower of.
+  if (k.kufiri !== null && !d.manual) {
+    rreshtat.push(
+      [`Mbetur sipas objektivit ${k.objektivi}%`, k.kufiri, k.kufiri < 0 ? "neg" : "pos"],
+      ["Bilanci lejon në ditë", Math.max(d.ngaBilanci, 0) / d.ditetMbetura, "neutral"]
+    );
+  }
 
   return (
     <Panel title="Sa Mund të Shpenzoj Sot" icon={Gauge} action={action} actionTo={actionTo}>
-      {d.caktuar ? (
+      {shfaqNumeruesin ? (
         <div className="fcp-daily">
-          <div className={`fcp-daily-value ${d.tejkaluar ? "fcp-neg" : "fcp-pos"}`}>{money(d.mbetur)}</div>
+          <div className={`fcp-daily-value ${tejkaluar || ngaObjektivi ? "fcp-neg" : "fcp-pos"}`}>{money(mbetur)}</div>
           <div className="fcp-daily-sub">
-            Kufiri ditor <strong>{money(d.limiti)}</strong> · shpenzuar sot <strong>{money(d.shpenzuarSot)}</strong>
+            Kufiri ditor <strong>{money(limiti)}</strong> · shpenzuar sot <strong>{money(d.shpenzuarSot)}</strong>
           </div>
           {/* Without this line the card looks broken on the day somebody fills the tank: the
               balance fell by 80 € and "shpenzuar sot" says 12 €. */}
@@ -85,23 +102,32 @@ function ShpenzimiDitor({ action = "Planifiko", actionTo = "/planifikuara" }) {
               kanë mbetur, jo mbi këtë ditë.
             </div>
           )}
-          <ProgressBar value={d.perqindja} color="var(--sp-cyan)" over={d.tejkaluar} />
-          {k.kufizon && !d.manual && (
+          <ProgressBar value={perqindja} color="var(--sp-cyan)" over={tejkaluar} />
+          {ngaObjektivi ? (
+            <div className="fcp-daily-note">
+              Këtë muaj keni shpenzuar <strong>{money(Math.abs(k.kufiri))}</strong> më shumë se sa lejon objektivi i
+              kursimit {k.objektivi}% ({money(k.synimi)} nga {money(k.teArdhurat)} të ardhura
+              {k.ngaPlani ? " të planifikuara" : ""}). Çdo shpenzim tani vjen nga kursimet e muajve të kaluar.
+              Objektivin e ndryshoni te <Link to="/cilesimet">Cilësimet</Link>.
+            </div>
+          ) : k.kufizon && !d.manual && (
             <div className="fcp-daily-note">
               Kufizuar nga objektivi i kursimit {k.objektivi}%: bilanci do të lejonte{" "}
               {money(d.ngaBilanci / d.ditetMbetura)} në ditë, por këtë muaj duhen mbajtur{" "}
               {money(k.synimi)} nga {money(k.teArdhurat)} të ardhura{k.ngaPlani ? " të planifikuara" : ""}.
             </div>
           )}
-          <div className="fcp-daily-note">
-            {d.tejkaluar
-              ? `Kufiri i sotëm u tejkalua me ${money(Math.abs(d.mbetur))} - nesër fondi ndahet nga e para.`
-              : d.manual
-                ? `Limit i caktuar nga ju te Cilësimet. Të lira këtë muaj keni ${money(d.disponueshme)}.`
-                : `${money(d.disponueshme)} të lira, të ndara në ${d.ditetMbetura} ${
-                    d.ditetMbetura === 1 ? "ditë të mbetur" : "ditë të mbetura"
-                  } të ${monthLabel(d.muaji)}.`}
-          </div>
+          {!ngaObjektivi && (
+            <div className="fcp-daily-note">
+              {d.tejkaluar
+                ? `Kufiri i sotëm u tejkalua me ${money(Math.abs(d.mbetur))} - nesër fondi ndahet nga e para.`
+                : d.manual
+                  ? `Limit i caktuar nga ju te Cilësimet. Të lira këtë muaj keni ${money(d.disponueshme)}.`
+                  : `${money(d.disponueshme)} të lira, të ndara në ${d.ditetMbetura} ${
+                      d.ditetMbetura === 1 ? "ditë të mbetur" : "ditë të mbetura"
+                    } të ${monthLabel(d.muaji)}.`}
+            </div>
+          )}
 
           {shkaktari && (
             <div className="fcp-daily-note">
@@ -114,15 +140,7 @@ function ShpenzimiDitor({ action = "Planifiko", actionTo = "/planifikuara" }) {
         </div>
       ) : (
         <Empty>
-          {k.kufizon ? (
-            <>
-              Këtë muaj keni shpenzuar <strong>{money(Math.abs(k.kufiri))}</strong> më shumë se sa lejon objektivi i
-              kursimit {k.objektivi}% ({money(k.synimi)} nga {money(k.teArdhurat)} të ardhura
-              {k.ngaPlani ? " të planifikuara" : ""}). Bilanci ju lejon ende{" "}
-              {money(Math.max(d.ngaBilanci, 0) / d.ditetMbetura)} në ditë, por çdo shpenzim tani vjen nga kursimet e
-              muajve të kaluar. Objektivin e ndryshoni te <Link to="/cilesimet">Cilësimet</Link>.
-            </>
-          ) : d.disponueshme < 0 ? (
+          {d.disponueshme < 0 ? (
             <>
               Detyrimet e këtij muaji - pagesat e përsëritura dhe planet - kalojnë me{" "}
               <strong>{money(Math.abs(d.disponueshme))}</strong> paratë që keni. Zhvendosni ndonjë plan për muajin
@@ -137,7 +155,7 @@ function ShpenzimiDitor({ action = "Planifiko", actionTo = "/planifikuara" }) {
         </Empty>
       )}
 
-      {d.caktuar && (
+      {shfaqNumeruesin && (
         <div className="fcp-daily-grid">
           {rreshtat.map(([label, vlera, tone]) => (
             <div className="fcp-daily-cell" key={label}>
