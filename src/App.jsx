@@ -12,6 +12,7 @@ const Llogarite = lazy(() => import("./Pages/Llogarite"));
 const Borxhet = lazy(() => import("./Pages/Borxhet"));
 const Grupet = lazy(() => import("./Pages/Grupet"));
 const Vendet = lazy(() => import("./Pages/Vendet"));
+const Ndryshimet = lazy(() => import("./Pages/Ndryshimet"));
 const Kategorite = lazy(() => import("./Pages/Kategorite"));
 const Buxhetet = lazy(() => import("./Pages/Buxhetet"));
 const Qellimet = lazy(() => import("./Pages/Qellimet"));
@@ -39,6 +40,7 @@ function App() {
         <Route path="/borxhet" element={<Borxhet />} />
         <Route path="/grupet" element={<Grupet />} />
         <Route path="/vendet" element={<Vendet />} />
+        <Route path="/ndryshimet" element={<Ndryshimet />} />
         <Route path="/kategorite" element={<Kategorite />} />
         <Route path="/buxhetet" element={<Buxhetet />} />
         <Route path="/qellimet" element={<Qellimet />} />

@@ -94,6 +94,7 @@
   padding: 0.15rem 0.55rem;
   font-family: monospace;
   cursor: pointer;
+  text-decoration: none;
 }
 
 .fcp-footer-version:hover {

@@ -4,6 +4,7 @@ import {
   celesiEtiketes, GJATESIA_MAX, ndajEtiketat, ngjyraEtiketes, normalizoEtiketen, NUMRI_MAX,
   pastroEtiketat,
 } from "../lib/etiketat";
+import Ndihme from "./Ndihme";
 
 /**
  * The tag field: the chips already on the record, an input that turns what is typed into another
@@ -119,12 +120,12 @@ function EtiketaFusha({ etiketat = [], onChange, sugjerime = [], ndihma }) {
         </div>
       )}
 
-      <div className="fcp-modal-hint">
+      <Ndihme>
         {plot
           ? `Maksimumi ${NUMRI_MAX} etiketa për një transaksion.`
           : ndihma ||
             "Etiketat i lidhin transaksionet përtej kategorisë - p.sh. një udhëtim ose një projekt. Shtypni Enter ose presje për ta shtuar."}
-      </div>
+      </Ndihme>
     </div>
   );
 }

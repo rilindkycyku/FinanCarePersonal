@@ -10,6 +10,7 @@ import Zgjedhesi from "./Zgjedhesi";
 import { opsionetLlogarive } from "../lib/opsionet";
 import FaturaFusha from "./Faturat/FaturaFusha";
 import VendndodhjaFusha from "./VendndodhjaFusha";
+import Ndihme from "./Ndihme";
 import { makeId, sinkronizoFaturat, STORES } from "../lib/db";
 import { currencySymbol, formatMoney, toNumber, todayISO } from "../lib/format";
 import { etiketatE, pastroEtiketat, perdorimiEtiketave } from "../lib/etiketat";
@@ -65,7 +66,7 @@ function ShtoTransaksionin({
   destinacioniFillestar,
 }) {
   const { accounts, categories, goals, budgets, transactions, planet, recurring, faturat, save, saveProfile,
-    reload, profile, monedha, simboli, njeLlogari, llogariaKryesore } = useData();
+    reload, profile, monedha, simboli, njeLlogari, llogariaKryesore, sipasPeriudhes } = useData();
   const [tx, setTx] = useState(blank(llojiFillestar));
   // Invoice photos are staged here and only written once the transaction itself is saved, so a
   // cancelled form leaves nothing behind (see sinkronizoFaturat).
@@ -366,7 +367,11 @@ function ShtoTransaksionin({
     if (profile.njoftimeLimiti) {
       const sot = todayISO();
       const tjeret = transactions.filter((t) => t.id !== rekordi.id);
-      const bazat = { accounts, plans: planet, recurring, today: sot, limitiManual: profile.limitiDitor };
+      const bazat = {
+        accounts, plans: planet, recurring, today: sot, limitiManual: profile.limitiDitor,
+        objektiviKursimit: profile.objektiviKursimit,
+        teArdhuratPlanifikuara: profile.teArdhuratMujore, sipasPeriudhes,
+      };
       const para = dailyLimit({ ...bazat, transactions: tjeret });
       const pas = dailyLimit({ ...bazat, transactions: [...tjeret, rekordi] });
       if (!para.tejkaluar && pas.tejkaluar) {
@@ -450,7 +455,9 @@ function ShtoTransaksionin({
   }
 
   return (
-    <Modal show={show} onHide={onHide} centered size="lg" className="sp-modal">
+    // Full screen on a phone: the save button sits at the bottom of the screen instead of at the end
+    // of a scroll, and the body gets every pixel between it and the title.
+    <Modal show={show} onHide={onHide} centered size="lg" fullscreen="sm-down" className="sp-modal fcp-tx-modal">
       <Modal.Header closeButton>
         {/* Keyed on the id rather than on `initial`: repeating a transaction opens the form
             pre-filled from an old one but saves a new record, so it is not an edit. */}
@@ -488,7 +495,7 @@ function ShtoTransaksionin({
           )}
 
           <Row className="g-3">
-            <Form.Group as={Col} md={6} controlId="tx-vlera">
+            <Form.Group as={Col} xs={7} md={6} controlId="tx-vlera">
               <Form.Label>
                 Vlera <span className="text-danger">*</span>
               </Form.Label>
@@ -517,19 +524,12 @@ function ShtoTransaksionin({
               )}
             </Form.Group>
 
-            <Form.Group as={Col} md={6} controlId="tx-data">
+            <Form.Group as={Col} xs={5} md={6} controlId="tx-data">
               <Form.Label>
                 Data <span className="text-danger">*</span>
               </Form.Label>
               <Form.Control type="date" value={tx.data} onChange={(e) => setField("data", e.target.value)} required />
             </Form.Group>
-
-            <MonedhaTjeter
-              monedhaOrigjinale={tx.monedhaOrigjinale}
-              kursi={tx.kursi}
-              vlera={tx.vlera}
-              onChange={(fusha) => setTx((prev) => ({ ...prev, ...fusha }))}
-            />
 
             {/* Single-account mode books everything into the main account, so the pickers are
                 replaced by a plain line telling the user where the money is going. */}
@@ -541,7 +541,7 @@ function ShtoTransaksionin({
                 </div>
               </Col>
             ) : (
-              <Form.Group as={Col} md={6} controlId="tx-llogariaid">
+              <Form.Group as={Col} xs={6} controlId="tx-llogariaid">
                 <Form.Label>
                   {isTransfer ? "Nga llogaria" : "Llogaria"} <span className="text-danger">*</span>
                 </Form.Label>
@@ -566,7 +566,7 @@ function ShtoTransaksionin({
 
             {isTransfer ? (
               !njeLlogari && (
-                <Form.Group as={Col} md={6} controlId="tx-llogariadestinacionid">
+                <Form.Group as={Col} xs={6} controlId="tx-llogariadestinacionid">
                   <Form.Label>
                     Në llogarinë <span className="text-danger">*</span>
                   </Form.Label>
@@ -582,7 +582,7 @@ function ShtoTransaksionin({
                 </Form.Group>
               )
             ) : (
-              <Form.Group as={Col} md={njeLlogari ? 12 : 6} controlId="tx-kategoriaid">
+              <Form.Group as={Col} xs={njeLlogari ? 12 : 6} controlId="tx-kategoriaid">
                 <Form.Label>
                   Kategoria <span className="text-danger">*</span>
                 </Form.Label>
@@ -606,25 +606,6 @@ function ShtoTransaksionin({
                     Nuk ka kategori për këtë lloj - shtoni një te faqja Kategoritë.
                   </div>
                 )}
-                {tx.lloji === "shpenzim" && (
-                  <>
-                    <Form.Check
-                      type="checkbox"
-                      id="tx-ritmi"
-                      className="mt-2"
-                      label="Shpenzim mujor - ndahet mbi muajin, jo mbi ditën e sotme"
-                      checked={mujorTani}
-                      onChange={(e) => setField("ritmi", e.target.checked ? RITMI_MUJOR : null)}
-                    />
-                    <div className="fcp-modal-hint">
-                      Lëreni bosh për shpenzimet e zakonshme të ditës. Shënojeni për blerjet që
-                      mbajnë gjatë - një depo karburant, një sigurim, një palë këpucë: paraja del
-                      njësoj nga bilanci, por ndahet mbi ditët që kanë mbetur në vend që t&apos;i
-                      ngarkohet kësaj dite. Të njëjtën shenjë mund ta vini edhe te lista e
-                      transaksioneve.
-                    </div>
-                  </>
-                )}
               </Form.Group>
             )}
 
@@ -638,6 +619,30 @@ function ShtoTransaksionin({
                 onFocus={fokusiIPershkrimit}
               />
             </Form.Group>
+
+            <MonedhaTjeter
+              monedhaOrigjinale={tx.monedhaOrigjinale}
+              kursi={tx.kursi}
+              vlera={tx.vlera}
+              onChange={(fusha) => setTx((prev) => ({ ...prev, ...fusha }))}
+            />
+
+            {tx.lloji === "shpenzim" && (
+              <Col md={12}>
+                <Form.Check
+                  type="checkbox"
+                  id="tx-ritmi"
+                  label="Shpenzim mujor"
+                  checked={mujorTani}
+                  onChange={(e) => setField("ritmi", e.target.checked ? RITMI_MUJOR : null)}
+                />
+                <Ndihme>
+                  Ndahet mbi ditët e mbetura të muajit, jo mbi ditën e sotme - për blerjet që mbajnë gjatë:
+                  karburant, sigurim, këpucë. Paraja del njësoj nga bilanci. Të njëjtën shenjë mund ta vini edhe te
+                  lista e transaksioneve.
+                </Ndihme>
+              </Col>
+            )}
 
             <Col md={12}>
               <Form.Label>Etiketat</Form.Label>
@@ -661,9 +666,7 @@ function ShtoTransaksionin({
                   titulli="Qëllimi i kursimit"
                   disabled={Boolean(qellimiFiksuar)}
                 />
-                <div className="fcp-modal-hint">
-                  Kur zgjidhet, vlera e këtij transaksioni llogaritet si kontribut në ecurinë e qëllimit.
-                </div>
+                <Ndihme>Kur zgjidhet, vlera e këtij transaksioni llogaritet si kontribut në ecurinë e qëllimit.</Ndihme>
               </Form.Group>
             )}
 

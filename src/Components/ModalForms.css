@@ -1002,3 +1002,63 @@ body.light-mode .fcp-cat-trigger {
 .fcp-ritmi {
   margin-bottom: 0.4rem;
 }
+
+/* On a phone the form is full screen: tighter spacing so the essentials fit above the fold. */
+@media (max-width: 575.98px) {
+  .fcp-tx-modal .modal-body {
+    padding-top: 0.75rem;
+  }
+  .fcp-tx-modal .fcp-type-toggle {
+    margin-bottom: 0.75rem;
+  }
+  .fcp-tx-modal .form-label {
+    margin-bottom: 0.25rem;
+  }
+  .fcp-tx-modal .modal-footer {
+    padding: 0.5rem 0.75rem;
+  }
+
+  /* One line of each hint, "…" at the end; a tap opens the rest (Ndihme.jsx). */
+  .fcp-ndihme:not(.hapur) {
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    cursor: pointer;
+  }
+
+  /* Tags used before: one row to swipe through, not three rows of chips pushing the form down. */
+  .fcp-etiketa-sugjerime {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .fcp-etiketa-sugjerime::-webkit-scrollbar {
+    display: none;
+  }
+  .fcp-etiketa-sugjerime > * {
+    flex-shrink: 0;
+  }
+
+  /* The body scrolls between a fixed title and a fixed save button. react-bootstrap's Form sits
+     between .modal-content and .modal-body and is not a flex item that shrinks, so without this
+     the whole sheet grew past the screen and the save button went with it. */
+  .fcp-tx-modal .modal-content > form {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+  .fcp-tx-modal .modal-body {
+    overflow-y: auto;
+  }
+
+  /* Adding a photo is a button, not a square the width of half the screen. */
+  .fcp-tx-modal .fcp-fatura-shto {
+    aspect-ratio: auto;
+    flex-direction: row;
+    padding: 0.6rem;
+    font-size: 0.75rem;
+  }
+}

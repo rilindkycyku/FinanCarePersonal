@@ -4,7 +4,7 @@ import { Dropdown } from "react-bootstrap";
 import {
   LayoutDashboard, ArrowRightLeft, Wallet, Tags, PiggyBank, Target, Repeat,
   BarChart3, Settings, DatabaseBackup, Sun, Moon, ChevronDown, Menu, X, Receipt,
-  ClipboardList, FileSpreadsheet, BookOpen, CalendarRange, Users, MapPin,
+  ClipboardList, FileSpreadsheet, BookOpen, CalendarRange, Users, MapPin, Sparkles,
 } from "lucide-react";
 import { useTheme } from "../Context/ThemeContext";
 import ButonPasqyra from "./ButonPasqyra";
@@ -52,6 +52,7 @@ const CATEGORIES = [
       // Çdo skedë e udhëzuesit ka adresën e vet nën këtë - `/udhezuesi/buxhetet` - prandaj zëri
       // ndizet edhe prej tyre, jo vetëm prej listës së parë.
       { to: "/udhezuesi", label: "Udhëzuesi", icon: BookOpen, nenshtigje: true },
+      { to: "/ndryshimet", label: "Çka ka të re", icon: Sparkles },
     ],
   },
 ];

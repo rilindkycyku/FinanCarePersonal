@@ -142,3 +142,20 @@ export function zeriNeHtml(tekst = "") {
     .join("<br>");
   return html.replace(/\uE000\s*/g, "<br>");
 }
+
+/**
+ * An item split into its headline and the rest, for a list that shows the headlines and opens one
+ * on a tap. The changelog's convention is a bold first sentence (`**Grupet: ...** Deri tani ...`),
+ * so that is the headline when the item starts with one; otherwise the first sentence is, and an
+ * item that is one sentence long has no rest to open.
+ */
+export function ndajZerin(tekst = "") {
+  const t = String(tekst).trim();
+  const bold = t.match(/^\*\*(.+?)\*\*\s*/s);
+  if (bold) return { titulli: bold[0].trim(), trupi: t.slice(bold[0].length).trim() };
+  const fjalia = t.match(/^(.+?[.!?])(\s+)(?=\S)/s);
+  if (fjalia && fjalia[1].length < t.length) {
+    return { titulli: fjalia[1], trupi: t.slice(fjalia[0].length).trim() };
+  }
+  return { titulli: t, trupi: "" };
+}

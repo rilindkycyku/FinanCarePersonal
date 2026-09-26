@@ -31,7 +31,7 @@ npm run dev       # vite --host
 npm run build
 npm run preview
 npm run lint      # eslint . — must stay at 0 errors (4 pre-existing warnings)
-npm test          # vitest run — 30 files, 689 tests, all green
+npm test          # vitest run — 30 files, 698 tests, all green
 npm run test:watch
 npm run ikonat    # regenerates the icons and the two wordmark PNGs from Logo.svg (Playwright)
 ```
@@ -115,7 +115,8 @@ imports, so keep doing that unless you are converting deliberately.
 ### 1. All money maths lives in `finance.js`, and it is pure
 
 Balances, cashflow, category/account splits, budget and goal progress, recurring scheduling,
-planned purchases, the daily allowance (`dailyLimit`), the balance `forecast`, `annualOutlook`.
+planned purchases, the daily allowance (`dailyLimit` — the lower of the balance-based pool and, when
+`objektiviKursimit` is set, what the month can still spend and keep its savings rate), the balance `forecast`, `annualOutlook`.
 Pages stay thin and derive every figure from these functions, so the dashboard and the statistics
 page can never disagree.
 
@@ -178,6 +179,8 @@ Read the header comments of `sinkronizimi.js`, `db.js` and `skema.js` before cha
   Rows come from `opsionet.js` helpers.
 - **Never use `window.alert` / `confirm`** — `useDialog()` gives `alert()` and `confirm()` as
   promises, with an optional `requireText` for destructive actions.
+- Explanatory text under a form field is `<Ndihme>` rather than a bare `.fcp-modal-hint`: it folds to
+  one line on phones (tap to open) and shows in full on wider screens. Errors stay plain hints.
 - Amount inputs are `VleraInput` (it carries the calculator); dates are plain `type="date"`
   controls; colour and icon pickers come from `Pickers.jsx`.
 - List pages use `Components/Tabela/Tabela.jsx`: it takes `data` as display-row objects whose keys

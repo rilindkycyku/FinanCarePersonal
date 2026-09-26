@@ -5,6 +5,7 @@ import {
   SAKTESIA_E_DOBET, emriIVenditAfer, formatoDistancen, grupoVendet, lidhjaHartes, normalizoEmrin,
   pastroVendndodhjen,
 } from "../lib/vendndodhjet";
+import Ndihme from "./Ndihme";
 
 /** Why the browser said no, in words the user can act on. The codes are the Geolocation API's. */
 function mesazhiIGabimit(err) {
@@ -82,9 +83,9 @@ function VendndodhjaFusha({ value, onChange, transactions = [], ekskludoId }) {
         {gabim ? (
           <div className="fcp-modal-hint text-danger mt-1">{gabim}</div>
         ) : (
-          <div className="fcp-modal-hint mt-1">
+          <Ndihme className="mt-1">
             Opsionale. Merret vetëm kur e shtypni dhe ruhet vetëm te ky transaksion - aplikacioni nuk e dërgon askund.
-          </div>
+          </Ndihme>
         )}
       </div>
     );

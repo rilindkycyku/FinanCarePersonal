@@ -1328,6 +1328,120 @@ describe("dailyLimit", () => {
     expect(limit.disponueshme).toBe(-400);
     expect(limit.caktuar).toBe(false);
   });
+
+  describe("with a savings goal", () => {
+    // 2000 € carried over from earlier months, so the balance alone always has plenty to hand out.
+    const meSynim = {
+      accounts: [account("a", { bilanciFillestar: 2000 })],
+      today: "2026-08-27", // 5 days left, today included
+      objektiviKursimit: 30,
+    };
+    const rroga = tx("r", { data: "2026-08-01", lloji: "hyrje", vlera: 1000 });
+
+    it("stops handing out the balance once the month has spent past its goal", () => {
+      // 1000 in, 900 out: the month is 100 ahead, the goal wants 300 kept - 200 over already.
+      const limit = dailyLimit({ ...meSynim, transactions: [rroga, tx("s", { data: "2026-08-05", vlera: 900 })] });
+      expect(limit.ngaBilanci).toBe(2100);
+      expect(limit.kursimi).toMatchObject({ synimi: 300, kufiri: -200, kufizon: true });
+      expect(limit.disponueshme).toBe(-200);
+      expect(limit.caktuar).toBe(false);
+    });
+
+    it("leaves what the month can still spend and end on the goal", () => {
+      const limit = dailyLimit({ ...meSynim, transactions: [rroga, tx("s", { data: "2026-08-05", vlera: 500 })] });
+      // 1000 − 500 − 300 = 200 over the 5 days left.
+      expect(limit.disponueshme).toBe(200);
+      expect(limit.limiti).toBeCloseTo(40);
+      expect(limit.kursimi.kufizon).toBe(true);
+    });
+
+    it("never loosens what the balance allows", () => {
+      const limit = dailyLimit({
+        ...meSynim,
+        accounts: [account("a", { bilanciFillestar: 0 })],
+        transactions: [rroga],
+      });
+      // Balance 1000, goal ceiling 700: the goal decides. With a balance of 100 it would not.
+      expect(limit.disponueshme).toBe(700);
+      const pak = dailyLimit({
+        ...meSynim,
+        accounts: [account("a", { bilanciFillestar: -900 })],
+        transactions: [rroga],
+      });
+      expect(pak.disponueshme).toBe(100);
+      expect(pak.kursimi.kufizon).toBe(false);
+    });
+
+    it("counts recurring income still expected, and today's spending stays today's", () => {
+      const limit = dailyLimit({
+        ...meSynim,
+        transactions: [rroga, tx("s", { data: "2026-08-27", vlera: 50 })],
+        recurring: [schedule("bonus", { lloji: "hyrje", vlera: 500, frekuenca: "mujore", dataETjetres: "2026-08-30" })],
+      });
+      // (1000 + 500) − 0 before today − 30% of 1500 = 1050; the 50 spent today is today's.
+      expect(limit.kursimi.teArdhurat).toBe(1500);
+      expect(limit.disponueshme).toBe(1050);
+      expect(limit.shpenzuarSot).toBe(50);
+    });
+
+    it("stays off before any income this month, and without a goal", () => {
+      const paHyrje = dailyLimit({ ...meSynim, transactions: [tx("s", { data: "2026-08-02", vlera: 100 })] });
+      expect(paHyrje.kursimi.kufizon).toBe(false);
+      expect(paHyrje.disponueshme).toBe(1900);
+      const paSynim = dailyLimit({
+        ...meSynim,
+        objektiviKursimit: 0,
+        transactions: [rroga, tx("s", { data: "2026-08-05", vlera: 900 })],
+      });
+      expect(paSynim.kursimi.kufiri).toBeNull();
+      expect(paSynim.disponueshme).toBe(2100);
+    });
+
+    it("measures the goal on the planned income when that is more than what came in", () => {
+      // The screenshot case: 1806,50 planned, 1674,50 in, 2004,17 out, 30%.
+      const limit = dailyLimit({
+        ...meSynim,
+        teArdhuratPlanifikuara: 1806.5,
+        transactions: [
+          tx("r", { data: "2026-08-01", lloji: "hyrje", vlera: 1674.5 }),
+          tx("s", { data: "2026-08-05", vlera: 2004.17 }),
+        ],
+      });
+      expect(limit.kursimi.teArdhurat).toBe(1806.5);
+      expect(limit.kursimi.ngaPlani).toBe(true);
+      expect(limit.kursimi.synimi).toBeCloseTo(541.95);
+      expect(limit.kursimi.kufiri).toBeCloseTo(1806.5 - 541.95 - 2004.17);
+      expect(limit.caktuar).toBe(false);
+    });
+
+    it("gives the first days of the month a budget before the salary lands", () => {
+      const limit = dailyLimit({
+        ...meSynim,
+        today: "2026-08-03",
+        teArdhuratPlanifikuara: 1000,
+        transactions: [tx("s", { data: "2026-08-01", vlera: 100 })],
+      });
+      // 1000 − 30% − 100 already spent = 600, below the 1900 the balance would allow.
+      expect(limit.disponueshme).toBe(600);
+      expect(limit.kursimi.kufizon).toBe(true);
+    });
+
+    it("a month that earns more than planned saves its share of the extra too", () => {
+      const limit = dailyLimit({ ...meSynim, teArdhuratPlanifikuara: 800, transactions: [rroga] });
+      expect(limit.kursimi.teArdhurat).toBe(1000);
+      expect(limit.kursimi.ngaPlani).toBe(false);
+      expect(limit.kursimi.synimi).toBe(300);
+    });
+
+    it("a fixed limit from Cilësimet still wins", () => {
+      const limit = dailyLimit({
+        ...meSynim,
+        limitiManual: 25,
+        transactions: [rroga, tx("s", { data: "2026-08-05", vlera: 900 })],
+      });
+      expect(limit.limiti).toBe(25);
+    });
+  });
 });
 
 /**
