@@ -117,6 +117,41 @@ export function emriIVenditAfer(pika, transactions = [], rrezja = RREZJA_VENDIT)
   return meIMire?.emri ?? null;
 }
 
+/** How far to look for "places near you" to offer under a fresh pin: wider than one place, so a
+ * reading that landed across the street still offers the right name to tap. */
+export const RREZJA_AFER = 400;
+
+/**
+ * The places already named near a pin, one entry per name (its closest pin), nearest first - the
+ * chips the form offers under a new reading, so a name typed once is a tap every time after, even
+ * when the phone put this visit a little further off than the automatic match allows.
+ */
+export function vendetAfer(pika, transactions = [], { rrezja = RREZJA_AFER, sa = 4 } = {}) {
+  const p = pastroVendndodhjen(pika);
+  if (!p) return [];
+  const sipasEmrit = new Map();
+  for (const tx of transactions) {
+    const v = vendndodhjaE(tx);
+    if (!v?.emri) continue;
+    const d = distancaMetra(p, v);
+    if (d > rrezja) continue;
+    const celesi = celesiEmrit(v.emri);
+    const para = sipasEmrit.get(celesi);
+    if (!para || d < para.distanca) sipasEmrit.set(celesi, { emri: v.emri, distanca: d });
+  }
+  return [...sipasEmrit.values()].sort((a, b) => a.distanca - b.distanca).slice(0, sa);
+}
+
+/**
+ * How far a fresh reading may be from a named place and still take its name without asking: the
+ * usual radius, or the reading's own accuracy when the phone says it is less sure than that (up to
+ * a limit - a reading off by a kilometre names nothing).
+ */
+export function rrezjaPerLexim(saktesia) {
+  const s = Number(saktesia);
+  return Number.isFinite(s) && s > RREZJA_VENDIT ? Math.min(s, 300) : RREZJA_VENDIT;
+}
+
 /**
  * The pins, grouped into places.
  *

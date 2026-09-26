@@ -863,7 +863,14 @@ export const UDHEZIMET = [
         titulli: "Jepini një emër",
         teksti:
           "Shkruani emrin e vendit poshtë pikës (p.sh. Pizzeria Napoli). Herën tjetër që jeni aty, emri vjen vetë, " +
-          "sepse çdo pikë brenda rreth 120 metrave nga një vend me emër e merr atë emër.",
+          "sepse çdo pikë brenda rreth 120 metrave nga një vend me emër e merr atë emër. Kur pika bie pak më larg, " +
+          "vendet me emër përreth dalin si butona me largësinë - një prekje e zgjedh.",
+      },
+      {
+        titulli: "Merreni vetë",
+        teksti:
+          "Te kjo faqe, çelësi «Merre vendndodhjen vetë te çdo transaksion i ri» e merr pikën sapo hapet formulari " +
+          "i një transaksioni të ri - pa e shtypur butonin. Kurrë në sfond dhe kurrë kur ndryshoni një të vjetër.",
       },
       {
         titulli: "Hapeni në hartë",

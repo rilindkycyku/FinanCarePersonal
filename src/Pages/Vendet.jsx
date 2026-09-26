@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { Container, Row, Button, Form, Modal, Alert } from "react-bootstrap";
 import {
   MapPin, Edit3, Trash2, ChevronDown, ChevronUp, ExternalLink, Wallet, Search, ShieldCheck, Info,
-  Footprints,
+  Footprints, LocateFixed,
 } from "lucide-react";
 import NavBar from "../Components/NavBar";
 import Footer from "../Components/Footer";
@@ -131,16 +131,32 @@ function Vendet() {
               checked={vetemPajisje}
               onChange={(e) => ndryshoSinkronizimin(e.target.checked)}
               label={
-                <span>
+                <span className="small fw-semibold">
                   <ShieldCheck size={14} className="me-1" />
                   Mos i dërgo vendndodhjet në cloud
                 </span>
               }
             />
-            <div className="fcp-row-sub mt-1">
+            <div className="fcp-row-sub mt-1 mb-3">
               {vetemPajisje
                 ? "Transaksionet sinkronizohen pa vendndodhjen: secila pajisje i mban vetëm pikat që i ka shënuar vetë."
                 : "Kur sinkronizimi është i lidhur, vendndodhja udhëton me transaksionin te projekti juaj Supabase, si çdo fushë tjetër."}
+            </div>
+            <Form.Check
+              type="switch"
+              id="vendndodhja-automatike"
+              checked={Boolean(profile?.vendndodhjaAutomatike)}
+              onChange={(e) => saveProfile({ ...profile, vendndodhjaAutomatike: e.target.checked })}
+              label={
+                <span className="small fw-semibold">
+                  <LocateFixed size={14} className="me-1" />
+                  Merre vendndodhjen vetë te çdo transaksion i ri
+                </span>
+              }
+            />
+            <div className="fcp-row-sub mt-1">
+              Sapo hapet formulari i një transaksioni të ri, pika merret një herë dhe - pranë një vendi që ia keni vënë
+              emrin - emri plotësohet vetë. Kurrë në sfond dhe kurrë kur ndryshoni një transaksion të vjetër.
             </div>
           </div>
 

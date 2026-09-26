@@ -2265,3 +2265,30 @@ body.light-mode .card.profile-card.fcp-zona-rrezik:hover {
     justify-content: flex-end;
   }
 }
+
+/* Named places near a fresh pin, as taps. */
+.fcp-vendet-afer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.fcp-vendi-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.25rem 0.6rem;
+  border: 1px dashed var(--sp-border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--sp-text);
+  font-size: 0.75rem;
+}
+
+.fcp-vendi-chip span {
+  color: var(--sp-text-muted);
+}
+
+.fcp-vendi-chip:hover {
+  border-color: var(--sp-emerald);
+}
