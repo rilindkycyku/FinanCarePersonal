@@ -9,6 +9,31 @@ e fundit kur rregullohet diçka, dhe e para vetëm kur ndryshon vetë forma e pr
 herë, te `2.0.0`, kur të dhënat mësuan të dalin nga shfletuesi. Datat janë ato të commit-it që e
 ngriti versionin.
 
+## [2.30.0] - 2026-09-29
+
+### Shtuar
+- **Kategoritë e pushimeve: 10 nënkategori të reja te Udhëtime.** *Udhëtime* ishte ndarë për
+  udhëtimin që rezervohet — bileta, hoteli, makina me qira — dhe ndalej aty, pikërisht ku fillon një
+  javë në det. Faturat që vijnë pasi arrini nuk kishin ku të shkonin: shezlongu e çadra çdo mëngjes,
+  kafeja në shëtitore, rezervuari i mbushur rrugës dhe pagesa te tuneli, taksia pas darkës, trageti,
+  roamingu. Të shënuara te rreshtat e përditshëm (*Kafe*, *Benzinë*, *Taksi*) bënin dy dëme
+  njëherësh: pushimet nuk mblidheshin kurrë në një shifër, dhe muaji kur ranë dukej sikur i kishte
+  prishur buxhetet e zakonshme të kafesë e karburantit. Tani *Udhëtime* ka edhe:
+
+  - *Plazh & Pishinë* — shezlong, çadër, pishinë, aquapark.
+  - *Kafe, Pije & Dalje* — kafeja, pijet dhe mbrëmjet jashtë, ndarë nga ushqimi.
+  - *Karburant për Rrugë* dhe *Autostradë & Parkim* — rruga me veturë, tunelet e pagesat rrugore
+    dhe parkimi atje ku rrini.
+  - *Taksi & Transport Lokal* dhe *Traget & Varkë*.
+  - *Vizë & Dokumente*, *Roaming & Internet*, *Këmbim Valutor & Tarifa* dhe *Bagazh & Valixhe*.
+
+  Dalin vetë herën e parë që hapet aplikacioni, pa prekur asgjë nga ç'keni: një kategori që e keni
+  riemërtuar mbetet me emrin tuaj, një që e keni fshirë nuk kthehet, dhe nëse e keni fshirë vetë
+  *Udhëtime*, nënkategoritë e reja nuk ju dalin si kategori kryesore. Sigurimi i udhëtimit mbetet te
+  *Sigurime*, krah policave të tjera. Për të parë sa kushtoi një udhëtim i caktuar, etiketa
+  («pushime2026») vazhdon të jetë përgjigjja, sepse i mbledh edhe shpenzimet e shënuara jashtë
+  *Udhëtimeve*.
+
 ## [2.29.0] - 2026-09-26
 
 ### Shtuar

@@ -98,10 +98,11 @@ sa shpenzohet, sa mbetet dhe sa po kursesh.
   dhe me numërimin e përdorimit real të secilës. Çdo kategori mund të ketë **nënkategori** - p.sh.
   *Ushqim & Pije › Market*, *› Furra*, *› Pije & Ujë*, ose *Kafe & Restorant › Kafe*, *› Drekë në
   Punë*, *› Fast Food* - që i përgjigjen pyetjes që lista e sheshtë nuk e mbulonte: ishte market,
-  drekë në punë apo restorant? Lista e parazgjedhur vjen me **183 nënkategori te 39 kategori
+  drekë në punë apo restorant? Lista e parazgjedhur vjen me **193 nënkategori te 39 kategori
   kryesore** - ushqimi i ndarë deri te bulmeti dhe të ngrirat, karburanti deri te benzina, nafta,
   gazi e rikarikimi elektrik, riparimet deri te hidrauliku, elektricisti dhe bojaxhiu, fatura sipas
-  llojit, udhëtimi i ndarë në bileta, fjetje e transferë, sigurimet një nga një - dhe e njëjta gjë
+  llojit, udhëtimi i ndarë në bileta, fjetje e transferë deri te plazhi, kafeja në pushime,
+  karburanti i rrugës e autostrada, sigurimet një nga një - dhe e njëjta gjë
   vlen edhe për hyrjet, ku *Rroga* ndahet në pagë bazë, orë shtesë, shujta & transport, pagesa të
   prapambetura, pushime e pagesë të 13-të, që të dallohet muaji i zakonshëm nga ai që kishte diçka
   mbi të. Përjashtim bëjnë vetëm ato ku ndarja nuk do të shtonte asgjë (*Këste të Kartelës*,

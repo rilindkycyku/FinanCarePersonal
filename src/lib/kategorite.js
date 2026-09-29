@@ -246,3 +246,25 @@ export function prindiPerRuajtje(categories, kategoria, prindiId) {
   const lejuar = prinderitEMundshem(categories, kategoria).some((c) => c.id === prindiId);
   return lejuar && mundTeKeteNjePrind(categories, kategoria) ? prindiId : null;
 }
+
+/**
+ * The default categories an existing ledger has never seen - what `ensureDefaultCategories` adds at
+ * startup, which is the only way a category shipped in a later release reaches someone whose store
+ * was seeded before it (the store is seeded once, at creation).
+ *
+ * Three rows are held back. One that is already there, under whatever name the user gave it. One
+ * whose id is in `hequra` - the profile's `kategoriTeHequra`, left behind when a default is deleted
+ * - because a category thrown away stays gone. And a subcategory whose parent is missing: someone
+ * who deleted "Udhëtime" said they do not track trips, and shipping its new children into their
+ * list as top-level categories is not what they asked for.
+ *
+ * `ekzistuese` is the ledger's categories, archived ones included - an archived parent still has
+ * a history, and its new children are there for the day it is brought back.
+ */
+export function kategoriteQeMungojne(parazgjedhurat, ekzistuese, hequra = []) {
+  const kaId = new Set(lista(ekzistuese).map((c) => c.id));
+  const teHequra = new Set(hequra || []);
+  return (parazgjedhurat || []).filter(
+    (c) => !kaId.has(c.id) && !teHequra.has(c.id) && (!c.prindi || kaId.has(c.prindi))
+  );
+}

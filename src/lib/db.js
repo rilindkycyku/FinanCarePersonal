@@ -6,6 +6,7 @@
 
 import { DEFAULT_CATEGORIES, DEFAULT_ACCOUNTS } from "./options";
 import { generateDueTransactions } from "./finance";
+import { kategoriteQeMungojne } from "./kategorite";
 import { todayISO } from "./format";
 import { blobNeDataUrl, dataUrlNeBlob, emriSkedarit, ringjeshFaturen, thumbNeDataUrl } from "./images";
 import { krijoZip, lexoZip } from "./zip";
@@ -465,14 +466,11 @@ export async function pastroStoretSink() {
  * A default *subcategory* is held to one more condition: its parent has to be there. Someone who
  * deleted "Ushqim & Pije" a year ago said they do not use it, and shipping five of its
  * subcategories into their list as five new top-level categories is not what they asked for.
+ * (The rule itself is `kategoriteQeMungojne` in kategorite.js, where it is tested.)
  */
 export async function ensureDefaultCategories() {
   const [categories, profile] = await Promise.all([getAll(STORES.categories), getProfile()]);
-  const hequra = new Set(profile?.kategoriTeHequra || []);
-  const ekzistuese = new Set(categories.map((c) => c.id));
-  const munguara = DEFAULT_CATEGORIES.filter(
-    (c) => !ekzistuese.has(c.id) && !hequra.has(c.id) && (!c.prindi || ekzistuese.has(c.prindi))
-  );
+  const munguara = kategoriteQeMungojne(DEFAULT_CATEGORIES, categories, profile?.kategoriTeHequra);
   if (munguara.length === 0) return false;
   // `putSeed`, not `put`: these carry the same fixed ids the user's other devices have been
   // renaming for months, and an untouched default must never win against one of those.
