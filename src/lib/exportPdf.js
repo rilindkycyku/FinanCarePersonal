@@ -14,7 +14,7 @@
 import {
   accountBalance, filterByRange, sortByDateDesc, totalBalance, totalsByCategory, txSignForAccount,
 } from "./finance";
-import { cellText, currencySymbol, formatDate, plainAmount, toNumber, todayISO } from "./format";
+import { cellText, currencySymbol, formatAmount, formatDate, toNumber, todayISO } from "./format";
 import { accountTypeMeta, DEFAULT_CURRENCY, MONTHS_GENITIVE } from "./options";
 import { emriIPlote } from "./kategorite";
 
@@ -221,7 +221,7 @@ export function statementRows({ accounts, categories, transactions, recurring = 
             ? `${nameOf(tx.llogariaId)} → ${nameOf(tx.llogariaDestinacionId)}`
             : nameOf(tx.llogariaId),
         pershkrimi:
-          [tx.pershkrimi, tx.monedhaOrigjinale ? `(${plainAmount(tx.vleraOrigjinale)} ${tx.monedhaOrigjinale})` : ""]
+          [tx.pershkrimi, tx.monedhaOrigjinale ? `(${formatAmount(tx.vleraOrigjinale)} ${tx.monedhaOrigjinale})` : ""]
             .filter(Boolean)
             .join(" ") ||
           (tx.lloji === "transfer" ? "Transfer" : emriIPlote(categories, tx.kategoriaId)) ||
@@ -284,6 +284,10 @@ export async function exportStatementPdf({
   // When set, the caller gets the file back instead of the browser downloading it - what the
   // share sheet needs.
   kthejBlob = false,
+  // The statement's heading when the caller knows the period by name. The dates alone only name a
+  // whole month or year, so the weekly and quarterly emails - and a month still running, which ends
+  // today rather than on the 31st - attached a statement headed "Pasqyra e periudhës".
+  titulli: titulliIDhene = "",
 }) {
   const [{ jsPDF }, autoTableModule] = await Promise.all([import("jspdf"), import("jspdf-autotable")]);
   const autoTable = autoTableModule.default || autoTableModule.autoTable;
@@ -293,11 +297,14 @@ export async function exportStatementPdf({
   const llogaria = llogariaId ? accounts.find((a) => a.id === llogariaId) : null;
   const t = statementRows({ accounts, categories, transactions, recurring, start, end, llogariaId });
 
-  const doc = new jsPDF({ unit: "pt", format: "a4" });
+  // `compress` deflates the page streams and the embedded fonts. Without it a two-page month came
+  // out at ~840 kB - the fonts and every table cell stored as raw text - which as a base64 email
+  // attachment is over a megabyte per report; compressed it is ~70 kB and looks identical.
+  const doc = new jsPDF({ unit: "pt", format: "a4", compress: true });
   const [font, logo] = await Promise.all([embedFonts(doc), loadLogo()]);
   const W = doc.internal.pageSize.getWidth();
   const H = doc.internal.pageSize.getHeight();
-  const money = (v) => `${plainAmount(v)} ${simboli}`;
+  const money = (v) => `${formatAmount(v)} ${simboli}`;
 
   const setText = (size, style = "normal", color = CLR.text) => {
     doc.setFont(font, style);
@@ -326,7 +333,7 @@ export async function exportStatementPdf({
 
   const tani = new Date();
   const dyShifra = (n) => String(n).padStart(2, "0");
-  const titulli = statementTitle(start, end);
+  const titulli = titulliIDhene || statementTitle(start, end);
 
   // "01/01/0001 - 31/12/9999" is a sentinel, not a period anyone recognises: an open-ended
   // statement prints the span its own movements cover, and says so in words when it has none.
@@ -677,10 +684,10 @@ export async function exportStatementPdf({
         r.pershkrimi,
         ...(k.kategoria ? [r.kategoria] : []),
         ...(seksioni.keste ? [r.kesti] : []),
-        plainAmount(shuma(seksioni, r)),
+        formatAmount(shuma(seksioni, r)),
       ]),
       foot: shfaqFund
-        ? [[{ content: "Totali:", colSpan: kolonaVlera, styles: { halign: "right" } }, plainAmount(totali)]]
+        ? [[{ content: "Totali:", colSpan: kolonaVlera, styles: { halign: "right" } }, formatAmount(totali)]]
         : undefined,
       // Statement density: a compact row keeps a long month to as few pages as possible while
       // staying legible on paper (banks print these around 7 pt).
@@ -980,7 +987,7 @@ export async function buildListPdfBlob({ titulli, headers, rows, profile = {} })
   const autoTable = autoTableModule.default || autoTableModule.autoTable;
 
   const gjeresiFaqes = headers.length > 6 ? "landscape" : "portrait";
-  const doc = new jsPDF({ unit: "pt", format: "a4", orientation: gjeresiFaqes });
+  const doc = new jsPDF({ unit: "pt", format: "a4", orientation: gjeresiFaqes, compress: true });
   const [font, logo] = await Promise.all([embedFonts(doc), loadLogo()]);
   const W = doc.internal.pageSize.getWidth();
   const H = doc.internal.pageSize.getHeight();
@@ -1052,7 +1059,7 @@ export async function buildListPdfBlob({ titulli, headers, rows, profile = {} })
     head: [headers],
     body: rows.map((r) => headers.map((h) => stripTags(r[h]) || "-")),
     foot: kaTotale
-      ? [headers.map((h, i) => (totalet[h] !== undefined ? plainAmount(totalet[h]) : i === 0 ? "TOTALI" : ""))]
+      ? [headers.map((h, i) => (totalet[h] !== undefined ? formatAmount(totalet[h]) : i === 0 ? "TOTALI" : ""))]
       : undefined,
     styles: {
       font,

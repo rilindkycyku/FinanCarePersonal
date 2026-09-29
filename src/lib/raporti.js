@@ -225,6 +225,14 @@ export async function gjendjaFunksionit() {
   }
 }
 
+/** A period asked for by hand may still be running: its statement stops at today, the way the email
+ * body does, instead of listing the rest of the month as empty. */
+function deriSot(end, sot = new Date()) {
+  const dy = (n) => String(n).padStart(2, "0");
+  const tani = `${sot.getFullYear()}-${dy(sot.getMonth() + 1)}-${dy(sot.getDate())}`;
+  return tani < end ? tani : end;
+}
+
 /** The statement PDF as base64, or null when it could not be produced - a report that arrives
  * without its attachment is still worth having, so this never takes the email down with it.
  *
@@ -236,9 +244,11 @@ async function pdfBase64({ lloji, periudha, profile, accounts, categories, trans
   try {
     const { exportStatementPdf, statementFilenameFromTitle } = await import("./exportPdf");
     const { start, end } = kufijtePeriudhes(lloji, periudha);
+    const titulli = titulliPeriudhes(lloji, periudha);
     const { blob, filename } = await exportStatementPdf({
-      profile, accounts, categories, transactions, recurring, start, end, kthejBlob: true,
-      filename: statementFilenameFromTitle(titulliPeriudhes(lloji, periudha)),
+      profile, accounts, categories, transactions, recurring, start, end: deriSot(end), kthejBlob: true,
+      titulli,
+      filename: statementFilenameFromTitle(titulli),
     });
     const dataUrl = await blobNeDataUrl(blob);
     return { pdf: String(dataUrl).split(",")[1] || "", filename };

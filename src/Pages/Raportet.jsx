@@ -130,6 +130,7 @@ function Raportet() {
         await exportStatementPdf({
           kthejBlob: true, profile, accounts, categories, transactions, recurring, start,
           end: !eMbyllur && sot < end ? sot : end,
+          titulli: titulliPeriudhes(lloji, periudha),
           filename: statementFilenameFromTitle(titulliPeriudhes(lloji, periudha)),
         })
       );

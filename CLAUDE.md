@@ -31,7 +31,7 @@ npm run dev       # vite --host
 npm run build
 npm run preview
 npm run lint      # eslint . — must stay at 0 errors (4 pre-existing warnings)
-npm test          # vitest run — 32 files, 744 tests, all green
+npm test          # vitest run — 32 files, 753 tests, all green
 npm run test:watch
 npm run ikonat    # regenerates the icons and the two wordmark PNGs from Logo.svg (Playwright)
 ```
@@ -304,5 +304,9 @@ precache, or a waiting version would be described by the old copy.
   cascade.
 - Budgets set on a parent category count the whole family (`familjaSet`).
 - Never accept a Supabase `service_role` / `secret` key — `kontrolloCelesin` refuses it on purpose.
+- Amounts in anything printed (the PDF statement, table PDFs) go through `formatAmount` - grouped like
+  the screen, with plain spaces the embedded font can draw. `plainAmount` is only for cells that feed
+  the Excel export, where a grouped number would stop summing. Both jsPDF documents are built with
+  `compress: true`; without it a monthly statement is ~840 kB instead of ~70 kB.
 - Long operations (ZIP export, import, photo re-compression) block the screen deliberately
   (`PunaNeVazhdim`) — a double tap there means a double import.

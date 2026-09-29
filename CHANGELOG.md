@@ -80,6 +80,29 @@ ngriti versionin.
 - **«Çka ka të re» hapet më lehtë.** Faqja mbante brenda gjithë historinë e versioneve (~95 kB) për të
   treguar tetë të fundit; tani i ka vetëm ato, dhe versionet e vjetra ngarkohen kur i kërkoni. Punon
   njësoj edhe pa internet.
+- **Emailet e raporteve thonë më shumë në krye.** Nën secilën nga tri shifrat e para shkruhet tani
+  krahasimi me periudhën e kaluar - «+57% ndaj korrikut» nën Shpenzime, me të kuqe kur shpenzimet
+  rriten e me të gjelbër kur bien - dhe nën Bilancin sa ndryshoi gjatë periudhës. Krahasimi ishte
+  vetëm në fjalinë e fundit të emailit, pikërisht aty ku lexohet më pak.
+- **Kursimi ka seksionin e vet, me objektivin tuaj.** Kur keni vendosur një objektiv kursimi te
+  Cilësimet, raporti e mat periudhën ndaj tij: «Objektivi 20% (290,00 €) u arrit», ose sa mungoi.
+- **Pasqyra PDF që vjen me email është 12 herë më e vogël.** Një muaj me dy faqe zinte ~840 kB -
+  mbi 1 MB si bashkëngjitje - sepse shkronjat dhe çdo rresht i tabelave ruheshin pa u ngjeshur. Tani
+  zë ~70 kB dhe duket njësoj; e njëjta vlen për PDF-të e tabelave dhe për pasqyrën që shkarkoni.
+- **Shumat në PDF shkruhen si kudo tjetër**: «1.854,32 €» në vend të «1854.32 €», që pasqyra të
+  lexohet njësoj si emaili me të cilin vjen.
+
+### Rregulluar
+- **Pasqyra e javës dhe e tremujorit kanë emrin e tyre.** PDF-ja e bashkëngjitur te raporti javor apo
+  tremujor - dhe ajo e një muaji ende në vazhdim - titullohej «Pasqyra e periudhës», sepse nga datat
+  vetëm një muaj i plotë apo një vit njihen me emër. Tani titullohet si emaili: «Pasqyra e javës 10-16
+  gusht 2026». Një muaj i kërkuar me dorë para se të mbarojë ndalet te dita e sotme, si emaili.
+- **Shiritat bosh vizatohen bosh.** Në email, një shirit pa asgjë për të mbushur - një normë kursimi
+  negative, një qëllim ku s'u fut asgjë, një borxh ku s'u pagua asgjë - dilte gjysmë i mbushur, sepse
+  tabela e emailit i ndante hapësirën përgjysmë. Tani del bosh, dhe shifra pranë tij e thotë.
+- **«Sa mbeti nga çfarë hyri»** nuk duket më si rreshti i fundit i etiketave apo i udhëtimeve: ka
+  titullin e vet.
+- **Një udhëtim që mbaron bashkë me javën** nuk quhet më «ende në vazhdim» te raporti i asaj jave.
 
 ## [2.29.0] - 2026-09-26
 

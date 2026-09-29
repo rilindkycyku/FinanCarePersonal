@@ -43,7 +43,7 @@ import {
   NGJYRAT, grafikuPjeseve, grafikuShtyllave, matesi, paragraf, qelizaShifres, shiritetHorizontale,
   titulliSeksionit,
 } from "./raportGrafike";
-import { DEFAULT_CURRENCY } from "./options";
+import { DEFAULT_CURRENCY, MONTHS_GENITIVE } from "./options";
 import { frequencyLabel } from "./finance";
 
 const { EMERALD, LINE, MUTED, NAVY, RED, TEXT, AMBER } = NGJYRAT;
@@ -141,15 +141,54 @@ function krahasimiNeFjale(f) {
   return `${perqindjeMeShenje(p)} ndaj ${etiketaPeriudhes(f.lloji, f.krahasimi.periudha)}`;
 }
 
-const rreshtiKursimit = (f, monedha) =>
-  f.kursimi === null
-    ? ""
-    : `<tr><td style="padding:18px 0 0;">${matesi({
-        perqindja: f.kursimi,
-        etiketa: "Sa mbeti nga çfarë hyri",
-        vlera: `${formatPercent(f.kursimi)} · ${meShenje(f.neto, monedha)}`,
-        ngjyra: f.kursimi >= 0 ? EMERALD : RED,
-      })}</td></tr>`;
+/**
+ * The savings rate, under a heading of its own. It used to follow whichever section came before it
+ * without one, and so read as the last row of the tags - or, once trips were added, of the trips.
+ *
+ * With a savings target on the profile, the line under the bar measures the period against it: made
+ * it, or how much more would have had to stay. A period that spent more than it earned draws an
+ * empty bar and says so in red - a bar filled to "-23%" cannot be drawn honestly.
+ */
+const rreshtiKursimit = (f, monedha) => {
+  if (f.kursimi === null) return "";
+  const o = f.objektivi;
+  const nen = o
+    ? o.arritur
+      ? `Objektivi ${formatPercent(o.perqindja)} (${formatMoney(o.shuma, monedha)}) u arrit`
+      : `Objektivi ${formatPercent(o.perqindja)} (${formatMoney(o.shuma, monedha)}) - mungojnë ${formatMoney(o.mungon, monedha)}`
+    : "";
+  return `${titulliSeksionit("Kursimi")}
+            <tr><td style="padding:4px 0 0;">${matesi({
+              perqindja: f.kursimi,
+              etiketa: "Sa mbeti nga çfarë hyri",
+              vlera: `${formatPercent(f.kursimi)} · ${meShenje(f.neto, monedha)}`,
+              ngjyra: f.kursimi >= 0 ? (o && !o.arritur ? AMBER : EMERALD) : RED,
+              nen,
+            })}</td></tr>`;
+};
+
+/**
+ * "ndaj korrikut" - the previous period, short enough for the line under a figure. The sentence at
+ * the bottom of the email names it in full; a tile has room for a word or two.
+ */
+function ndajParaardheses(lloji, periudha) {
+  const teksti = String(periudha || "");
+  if (lloji === MUJOR) return `ndaj ${MONTHS_GENITIVE[Number(teksti.slice(5, 7)) - 1] || "muajit të kaluar"}`;
+  if (lloji === JAVOR) return "ndaj javës së kaluar";
+  if (lloji === TREMUJOR) return "ndaj tremujorit të kaluar";
+  return `ndaj ${teksti}`;
+}
+
+/** The comparison under one figure, coloured by whether the move is good news for *that* figure. */
+function nenKrahasimi(f, fusha, rritjaEMire) {
+  const p = f.krahasimi?.[fusha];
+  if (p === null || p === undefined || !Number.isFinite(p)) return null;
+  const rrumbullak = Math.round(p);
+  return {
+    teksti: `${perqindjeMeShenje(p)} ${ndajParaardheses(f.lloji, f.krahasimi.periudha)}`,
+    ngjyra: rrumbullak === 0 ? MUTED : rrumbullak > 0 === rritjaEMire ? EMERALD : RED,
+  };
+}
 
 /**
  * Where the money went by the reader's own labels, under the section that says where it went by
@@ -187,8 +226,9 @@ const seksioniUdhetimeve = (f, monedha) =>
                     const nen = [
                       `${dataShkurt(u.dataFillimit)} - ${dataShkurt(u.dataMbarimit)} · ${u.ditet} ditë`,
                       u.mesatarjaDitore !== null ? `${formatMoney(u.mesatarjaDitore, monedha)} në ditë atje` : "",
+                      u.mbiBuxhet > 0 ? `${formatMoney(u.mbiBuxhet, monedha)} mbi buxhet` : "",
                       u.kryesorja ? `më së shumti ${u.kryesorja.emri}` : "",
-                      u.statusi === "aktiv" ? "ende në vazhdim" : "",
+                      u.neVazhdim ? "ende në vazhdim" : "",
                     ]
                       .filter(Boolean)
                       .join(" · ");
@@ -645,6 +685,7 @@ export function ndertoRaportin({
     goals,
     borxhet,
     udhetimet,
+    objektiviKursimit: profile.objektiviKursimit,
     sot,
   });
   const titulli = titulliPeriudhes(lloji, celesi);
@@ -711,9 +752,12 @@ export function ndertoRaportin({
             </td></tr>
             <tr><td>
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
-${qelizaShifres("Hyrje", formatMoney(f.hyrjet, monedha), EMERALD)}
-${qelizaShifres("Shpenzime", formatMoney(f.daljet, monedha), RED)}
-${qelizaShifres("Bilanci", formatMoney(f.perfundimtar, monedha), NAVY)}
+${qelizaShifres("Hyrje", formatMoney(f.hyrjet, monedha), EMERALD, "33%", nenKrahasimi(f, "hyrjetPerqindje", true))}
+${qelizaShifres("Shpenzime", formatMoney(f.daljet, monedha), RED, "33%", nenKrahasimi(f, "shpenzimetPerqindje", false))}
+${qelizaShifres("Bilanci", formatMoney(f.perfundimtar, monedha), NAVY, "33%", {
+  teksti: `${meShenje(f.neto, monedha)} ${f.epjesshme ? "deri tani" : "gjatë periudhës"}`,
+  ngjyra: f.neto >= 0 ? EMERALD : RED,
+})}
               </tr></table>
             </td></tr>
             ${
@@ -820,7 +864,17 @@ ${qelizaShifres("Bilanci", formatMoney(f.perfundimtar, monedha), NAVY)}
               ),
             ]
           : []),
-        ...(f.kursimi === null ? [] : ["", `Sa mbeti nga çfarë hyri: ${formatPercent(f.kursimi)}`]),
+        ...(f.kursimi === null
+          ? []
+          : [
+              "",
+              `Sa mbeti nga çfarë hyri: ${formatPercent(f.kursimi)}` +
+                (f.objektivi
+                  ? f.objektivi.arritur
+                    ? ` (objektivi ${formatPercent(f.objektivi.perqindja)} u arrit)`
+                    : ` (objektivi ${formatPercent(f.objektivi.perqindja)} - mungojnë ${formatMoney(f.objektivi.mungon, monedha)})`
+                  : ""),
+            ]),
         "",
         `${f.nrRreshtave} transaksione${krahasimiNeFjale(f) ? ` · shpenzimet ${krahasimiNeFjale(f)}` : ""}.`,
       ];
@@ -829,8 +883,12 @@ ${qelizaShifres("Bilanci", formatMoney(f.perfundimtar, monedha), NAVY)}
     titulli,
     `${f.start} - ${f.fundiEfektiv || f.end}${f.epjesshme ? " (periudha ende në vazhdim)" : ""}`,
     "",
-    `Hyrje: ${formatMoney(f.hyrjet, monedha)}`,
-    `Shpenzime: ${formatMoney(f.daljet, monedha)}`,
+    `Hyrje: ${formatMoney(f.hyrjet, monedha)}${
+      nenKrahasimi(f, "hyrjetPerqindje", true) ? ` (${nenKrahasimi(f, "hyrjetPerqindje", true).teksti})` : ""
+    }`,
+    `Shpenzime: ${formatMoney(f.daljet, monedha)}${
+      nenKrahasimi(f, "shpenzimetPerqindje", false) ? ` (${nenKrahasimi(f, "shpenzimetPerqindje", false).teksti})` : ""
+    }`,
     `Bilanci në fund: ${formatMoney(f.perfundimtar, monedha)} (${meShenje(f.neto, monedha)})`,
     ...rreshtaTekst,
     "",

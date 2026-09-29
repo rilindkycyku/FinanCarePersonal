@@ -123,7 +123,18 @@ describe("markup-i", () => {
 
   it("draws a full bar for anything past the limit rather than overflowing the frame", () => {
     expect(matesi({ perqindja: 180, etiketa: "Buxheti", vlera: "180%" })).toContain('width="100%"');
-    expect(matesi({ perqindja: -20 })).toContain('width="0%"');
+  });
+
+  it("draws nothing filled for nothing, rather than a cell the table splits in half", () => {
+    // A 0%-wide cell holding &nbsp; is given half the row by an email table: a savings rate of -23%
+    // and a goal nothing went into both used to arrive as a bar half full.
+    [-20, 0].forEach((perqindja) => {
+      const html = matesi({ perqindja, ngjyra: "#ef4444" });
+      expect(html).not.toContain("#ef4444");
+      expect(html).not.toMatch(/width="0%"/);
+    });
+    // And a bar that is full has no empty remainder cell beside it.
+    expect(matesi({ perqindja: 100 }).match(/&nbsp;/g)).toHaveLength(1);
   });
 
   it("carries a line under the bar when it is given one, and no empty row when it is not", () => {

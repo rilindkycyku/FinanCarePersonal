@@ -84,6 +84,19 @@ export function normaEKursimit(hyrjet, daljet) {
   return hyrjet > 0 ? ((hyrjet - daljet) / hyrjet) * 100 : null;
 }
 
+/**
+ * The savings target measured on this period: the share the profile aims for, the amount that
+ * share is of what came in, and how far short the period fell (0 when it made it). Left out when no
+ * target is set, and when nothing came in - "save 20% of nothing" is not a target anyone missed.
+ */
+export function objektiviIPeriudhes(objektivi, hyrjet, daljet) {
+  const perqindja = toNumber(objektivi);
+  if (!(perqindja > 0) || !(hyrjet > 0)) return null;
+  const shuma = (hyrjet * perqindja) / 100;
+  const kursyer = hyrjet - daljet;
+  return { perqindja, shuma, mungon: Math.max(shuma - kursyer, 0), arritur: kursyer >= shuma };
+}
+
 /** The one purchase the period will be remembered by. Transfers are skipped: moving your own money
  * between your own accounts is not a purchase, however large. */
 function shpenzimiMeIMadh(rreshtat, categories) {
@@ -194,12 +207,17 @@ function udhetimetEPeriudhes(udhetimet, transactions, categories, start, deri) {
         dataFillimit: u.dataFillimit,
         dataMbarimit: u.dataMbarimit,
         statusi: p.statusi,
+        // Still going *after* the stretch reported on. A trip whose last day is the week's last day
+        // is over as far as that week is concerned, even though `statusi` - measured on that very
+        // day - calls it running.
+        neVazhdim: u.dataMbarimit > deri,
         ditet: p.ditet,
         kosto: p.kosto,
         mesatarjaDitore: p.mesatarjaDitore,
         buxheti: p.buxheti,
         perqindja: p.perqindja,
         tejkaluar: p.tejkaluar,
+        mbiBuxhet: p.tejkaluar ? p.kosto - p.buxheti : 0,
         kryesorja: p.sipasKategorive[0] ? { emri: p.sipasKategorive[0].emri, vlera: p.sipasKategorive[0].vlera } : null,
       };
     });
@@ -293,6 +311,9 @@ export function figuratERaportit({
   goals = [],
   borxhet = [],
   udhetimet = [],
+  // The profile's savings target, in percent. Passed on its own rather than as the profile: this
+  // file works from the ledger, and the one setting it reads should be visible at the call.
+  objektiviKursimit = null,
   sot = null,
 } = {}) {
   const { start, end } = kufijtePeriudhes(lloji, periudha);
@@ -344,6 +365,7 @@ export function figuratERaportit({
     etiketat: totalsByTag(rreshtat).slice(0, SA_ETIKETA),
     udhetimet: udhetimetEPeriudhes(udhetimet, transactions, categories, start, deri),
     kursimi: normaEKursimit(t.hyrjet, t.daljet),
+    objektivi: objektiviIPeriudhes(objektiviKursimit, t.hyrjet, t.daljet),
     meIMadhi: shpenzimiMeIMadh(rreshtat, categories),
     krahasimi: rreshtatPara.length
       ? {

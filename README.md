@@ -279,7 +279,10 @@ sa shpenzohet, sa mbetet dhe sa po kursesh.
 - **Raportet** - faqja që i hap të katër raportet (java, muaji, tremujori, viti) brenda aplikacionit,
   për çdo periudhë, pa asnjë konfigurim: i njëjti raport që mund t'ju vijë me email, i llogaritur në
   pajisjen tuaj. Shkarkohet si PDF, printohet, ose - kur keni lidhur projektin - dërgohet me email.
-  Raportet përmbajnë edhe udhëtimet që ranë në periudhë, secili me koston dhe buxhetin e vet.
+  Raportet përmbajnë edhe udhëtimet që ranë në periudhë, secili me koston dhe buxhetin e vet, dhe
+  krahasimin me periudhën e kaluar nën secilën shifër të kreut; kur keni objektiv kursimi, periudha
+  matet ndaj tij. Pasqyra PDF që u shtohet emaileve ngjeshet (~70 kB për një muaj) dhe titullohet
+  sipas periudhës - edhe për javën e tremujorin.
 - **Raportet me email (opsionale)** - katër raporte, secili me çelësin e vet: **javor**, **mujor**,
   **tremujor** dhe **vjetor**. Sa herë mbyllet një periudhë, hera e parë që hapet aplikacioni pas saj
   dërgon me email pasqyrën e asaj periudhe - shifrat kryesore, grafikët e periudhës (ditët e javës,

@@ -498,3 +498,26 @@ describe("raporti brenda aplikacionit", () => {
     expect(faqja).toContain("u llogarit në këtë pajisje");
   });
 });
+
+describe("shifrat e kokës dhe kursimi", () => {
+  it("puts the comparison with the previous period under the figure it belongs to", () => {
+    // July spent 120 against June's 60: +100%, and a rise in spending is bad news, so it is red.
+    const { html, text } = ndertimi();
+    expect(html).toContain("+100% ndaj qershorit");
+    expect(html).toMatch(/color:#[0-9a-f]{6};padding-top:5px;white-space:nowrap;">\+100% ndaj qershorit/i);
+    expect(text).toContain("Shpenzime: 120,00 € (+100% ndaj qershorit)");
+    // June had no income, so there is nothing to compare income against - and no line invented.
+    expect(html).not.toMatch(/Hyrje[\s\S]{0,400}ndaj qershorit[\s\S]{0,40}Shpenzime/);
+  });
+
+  it("gives the savings rate its own heading and measures it against the target", () => {
+    const pa = ndertimi().html;
+    expect(pa).toContain("Kursimi");
+    expect(pa).not.toContain("Objektivi");
+
+    // 900 in, 120 out: 780 kept, well past a 20% target of 180.
+    const me = ndertimi({ profile: { emri: "Rilind", monedha: "EUR", objektiviKursimit: 20 } });
+    expect(me.html).toContain("Objektivi 20% (180,00 €) u arrit");
+    expect(me.text).toContain("(objektivi 20% u arrit)");
+  });
+});
