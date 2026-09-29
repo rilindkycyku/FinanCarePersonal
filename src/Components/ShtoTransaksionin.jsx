@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Modal, Button, Form, Row, Col, Alert } from "react-bootstrap";
-import { TrendingUp, TrendingDown, ArrowRightLeft, Wand2 } from "lucide-react";
+import { TrendingUp, TrendingDown, ArrowRightLeft, Wand2, Plane, Split, Plus, X } from "lucide-react";
 import { useData } from "../Context/DataContext";
 import MonedhaTjeter from "./MonedhaTjeter";
 import VleraInput from "./VleraInput";
@@ -14,12 +14,15 @@ import Ndihme from "./Ndihme";
 import { makeId, sinkronizoFaturat, STORES } from "../lib/db";
 import { currencySymbol, formatMoney, toNumber, todayISO } from "../lib/format";
 import { etiketatE, pastroEtiketat, perdorimiEtiketave } from "../lib/etiketat";
-import { RITMI_MUJOR, convertedAmount, currencyFields, dailyLimit, goalProgress } from "../lib/finance";
+import {
+  RITMI_MUJOR, convertedAmount, currencyFields, dailyLimit, goalProgress, ndajFaturen, pjesetENdarjes,
+} from "../lib/finance";
 import { njofto, njoftoListen } from "../lib/njoftimet";
 import { mesoRregullen, sugjeroKategorine } from "../lib/rregullat";
 import { paralajmerimetPasTransaksionit } from "../lib/paralajmerimet";
-import { kategoriTeHapura } from "../lib/kategorite";
+import { emriIPlote, kategoriTeHapura } from "../lib/kategorite";
 import { pastroVendndodhjen } from "../lib/vendndodhjet";
+import { aplikoUdhetimin, udhetimiPerFormular } from "../lib/udhetimet";
 import "./ModalForms.css";
 
 const TYPE_BUTTONS = [
@@ -64,18 +67,23 @@ function ShtoTransaksionin({
   fikseLloji,
   qellimiFiksuar,
   destinacioniFillestar,
+  udhetimiFiksuar,
 }) {
-  const { accounts, categories, goals, budgets, transactions, planet, recurring, faturat, save, saveProfile,
-    reload, profile, monedha, simboli, njeLlogari, llogariaKryesore, sipasPeriudhes } = useData();
+  const { accounts, categories, goals, budgets, transactions, planet, recurring, faturat, save, saveMany, saveProfile,
+    reload, profile, monedha, simboli, njeLlogari, llogariaKryesore, sipasPeriudhes, udhetimet } = useData();
   const [tx, setTx] = useState(blank(llojiFillestar));
   // Invoice photos are staged here and only written once the transaction itself is saved, so a
   // cancelled form leaves nothing behind (see sinkronizoFaturat).
   const [faturaLista, setFaturaLista] = useState([]);
   const [error, setError] = useState("");
+  // The rest of a receipt split across categories: `{ id, kategoriaId, vlera }` per extra part. The
+  // category at the top of the form keeps whatever is left (`ndajFaturen` in finance.js).
+  const [pjeset, setPjeset] = useState([]);
 
   useEffect(() => {
     if (!show) return;
     setError("");
+    setPjeset([]);
     setFaturaLista(initial ? faturat.filter((f) => f.transaksioniId === initial.id) : []);
     if (initial) {
       // In single-account mode the pickers are hidden, so an id pointing at an account that no
@@ -107,16 +115,36 @@ function ShtoTransaksionin({
     // New transaction: preselect the goal, when contributing, and the account only where there is
     // no real choice to make.
     const aktive = accounts.filter((a) => !a.arkivuar);
+    /**
+     * During a trip's days a new expense opens already carrying the trip's tag, in the currency of
+     * the place - the whole point of trips is that nobody has to remember to do either on the
+     * fifth coffee of the day. Opened from a trip's own page, the trip is fixed instead, and the
+     * date moves into it when today is past its end (a receipt found in a pocket after coming home).
+     */
+    const meUdhetimin = (fushat) => {
+      const u = udhetimiFiksuar || udhetimiPerFormular(udhetimet, fushat);
+      if (!u) return { ...fushat, udhetimiAuto: null, udhetimiHequr: null };
+      const data = udhetimiFiksuar && fushat.data > u.dataMbarimit ? u.dataFillimit : fushat.data;
+      return {
+        ...fushat,
+        data,
+        ...aplikoUdhetimin(fushat, null, u, profile.kurset),
+        udhetimiAuto: u.id,
+        udhetimiHequr: null,
+      };
+    };
     if (njeLlogari) {
       // One account holds everything, so a contribution to a savings goal stays inside it: the
       // transfer is booked with the same account on both ends and moves no money (finance.js).
       const kryesore = llogariaKryesore?.id || "";
-      setTx({
-        ...blank(llojiFillestar),
-        llogariaId: kryesore,
-        llogariaDestinacionId: llojiFillestar === "transfer" ? kryesore : "",
-        qellimiId: qellimiFiksuar || "",
-      });
+      setTx(
+        meUdhetimin({
+          ...blank(llojiFillestar),
+          llogariaId: kryesore,
+          llogariaDestinacionId: llojiFillestar === "transfer" ? kryesore : "",
+          qellimiId: qellimiFiksuar || "",
+        })
+      );
       return;
     }
     const destinacioni =
@@ -136,15 +164,57 @@ function ShtoTransaksionin({
     // somewhere that is not that same account, or it would be the no-op transfer the form rejects
     // below anyway.
     const zgjidhVetiu = Boolean(destinacioni) || aktive.length <= 1;
-    setTx({
-      ...blank(llojiFillestar),
-      llogariaId: zgjidhVetiu
-        ? (destinacioni ? aktive.find((a) => a.id !== destinacioni)?.id : aktive[0]?.id) || ""
-        : "",
-      llogariaDestinacionId: destinacioni,
-      qellimiId: qellimiFiksuar || "",
-    });
-  }, [show, initial, llojiFillestar, qellimiFiksuar, destinacioniFillestar, accounts, faturat, njeLlogari, llogariaKryesore]);
+    setTx(
+      meUdhetimin({
+        ...blank(llojiFillestar),
+        llogariaId: zgjidhVetiu
+          ? (destinacioni ? aktive.find((a) => a.id !== destinacioni)?.id : aktive[0]?.id) || ""
+          : "",
+        llogariaDestinacionId: destinacioni,
+        qellimiId: qellimiFiksuar || "",
+      })
+    );
+    // `udhetimet` and the remembered rates are read only when a new form opens; the ledger reloads
+    // them together with the accounts listed here, so they need no trigger of their own.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [show, initial, llojiFillestar, qellimiFiksuar, destinacioniFillestar, accounts, faturat, njeLlogari, llogariaKryesore, udhetimiFiksuar]);
+
+  /**
+   * A new transaction whose date or type changes may move in or out of a trip: dated back into the
+   * holiday it picks the trip up, switched to income it drops it (lib/udhetimet.js says why). Only
+   * what the trip put there moves - `aplikoUdhetimin` - and a trip the user took off by hand stays
+   * off. An edit is never retagged behind the user's back, and neither is a form opened from a
+   * trip's own page.
+   */
+  const rifreskoUdhetimin = (prev, next) => {
+    if (initial?.id || udhetimiFiksuar) return next;
+    let iRi = udhetimiPerFormular(udhetimet, next);
+    if (iRi && iRi.id === prev.udhetimiHequr) iRi = null;
+    const vjeter = udhetimet.find((u) => u.id === prev.udhetimiAuto) || null;
+    if ((iRi?.id ?? null) === (vjeter?.id ?? null)) return next;
+    return { ...next, ...aplikoUdhetimin(next, vjeter, iRi, profile.kurset), udhetimiAuto: iRi?.id ?? null };
+  };
+
+  const udhetimiIVene = useMemo(
+    () => udhetimet.find((u) => u.id === tx.udhetimiAuto) || null,
+    [udhetimet, tx.udhetimiAuto]
+  );
+
+  const shtoPjese = () => setPjeset((prev) => [...prev, { id: makeId("pj"), kategoriaId: "", vlera: "" }]);
+  const ndryshoPjesen = (id, fushat) => setPjeset((prev) => prev.map((p) => (p.id === id ? { ...p, ...fushat } : p)));
+  const hiqPjesen = (id) => setPjeset((prev) => prev.filter((p) => p.id !== id));
+  // In the currency the receipt was billed in, because that is what the parts are typed in.
+  const mbetjaEPjeseve = toNumber(tx.vlera) - pjeset.reduce((sum, p) => sum + toNumber(p.vlera), 0);
+  // An existing row that came out of a split says so, with the receipt it came from.
+  const ndarjaEkzistuese = useMemo(() => (initial?.id ? pjesetENdarjes(transactions, initial) : []), [transactions, initial]);
+
+  const hiqUdhetimin = () =>
+    setTx((prev) => ({
+      ...prev,
+      ...aplikoUdhetimin(prev, udhetimiIVene, null),
+      udhetimiAuto: null,
+      udhetimiHequr: udhetimiIVene?.id ?? null,
+    }));
 
   const aktive = useMemo(() => accounts.filter((a) => !a.arkivuar), [accounts]);
 
@@ -291,7 +361,7 @@ function ShtoTransaksionin({
       // Categories belong to exactly one direction, so a category picked for the previous type
       // would be invalid - clear it unless it happens to fit the new one.
       const keepCategory = categories.find((c) => c.id === prev.kategoriaId)?.lloji === lloji;
-      return {
+      return rifreskoUdhetimin(prev, {
         ...prev,
         lloji,
         kategoriaId: keepCategory ? prev.kategoriaId : "",
@@ -300,7 +370,7 @@ function ShtoTransaksionin({
             ? prev.llogariaDestinacionId || aktive.find((a) => a.id !== prev.llogariaId)?.id || ""
             : "",
         qellimiId: lloji === "hyrje" ? "" : prev.qellimiId,
-      };
+      });
     });
     setError("");
   };
@@ -357,10 +427,16 @@ function ShtoTransaksionin({
       // Carried through like the debt link above, so editing a bill's transaction from here keeps
       // it attached to its shared-expense group.
       grupiId: tx.grupiId || null,
+      // Which receipt this row was split from, kept through an edit like the links above.
+      ndarjaId: tx.ndarjaId || null,
       ...monedhat,
     };
 
-    await save(STORES.transactions, rekordi);
+    // One receipt across several categories is saved as several ordinary rows - see `ndajFaturen`.
+    const { rekordet, gabimi } = isTransfer ? { rekordet: [rekordi], gabimi: "" } : ndajFaturen(rekordi, pjeset, { makeId });
+    if (gabimi) return setError(gabimi);
+    if (rekordet.length > 1) await saveMany(rekordet.map((r) => [STORES.transactions, r]));
+    else await save(STORES.transactions, rekordi);
 
     // Only when *this* entry is what crossed the line: comparing the day before and after it keeps
     // the app from notifying again on every expense that follows an already-blown limit.
@@ -373,7 +449,7 @@ function ShtoTransaksionin({
         teArdhuratPlanifikuara: profile.teArdhuratMujore, sipasPeriudhes,
       };
       const para = dailyLimit({ ...bazat, transactions: tjeret });
-      const pas = dailyLimit({ ...bazat, transactions: [...tjeret, rekordi] });
+      const pas = dailyLimit({ ...bazat, transactions: [...tjeret, ...rekordet] });
       if (!para.tejkaluar && pas.tejkaluar) {
         njofto(
           "Limiti ditor u tejkalua",
@@ -385,10 +461,15 @@ function ShtoTransaksionin({
     // The rest of the crossings this record may have caused - a budget three quarters gone, a
     // savings goal reached. Same rule as the limit above: the ledger before and after are compared,
     // so nothing announces a state that was already true.
-    njoftoListen(
-      paralajmerimetPasTransaksionit({
-        profile, categories, budgets, goals, transactions, rekordi, monedha,
-      })
+    // Row by row for a split receipt, each measured against the ledger with the rows before it, so a
+    // budget crossed by the second part is announced once and by that part.
+    rekordet.forEach((r, i) =>
+      njoftoListen(
+        paralajmerimetPasTransaksionit({
+          profile, categories, budgets, goals, rekordi: r, monedha,
+          transactions: [...transactions.filter((t) => !rekordet.some((x) => x.id === t.id)), ...rekordet.slice(0, i)],
+        })
+      )
     );
 
     // Two things the profile remembers from a saved transaction: the exchange rate, so the next
@@ -532,7 +613,10 @@ function ShtoTransaksionin({
                 type="date"
                 className="fcp-krah-vleres"
                 value={tx.data}
-                onChange={(e) => setField("data", e.target.value)}
+                onChange={(e) => {
+                  const data = e.target.value;
+                  setTx((prev) => rifreskoUdhetimin(prev, { ...prev, data }));
+                }}
                 required
               />
             </Form.Group>
@@ -615,6 +699,70 @@ function ShtoTransaksionin({
               </Form.Group>
             )}
 
+            {!isTransfer && (
+              <Col md={12} className="pt-0">
+                {ndarjaEkzistuese.length > 1 && (
+                  <div className="fcp-modal-hint mb-1">
+                    <Split size={12} className="me-1" />
+                    Pjesë e një fature të ndarë në {ndarjaEkzistuese.length} kategori - gjithsej{" "}
+                    {formatMoney(ndarjaEkzistuese.reduce((s2, t) => s2 + toNumber(t.vlera), 0), monedha)}. Ndryshimi prek vetëm
+                    këtë pjesë.
+                  </div>
+                )}
+                {pjeset.length === 0 ? (
+                  <button type="button" className="btn btn-link btn-sm p-0 fcp-ndarja-hap" onClick={shtoPjese}>
+                    <Split size={13} className="me-1" />
+                    Ndaje në disa kategori
+                  </button>
+                ) : (
+                  <div className="fcp-ndarja">
+                    <div className="fcp-ndarja-titulli">
+                      <Split size={13} className="me-1" /> Pjesë të së njëjtës faturë në kategori të tjera
+                    </div>
+                    {pjeset.map((p) => (
+                      <div className="fcp-ndarja-rresht" key={p.id}>
+                        <div className="fcp-ndarja-kategoria">
+                          <ZgjedhesiKategorive
+                            id={`tx-pjesa-${p.id}`}
+                            size="sm"
+                            categories={categories}
+                            lloji={tx.lloji}
+                            value={p.kategoriaId}
+                            onChange={(kategoriaId) => ndryshoPjesen(p.id, { kategoriaId })}
+                          />
+                        </div>
+                        <div className="fcp-ndarja-vlera">
+                          <VleraInput
+                            compact
+                            value={p.vlera}
+                            onChange={(vlera) => ndryshoPjesen(p.id, { vlera })}
+                            simboli={tx.monedhaOrigjinale ? currencySymbol(tx.monedhaOrigjinale) : simboli}
+                            titulliKalkulatorit="Vlera e pjesës"
+                            aria-label="Vlera e pjesës"
+                          />
+                        </div>
+                        <button type="button" className="fcp-icon-action delete" title="Hiq pjesën" onClick={() => hiqPjesen(p.id)}>
+                          <X size={14} />
+                        </button>
+                      </div>
+                    ))}
+                    <div className="fcp-ndarja-fundi">
+                      <button type="button" className="btn btn-link btn-sm p-0" onClick={shtoPjese}>
+                        <Plus size={13} className="me-1" /> Shto pjesë
+                      </button>
+                      <span className={mbetjaEPjeseve > 0 ? "fcp-modal-hint m-0" : "fcp-modal-hint m-0 text-danger"}>
+                        {tx.kategoriaId ? emriIPlote(categories, tx.kategoriaId) : "Kategoria sipër"} merr{" "}
+                        <strong>
+                          {formatMoney(Math.max(mbetjaEPjeseve, 0), tx.monedhaOrigjinale || monedha)}
+                        </strong>
+                        {mbetjaEPjeseve <= 0 && " - pjesët e kalojnë totalin"}
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </Col>
+            )}
+
             <Form.Group as={Col} md={12} controlId="tx-pershkrimi">
               <Form.Label>Përshkrimi</Form.Label>
               <Form.Control
@@ -657,6 +805,18 @@ function ShtoTransaksionin({
                 sugjerime={etiketatEPerdorura}
                 onChange={(etiketat) => setField("etiketat", etiketat)}
               />
+              {udhetimiIVene && (
+                <div className="fcp-modal-hint fcp-udh-hint">
+                  <Plane size={12} className="me-1" style={{ color: udhetimiIVene.ngjyra }} />
+                  Udhëtimi «{udhetimiIVene.emri}»: etiketa
+                  {udhetimiIVene.monedha && tx.monedhaOrigjinale === udhetimiIVene.monedha ? ` dhe monedha (${udhetimiIVene.monedha})` : ""} u vunë vetë.
+                  {!udhetimiFiksuar && (
+                    <button type="button" className="btn btn-link btn-sm p-0 ms-1 align-baseline" onClick={hiqUdhetimin}>
+                      Nuk i përket
+                    </button>
+                  )}
+                </div>
+              )}
             </Col>
 
             {tx.lloji !== "hyrje" && qellimetAktive.length > 0 && (
@@ -712,7 +872,11 @@ function ShtoTransaksionin({
             Anulo
           </Button>
           <Button type="submit" className="btn-primary">
-            {initial?.id ? "Ruaj Ndryshimet" : "Ruaj Transaksionin"}
+            {pjeset.length > 0 && !isTransfer
+              ? `Ruaj ${pjeset.length + 1} Pjesët`
+              : initial?.id
+                ? "Ruaj Ndryshimet"
+                : "Ruaj Transaksionin"}
           </Button>
         </Modal.Footer>
       </Form>

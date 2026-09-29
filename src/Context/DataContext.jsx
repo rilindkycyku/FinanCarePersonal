@@ -35,6 +35,7 @@ const EMPTY = {
   borxhet: [],
   planet: [],
   grupet: [],
+  udhetimet: [],
   faturat: [],
 };
 

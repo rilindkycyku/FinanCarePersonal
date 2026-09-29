@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Alert, Button, Card, Form, Spinner } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import {
-  AlertTriangle, Check, Clock, CloudOff, Copy, ExternalLink, Mail, RefreshCw, Send,
+  AlertTriangle, Check, CheckCircle2, Clock, CloudOff, Copy, Eye, ExternalLink, Mail, RefreshCw, Send,
 } from "lucide-react";
 import { useData } from "../Context/DataContext";
 import { useDialog } from "../Context/DialogContext";
@@ -43,7 +43,7 @@ const koha = (iso) => {
  * rather than four cards.
  */
 function Raportet() {
-  const { profile, saveProfile, accounts, categories, transactions, recurring, budgets, goals, borxhet } =
+  const { profile, saveProfile, accounts, categories, transactions, recurring, budgets, goals, borxhet, udhetimet } =
     useData();
   const { lidhur, konfigurimi } = useSync();
   const dialog = useDialog();
@@ -215,6 +215,7 @@ function Raportet() {
         budgets,
         goals,
         borxhet,
+        udhetimet,
       });
       // Only a period that has ended is recorded as sent. A running month written down here would
       // be found by the automatic path at the start of the next one and taken as already done -
@@ -234,14 +235,6 @@ function Raportet() {
       setDuke("");
     }
   };
-
-  // One line per kind: the last one that went out, and the last one that did not. A kind nobody
-  // has switched on has nothing to say, so it says nothing.
-  const gjendjet = LLOJET_RAPORTIT.map((r) => ({
-    perkufizimi: r,
-    derguar: shenjat.find((s) => s.lloji === r.lloji && s.gjendja === "derguar"),
-    deshtoi: shenjat.find((s) => s.lloji === r.lloji && s.gjendja === "deshtoi"),
-  })).filter((g) => g.derguar || g.deshtoi);
 
   // The third state, which the two lines above never had a word for: the period is closed, nothing
   // failed, and the email is simply waiting for an opening of the app that reaches the network.
@@ -263,7 +256,8 @@ function Raportet() {
         <Alert variant="secondary" className="small mb-0">
           <CloudOff size={15} className="me-2" />
           Kjo veçori kërkon një projekt Supabase të lidhur - pa server nuk ka nga çfarë të niset
-          emaili. <Link to="/sinkronizimi">Lidheni te faqja Sinkronizimi</Link>.
+          emaili. <Link to="/sinkronizimi">Lidheni te faqja Sinkronizimi</Link>. Vetë raportet mund
+          t&apos;i shihni edhe pa lidhje, te faqja <Link to="/raportet">Raportet</Link>.
         </Alert>
       ) : (
         <>
@@ -322,6 +316,13 @@ function Raportet() {
                     ? " · me pasqyrën PDF bashkëngjitur"
                     : " · pa bashkëngjitje"}
                 </div>
+                <GjendjaELlojit
+                  lloji={r.lloji}
+                  aktiv={Boolean(profile[r.fusha])}
+                  derguar={shenjat.find((sh) => sh.lloji === r.lloji && sh.gjendja === "derguar")}
+                  deshtoi={shenjat.find((sh) => sh.lloji === r.lloji && sh.gjendja === "deshtoi")}
+                  nePritje={nePritje.find((n) => n.lloji === r.lloji)}
+                />
                 {/* The attachment switch appears only once the kind itself is on: a choice about
                     an email nobody has asked for is noise. */}
                 {r.fushaBashkengjitje && profile[r.fusha] ? (
@@ -370,6 +371,13 @@ function Raportet() {
                 aria-label="Periudha e raportit"
               />
             </div>
+            <Link
+              className="btn btn-outline-light btn-sm"
+              to={`/raportet?lloji=${llojiZgjedhur}&periudha=${encodeURIComponent(periudhaZgjedhur)}`}
+            >
+              <Eye size={15} className="me-1" />
+              Shiko
+            </Link>
             <Button className="btn-primary" size="sm" onClick={dergoTani} disabled={duke === "dergimi"}>
               {duke === "dergimi" ? (
                 <Spinner animation="border" size="sm" className="me-1" />
@@ -415,28 +423,6 @@ function Raportet() {
               hera e parë që hapet aplikacioni me internet. Nëse e doni tani, zgjidheni më poshtë te
               «Dërgo një raport me dorë».
             </Alert>
-          )}
-
-          {gjendjet.length > 0 && (
-            <div className="text-muted small mb-3">
-              {gjendjet.map(({ perkufizimi, derguar, deshtoi }) => (
-                <div key={perkufizimi.lloji}>
-                  {derguar && (
-                    <div>
-                      {perkufizimi.emri} i {etiketaPeriudhes(perkufizimi.lloji, derguar.periudha)} u dërgua te{" "}
-                      {derguar.marresi || "adresën tuaj"} më {koha(derguar.kur)}
-                      {derguar.vetjak ? " (me kërkesë)" : ""}.
-                    </div>
-                  )}
-                  {deshtoi && (
-                    <div className="text-warning">
-                      {perkufizimi.emri} i {etiketaPeriudhes(perkufizimi.lloji, deshtoi.periudha)} nuk u dërgua:{" "}
-                      {deshtoi.gabimi || "arsye e panjohur"}.
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
           )}
 
           {/* Inside a plain div: a `Card` is a flex column, and a button dropped straight into one
@@ -490,6 +476,41 @@ function Raportet() {
         </>
       )}
     </Card>
+  );
+}
+
+/**
+ * Where one kind stands, on its own row: the last one that went out, the last one that did not, and
+ * the one still waiting for an opening of the app. It used to be a separate list under the card,
+ * which put "Raporti mujor u dërgua" three screens away from the switch it was about. A kind that is
+ * off and has never sent anything has nothing to say, so it says nothing.
+ */
+function GjendjaELlojit({ lloji, aktiv, derguar, deshtoi, nePritje }) {
+  if (!derguar && !deshtoi && !(aktiv && nePritje)) return null;
+  // A failure older than the last success is history, not news.
+  const deshtoiPas = deshtoi && (!derguar || String(deshtoi.periudha) >= String(derguar.periudha));
+  return (
+    <div className="fcp-raporti-gjendjet">
+      {derguar && (
+        <span className="fcp-raporti-gjendja ok" title={derguar.marresi ? `Te ${derguar.marresi}` : undefined}>
+          <CheckCircle2 size={13} />
+          {etiketaPeriudhes(lloji, derguar.periudha)} u dërgua më {koha(derguar.kur)}
+          {derguar.vetjak ? " (me kërkesë)" : ""}
+        </span>
+      )}
+      {deshtoiPas && (
+        <span className="fcp-raporti-gjendja gabim">
+          <AlertTriangle size={13} />
+          {etiketaPeriudhes(lloji, deshtoi.periudha)} nuk u dërgua: {deshtoi.gabimi || "arsye e panjohur"}
+        </span>
+      )}
+      {aktiv && nePritje && nePritje.gjendja !== "deshtoi" && (
+        <span className="fcp-raporti-gjendja pritje">
+          <Clock size={13} />
+          {etiketaPeriudhes(lloji, nePritje.periudha)} në pritje
+        </span>
+      )}
+    </div>
   );
 }
 

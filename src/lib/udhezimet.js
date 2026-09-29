@@ -166,6 +166,14 @@ export const UDHEZIMET = [
           "mëson aplikacionit se ku e klasifikoni një dyqan.",
       },
       {
+        titulli: "Një faturë, disa kategori",
+        teksti:
+          "Kur një faturë e marketit ka edhe ushqim edhe shampo, shtypni «Ndaje në disa kategori» nën kategorinë. " +
+          "Çdo pjesë merr kategorinë dhe vlerën e vet, dhe kategoria sipër merr atë që mbetet - totali mbetet " +
+          "ai i faturës. Ruhen si transaksione të veçanta me të njëjtën datë, llogari, përshkrim dhe etiketa, " +
+          "prandaj buxhetet dhe statistikat i numërojnë secilën te kategoria e saj.",
+      },
+      {
         titulli: "Transferi është lloj më vete",
         teksti:
           "Një transfer lëviz para mes dy llogarive tuaja, prandaj nuk numërohet as si hyrje as si shpenzim " +
@@ -688,6 +696,59 @@ export const UDHEZIMET = [
   },
 
   {
+    id: "udhetimet",
+    grupi: "Planifikimi",
+    etiketa: "Udhëtimet",
+    titulli: "Udhëtimet - sa kushtoi një udhëtim",
+    ikona: "Plane",
+    shtegu: "/udhetimet",
+    permbledhje:
+      "Një udhëtim ka emër, data, një etiketë dhe - nëse doni - monedhën e vendit dhe një buxhet. Gjatë ditëve të tij " +
+      "çdo shpenzim i ri merr vetë etiketën, dhe faqja tregon koston, sa në ditë, ku shkuan paratë dhe sa mbetet nga buxheti.",
+    hapat: [
+      {
+        titulli: "Krijoni udhëtimin",
+        teksti:
+          "Shtypni «Udhëtim i Ri», jepini emrin dhe datat. Etiketa merr vetë emrin; nëse i keni etiketuar tashmë " +
+          "pushimet (p.sh. «pushime2026»), zgjidheni atë etiketë dhe udhëtimi i mbledh menjëherë të gjitha.",
+      },
+      {
+        titulli: "Gjatë udhëtimit",
+        teksti:
+          "Çdo shpenzim i ri me datë brenda udhëtimit hapet me etiketën e tij dhe, kur e keni zgjedhur, në monedhën e " +
+          "vendit me kursin tuaj. Nën etiketat shkruhet që u vunë vetë; «Nuk i përket» i heq për atë transaksion. " +
+          "Hyrjet dhe transferet nuk etiketohen vetë - rroga që vjen gjatë pushimeve nuk është pjesë e tyre.",
+      },
+      {
+        titulli: "Buxheti dhe paneli",
+        teksti:
+          "Me buxhet, paneli tregon gjatë udhëtimit sa ka mbetur dhe sa mund të shpenzoni në ditë deri në kthim. Kostoja " +
+          "është shpenzimet minus hyrjet me të njëjtën etiketë - një kthim parash apo pjesa që ju ktheu një shok.",
+      },
+      {
+        titulli: "U kthyet dhe s'keni etiketuar asgjë?",
+        teksti:
+          "Krijojeni udhëtimin me datat e tij: faqja e tij tregon sa shpenzime të atyre ditëve nuk e kanë etiketën, " +
+          "dhe «Shiko dhe etiketo» ju lë t'i zgjidhni. Pagesat e përsëritura (qiraja, abonimet) nuk zgjidhen vetë, " +
+          "sepse do të ishin paguar edhe pa udhëtim.",
+      },
+      {
+        titulli: "Leximi i shifrave",
+        teksti:
+          "«Në ditë atje» numëron vetëm çka u shpenzua brenda datave të udhëtimit; biletat e blera muaj më parë " +
+          "dalin te «Para nisjes», që mesatarja ditore të mos fryhet prej tyre. «Ku shkuan paratë» e ndan sipas " +
+          "nënkategorive - Plazh, Kafe, Karburant për rrugë - jo vetëm «Udhëtime».",
+      },
+    ],
+    keshilla: [
+      "Udhëtimi nuk prek asnjë bilanc: ai vetëm lexon transaksionet me etiketën e tij. Fshirja e tij i lë transaksionet dhe etiketat si janë.",
+      "Nëse ndryshoni etiketën e një udhëtimi, ajo ndryshohet edhe te transaksionet që e mbajnë.",
+      "Për udhëtime me shokë, Grupet mbajnë kush pagoi çfarë; Udhëtimet mbajnë sa ju kushtoi juve.",
+    ],
+    shihEdhe: ["grupet", "transaksionet", "statistikat"],
+  },
+
+  {
     id: "statistikat",
     grupi: "Më shumë",
     etiketa: "Statistikat",
@@ -793,6 +854,44 @@ export const UDHEZIMET = [
       "Hapja e një rreshti numëron gjithë familjen e tij: një kategori kryesore merr me vete edhe nënkategoritë, njësoj si shifra që u prek.",
     ],
     shihEdhe: ["buxhetet", "kategorite", "te-dhena"],
+  },
+
+  {
+    id: "raportet",
+    grupi: "Më shumë",
+    etiketa: "Raportet",
+    titulli: "Raportet - java, muaji, tremujori, viti",
+    ikona: "FileText",
+    shtegu: "/raportet",
+    permbledhje:
+      "I njëjti raport që mund t'ju vijë me email, i hapur këtu në aplikacion për çdo javë, muaj, tremujor ose vit - " +
+      "pa asnjë konfigurim. Shkarkohet si PDF, printohet, ose dërgohet me email kur keni lidhur projektin tuaj.",
+    hapat: [
+      {
+        titulli: "Zgjidhni llojin dhe periudhën",
+        teksti:
+          "Sipër zgjidhni Java, Muaji, Tremujori ose Viti, dhe poshtë periudhën. Periudha në vazhdim shfaqet deri " +
+          "sot, dhe krahasohet me të njëjtën pjesë të periudhës së kaluar - jo me të tërën.",
+      },
+      {
+        titulli: "Çka ka secili",
+        teksti:
+          "Java: shtatë ditë, blerja që bie në sy dhe çka vjen deri javën tjetër. Muaji: ku shkuan paratë javë pas " +
+          "jave, buxhetet që u tejkaluan, qëllimet dhe borxhet. Tremujori: muajt krah për krah dhe kategoritë që " +
+          "lëvizën. Viti: historia e tij, njësoj si faqja «Viti në një faqe».",
+      },
+      {
+        titulli: "Shkarko, printo, dërgo",
+        teksti:
+          "«PDF» shkarkon pasqyrën e periudhës si ajo e bankës. «Printo» e printon raportin siç e shihni. «Dërgo me " +
+          "email» e nis te adresa juaj kur keni lidhur Supabase-in dhe funksionin «raporti» (te Cilësimet).",
+      },
+    ],
+    keshilla: [
+      "Raporti llogaritet në pajisjen tuaj nga të njëjtat funksione si paneli dhe statistikat - shifrat nuk mund të ndryshojnë nga ato.",
+      "Raportet automatike me email ndizen te Cilësimet → Raportet me Email; këtu mund t'i shihni pa i ndezur.",
+    ],
+    shihEdhe: ["statistikat", "viti", "cilesimet"],
   },
 
   {

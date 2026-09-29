@@ -13,7 +13,7 @@ import { krijoZip, lexoZip } from "./zip";
 import { pastroKonfigurimin, ruajKonfigurimin } from "./supabase";
 
 const DB_NAME = "financarepersonal";
-const DB_VERSION = 6;
+const DB_VERSION = 7;
 
 export const STORES = {
   profile: "profile",
@@ -33,6 +33,9 @@ export const STORES = {
   // Shared-expense groups (a trip, a flat): the members, the bills and how each was split - see
   // lib/grupet.js. Off-ledger like the debt notes: only the transactions a group books move money.
   grupet: "grupet",
+  // Trips: a name, the days, the tag their spending carries, a currency and a budget - see
+  // lib/udhetimet.js. Off-ledger like the groups: a trip reads the transactions, it adds none.
+  udhetimet: "udhetimet",
   // Invoice photos, split in two on purpose: `faturat` holds only the small metadata record (name,
   // size, thumbnail, which transaction it belongs to) and is loaded with everything else, while the
   // full-size image sits in `faturaSkedaret` keyed by the same id and is read only when a picture is
@@ -66,6 +69,7 @@ export const SINK_STORES = [
   STORES.borxhet,
   STORES.planet,
   STORES.grupet,
+  STORES.udhetimet,
 ];
 
 export const SINK_PROFILE_ID = PROFILE_KEY;
@@ -191,6 +195,12 @@ function openDb() {
         // the newer release. Its older copy skipped the `grupet` rows it could not store, and its
         // pull watermark has moved past them since - so an incremental pull would never bring
         // them. One full download does, and costs nothing on a device that has never synced.
+        if (e.oldVersion > 0) kerkoShkarkimTePlote();
+      }
+      // Added in DB_VERSION 7, for trips - same guard, and the same full download for a database
+      // that may have been syncing with a device that already had them.
+      if (!db.objectStoreNames.contains(STORES.udhetimet)) {
+        db.createObjectStore(STORES.udhetimet, { keyPath: "id" });
         if (e.oldVersion > 0) kerkoShkarkimTePlote();
       }
     };
@@ -517,10 +527,11 @@ export function getAllData() {
     getAll(STORES.borxhet),
     getAll(STORES.planet),
     getAll(STORES.grupet),
+    getAll(STORES.udhetimet),
     // Metadata only - the pictures themselves stay on disk until one is opened.
     getAll(STORES.faturat),
   ]).then(
-    ([profile, accounts, categories, transactions, budgets, goals, recurring, borxhet, planet, grupet, faturat]) => ({
+    ([profile, accounts, categories, transactions, budgets, goals, recurring, borxhet, planet, grupet, udhetimet, faturat]) => ({
       profile: profile ?? {},
       accounts,
       categories,
@@ -531,6 +542,7 @@ export function getAllData() {
       borxhet,
       planet,
       grupet,
+      udhetimet,
       faturat,
     })
   );
@@ -745,6 +757,7 @@ export async function exportAllData({ perfshiFaturat = false } = {}) {
     borxhet: data.borxhet,
     planet: data.planet,
     grupet: data.grupet,
+    udhetimet: data.udhetimet,
     faturat,
   };
 }
@@ -828,6 +841,7 @@ const IMPORT_STORES = [
   [STORES.borxhet, "borxhet"],
   [STORES.planet, "planet"],
   [STORES.grupet, "grupet"],
+  [STORES.udhetimet, "udhetimet"],
 ];
 
 /**

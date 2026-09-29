@@ -228,4 +228,13 @@ describe("kategori të arkivuara", () => {
       expect(kategoriteQeMungojne(undefined, ekzistuese)).toEqual([]);
     });
   });
+
+  it("reads a list that grew after it was first asked about, not a remembered copy of it", () => {
+    // The index is cached per array; a caller that pushes into its own list must not be answered
+    // from the version before the push.
+    const rritet = [kategori("a", "A")];
+    expect(emriIPlote(rritet, "b", "?")).toBe("?");
+    rritet.push(kategori("b", "B", { prindi: "a" }));
+    expect(emriIPlote(rritet, "b")).toBe("A › B");
+  });
 });

@@ -28,10 +28,46 @@ function ndryshimetJson() {
   };
 }
 
+/**
+ * The same changelog for the «Çka ka të re» page, parsed at build time and split in two virtual
+ * modules: the latest few releases, which the page opens on, and the rest, which only load when
+ * somebody asks for the older versions.
+ *
+ * The page used to import CHANGELOG.md raw and parse it in the browser, which put the whole history
+ * - 95 kB and growing with every release - into the page's chunk to show the top eight. Both halves
+ * are still JavaScript, so the service worker precaches them and the page keeps working offline; it
+ * just no longer downloads a year of release notes to show the last month's.
+ */
+const TE_FUNDIT = 8;
+const VIRTUAL_TE_FUNDIT = 'virtual:ndryshimet-te-fundit';
+const VIRTUAL_TE_VJETRA = 'virtual:ndryshimet-te-vjetra';
+
+function ndryshimetPerFaqen() {
+  const skedari = path.resolve(__dirname, 'CHANGELOG.md');
+  const versionet = () => lexoNdryshimet(readFileSync(skedari, 'utf8'));
+  return {
+    name: 'fcp-ndryshimet-faqja',
+    resolveId(id) {
+      if (id === VIRTUAL_TE_FUNDIT || id === VIRTUAL_TE_VJETRA) return `\0${id}`;
+      return null;
+    },
+    load(id) {
+      if (id !== `\0${VIRTUAL_TE_FUNDIT}` && id !== `\0${VIRTUAL_TE_VJETRA}`) return null;
+      this.addWatchFile(skedari);
+      const te = versionet();
+      if (id === `\0${VIRTUAL_TE_FUNDIT}`) {
+        return `export default ${JSON.stringify(te.slice(0, TE_FUNDIT))};\nexport const gjithsej = ${te.length};`;
+      }
+      return `export default ${JSON.stringify(te.slice(TE_FUNDIT))};`;
+    },
+  };
+}
+
 export default defineConfig({
   plugins: [
     react(),
     ndryshimetJson(),
+    ndryshimetPerFaqen(),
     // The app already runs entirely offline - the data never leaves IndexedDB - so the only thing
     // between it and working on a plane was fetching the assets. `public/site.webmanifest` stays
     // the manifest of record (`manifest: false`); this only adds the service worker.

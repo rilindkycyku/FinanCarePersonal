@@ -173,6 +173,45 @@ const seksioniEtiketave = (f, monedha) =>
     : "";
 
 /**
+ * The trips that fell in the period, each as one line: what it cost, per day while there, and
+ * against its budget when it has one. It sits right under the tags because it answers the same
+ * question - what was this money part of - for the one kind of "part of" people plan ahead.
+ */
+const seksioniUdhetimeve = (f, monedha) =>
+  f.udhetimet?.length
+    ? `${titulliSeksionit("Udhëtimet")}
+            <tr><td>
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                ${f.udhetimet
+                  .map((u, _i, te) => {
+                    const nen = [
+                      `${dataShkurt(u.dataFillimit)} - ${dataShkurt(u.dataMbarimit)} · ${u.ditet} ditë`,
+                      u.mesatarjaDitore !== null ? `${formatMoney(u.mesatarjaDitore, monedha)} në ditë atje` : "",
+                      u.kryesorja ? `më së shumti ${u.kryesorja.emri}` : "",
+                      u.statusi === "aktiv" ? "ende në vazhdim" : "",
+                    ]
+                      .filter(Boolean)
+                      .join(" · ");
+                    return `<tr><td style="padding:8px 0 0;">${matesi({
+                      // Against its budget when it has one; otherwise against the dearest trip
+                      // listed, so two trips without budgets still read as a comparison.
+                      perqindja: u.buxheti
+                        ? u.perqindja
+                        : (u.kosto / Math.max(...te.map((x) => x.kosto), 1)) * 100,
+                      etiketa: u.emri,
+                      vlera: u.buxheti
+                        ? `${formatMoney(u.kosto, monedha)} nga ${formatMoney(u.buxheti, monedha)}`
+                        : formatMoney(u.kosto, monedha),
+                      ngjyra: u.tejkaluar ? RED : u.ngjyra || EMERALD,
+                      nen,
+                    })}</td></tr>`;
+                  })
+                  .join("")}
+              </table>
+            </td></tr>`
+    : "";
+
+/**
  * The single largest purchase of the period.
  *
  * `figuratERaportit` has always worked this out for every kind, and for a long time only the weekly
@@ -307,6 +346,7 @@ function trupiJavor(f, monedha) {
             ${rreshtiMeIMadh(f, monedha, "i javës")}
             ${seksioniKategorive(f, monedha)}
             ${seksioniEtiketave(f, monedha)}
+            ${seksioniUdhetimeve(f, monedha)}
             ${
               pagesat.length
                 ? `${titulliSeksionit("Brenda shtatë ditësh")}
@@ -352,6 +392,7 @@ function trupiMujor(f, monedha, { mePdf = false } = {}) {
             ${rreshtiMeIMadh(f, monedha, "i muajit")}
             ${seksioniKategorive(f, monedha)}
             ${seksioniEtiketave(f, monedha)}
+            ${seksioniUdhetimeve(f, monedha)}
             ${rreshtiKursimit(f, monedha)}
             ${
               f.buxhetet?.length
@@ -413,6 +454,7 @@ function trupiTremujor(f, monedha, { mePdf = false } = {}) {
             ${rreshtiKursimit(f, monedha)}
             ${seksioniKategorive(f, monedha)}
             ${seksioniEtiketave(f, monedha)}
+            ${seksioniUdhetimeve(f, monedha)}
             ${
               f.levizjet?.length
                 ? `${titulliSeksionit("Çfarë lëvizi më shumë")}
@@ -494,6 +536,7 @@ function trupiVjetor(f, monedha, { mePdf = false } = {}) {
             ${rreshtiKursimit(f, monedha)}
             ${seksioniKategorive(f, monedha)}
             ${seksioniEtiketave(f, monedha)}
+            ${seksioniUdhetimeve(f, monedha)}
             ${
               v.uRrit || v.uUl
                 ? paragraf(
@@ -577,11 +620,16 @@ export function ndertoRaportin({
   budgets = [],
   goals = [],
   borxhet = [],
+  udhetimet = [],
   sot = null,
   baza = "",
   // Whether the statement PDF is really riding along with this email. `raporti.js` decides it
   // before this is called, because a body may want to mention it.
   mePdf = false,
+  // "email" for what goes out, "aplikacion" for the same report shown on the Raportet page - where
+  // a footer about being sent from a Supabase project, with a link to switch emails off, would be
+  // describing something that did not happen.
+  pamja = "email",
 }) {
   const celesi = periudha || muaji;
   const adresa = bazaEPerdorshme(baza);
@@ -596,6 +644,7 @@ export function ndertoRaportin({
     budgets,
     goals,
     borxhet,
+    udhetimet,
     sot,
   });
   const titulli = titulliPeriudhes(lloji, celesi);
@@ -691,13 +740,19 @@ ${qelizaShifres("Bilanci", formatMoney(f.perfundimtar, monedha), NAVY)}
           </table>
         </td></tr>
         <tr><td class="fcp-fundi" style="border-top:1px solid ${LINE};padding:16px 24px;font-family:Arial,Helvetica,sans-serif;font-size:11px;line-height:1.7;color:${MUTED};">
-          Ky raport u përgatit nga aplikacioni juaj dhe u dërgua nga projekti juaj i Supabase-it -
+          ${
+            pamja === "aplikacion"
+              ? `Ky raport u llogarit në këtë pajisje, nga të njëjtat shifra si paneli dhe statistikat -
+          asgjë nuk doli prej saj për ta ndërtuar. I njëjti raport mund t'ju vijë edhe me email: ndizeni
+          te Cilësimet → Raportet me Email.`
+              : `Ky raport u përgatit nga aplikacioni juaj dhe u dërgua nga projekti juaj i Supabase-it -
           asnjë server i FinanCarePersonal nuk i sheh këto shifra. Për ta ndalur, çaktivizoni
           raportet te ${
             adresa
               ? `<a href="${esc(adresa)}/cilesimet" style="color:${EMERALD};text-decoration:underline;">Cilësimet</a>`
               : "Cilësimet"
-          }.
+          }.`
+          }
         </td></tr>
       </table>
       <!--[if mso]></td></tr></table><![endif]-->
@@ -750,6 +805,18 @@ ${qelizaShifres("Bilanci", formatMoney(f.perfundimtar, monedha), NAVY)}
               "Sipas etiketave:",
               ...f.etiketat.map(
                 (e) => `  ${e.emri}: ${formatMoney(e.vlera, monedha)} (${Math.round(e.perqindja)}%)`
+              ),
+            ]
+          : []),
+        ...(f.udhetimet?.length
+          ? [
+              "",
+              "Udhëtimet:",
+              ...f.udhetimet.map(
+                (u) =>
+                  `  ${u.emri}: ${formatMoney(u.kosto, monedha)}` +
+                  (u.buxheti ? ` nga ${formatMoney(u.buxheti, monedha)}` : "") +
+                  ` (${u.ditet} ditë${u.mesatarjaDitore !== null ? `, ${formatMoney(u.mesatarjaDitore, monedha)} në ditë` : ""})`
               ),
             ]
           : []),

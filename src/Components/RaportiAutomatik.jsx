@@ -28,13 +28,13 @@ const PERSERITJA = 60 * 60 * 1000;
  * how many came back.
  */
 function RaportiAutomatik() {
-  const { profile, accounts, categories, transactions, recurring, budgets, goals, borxhet, loading } =
+  const { profile, accounts, categories, transactions, recurring, budgets, goals, borxhet, udhetimet, loading } =
     useData();
   const { lidhur } = useSync();
 
   // The ledger as it is at the moment the timer fires, not as it was when the effect was set up.
   const teDhenat = useRef({});
-  teDhenat.current = { profile, accounts, categories, transactions, recurring, budgets, goals, borxhet };
+  teDhenat.current = { profile, accounts, categories, transactions, recurring, budgets, goals, borxhet, udhetimet };
 
   const heraEFundit = useRef(0);
   const aktiv = LLOJET_RAPORTIT.some((r) => profile?.[r.fusha]);

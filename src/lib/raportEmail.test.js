@@ -465,3 +465,36 @@ describe("qëllimet dhe borxhet në raportin mujor", () => {
     expect(vjetor.html).not.toContain("Qëllimet e kursimit");
   });
 });
+
+describe("udhëtimet në raport", () => {
+  it("draws one line per trip, in the HTML and in the plain text", () => {
+    const { html, text } = ndertimi({
+      transactions: [
+        ...transaksionet,
+        { id: "u1", data: "2026-07-21", lloji: "shpenzim", vlera: 80, kategoriaId: "k1", llogariaId: "l1", etiketat: ["Ulqin"] },
+      ],
+      udhetimet: [
+        { id: "u", emri: "Ulqin <2026>", etiketa: "Ulqin", dataFillimit: "2026-07-20", dataMbarimit: "2026-07-26", buxheti: 400 },
+      ],
+    });
+    expect(html).toContain("Udhëtimet");
+    // Escaped like every other name the user typed.
+    expect(html).toContain("Ulqin &lt;2026&gt;");
+    expect(html).toContain("80,00 € nga 400,00 €");
+    expect(text).toContain("Ulqin <2026>: 80,00 € nga 400,00 € (7 ditë, 11,43 € në ditë)");
+  });
+
+  it("leaves the section out when no trip touches the period", () => {
+    expect(ndertimi().html).not.toContain("Udhëtimet");
+  });
+});
+
+describe("raporti brenda aplikacionit", () => {
+  it("does not claim to have been emailed when it is only being shown", () => {
+    const email = ndertimi().html;
+    const faqja = ndertimi({ pamja: "aplikacion" }).html;
+    expect(email).toContain("u dërgua nga projekti juaj i Supabase-it");
+    expect(faqja).not.toContain("u dërgua nga projekti juaj");
+    expect(faqja).toContain("u llogarit në këtë pajisje");
+  });
+});

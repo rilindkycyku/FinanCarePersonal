@@ -367,3 +367,55 @@ describe("periudha ende në vazhdim", () => {
     expect(f.javet.map((j) => j.etiketa)).toEqual(["1-7", "8-14", "15-15"]);
   });
 });
+
+describe("udhëtimet në raport", () => {
+  const udhetim = (id, extra = {}) => ({
+    id, emri: id, etiketa: id, dataFillimit: "2026-07-20", dataMbarimit: "2026-07-26", ...extra,
+  });
+  const meTrip = [
+    ...transaksionet,
+    dalje("u1", "2026-06-10", 150, "k3", { etiketat: ["ulqin"] }),
+    dalje("u2", "2026-07-21", 30, "k1", { etiketat: ["ulqin"] }),
+    dalje("u3", "2026-07-22", 45, "k1", { etiketat: ["ulqin"] }),
+  ];
+
+  it("lists the trips whose days overlap the period, with the whole trip's cost", () => {
+    const f = figuratERaportit({
+      lloji: MUJOR,
+      periudha: "2026-07",
+      accounts: llogarite,
+      categories: kategorite,
+      transactions: meTrip,
+      udhetimet: [
+        udhetim("ulqin", { buxheti: 300 }),
+        udhetim("vjeshte", { dataFillimit: "2026-10-01", dataMbarimit: "2026-10-05" }),
+        udhetim("kufi", { dataFillimit: "2026-06-28", dataMbarimit: "2026-07-01" }),
+      ],
+    });
+    expect(f.udhetimet.map((u) => u.id)).toEqual(["kufi", "ulqin"]);
+    const ulqin = f.udhetimet[1];
+    // The June booking counts: it is part of the trip, whichever month it was paid in.
+    expect(ulqin.kosto).toBe(225);
+    expect(ulqin.perqindja).toBeCloseTo(75);
+    expect(ulqin.mesatarjaDitore).toBeCloseTo(75 / 7);
+    expect(ulqin.kryesorja).toEqual({ emri: "Argëtim", vlera: 150 });
+  });
+
+  it("shows a trip still running at the end of the stretch as it stood that day", () => {
+    const f = figuratERaportit({
+      lloji: MUJOR,
+      periudha: "2026-07",
+      accounts: llogarite,
+      categories: kategorite,
+      transactions: meTrip,
+      udhetimet: [udhetim("ulqin")],
+      sot: new Date(2026, 6, 22, 12),
+    });
+    expect(f.udhetimet[0].statusi).toBe("aktiv");
+    expect(f.udhetimet[0].mesatarjaDitore).toBeCloseTo(75 / 3);
+  });
+
+  it("has nothing to say without trips", () => {
+    expect(figurat({ lloji: MUJOR, periudha: "2026-07" }).udhetimet).toEqual([]);
+  });
+});

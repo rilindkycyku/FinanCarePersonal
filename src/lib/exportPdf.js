@@ -152,8 +152,36 @@ function openingBalance(accounts, transactions, start, llogariaId) {
  * it moves nothing and stays out of both totals.
  */
 export function statementRows({ accounts, categories, transactions, recurring = [], start, end, llogariaId }) {
-  const nameOf = (list, id) => list.find((x) => x.id === id)?.emri || "";
+  const emratLlogarive = new Map(accounts.map((a) => [a.id, a.emri]));
+  const nameOf = (id) => emratLlogarive.get(id) || "";
   const skedula = new Map(recurring.map((r) => [r.id, r]));
+  /**
+   * The dates booked from each instalment plan, sorted - so "which instalment is this one" is a
+   * binary search rather than a pass over the whole ledger for every row. It used to be the pass,
+   * once per instalment row and once more per plan for what is still owed, and on a statement for
+   * the whole history that made the listing quadratic.
+   */
+  const datatEPlanit = new Map();
+  transactions.forEach((tx) => {
+    // A row without a date never compared as "on or before" anything, so it is left out here too.
+    if (!tx.perseritjaId || !tx.data || !skedula.has(tx.perseritjaId)) return;
+    if (!datatEPlanit.has(tx.perseritjaId)) datatEPlanit.set(tx.perseritjaId, []);
+    datatEPlanit.get(tx.perseritjaId).push(String(tx.data));
+  });
+  datatEPlanit.forEach((datat) => datat.sort());
+  /** How many of the plan's bookings fall on or before `deri`. */
+  const paguarDeri = (planiId, deri) => {
+    const datat = datatEPlanit.get(planiId);
+    if (!datat) return 0;
+    let ulet = 0;
+    let lart = datat.length;
+    while (ulet < lart) {
+      const mes = (ulet + lart) >> 1;
+      if (datat[mes] <= deri) ulet = mes + 1;
+      else lart = mes;
+    }
+    return ulet;
+  };
   const periudha = filterByRange(transactions, start, end).filter(
     (tx) => !llogariaId || txSignForAccount(tx, llogariaId) !== 0
   );
@@ -179,9 +207,7 @@ export function statementRows({ accounts, categories, transactions, recurring = 
       const plan = tx.perseritjaId ? skedula.get(tx.perseritjaId) : null;
       const nrKesteve = Math.floor(toNumber(plan?.nrKesteve)) || 0;
       // Which instalment this one is: everything booked from the same plan up to and including it.
-      const kesti = nrKesteve
-        ? transactions.filter((x) => x.perseritjaId === tx.perseritjaId && x.data <= tx.data).length
-        : 0;
+      const kesti = nrKesteve ? paguarDeri(tx.perseritjaId, tx.data) : 0;
 
       return {
         data: tx.data,
@@ -192,8 +218,8 @@ export function statementRows({ accounts, categories, transactions, recurring = 
           tx.lloji === "transfer" ? "Transfer" : emriIPlote(categories, tx.kategoriaId, "Pa kategori"),
         llogaria:
           tx.lloji === "transfer"
-            ? `${nameOf(accounts, tx.llogariaId)} → ${nameOf(accounts, tx.llogariaDestinacionId)}`
-            : nameOf(accounts, tx.llogariaId),
+            ? `${nameOf(tx.llogariaId)} → ${nameOf(tx.llogariaDestinacionId)}`
+            : nameOf(tx.llogariaId),
         pershkrimi:
           [tx.pershkrimi, tx.monedhaOrigjinale ? `(${plainAmount(tx.vleraOrigjinale)} ${tx.monedhaOrigjinale})` : ""]
             .filter(Boolean)
@@ -215,7 +241,7 @@ export function statementRows({ accounts, categories, transactions, recurring = 
   const mbeturKeste = recurring
     .filter((r) => r.aktiv !== false && Math.floor(toNumber(r.nrKesteve)) > 0)
     .reduce((sum, r) => {
-      const paguar = transactions.filter((tx) => tx.perseritjaId === r.id && tx.data <= end).length;
+      const paguar = paguarDeri(r.id, end);
       const mbetur = Math.max(Math.floor(toNumber(r.nrKesteve)) - paguar, 0);
       return sum + mbetur * toNumber(r.vlera);
     }, 0);

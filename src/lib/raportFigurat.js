@@ -33,6 +33,7 @@ import { toNumber } from "./format";
 import { JAVOR, MUJOR, TREMUJOR, VJETOR, kufijtePeriudhes, periudhaParaardhese } from "./periudhat";
 import { DAYS_SHORT, MONTHS_SHORT } from "./options";
 import { vitiNeNjeFaqe } from "./viti";
+import { permbledhjaEUdhetimit } from "./udhetimet";
 
 /** How many categories a report lists before the list stops being readable. */
 const SA_KATEGORI = 6;
@@ -50,6 +51,8 @@ const SA_ETIKETA = 5;
 /** How many goals and how many debt notes a report names - the ones being worked on, not the file. */
 const SA_QELLIME = 3;
 const SA_BORXHE = 3;
+/** Trips overlapping one period - more than three in a month is a travel agent, not a holiday. */
+const SA_UDHETIME = 3;
 
 const DITA = 24 * 60 * 60 * 1000;
 const utc = (iso) => {
@@ -167,6 +170,41 @@ function borxhetEPeriudhes(debts, start, deri) {
     .slice(0, SA_BORXHE);
 }
 
+/**
+ * The trips whose days overlap the period, each with what it cost.
+ *
+ * The cost is the whole trip's, not the period's slice of it: a holiday from the 28th to the 4th is
+ * one holiday, and a July report that showed four days of it would be quoting a number nobody paid.
+ * Measured to the end of the stretch reported on, so a trip still running then is shown as it
+ * stood that day - the same rule the debt notes follow - and a trip that has not started yet by
+ * then is left out, since there is nothing about it to report.
+ */
+function udhetimetEPeriudhes(udhetimet, transactions, categories, start, deri) {
+  return udhetimet
+    .filter((u) => u && !u.arkivuar && u.dataFillimit && u.dataMbarimit)
+    .filter((u) => u.dataFillimit <= deri && u.dataMbarimit >= start)
+    .sort((a, b) => a.dataFillimit.localeCompare(b.dataFillimit))
+    .slice(0, SA_UDHETIME)
+    .map((u) => {
+      const p = permbledhjaEUdhetimit(u, transactions, categories, { sot: deri });
+      return {
+        id: u.id,
+        emri: u.emri,
+        ngjyra: u.ngjyra || null,
+        dataFillimit: u.dataFillimit,
+        dataMbarimit: u.dataMbarimit,
+        statusi: p.statusi,
+        ditet: p.ditet,
+        kosto: p.kosto,
+        mesatarjaDitore: p.mesatarjaDitore,
+        buxheti: p.buxheti,
+        perqindja: p.perqindja,
+        tejkaluar: p.tejkaluar,
+        kryesorja: p.sipasKategorive[0] ? { emri: p.sipasKategorive[0].emri, vlera: p.sipasKategorive[0].vlera } : null,
+      };
+    });
+}
+
 /** Spending per day across a span - the seven columns of the weekly chart. */
 function ditetEPeriudhes(transactions, start, end) {
   const rreshtat = filterByRange(transactions, start, end).filter((tx) => tx.lloji === "shpenzim");
@@ -254,6 +292,7 @@ export function figuratERaportit({
   budgets = [],
   goals = [],
   borxhet = [],
+  udhetimet = [],
   sot = null,
 } = {}) {
   const { start, end } = kufijtePeriudhes(lloji, periudha);
@@ -303,6 +342,7 @@ export function figuratERaportit({
     // counts in full under both, so these shares answer "how much of the month went to this" and
     // are not slices of a pie that has to come to 100. `totalsByTag` holds that reasoning.
     etiketat: totalsByTag(rreshtat).slice(0, SA_ETIKETA),
+    udhetimet: udhetimetEPeriudhes(udhetimet, transactions, categories, start, deri),
     kursimi: normaEKursimit(t.hyrjet, t.daljet),
     meIMadhi: shpenzimiMeIMadh(rreshtat, categories),
     krahasimi: rreshtatPara.length

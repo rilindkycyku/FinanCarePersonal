@@ -30,9 +30,56 @@ ngriti versionin.
   Dalin vetë herën e parë që hapet aplikacioni, pa prekur asgjë nga ç'keni: një kategori që e keni
   riemërtuar mbetet me emrin tuaj, një që e keni fshirë nuk kthehet, dhe nëse e keni fshirë vetë
   *Udhëtime*, nënkategoritë e reja nuk ju dalin si kategori kryesore. Sigurimi i udhëtimit mbetet te
-  *Sigurime*, krah policave të tjera. Për të parë sa kushtoi një udhëtim i caktuar, etiketa
-  («pushime2026») vazhdon të jetë përgjigjja, sepse i mbledh edhe shpenzimet e shënuara jashtë
-  *Udhëtimeve*.
+  *Sigurime*, krah policave të tjera. Sa kushtoi një udhëtim i caktuar e thotë tani faqja e re
+  **Udhëtimet**, më poshtë.
+- **Udhëtimet.** Një faqe e re te *Planifikimi*: udhëtimi ka emër, data, një etiketë dhe - nëse doni -
+  monedhën e vendit dhe një buxhet. **Gjatë ditëve të tij çdo shpenzim i ri hapet vetë me etiketën e
+  udhëtimit** dhe, kur e keni zgjedhur, në lekë apo në monedhën tjetër me kursin tuaj, pra kafeja e
+  pestë e ditës nuk kërkon që të kujtoheni për asgjë. Nën etiketat shkruhet se u vunë vetë, dhe «Nuk i
+  përket» i heq për atë transaksion. Hyrjet dhe transferet nuk etiketohen vetë: rroga që bie më 1 të
+  muajit gjatë pushimeve nuk është pjesë e tyre.
+  <br />Gjatë udhëtimit **paneli ka një kartë të vetën**: kostoja deri tani, sa u shpenzua sot, sa
+  mbetet nga buxheti dhe sa mund të shpenzoni në ditë deri në kthim. Faqja e udhëtimit e ndan koston
+  **dita pas dite** dhe **sipas nënkategorive** (Plazh, Kafe, Karburant për rrugë - jo thjesht
+  «Udhëtime»), dhe biletat e blera muaj më parë i mban te «Para nisjes», që mesatarja ditore të mos
+  fryhet prej tyre. Kostoja është shpenzimet minus hyrjet me të njëjtën etiketë - një kthim parash apo
+  pjesa që ju ktheu një shok.
+  <br />**U kthyet dhe s'keni etiketuar asgjë?** Krijoni udhëtimin me datat e tij: faqja tregon sa
+  shpenzime të atyre ditëve nuk e kanë etiketën dhe «Shiko dhe etiketo» ju lë t'i zgjidhni. Pagesat e
+  përsëritura (qiraja, abonimet) nuk zgjidhen vetë, sepse do të ishin paguar edhe pa udhëtim. Një
+  etiketë që e keni përdorur më parë (p.sh. «pushime2026») mund të zgjidhet për udhëtimin, dhe ai i
+  mbledh menjëherë të gjitha.
+  <br />Udhëtimi nuk prek asnjë bilanc - ai vetëm lexon transaksionet me etiketën e tij - dhe
+  sinkronizohet, hyn në kopjet ZIP/JSON dhe kalon me QR si çdo gjë tjetër.
+- **Një faturë, disa kategori.** Nën kategorinë e formularit ka tani «Ndaje në disa kategori»: fatura e
+  marketit prej 50 € bëhet 38 € *Market* dhe 12 € *Higjienë*. Çdo pjesë merr kategorinë dhe vlerën e
+  vet, kategoria sipër merr atë që mbetet, dhe totali mbetet gjithmonë ai i faturës - në centë, edhe
+  kur fatura është në monedhë tjetër. Ruhen si transaksione të zakonshme me të njëjtën datë, llogari,
+  përshkrim dhe etiketa, prandaj buxhetet, statistikat dhe raportet i numërojnë secilën te kategoria e
+  saj pa ditur fare që ishin një faturë. Kur hapni njërën prej tyre, formulari e thotë se është pjesë e
+  një fature të ndarë.
+- **Faqja Raportet.** Të katër raportet - java, muaji, tremujori, viti - hapen tani brenda
+  aplikacionit, për çdo periudhë, **pa asnjë konfigurim**. Deri tani një raport shihej vetëm kur vinte
+  me email, pra pas një projekti Supabase, një funksioni dhe një çelësi Resend - dhe shumica nuk e
+  kishin parë kurrë. Por raporti ndërtohej gjithmonë në pajisjen tuaj; tani i njëjti raport shfaqet
+  këtu, me shigjeta për periudhën e mëparshme e tjetrën, dhe shkarkohet si PDF, printohet ose -
+  kur keni lidhur projektin - dërgohet me email. Te *Më Shumë*, pranë Statistikave.
+
+### Ndryshuar
+- **Raportet kanë udhëtimet.** Çdo raport, me email apo në faqe, tregon udhëtimet që ranë në periudhë:
+  koston e të gjithë udhëtimit (edhe biletën e blerë muajin më parë), sa në ditë atje, ku shkoi më
+  shumë dhe buxhetin kur ka.
+- **Raportet me Email te Cilësimet.** Secili lloj e tregon gjendjen e vet në rreshtin e vet - u
+  dërgua, nuk u dërgua dhe pse, ose pret - në vend të një liste të veçantë poshtë kartës. Pranë «Dërgo
+  tani» ka edhe **«Shiko»**, që e hap raportin te faqja e re para se ta dërgoni.
+- **Raportet dhe pasqyra PDF ndërtohen shumë më shpejt.** Emri i kategorisë së çdo rreshti kërkohej
+  duke ndërtuar nga e para listën e të gjitha kategorive (232 sipas parazgjedhjes), dhe numri i këstit
+  duke kaluar tërë librin për çdo këst. Tani të dyja lexohen nga një tregues i gatshëm: në një libër me
+  8.000 transaksione raporti vjetor bie nga ~98 ms në ~21 ms dhe pasqyra e gjithë historisë nga ~247 ms
+  në ~15 ms. Shifrat nuk ndryshuan.
+- **«Çka ka të re» hapet më lehtë.** Faqja mbante brenda gjithë historinë e versioneve (~95 kB) për të
+  treguar tetë të fundit; tani i ka vetëm ato, dhe versionet e vjetra ngarkohen kur i kërkoni. Punon
+  njësoj edhe pa internet.
 
 ## [2.29.0] - 2026-09-26
 

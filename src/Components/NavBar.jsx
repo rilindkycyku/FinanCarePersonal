@@ -4,7 +4,7 @@ import { Dropdown } from "react-bootstrap";
 import {
   LayoutDashboard, ArrowRightLeft, Wallet, Tags, PiggyBank, Target, Repeat,
   BarChart3, Settings, DatabaseBackup, Sun, Moon, ChevronDown, Menu, X, Receipt,
-  ClipboardList, FileSpreadsheet, BookOpen, CalendarRange, Users, MapPin, Sparkles,
+  ClipboardList, FileSpreadsheet, BookOpen, CalendarRange, Users, MapPin, Sparkles, Plane, FileText,
 } from "lucide-react";
 import { useTheme } from "../Context/ThemeContext";
 import ButonPasqyra from "./ButonPasqyra";
@@ -35,6 +35,7 @@ const CATEGORIES = [
       { to: "/buxhetet", label: "Buxhetet", icon: PiggyBank },
       { to: "/qellimet", label: "Qëllimet e Kursimit", icon: Target },
       { to: "/te-perseritura", label: "Pagesat e Përsëritura", icon: Repeat },
+      { to: "/udhetimet", label: "Udhëtimet", icon: Plane },
     ],
   },
   {
@@ -42,6 +43,7 @@ const CATEGORIES = [
     icon: Settings,
     links: [
       { to: "/statistikat", label: "Statistikat", icon: BarChart3 },
+      { to: "/raportet", label: "Raportet", icon: FileText },
       { to: "/viti", label: "Viti në një faqe", icon: CalendarRange },
       { to: "/vendet", label: "Vendet", icon: MapPin },
       { to: "/cilesimet", label: "Cilësimet", icon: Settings },

@@ -2292,3 +2292,285 @@ body.light-mode .card.profile-card.fcp-zona-rrezik:hover {
 .fcp-vendi-chip:hover {
   border-color: var(--sp-emerald);
 }
+
+/* ── Udhëtimet ─────────────────────────────────────────────────────────────── */
+
+/* The trip's own colour runs down the left edge of its card, so a list of three trips reads as
+   three trips before a single name is read. */
+.fcp-udh-karta {
+  border-left: 4px solid var(--udh-ngjyra, var(--sp-emerald));
+  color: inherit;
+}
+
+.fcp-udh-karta:hover {
+  border-color: var(--sp-border-glow);
+  border-left-color: var(--udh-ngjyra, var(--sp-emerald));
+}
+
+.fcp-udh-karta .fcp-progress {
+  margin-top: 0.1rem;
+}
+
+.fcp-udh-statusi {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.12rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  background: var(--sp-tint);
+  color: var(--sp-text-muted);
+}
+
+.fcp-udh-statusi.aktiv {
+  background: var(--sp-emerald-glow);
+  color: var(--sp-emerald);
+}
+
+.fcp-udh-statusi.ardhshem {
+  background: var(--sp-cyan-glow);
+  color: var(--sp-cyan);
+}
+
+/* "3 expenses from these days are not tagged" - a nudge, not an alert. */
+.fcp-udh-njoftim {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  padding: 0.7rem 0.9rem;
+  border: 1px dashed var(--sp-border-glow);
+  border-radius: var(--sp-radius-md);
+  background: var(--sp-emerald-glow);
+  font-size: 0.85rem;
+}
+
+/* Day-by-day columns. Heights are percentages of the tallest day, drawn from the bottom. */
+.fcp-udh-ditet {
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+  height: 150px;
+}
+
+.fcp-udh-dita {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.fcp-udh-shtylla-kuti {
+  flex: 1;
+  display: flex;
+  align-items: flex-end;
+  border-radius: 6px;
+  background: var(--sp-tint);
+}
+
+.fcp-udh-shtylla {
+  width: 100%;
+  border-radius: 6px;
+  opacity: 0.85;
+}
+
+.fcp-udh-shtylla.sot {
+  opacity: 1;
+  box-shadow: 0 0 0 2px var(--sp-surface), 0 0 0 3px var(--sp-text-muted);
+}
+
+.fcp-udh-dita-etiketa {
+  margin-top: 4px;
+  text-align: center;
+  font-size: 0.65rem;
+  color: var(--sp-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.fcp-udh-kandidat {
+  /* Bootstrap hangs the box in the check's left padding, so the padding stays. */
+  padding: 0.5rem 0 0.5rem 1.75em;
+  margin: 0;
+  border-bottom: 1px solid var(--sp-border);
+}
+
+.fcp-udh-kandidat .form-check-label {
+  width: 100%;
+}
+
+/* The trip card on the dashboard. */
+.fcp-udh-paneli {
+  border-left: 4px solid var(--udh-ngjyra, var(--sp-emerald));
+}
+
+.fcp-udh-paneli-shifrat {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1.25rem;
+  margin-top: 0.6rem;
+  font-size: 0.8rem;
+  color: var(--sp-text-muted);
+}
+
+.fcp-udh-paneli-shifrat strong {
+  display: block;
+  font-size: 1rem;
+  color: var(--sp-text);
+}
+
+/* ── Raportet ─────────────────────────────────────────────────────────────── */
+
+.fcp-raporti-shiriti {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: 0.25rem 0 1rem;
+}
+
+.fcp-raporti-periudha {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex: 1 1 260px;
+  max-width: 420px;
+}
+
+.fcp-raporti-zgjedhesi {
+  flex: 1;
+  min-width: 0;
+}
+
+.fcp-raporti-veprimet {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+/* The report is an email with its own light design, so it is shown the way a document is: a sheet
+   on the page, whatever the app's theme. The frame has no border of its own; the sheet has one. */
+.fcp-raporti-leter {
+  border: 1px solid var(--sp-border);
+  border-radius: var(--sp-radius-lg);
+  overflow: hidden;
+  background: #eef2f6;
+  min-height: 240px;
+}
+
+.fcp-raporti-leter iframe {
+  display: block;
+  width: 100%;
+  border: 0;
+  background: #eef2f6;
+}
+
+.fcp-raporti-duke {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 240px;
+  color: #475569;
+  font-size: 0.9rem;
+}
+
+.fcp-raporti-emaili {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  font-size: 0.82rem;
+  color: var(--sp-text-muted);
+}
+
+@media (max-width: 575.98px) {
+  .fcp-raporti-periudha {
+    max-width: none;
+  }
+  .fcp-raporti-veprimet {
+    width: 100%;
+  }
+  .fcp-raporti-veprimet .btn {
+    flex: 1 1 0;
+  }
+  /* The email pads itself for a phone already; the sheet does not need to add a margin of its own. */
+  .fcp-raporti-leter {
+    margin: 0 -4px;
+    border-radius: var(--sp-radius-md);
+  }
+}
+
+/* One kind's status, on its own row in the email-reports card. */
+.fcp-raporti-gjendjet {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.35rem;
+}
+
+.fcp-raporti-gjendja {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.12rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  background: var(--sp-tint);
+  color: var(--sp-text-muted);
+}
+
+.fcp-raporti-gjendja.ok {
+  background: var(--sp-emerald-glow);
+  color: var(--sp-emerald);
+}
+
+.fcp-raporti-gjendja.gabim {
+  background: rgba(245, 158, 11, 0.14);
+  color: #d97706;
+}
+
+/* ── One receipt, several categories (transaction form) ──────────────────────── */
+.fcp-ndarja {
+  border: 1px dashed var(--sp-border-glow);
+  border-radius: var(--sp-radius-md);
+  padding: 0.6rem 0.7rem;
+  background: var(--sp-tint);
+}
+
+.fcp-ndarja-titulli {
+  display: flex;
+  align-items: center;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--sp-text-muted);
+  margin-bottom: 0.45rem;
+}
+
+.fcp-ndarja-rresht {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.4rem;
+}
+
+.fcp-ndarja-kategoria {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.fcp-ndarja-vlera {
+  flex: 0 0 130px;
+}
+
+.fcp-ndarja-fundi {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.fcp-ndarja-hap {
+  font-size: 0.8rem;
+}
