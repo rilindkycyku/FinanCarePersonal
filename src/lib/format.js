@@ -34,6 +34,23 @@ export function formatSignedMoney(value, currency = DEFAULT_CURRENCY) {
   return `${sign}${numberFormatter.format(Math.abs(n))} ${currencySymbol(currency)}`;
 }
 
+/**
+ * A grouped amount without its symbol - "1.854,32" - for print: the PDF statement and the table
+ * exports, where the figure has to read the same as in the email it arrives with and on screen.
+ *
+ * `plainAmount` below was used there too, and printed "1854.32" under an email that said
+ * "1.854,32 €". The only difference from `formatMoney` is what happens to the spaces: a browser
+ * that has Albanian number data groups with a non-breaking (or narrow non-breaking) space, and the
+ * font embedded in the PDF is not guaranteed a glyph for either - so they become plain spaces, and a
+ * typographic minus becomes a hyphen, the two characters every font has.
+ */
+export function formatAmount(value) {
+  return numberFormatter
+    .format(toNumber(value))
+    .replace(/[\u00a0\u202f]/g, " ")
+    .replace(/\u2212/g, "-");
+}
+
 /** Ungrouped fixed-decimal string. Table cells that feed the Excel export use this so the
  * exported column stays numeric (a grouped "1.234,56" would not sum in a spreadsheet). */
 export function plainAmount(value) {

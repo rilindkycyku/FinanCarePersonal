@@ -50,6 +50,29 @@ describe("DEFAULT_CATEGORIES", () => {
     });
   });
 
+  it("gives every row of a family its own icon, so the picker can be read at a glance", () => {
+    const sipasPrindit = new Map();
+    DEFAULT_CATEGORIES.filter((c) => c.prindi).forEach((c) => {
+      const ikonat = sipasPrindit.get(c.prindi) || new Set();
+      expect(ikonat.has(c.ikona), c.id).toBe(false);
+      ikonat.add(c.ikona);
+      sipasPrindit.set(c.prindi, ikonat);
+    });
+  });
+
+  it("has a place under Udhëtime for what a holiday costs once you have arrived", () => {
+    // The first split stopped at what gets booked; these are the receipts from the week itself,
+    // which otherwise land in the everyday coffee, fuel and taxi lines.
+    const udhetime = nenkategorite(DEFAULT_CATEGORIES, "cat_default_udhetime").map((c) => c.id);
+    [
+      "cat_default_udhetime_bileta", "cat_default_udhetime_fjetje", "cat_default_udhetime_ushqim",
+      "cat_default_udhetime_plazh", "cat_default_udhetime_kafe", "cat_default_udhetime_karburant",
+      "cat_default_udhetime_autostrade", "cat_default_udhetime_lokal", "cat_default_udhetime_traget",
+      "cat_default_udhetime_dokumente", "cat_default_udhetime_roaming", "cat_default_udhetime_kembim",
+      "cat_default_udhetime_bagazh",
+    ].forEach((id) => expect(udhetime, id).toContain(id));
+  });
+
   it("reads back as the tree the pickers render, one level deep", () => {
     const pema = pemaKategorive(DEFAULT_CATEGORIES);
     expect(pema.length).toBe(DEFAULT_CATEGORIES.filter((c) => !c.prindi).length);

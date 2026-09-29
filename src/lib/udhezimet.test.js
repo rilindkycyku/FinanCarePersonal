@@ -21,6 +21,8 @@ const SHTIGJET = [
   "/llogarite",
   "/borxhet",
   "/grupet",
+  "/udhetimet",
+  "/raportet",
   "/kategorite",
   "/buxhetet",
   "/qellimet",

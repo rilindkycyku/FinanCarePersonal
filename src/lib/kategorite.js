@@ -34,8 +34,26 @@ function lista(categories) {
   return (categories || []).filter((c) => c && typeof c === "object" && c.id);
 }
 
+/**
+ * The index is remembered per list, because the callers ask one name at a time: a statement, a
+ * report or the transactions table calls `emriIPlote` once or twice for every row it prints, and
+ * each call used to build a fresh Map of the whole category list - 232 entries by default - to read
+ * one name out of it. On a year of rows that was most of the time a report took to build.
+ *
+ * Safe to key on the array itself because the app never edits one in place: `DataContext` replaces
+ * the whole list on every reload, so a changed ledger is a different array and a cache miss. The
+ * length is checked as well, so code that does push into a list it built (a test, a fixture) gets a
+ * fresh index rather than a stale one.
+ */
+const indekset = new WeakMap();
+
 function indeksi(categories) {
-  return new Map(lista(categories).map((c) => [c.id, c]));
+  if (!Array.isArray(categories)) return new Map(lista(categories).map((c) => [c.id, c]));
+  const ruajtur = indekset.get(categories);
+  if (ruajtur && ruajtur.gjatesia === categories.length) return ruajtur.byId;
+  const byId = new Map(lista(categories).map((c) => [c.id, c]));
+  indekset.set(categories, { gjatesia: categories.length, byId });
+  return byId;
 }
 
 /**
@@ -245,4 +263,26 @@ export function prindiPerRuajtje(categories, kategoria, prindiId) {
   if (!prindiId) return null;
   const lejuar = prinderitEMundshem(categories, kategoria).some((c) => c.id === prindiId);
   return lejuar && mundTeKeteNjePrind(categories, kategoria) ? prindiId : null;
+}
+
+/**
+ * The default categories an existing ledger has never seen - what `ensureDefaultCategories` adds at
+ * startup, which is the only way a category shipped in a later release reaches someone whose store
+ * was seeded before it (the store is seeded once, at creation).
+ *
+ * Three rows are held back. One that is already there, under whatever name the user gave it. One
+ * whose id is in `hequra` - the profile's `kategoriTeHequra`, left behind when a default is deleted
+ * - because a category thrown away stays gone. And a subcategory whose parent is missing: someone
+ * who deleted "Udhëtime" said they do not track trips, and shipping its new children into their
+ * list as top-level categories is not what they asked for.
+ *
+ * `ekzistuese` is the ledger's categories, archived ones included - an archived parent still has
+ * a history, and its new children are there for the day it is brought back.
+ */
+export function kategoriteQeMungojne(parazgjedhurat, ekzistuese, hequra = []) {
+  const kaId = new Set(lista(ekzistuese).map((c) => c.id));
+  const teHequra = new Set(hequra || []);
+  return (parazgjedhurat || []).filter(
+    (c) => !kaId.has(c.id) && !teHequra.has(c.id) && (!c.prindi || kaId.has(c.prindi))
+  );
 }

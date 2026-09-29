@@ -9,7 +9,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { cellText, escapeHtml, isMarkup, markup } from "./format";
+import { cellText, escapeHtml, isMarkup, markup, formatAmount } from "./format";
 
 describe("markup", () => {
   it("is recognisable as markup, unlike a plain string that happens to contain tags", () => {
@@ -61,5 +61,17 @@ describe("escapeHtml", () => {
 
   it("escapes the ampersand first, so an entity is not built out of the escaping", () => {
     expect(escapeHtml("&lt;")).toBe("&amp;lt;");
+  });
+});
+
+describe("formatAmount", () => {
+  it("groups like the screen and the email, and prints only characters any font has", () => {
+    // `sq-AL` or its `de-DE` fallback, depending on the runtime's number data - both are fine, as
+    // long as the decimals are a comma and nothing exotic is left for the PDF font to miss.
+    expect(formatAmount(1854.32)).toMatch(/^1[. ]?854,32$/);
+    expect(formatAmount(1234567.5)).toMatch(/^1[. ]234[. ]567,50$/);
+    expect(formatAmount(-332.34)).toBe("-332,34");
+    expect(formatAmount("12,5")).toBe("12,50");
+    expect(formatAmount(1234567.5)).not.toMatch(/[\u00a0\u202f\u2212]/);
   });
 });

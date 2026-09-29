@@ -556,6 +556,29 @@ export const DEFAULT_CATEGORIES = [
   { id: "cat_default_shitje_rroba", emri: "Rroba & Aksesorë", lloji: "hyrje", prindi: "cat_default_shitje", ngjyra: "#06b6d4", ikona: "Shirt" },
   { id: "cat_default_shitje_shtepiake", emri: "Mobilje & Shtëpiake", lloji: "hyrje", prindi: "cat_default_shitje", ngjyra: "#06b6d4", ikona: "Sofa" },
   { id: "cat_default_shitje_automjet", emri: "Automjet", lloji: "hyrje", prindi: "cat_default_shitje", ngjyra: "#06b6d4", ikona: "Car" },
+
+  // ── Pushimet ────────────────────────────────────────────────────────────────
+  // "Udhëtime" was split for the trip that gets *booked* - the flight, the hotel, the car - and it
+  // stopped there, which is exactly where a week at the seaside starts. The receipts that pile up
+  // once you arrive had nowhere to go: the sunbed and umbrella every morning, the coffee on the
+  // promenade, the tank filled on the way down and the toll at the tunnel, the taxi back from
+  // dinner, the ferry, the roaming bill. Filed under the everyday lines instead ("Kafe", "Benzinë",
+  // "Taksi") they did two kinds of damage at once: the holiday never added up to one number, and
+  // the month it fell in made the ordinary coffee and fuel budgets look broken.
+  //
+  // So these name the spending that only happens *because* you are away, under the family that
+  // already answers "what did the trip cost". Travel insurance stays under "Sigurime", next to the
+  // other policies it is compared with. A tag ("pushime2026") still says which trip it was.
+  { id: "cat_default_udhetime_plazh", emri: "Plazh & Pishinë", lloji: "shpenzim", prindi: "cat_default_udhetime", ngjyra: "#22c55e", ikona: "Umbrella" },
+  { id: "cat_default_udhetime_kafe", emri: "Kafe, Pije & Dalje", lloji: "shpenzim", prindi: "cat_default_udhetime", ngjyra: "#22c55e", ikona: "Wine" },
+  { id: "cat_default_udhetime_karburant", emri: "Karburant për Rrugë", lloji: "shpenzim", prindi: "cat_default_udhetime", ngjyra: "#22c55e", ikona: "Fuel" },
+  { id: "cat_default_udhetime_autostrade", emri: "Autostradë & Parkim", lloji: "shpenzim", prindi: "cat_default_udhetime", ngjyra: "#22c55e", ikona: "CircleParking" },
+  { id: "cat_default_udhetime_lokal", emri: "Taksi & Transport Lokal", lloji: "shpenzim", prindi: "cat_default_udhetime", ngjyra: "#22c55e", ikona: "TramFront" },
+  { id: "cat_default_udhetime_traget", emri: "Traget & Varkë", lloji: "shpenzim", prindi: "cat_default_udhetime", ngjyra: "#22c55e", ikona: "Ship" },
+  { id: "cat_default_udhetime_dokumente", emri: "Vizë & Dokumente", lloji: "shpenzim", prindi: "cat_default_udhetime", ngjyra: "#22c55e", ikona: "Stamp" },
+  { id: "cat_default_udhetime_roaming", emri: "Roaming & Internet", lloji: "shpenzim", prindi: "cat_default_udhetime", ngjyra: "#22c55e", ikona: "Wifi" },
+  { id: "cat_default_udhetime_kembim", emri: "Këmbim Valutor & Tarifa", lloji: "shpenzim", prindi: "cat_default_udhetime", ngjyra: "#22c55e", ikona: "Coins" },
+  { id: "cat_default_udhetime_bagazh", emri: "Bagazh & Valixhe", lloji: "shpenzim", prindi: "cat_default_udhetime", ngjyra: "#22c55e", ikona: "Luggage" },
 ];
 
 export const DEFAULT_ACCOUNTS = [

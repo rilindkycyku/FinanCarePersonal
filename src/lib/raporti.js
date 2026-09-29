@@ -225,6 +225,14 @@ export async function gjendjaFunksionit() {
   }
 }
 
+/** A period asked for by hand may still be running: its statement stops at today, the way the email
+ * body does, instead of listing the rest of the month as empty. */
+function deriSot(end, sot = new Date()) {
+  const dy = (n) => String(n).padStart(2, "0");
+  const tani = `${sot.getFullYear()}-${dy(sot.getMonth() + 1)}-${dy(sot.getDate())}`;
+  return tani < end ? tani : end;
+}
+
 /** The statement PDF as base64, or null when it could not be produced - a report that arrives
  * without its attachment is still worth having, so this never takes the email down with it.
  *
@@ -236,9 +244,11 @@ async function pdfBase64({ lloji, periudha, profile, accounts, categories, trans
   try {
     const { exportStatementPdf, statementFilenameFromTitle } = await import("./exportPdf");
     const { start, end } = kufijtePeriudhes(lloji, periudha);
+    const titulli = titulliPeriudhes(lloji, periudha);
     const { blob, filename } = await exportStatementPdf({
-      profile, accounts, categories, transactions, recurring, start, end, kthejBlob: true,
-      filename: statementFilenameFromTitle(titulliPeriudhes(lloji, periudha)),
+      profile, accounts, categories, transactions, recurring, start, end: deriSot(end), kthejBlob: true,
+      titulli,
+      filename: statementFilenameFromTitle(titulli),
     });
     const dataUrl = await blobNeDataUrl(blob);
     return { pdf: String(dataUrl).split(",")[1] || "", filename };
@@ -269,6 +279,7 @@ export async function dergoRaportin({
   budgets = [],
   goals = [],
   borxhet = [],
+  udhetimet = [],
   meBashkengjitje = null,
 }) {
   if (!marresi) throw new Error("Mungon adresa e marrësit.");
@@ -280,7 +291,7 @@ export async function dergoRaportin({
   const { ndertoRaportin } = await import("./raportEmail");
   const { subject, html, text } = ndertoRaportin({
     lloji, periudha: celesi, profile, accounts, categories, transactions, recurring, budgets,
-    goals, borxhet,
+    goals, borxhet, udhetimet,
     mePdf: duhetPdf,
     // Always "now", for both paths. A closed period ends before today, so this changes nothing
     // there; a period the user asked for by hand may still be running, and this is what stops the
@@ -384,6 +395,7 @@ export async function ekzekutoRaportet({
   budgets = [],
   goals = [],
   borxhet = [],
+  udhetimet = [],
   sot = new Date(),
 } = {}) {
   const aktivet = raportetAktive(profile);
@@ -393,7 +405,7 @@ export async function ekzekutoRaportet({
   const marresi = marresiIRaportit(profile);
   if (!marresi) return [{ gjendja: "pa-marres" }];
 
-  const teDhenat = { profile, accounts, categories, transactions, recurring, budgets, goals, borxhet };
+  const teDhenat = { profile, accounts, categories, transactions, recurring, budgets, goals, borxhet, udhetimet };
   const fillimi = dataEParaERegjistruar(transactions);
   const rezultatet = [];
   for (const def of aktivet) {

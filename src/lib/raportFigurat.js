@@ -33,6 +33,7 @@ import { toNumber } from "./format";
 import { JAVOR, MUJOR, TREMUJOR, VJETOR, kufijtePeriudhes, periudhaParaardhese } from "./periudhat";
 import { DAYS_SHORT, MONTHS_SHORT } from "./options";
 import { vitiNeNjeFaqe } from "./viti";
+import { permbledhjaEUdhetimit } from "./udhetimet";
 
 /** How many categories a report lists before the list stops being readable. */
 const SA_KATEGORI = 6;
@@ -50,6 +51,8 @@ const SA_ETIKETA = 5;
 /** How many goals and how many debt notes a report names - the ones being worked on, not the file. */
 const SA_QELLIME = 3;
 const SA_BORXHE = 3;
+/** Trips overlapping one period - more than three in a month is a travel agent, not a holiday. */
+const SA_UDHETIME = 3;
 
 const DITA = 24 * 60 * 60 * 1000;
 const utc = (iso) => {
@@ -79,6 +82,19 @@ export function ndryshimiPerqind(tani, para) {
  * it earned, which is the month somebody most needs to see it. */
 export function normaEKursimit(hyrjet, daljet) {
   return hyrjet > 0 ? ((hyrjet - daljet) / hyrjet) * 100 : null;
+}
+
+/**
+ * The savings target measured on this period: the share the profile aims for, the amount that
+ * share is of what came in, and how far short the period fell (0 when it made it). Left out when no
+ * target is set, and when nothing came in - "save 20% of nothing" is not a target anyone missed.
+ */
+export function objektiviIPeriudhes(objektivi, hyrjet, daljet) {
+  const perqindja = toNumber(objektivi);
+  if (!(perqindja > 0) || !(hyrjet > 0)) return null;
+  const shuma = (hyrjet * perqindja) / 100;
+  const kursyer = hyrjet - daljet;
+  return { perqindja, shuma, mungon: Math.max(shuma - kursyer, 0), arritur: kursyer >= shuma };
 }
 
 /** The one purchase the period will be remembered by. Transfers are skipped: moving your own money
@@ -165,6 +181,46 @@ function borxhetEPeriudhes(debts, start, deri) {
     .filter((d) => !d.perfunduar && d.mbetur > 0)
     .sort((a, b) => b.mbetur - a.mbetur)
     .slice(0, SA_BORXHE);
+}
+
+/**
+ * The trips whose days overlap the period, each with what it cost.
+ *
+ * The cost is the whole trip's, not the period's slice of it: a holiday from the 28th to the 4th is
+ * one holiday, and a July report that showed four days of it would be quoting a number nobody paid.
+ * Measured to the end of the stretch reported on, so a trip still running then is shown as it
+ * stood that day - the same rule the debt notes follow - and a trip that has not started yet by
+ * then is left out, since there is nothing about it to report.
+ */
+function udhetimetEPeriudhes(udhetimet, transactions, categories, start, deri) {
+  return udhetimet
+    .filter((u) => u && !u.arkivuar && u.dataFillimit && u.dataMbarimit)
+    .filter((u) => u.dataFillimit <= deri && u.dataMbarimit >= start)
+    .sort((a, b) => a.dataFillimit.localeCompare(b.dataFillimit))
+    .slice(0, SA_UDHETIME)
+    .map((u) => {
+      const p = permbledhjaEUdhetimit(u, transactions, categories, { sot: deri });
+      return {
+        id: u.id,
+        emri: u.emri,
+        ngjyra: u.ngjyra || null,
+        dataFillimit: u.dataFillimit,
+        dataMbarimit: u.dataMbarimit,
+        statusi: p.statusi,
+        // Still going *after* the stretch reported on. A trip whose last day is the week's last day
+        // is over as far as that week is concerned, even though `statusi` - measured on that very
+        // day - calls it running.
+        neVazhdim: u.dataMbarimit > deri,
+        ditet: p.ditet,
+        kosto: p.kosto,
+        mesatarjaDitore: p.mesatarjaDitore,
+        buxheti: p.buxheti,
+        perqindja: p.perqindja,
+        tejkaluar: p.tejkaluar,
+        mbiBuxhet: p.tejkaluar ? p.kosto - p.buxheti : 0,
+        kryesorja: p.sipasKategorive[0] ? { emri: p.sipasKategorive[0].emri, vlera: p.sipasKategorive[0].vlera } : null,
+      };
+    });
 }
 
 /** Spending per day across a span - the seven columns of the weekly chart. */
@@ -254,6 +310,10 @@ export function figuratERaportit({
   budgets = [],
   goals = [],
   borxhet = [],
+  udhetimet = [],
+  // The profile's savings target, in percent. Passed on its own rather than as the profile: this
+  // file works from the ledger, and the one setting it reads should be visible at the call.
+  objektiviKursimit = null,
   sot = null,
 } = {}) {
   const { start, end } = kufijtePeriudhes(lloji, periudha);
@@ -303,7 +363,9 @@ export function figuratERaportit({
     // counts in full under both, so these shares answer "how much of the month went to this" and
     // are not slices of a pie that has to come to 100. `totalsByTag` holds that reasoning.
     etiketat: totalsByTag(rreshtat).slice(0, SA_ETIKETA),
+    udhetimet: udhetimetEPeriudhes(udhetimet, transactions, categories, start, deri),
     kursimi: normaEKursimit(t.hyrjet, t.daljet),
+    objektivi: objektiviIPeriudhes(objektiviKursimit, t.hyrjet, t.daljet),
     meIMadhi: shpenzimiMeIMadh(rreshtat, categories),
     krahasimi: rreshtatPara.length
       ? {

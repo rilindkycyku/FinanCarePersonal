@@ -6,25 +6,32 @@ import Footer from "../Components/Footer";
 import PageTitle from "../Components/PageTitle";
 import ButoniUdhezimit from "../Components/ButoniUdhezimit";
 import { ListaENdryshimeve } from "../Components/DritarjaENdryshimeve";
-import { lexoNdryshimet } from "../lib/ndryshimet";
 import { version as APP_VERSION } from "../../package.json";
-// Bundled into this page's own chunk rather than fetched: this page describes the version that is
-// running, which is exactly the one this chunk was built with - and so it works offline too. The
-// update prompt is the one place that fetches `/ndryshimet.json`, because it describes a version
-// the running bundle has never seen.
-import CHANGELOG from "../../CHANGELOG.md?raw";
+// Bundled with the app rather than fetched: this page describes the version that is running, which
+// is exactly the one it was built with - and so it works offline too. The update prompt is the one
+// place that fetches `/ndryshimet.json`, because it describes a version the running bundle has
+// never seen. Parsed at build time and split in two (`ndryshimetPerFaqen` in vite.config.js): the
+// latest releases ship with this page, the older ones in a chunk of their own that loads on request.
+import TE_FUNDIT_LISTA, { gjithsej as GJITHSEJ } from "virtual:ndryshimet-te-fundit";
 import "./Styles/PremiumTheme.css";
 import "./Styles/DizajniPergjithshem.css";
 import "./Styles/Personal.css";
 
-/** Enough to cover what anyone has missed in a couple of months; the rest is one tap away. */
-const TE_FUNDIT = 8;
-
 /** «Çka ka të re» - CHANGELOG.md, newest first, as the person reading the app sees it. */
 function Ndryshimet() {
-  const versionet = useMemo(() => lexoNdryshimet(CHANGELOG), []);
-  const [teGjitha, setTeGjitha] = useState(false);
-  const teDukshme = teGjitha ? versionet : versionet.slice(0, TE_FUNDIT);
+  const [teVjetra, setTeVjetra] = useState(null);
+  const [duke, setDuke] = useState(false);
+  const teDukshme = useMemo(() => [...TE_FUNDIT_LISTA, ...(teVjetra || [])], [teVjetra]);
+  const teTjera = GJITHSEJ - TE_FUNDIT_LISTA.length;
+
+  const shfaqTeVjetrat = async () => {
+    setDuke(true);
+    try {
+      setTeVjetra((await import("virtual:ndryshimet-te-vjetra")).default);
+    } finally {
+      setDuke(false);
+    }
+  };
 
   return (
     <div className="fcp-page">
@@ -46,11 +53,11 @@ function Ndryshimet() {
 
           <div className="fcp-panel p-3 p-md-4 mb-4">
             <ListaENdryshimeve versionet={teDukshme} />
-            {!teGjitha && versionet.length > TE_FUNDIT && (
+            {!teVjetra && teTjera > 0 && (
               <div className="text-center mt-4">
-                <Button variant="outline-light" onClick={() => setTeGjitha(true)}>
+                <Button variant="outline-light" onClick={shfaqTeVjetrat} disabled={duke}>
                   <Sparkles size={14} className="me-1" />
-                  Shfaq edhe {versionet.length - TE_FUNDIT} versionet e vjetra
+                  Shfaq edhe {teTjera} versionet e vjetra
                 </Button>
               </div>
             )}

@@ -16,6 +16,7 @@ import ButoniUdhezimit from "../Components/ButoniUdhezimit";
 import ShtoTransaksionin from "../Components/ShtoTransaksionin";
 import ButonPasqyra from "../Components/ButonPasqyra";
 import ShpenzimiDitor from "../Components/ShpenzimiDitor";
+import UdhetimiNeVazhdim from "../Components/UdhetimiNeVazhdim";
 import SinkronizimiNdaloi from "../Components/SinkronizimiNdaloi";
 import { Kpi, Panel, ProgressBar, Empty } from "../Components/Ui";
 import { useData } from "../Context/DataContext";
@@ -241,6 +242,10 @@ function Dashboard() {
               lg={3}
             />
           </Row>
+
+          {/* Only while a trip is on (or about to be): its budget is the figure that matters that
+              week, so it sits right above the daily one. */}
+          <UdhetimiNeVazhdim />
 
           {/* The two halves of the same question - what today's money is, and what is already
               promised away from it - so the daily figure is never a number without a reason. */}

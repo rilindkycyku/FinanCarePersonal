@@ -213,9 +213,7 @@ export function shiritetHorizontale({ rreshtat = [], monedha, ngjyraStandarde = 
               ${escapeHtml(r.emri)}
               <div style="padding-top:5px;">
                 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${LINE};border-radius:3px;">
-                  <tr><td width="${gjeresia}%" style="background:${
-                    r.ngjyra || ngjyraStandarde
-                  };height:6px;line-height:6px;font-size:0;border-radius:3px;">&nbsp;</td><td>&nbsp;</td></tr>
+                  <tr>${mbushjaEShiritit(gjeresia, r.ngjyra || ngjyraStandarde, 6, 3)}</tr>
                 </table>
               </div>
             </td>
@@ -233,6 +231,22 @@ export function shiritetHorizontale({ rreshtat = [], monedha, ngjyraStandarde = 
             })
             .join("")}
         </table>`;
+}
+
+/**
+ * The inside of a bar track: the filled part, then the rest.
+ *
+ * A fill of 0% is not drawn as a 0%-wide cell. An email table gives a cell the width its content
+ * asks for, and a `&nbsp;` asks for some - so the "empty" half and the fill split the row between
+ * them, and a savings rate of -23%, a goal nothing was put into or a debt nothing was paid on all
+ * arrived as a bar half full. With nothing to fill there is only the track.
+ */
+function mbushjaEShiritit(perqindja, ngjyra, lartesia, rreze) {
+  const qeliza = `height:${lartesia}px;line-height:0;font-size:0;`;
+  if (perqindja <= 0) return `<td style="${qeliza}">&nbsp;</td>`;
+  return `<td width="${perqindja}%" style="${qeliza}background:${ngjyra};border-radius:${rreze}px;">&nbsp;</td>${
+    perqindja < 100 ? `<td style="${qeliza}">&nbsp;</td>` : ""
+  }`;
 }
 
 /** A single filled bar with a caption: the savings rate, how much of a budget is gone. Anything
@@ -254,10 +268,7 @@ export function matesi({ perqindja = 0, etiketa = "", vlera = "", ngjyra = EMERA
           </tr>
           <tr><td colspan="2">
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${LINE};border-radius:5px;">
-              <tr>
-                <td width="${mbushja}%" style="height:10px;line-height:0;font-size:0;background:${ngjyra};border-radius:5px;">&nbsp;</td>
-                <td style="line-height:0;font-size:0;">&nbsp;</td>
-              </tr>
+              <tr>${mbushjaEShiritit(mbushja, ngjyra, 10, 5)}</tr>
             </table>
           </td></tr>
           ${
@@ -271,8 +282,11 @@ export function matesi({ perqindja = 0, etiketa = "", vlera = "", ngjyra = EMERA
 }
 
 /** The three-across figure strip every report opens with. The class is the hook the message's own
- * stylesheet uses to stack the three on a phone; a client that ignores stylesheets keeps the row. */
-export function qelizaShifres(etiketa, vlera, ngjyra, gjeresia = "33%") {
+ * stylesheet uses to stack the three on a phone; a client that ignores stylesheets keeps the row.
+ *
+ * `nen` is the small line under the figure - "+12% ndaj korrikut" - with its own colour, because
+ * whether a rise is good news depends on which figure rose. */
+export function qelizaShifres(etiketa, vlera, ngjyra, gjeresia = "33%", nen = null) {
   return `
               <td class="fcp-shifra" width="${gjeresia}" style="padding:0 4px;" valign="top">
                 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
@@ -283,7 +297,14 @@ export function qelizaShifres(etiketa, vlera, ngjyra, gjeresia = "33%") {
                     )}</div>
                     <div style="font-size:19px;font-weight:bold;color:${ngjyra};white-space:nowrap;">${escapeHtml(
                       vlera
-                    )}</div>
+                    )}</div>${
+                      nen?.teksti
+                        ? `
+                    <div style="font-size:11px;color:${nen.ngjyra || MUTED};padding-top:5px;white-space:nowrap;">${escapeHtml(
+                            nen.teksti
+                          )}</div>`
+                        : ""
+                    }
                   </td></tr>
                 </table>
               </td>`;

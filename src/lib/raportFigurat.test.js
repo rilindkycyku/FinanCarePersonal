@@ -6,7 +6,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { figuratERaportit, ndryshimiPerqind, normaEKursimit } from "./raportFigurat";
+import { figuratERaportit, ndryshimiPerqind, normaEKursimit, objektiviIPeriudhes } from "./raportFigurat";
 import { JAVOR, MUJOR, TREMUJOR, VJETOR } from "./periudhat";
 
 const kategorite = [
@@ -365,5 +365,103 @@ describe("periudha ende në vazhdim", () => {
     const f = figurat({ lloji: MUJOR, periudha: "2026-07", sot });
     // Five week-columns for a whole July; three once it stops on the 15th.
     expect(f.javet.map((j) => j.etiketa)).toEqual(["1-7", "8-14", "15-15"]);
+  });
+});
+
+describe("udhëtimet në raport", () => {
+  const udhetim = (id, extra = {}) => ({
+    id, emri: id, etiketa: id, dataFillimit: "2026-07-20", dataMbarimit: "2026-07-26", ...extra,
+  });
+  const meTrip = [
+    ...transaksionet,
+    dalje("u1", "2026-06-10", 150, "k3", { etiketat: ["ulqin"] }),
+    dalje("u2", "2026-07-21", 30, "k1", { etiketat: ["ulqin"] }),
+    dalje("u3", "2026-07-22", 45, "k1", { etiketat: ["ulqin"] }),
+  ];
+
+  it("lists the trips whose days overlap the period, with the whole trip's cost", () => {
+    const f = figuratERaportit({
+      lloji: MUJOR,
+      periudha: "2026-07",
+      accounts: llogarite,
+      categories: kategorite,
+      transactions: meTrip,
+      udhetimet: [
+        udhetim("ulqin", { buxheti: 300 }),
+        udhetim("vjeshte", { dataFillimit: "2026-10-01", dataMbarimit: "2026-10-05" }),
+        udhetim("kufi", { dataFillimit: "2026-06-28", dataMbarimit: "2026-07-01" }),
+      ],
+    });
+    expect(f.udhetimet.map((u) => u.id)).toEqual(["kufi", "ulqin"]);
+    const ulqin = f.udhetimet[1];
+    // The June booking counts: it is part of the trip, whichever month it was paid in.
+    expect(ulqin.kosto).toBe(225);
+    expect(ulqin.perqindja).toBeCloseTo(75);
+    expect(ulqin.mesatarjaDitore).toBeCloseTo(75 / 7);
+    expect(ulqin.kryesorja).toEqual({ emri: "Argëtim", vlera: 150 });
+  });
+
+  it("shows a trip still running at the end of the stretch as it stood that day", () => {
+    const f = figuratERaportit({
+      lloji: MUJOR,
+      periudha: "2026-07",
+      accounts: llogarite,
+      categories: kategorite,
+      transactions: meTrip,
+      udhetimet: [udhetim("ulqin")],
+      sot: new Date(2026, 6, 22, 12),
+    });
+    expect(f.udhetimet[0].statusi).toBe("aktiv");
+    expect(f.udhetimet[0].mesatarjaDitore).toBeCloseTo(75 / 3);
+  });
+
+  it("has nothing to say without trips", () => {
+    expect(figurat({ lloji: MUJOR, periudha: "2026-07" }).udhetimet).toEqual([]);
+  });
+});
+
+describe("objektivi i kursimit në raport", () => {
+  it("measures the period against the profile's target, in money as well as percent", () => {
+    // 1.200 in, 400 out: 800 kept against a 20% target of 240.
+    expect(objektiviIPeriudhes(20, 1200, 400)).toEqual({ perqindja: 20, shuma: 240, mungon: 0, arritur: true });
+    // 1.000 in, 900 out: 100 kept, 200 short of the 300 a 30% target asks for.
+    expect(objektiviIPeriudhes(30, 1000, 900)).toMatchObject({ shuma: 300, mungon: 200, arritur: false });
+  });
+
+  it("has nothing to say without a target or without income", () => {
+    expect(objektiviIPeriudhes(null, 1000, 10)).toBe(null);
+    expect(objektiviIPeriudhes(20, 0, 10)).toBe(null);
+  });
+
+  it("is carried in the figures when the caller passes a target", () => {
+    expect(figurat({ lloji: MUJOR, periudha: "2026-07", objektiviKursimit: 20 }).objektivi).toMatchObject({
+      perqindja: 20,
+      arritur: true,
+    });
+    expect(figurat({ lloji: MUJOR, periudha: "2026-07" }).objektivi).toBe(null);
+  });
+});
+
+describe("udhëtimet në raport - fundi i periudhës", () => {
+  const udhetim = { id: "u", emri: "u", etiketa: "u", dataFillimit: "2026-08-10", dataMbarimit: "2026-08-16", buxheti: 50 };
+  const meTrip = [...transaksionet, dalje("t1", "2026-08-12", 80, "k1", { etiketat: ["u"] })];
+
+  it("does not call a trip running when it ended on the period's last day", () => {
+    const javaE = figuratERaportit({
+      lloji: JAVOR, periudha: "2026-W33", accounts: llogarite, categories: kategorite, transactions: meTrip, udhetimet: [udhetim],
+    });
+    expect(javaE.udhetimet[0].neVazhdim).toBe(false);
+    const javaPara = figuratERaportit({
+      lloji: JAVOR, periudha: "2026-W33", accounts: llogarite, categories: kategorite, transactions: meTrip,
+      udhetimet: [{ ...udhetim, dataMbarimit: "2026-08-20" }],
+    });
+    expect(javaPara.udhetimet[0].neVazhdim).toBe(true);
+  });
+
+  it("says by how much a trip went over its budget", () => {
+    const f = figuratERaportit({
+      lloji: MUJOR, periudha: "2026-08", accounts: llogarite, categories: kategorite, transactions: meTrip, udhetimet: [udhetim],
+    });
+    expect(f.udhetimet[0].mbiBuxhet).toBe(30);
   });
 });

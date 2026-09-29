@@ -43,6 +43,11 @@ sa shpenzohet, sa mbetet dhe sa po kursesh.
   llogaritet as si hyrje as si shpenzim. Me më shumë se një llogari, rreshtat mund të shënohen me
   kutizë dhe të zhvendosen përnjëherë te një llogari tjetër - e dobishme kur një pjesë e muajit
   rezulton të mos ketë qenë kurrë e llogarisë ku u regjistrua.
+- **Një faturë, disa kategori** - «Ndaje në disa kategori» te formulari: fatura e marketit prej 50 €
+  bëhet 38 € *Market* dhe 12 € *Higjienë*. Ruhen si transaksione të zakonshme me të njëjtën datë,
+  llogari, përshkrim dhe etiketa (dhe një `ndarjaId` të përbashkët), prandaj buxhetet, statistikat,
+  raportet dhe eksportet i numërojnë pa ditur fare që ishin një faturë. Kategoria sipër merr atë që
+  mbetet, në centë, që pjesët të japin gjithmonë totalin - edhe në monedhë tjetër.
 - **Llogaritë** - kesh, llogari bankare, kartela krediti, kursime, investime, kredi. Bilanci
   llogaritet gjithmonë nga bilanci fillestar plus transaksionet, kurse llogaritë e vjetra
   arkivohen pa u fshirë historiku. Butoni i barazimit pyet sa ka vërtet llogaria dhe e shënon
@@ -90,6 +95,12 @@ sa shpenzohet, sa mbetet dhe sa po kursesh.
   Borxhet»** e çon pjesën tuaj te **Borxhet & Kartelat** si *Hua e Dhënë* ose *Borxh Personal* -
   herën tjetër vetëm diferencën e re - ku kthimet regjistrohen si zakonisht. Fatura që e paguani ju
   mund të regjistrohet edhe si shpenzim në llogari.
+- **Udhëtimet** - një udhëtim është një etiketë me data, me monedhën e vendit dhe një buxhet nëse doni.
+  Gjatë ditëve të tij çdo shpenzim i ri hapet me etiketën e udhëtimit dhe në monedhën e vendit; paneli
+  tregon koston, sa mbetet nga buxheti dhe sa mund të shpenzoni në ditë deri në kthim. Faqja e udhëtimit
+  e ndan koston dita pas dite dhe sipas nënkategorive, i mban biletat e blera më parë jashtë mesatares
+  ditore, dhe «Etiketo ditët e udhëtimit» i gjen shpenzimet e atyre ditëve që mbetën pa etiketë
+  (pagesat e përsëritura si qiraja nuk zgjidhen vetë). Si grupet, udhëtimi nuk prek asnjë bilanc.
 - **Vendet** - vendndodhja opsionale e një transaksioni, e marrë vetëm kur shtypni butonin, me emrin
   që i vini vetë (vizita e radhës aty e merr vetë). Faqja **Vendet** i bashkon pikat në vende, me
   shpenzimet e secilit, dhe i riemërton; lidhja «Hap në hartë» ju çon te Google Maps vetëm kur e
@@ -98,10 +109,11 @@ sa shpenzohet, sa mbetet dhe sa po kursesh.
   dhe me numërimin e përdorimit real të secilës. Çdo kategori mund të ketë **nënkategori** - p.sh.
   *Ushqim & Pije › Market*, *› Furra*, *› Pije & Ujë*, ose *Kafe & Restorant › Kafe*, *› Drekë në
   Punë*, *› Fast Food* - që i përgjigjen pyetjes që lista e sheshtë nuk e mbulonte: ishte market,
-  drekë në punë apo restorant? Lista e parazgjedhur vjen me **183 nënkategori te 39 kategori
+  drekë në punë apo restorant? Lista e parazgjedhur vjen me **193 nënkategori te 39 kategori
   kryesore** - ushqimi i ndarë deri te bulmeti dhe të ngrirat, karburanti deri te benzina, nafta,
   gazi e rikarikimi elektrik, riparimet deri te hidrauliku, elektricisti dhe bojaxhiu, fatura sipas
-  llojit, udhëtimi i ndarë në bileta, fjetje e transferë, sigurimet një nga një - dhe e njëjta gjë
+  llojit, udhëtimi i ndarë në bileta, fjetje e transferë deri te plazhi, kafeja në pushime,
+  karburanti i rrugës e autostrada, sigurimet një nga një - dhe e njëjta gjë
   vlen edhe për hyrjet, ku *Rroga* ndahet në pagë bazë, orë shtesë, shujta & transport, pagesa të
   prapambetura, pushime e pagesë të 13-të, që të dallohet muaji i zakonshëm nga ai që kishte diçka
   mbi të. Përjashtim bëjnë vetëm ato ku ndarja nuk do të shtonte asgjë (*Këste të Kartelës*,
@@ -264,6 +276,13 @@ sa shpenzohet, sa mbetet dhe sa po kursesh.
   arkivi ZIP. Çelësi *service_role* refuzohet me vetëdije: ai anashkalon rregullat e sigurisë dhe
   nuk ka pse të ndodhet kurrë në një shfletues. Hapat, forma e tabelës dhe kufizimet janë te
   seksioni [Sinkronizimi mes pajisjeve](#sinkronizimi-mes-pajisjeve).
+- **Raportet** - faqja që i hap të katër raportet (java, muaji, tremujori, viti) brenda aplikacionit,
+  për çdo periudhë, pa asnjë konfigurim: i njëjti raport që mund t'ju vijë me email, i llogaritur në
+  pajisjen tuaj. Shkarkohet si PDF, printohet, ose - kur keni lidhur projektin - dërgohet me email.
+  Raportet përmbajnë edhe udhëtimet që ranë në periudhë, secili me koston dhe buxhetin e vet, dhe
+  krahasimin me periudhën e kaluar nën secilën shifër të kreut; kur keni objektiv kursimi, periudha
+  matet ndaj tij. Pasqyra PDF që u shtohet emaileve ngjeshet (~70 kB për një muaj) dhe titullohet
+  sipas periudhës - edhe për javën e tremujorin.
 - **Raportet me email (opsionale)** - katër raporte, secili me çelësin e vet: **javor**, **mujor**,
   **tremujor** dhe **vjetor**. Sa herë mbyllet një periudhë, hera e parë që hapet aplikacioni pas saj
   dërgon me email pasqyrën e asaj periudhe - shifrat kryesore, grafikët e periudhës (ditët e javës,

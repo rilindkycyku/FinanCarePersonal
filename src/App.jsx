@@ -11,6 +11,8 @@ const Transaksionet = lazy(() => import("./Pages/Transaksionet"));
 const Llogarite = lazy(() => import("./Pages/Llogarite"));
 const Borxhet = lazy(() => import("./Pages/Borxhet"));
 const Grupet = lazy(() => import("./Pages/Grupet"));
+const Udhetimet = lazy(() => import("./Pages/Udhetimet"));
+const RaportetFaqja = lazy(() => import("./Pages/Raportet"));
 const Vendet = lazy(() => import("./Pages/Vendet"));
 const Ndryshimet = lazy(() => import("./Pages/Ndryshimet"));
 const Kategorite = lazy(() => import("./Pages/Kategorite"));
@@ -39,6 +41,8 @@ function App() {
         <Route path="/llogarite" element={<Llogarite />} />
         <Route path="/borxhet" element={<Borxhet />} />
         <Route path="/grupet" element={<Grupet />} />
+        <Route path="/udhetimet" element={<Udhetimet />} />
+        <Route path="/raportet" element={<RaportetFaqja />} />
         <Route path="/vendet" element={<Vendet />} />
         <Route path="/ndryshimet" element={<Ndryshimet />} />
         <Route path="/kategorite" element={<Kategorite />} />

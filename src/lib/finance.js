@@ -243,6 +243,94 @@ export function currencyFields({ monedhaOrigjinale, vleraOrigjinale, kursi }, mo
   };
 }
 
+// ── One receipt, several categories ─────────────────────────────────────────
+
+const centet = (v) => Math.round(toNumber(v) * 100);
+
+/**
+ * Splits one receipt into one ordinary transaction per category - the supermarket bill that was
+ * 38 € of food and 12 € of shampoo.
+ *
+ * ---- why several transactions and not one with a list of parts ----
+ *
+ * Every total, budget, chart, report and export in the app reads `kategoriaId` and `vlera` off a
+ * transaction. A transaction carrying a list of parts would have to be taught to every one of them,
+ * and the one that was missed would count the whole 50 € as food. As separate rows, each part is a
+ * transaction like any other and nothing downstream needs to know a split happened. What ties them
+ * together is `ndarjaId` - for the form to say "part of a receipt split in three", not for any sum.
+ *
+ * ---- what goes where ----
+ *
+ * `rekordi` is the transaction as the form would have saved it whole: total amount, the category
+ * chosen at the top, and everything else. Each part names a category and an amount *as typed* -
+ * in the billing currency when the receipt was in one - and the category at the top keeps what is
+ * left, so the receipt total is always exactly what the form said. Amounts are handled in cents:
+ * the remainder is the total minus the parts, never a separately rounded figure, so the rows add
+ * back to the receipt to the cent.
+ *
+ * The rows share the date, account, description, note, tags, place and rhythm - it was one
+ * purchase. The links that describe *why* money moved (a savings goal, a schedule, a debt, a plan, a
+ * group bill) stay only on the first row, which keeps the id the form started with: counting the
+ * same instalment three times would be exactly the bug this was built to avoid.
+ *
+ * Returns `{ rekordet, gabimi }` - the rows to save, or the reason there are none.
+ */
+export function ndajFaturen(rekordi, pjeset = [], { makeId } = {}) {
+  const pjeseTePlota = (pjeset || []).filter((p) => p && (p.kategoriaId || toNumber(p.vlera) > 0));
+  if (pjeseTePlota.length === 0) return { rekordet: [rekordi], gabimi: "" };
+  if (pjeseTePlota.some((p) => !p.kategoriaId)) return { rekordet: [], gabimi: "Zgjidhni kategorinë e çdo pjese." };
+  if (pjeseTePlota.some((p) => !(toNumber(p.vlera) > 0))) {
+    return { rekordet: [], gabimi: "Çdo pjesë duhet të ketë një vlerë më të madhe se zero." };
+  }
+
+  const meMonedhe = Boolean(rekordi.monedhaOrigjinale);
+  const totaliShkruar = centet(meMonedhe ? rekordi.vleraOrigjinale : rekordi.vlera);
+  const pjeseShkruar = pjeseTePlota.map((p) => centet(p.vlera));
+  const mbetjaShkruar = totaliShkruar - pjeseShkruar.reduce((a, b) => a + b, 0);
+  if (mbetjaShkruar <= 0) {
+    return {
+      rekordet: [],
+      gabimi: "Pjesët e kalojnë totalin. Kategoria e zgjedhur sipër merr atë që mbetet, prandaj duhet të mbetet diçka.",
+    };
+  }
+
+  // Converted part by part, and the remainder taken from the converted total, so the rows add up
+  // to what the account really lost.
+  const pjeseBaze = pjeseShkruar.map((c) => (meMonedhe ? centet(convertedAmount(c / 100, rekordi.kursi)) : c));
+  const mbetjaBaze = centet(rekordi.vlera) - pjeseBaze.reduce((a, b) => a + b, 0);
+  if (mbetjaBaze <= 0) {
+    return { rekordet: [], gabimi: "Pjesët e kalojnë totalin pas konvertimit të monedhës." };
+  }
+
+  const ndarjaId = rekordi.ndarjaId || makeId("spl");
+  const kryesori = {
+    ...rekordi,
+    vlera: mbetjaBaze / 100,
+    ...(meMonedhe ? { vleraOrigjinale: mbetjaShkruar / 100 } : {}),
+    ndarjaId,
+  };
+  const tjeret = pjeseTePlota.map((p, i) => ({
+    ...rekordi,
+    id: makeId("tx"),
+    kategoriaId: p.kategoriaId,
+    vlera: pjeseBaze[i] / 100,
+    ...(meMonedhe ? { vleraOrigjinale: pjeseShkruar[i] / 100 } : {}),
+    qellimiId: null,
+    perseritjaId: null,
+    borxhiId: null,
+    planiId: null,
+    grupiId: null,
+    ndarjaId,
+  }));
+  return { rekordet: [kryesori, ...tjeret], gabimi: "" };
+}
+
+/** The other rows of the receipt a transaction was split from, itself included, oldest first. */
+export function pjesetENdarjes(transactions = [], tx) {
+  if (!tx?.ndarjaId) return [];
+  return transactions.filter((t) => t.ndarjaId === tx.ndarjaId);
+}
+
 // ── Date ranges ─────────────────────────────────────────────────────────────
 
 /** Inclusive first/last day of the month a date falls in, as "YYYY-MM-DD" strings. */

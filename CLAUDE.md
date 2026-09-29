@@ -31,7 +31,7 @@ npm run dev       # vite --host
 npm run build
 npm run preview
 npm run lint      # eslint . — must stay at 0 errors (4 pre-existing warnings)
-npm test          # vitest run — 30 files, 698 tests, all green
+npm test          # vitest run — 32 files, 755 tests, all green
 npm run test:watch
 npm run ikonat    # regenerates the icons and the two wordmark PNGs from Logo.svg (Playwright)
 ```
@@ -99,6 +99,7 @@ imports, so keep doing that unless you are converting deliberately.
 | `paralajmerimet.js` / `njoftimet.js` | Crossing-based notifications |
 | `abonimet.js` | Detects repeating payments already in the history |
 | `grupet.js` | Shared-expense groups: bill splitting in cents, pairwise balances, fewest transfers, the delta carried into `borxhet` |
+| `udhetimet.js` | Trips: a tag with dates, currency and budget; the trip's figures, the form's auto-tagging (`aplikoUdhetimin`), tagging after the fact |
 | `vendndodhjet.js` | Transaction location pins: cleaning, clustering into places, renaming, the sync opt-out strip/keep |
 | `viti.js` | Year-vs-previous-year page |
 | `udhezimet.js` | Text of the in-app guide, one entry per page, keyed by route |
@@ -136,8 +137,8 @@ That reload is the single refresh point — never mutate `data` locally to "avoi
 
 ### 3. Debts, plans and invoice photos are deliberately outside the balance
 
-`borxhet` (debt notes), `planet` (planned purchases) and `grupet` (shared-expense groups) are their
-own stores and **no balance function reads them**. A card with 900 € outstanding must not darken the total balance; a plan only
+`borxhet` (debt notes), `planet` (planned purchases), `grupet` (shared-expense groups) and `udhetimet`
+(trips) are their own stores and **no balance function reads them**. A card with 900 € outstanding must not darken the total balance; a plan only
 *reserves* money from the daily allowance. Keep it that way.
 
 Invoice photos are split in two stores on purpose: `faturat` holds small metadata + thumbnail
@@ -199,10 +200,10 @@ Read the header comments of `sinkronizimi.js`, `db.js` and `skema.js` before cha
 3. Add a guide entry in `lib/udhezimet.js` with the matching `shtegu` — `ButoniUdhezimit` finds
    the guide by route, so a page without one silently shows no help button.
 
-## Data model (IndexedDB `financarepersonal`, version 6)
+## Data model (IndexedDB `financarepersonal`, version 7)
 
 Stores are declared in `STORES` in `db.js`. Ids are `makeId(prefix)` → `tx_…`, `acc_…`, `cat_…`,
-`goal_…`, `rec_…`, `debt_…`, `plan_…`, `grp_…`.
+`goal_…`, `rec_…`, `debt_…`, `plan_…`, `grp_…`, `trip_…`; a split receipt's shared `ndarjaId` is `spl_…`.
 
 - `profile` (single record, key `main`): `emri`, `monedha`, `teArdhuratMujore`,
   `objektiviKursimit`, `limitiDitor`, `njoftimeLimiti|Buxheti|Qellimi|Pagesa`, `cilesiaFaturave`,
@@ -217,7 +218,9 @@ Stores are declared in `STORES` in `db.js`. Ids are `makeId(prefix)` → `tx_…
   emri }` or null - see `vendndodhjet.js`; stripped from pushes when the profile has
   `vendndodhjaVetemPajisje`), `krijuar` (set once — it orders same-day
   rows), `ritmi` (`"mujor"` = spread over the month instead of charged to today; legacy
-  `jashteLimitit` is still read), plus optional `monedhaOrigjinale`/`vleraOrigjinale`/`kursi`.
+  `jashteLimitit` is still read), plus optional `monedhaOrigjinale`/`vleraOrigjinale`/`kursi`, and
+  `ndarjaId` when the row is one part of a receipt split across categories (`ndajFaturen` in
+  finance.js - each part is an ordinary transaction; the id only lets the form say so).
 - `budgets`: `kategoriaId`, `vlera`, `muaji` (null = standing limit, `YYYY-MM` = that month only),
   `rimbart` (rollover).
 - `goals`: `emri`, `vleraSynim`, `vleraFillestare`, `dataSynim`, `llogariaId`, `ngjyra`.
@@ -231,6 +234,10 @@ Stores are declared in `STORES` in `db.js`. Ids are `makeId(prefix)` → `tx_…
   `UNE`), `shpenzimet[]` (`paguesi`, `ndarja`, `pjesemarresit`, `pjeset`, `transaksioniId`),
   `shlyerjet[]` (between two *other* members only), `kaluarNeBorxhe` (per member, what has already
   been carried into debt notes; notes carry `grupiId` + `anetariId`), `arkivuar`.
+- `udhetimet`: `emri`, `etiketa` (the tag its transactions carry - membership is by tag, never by
+  date), `dataFillimit`, `dataMbarimit`, `monedha` + `kursi` (the place's currency, or null),
+  `buxheti` (or null), `ngjyra`, `shenim`. The dates only decide which trip the form auto-tags a new
+  *expense* with, and what "per day" means.
 - `faturat` / `faturaSkedaret`: photo metadata + full blobs.
 - `fshirjet`: tombstones keyed `${store}:${id}`.
 
@@ -243,7 +250,7 @@ version — and note that an upgrade blocked by another open tab is surfaced thr
 
 - Vitest, no DOM environment, no jsdom setup file. Tests sit next to the code as `*.test.js`.
 - Everything tested is pure: `finance`, `csv`, `sinkronizimi`, `kategorite`, `etiketat`, `format`,
-  `grupet`, `vendndodhjet`, `ndryshimet`,
+  `grupet`, `udhetimet`, the receipt split (`ndarja.test.js`), `vendndodhjet`, `ndryshimet`,
   `options`, `calc`, `periudhat`, `raportet`, `raporti`, `raportFigurat`, `raportGrafike`,
   `raportEmail`, `paralajmerimet`, `njoftimet`, `abonimet`, `viti`, `zerat`, `skema`, `supabase`,
   `transferQr`, `pajisja`, `instalimi`, `udhezimet`, plus the naming half of `exportPdf`
@@ -266,10 +273,22 @@ shows it at the bottom of every page. When a change is user-visible:
    voice (what the problem was, what changed, what the calculation still does).
 3. Update `README.md` if the feature list or the sync/privacy story changed.
 
+**One version per piece of work.** Everything done on one branch / in one session ships as a
+**single** version: bump `version` once, on the first user-visible change, and fold every later
+change on the same branch into that same `CHANGELOG.md` section (a new bullet, or a widened one)
+instead of bumping again. If a later change is bigger than the first (a fix first, then a new
+capability), raise that one version to match (patch → minor) rather than adding a second one. Check
+`git log` / the top of the changelog before bumping: if this branch already bumped, do not bump
+again.
+
 The changelog is also **shown to users**: the build parses it (`lib/ndryshimet.js`, a small plugin
 in `vite.config.js`) into `/ndryshimet.json`, and the service worker runs in `prompt` mode — a new
 version waits while `Components/PerditesimiIRi.jsx` lists every release newer than the running one
-and asks before `updateServiceWorker(true)`. So write entries for the person reading that dialog,
+and asks before `updateServiceWorker(true)`. The same component also checks for a new version every 30 minutes and whenever the app becomes
+visible again, and - because a browser starts the waiting version by itself once every window is
+closed - shows «Çka ka të re te vX» once after such an opening, from the version this device last ran
+(`localStorage` key `fcp-versioni-i-pare`, `ndryshimetMes`). So write entries for the person reading
+that dialog,
 keep the heading format exact, and keep the newest version at the top: `ndryshimet.test.js` fails
 when the first entry is not `package.json`'s version. `/ndryshimet.json` must stay out of the
 precache, or a waiting version would be described by the old copy.
@@ -289,5 +308,9 @@ precache, or a waiting version would be described by the old copy.
   cascade.
 - Budgets set on a parent category count the whole family (`familjaSet`).
 - Never accept a Supabase `service_role` / `secret` key — `kontrolloCelesin` refuses it on purpose.
+- Amounts in anything printed (the PDF statement, table PDFs) go through `formatAmount` - grouped like
+  the screen, with plain spaces the embedded font can draw. `plainAmount` is only for cells that feed
+  the Excel export, where a grouped number would stop summing. Both jsPDF documents are built with
+  `compress: true`; without it a monthly statement is ~840 kB instead of ~70 kB.
 - Long operations (ZIP export, import, photo re-compression) block the screen deliberately
   (`PunaNeVazhdim`) — a double tap there means a double import.

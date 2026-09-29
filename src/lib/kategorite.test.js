@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  emriIPlote, eshteArkivuar, familja, kategoriTeHapura, kerkoKategorite, mundTeKeteNjePrind, nenkategorite, pemaKategorive, prinderitEMundshem, prindiI, prindiPerRuajtje, rrenjaE,
+  emriIPlote, eshteArkivuar, familja, kategoriTeHapura, kategoriteQeMungojne, kerkoKategorite, mundTeKeteNjePrind, nenkategorite, pemaKategorive, prinderitEMundshem, prindiI, prindiPerRuajtje, rrenjaE,
 } from "./kategorite";
 
 const kategori = (id, emri, extra = {}) => ({ id, emri, lloji: "shpenzim", ...extra });
@@ -181,5 +181,60 @@ describe("kategori të arkivuara", () => {
     const pema = pemaKategorive(kategoriTeHapura(meArkiv), "shpenzim");
     expect(pema.map((r) => r.id)).toEqual(["ushqim"]);
     expect(pema[0].femijet.map((c) => c.id)).toEqual(["market"]);
+  });
+
+  describe("kategoriteQeMungojne", () => {
+    // A ledger seeded by an older release: the travel family is there, but only with what that
+    // release shipped - and "Karburant" was deleted, "Udhëtime" archived.
+    const parazgjedhurat = [
+      kategori("udhetime", "Udhëtime"),
+      kategori("udhetime_bileta", "Bileta", { prindi: "udhetime" }),
+      kategori("udhetime_plazh", "Plazh & Pishinë", { prindi: "udhetime" }),
+      kategori("karburant", "Karburant"),
+      kategori("karburant_nafte", "Naftë", { prindi: "karburant" }),
+      kategori("dhurata", "Dhurata"),
+    ];
+    const ekzistuese = [
+      kategori("udhetime", "Pushimet", { arkivuar: true }),
+      kategori("udhetime_bileta", "Avioni", { prindi: "udhetime" }),
+    ];
+
+    it("adds a new subcategory under a parent the ledger already has, even an archived one", () => {
+      const ids = kategoriteQeMungojne(parazgjedhurat, ekzistuese, ["karburant"]).map((c) => c.id);
+      expect(ids).toContain("udhetime_plazh");
+      // Already there under the user's own name - never offered again, never renamed back.
+      expect(ids).not.toContain("udhetime");
+      expect(ids).not.toContain("udhetime_bileta");
+    });
+
+    it("leaves out a deleted default, and the children of a parent that is gone", () => {
+      const ids = kategoriteQeMungojne(parazgjedhurat, ekzistuese, ["karburant"]).map((c) => c.id);
+      expect(ids).not.toContain("karburant");
+      expect(ids).not.toContain("karburant_nafte");
+      // A new top-level default nobody deleted still arrives.
+      expect(ids).toContain("dhurata");
+    });
+
+    it("waits for the parent rather than shipping a child to the top level", () => {
+      // "Dhurata" is new in this same pass, but its children arrive on the pass after it is saved.
+      const meFemije = [...parazgjedhurat, kategori("dhurata_dasma", "Dasma", { prindi: "dhurata" })];
+      expect(kategoriteQeMungojne(meFemije, ekzistuese).map((c) => c.id)).not.toContain("dhurata_dasma");
+    });
+
+    it("tolerates a ledger or a profile that holds nothing yet", () => {
+      expect(kategoriteQeMungojne(parazgjedhurat, [], undefined).map((c) => c.id)).toEqual([
+        "udhetime", "karburant", "dhurata",
+      ]);
+      expect(kategoriteQeMungojne(undefined, ekzistuese)).toEqual([]);
+    });
+  });
+
+  it("reads a list that grew after it was first asked about, not a remembered copy of it", () => {
+    // The index is cached per array; a caller that pushes into its own list must not be answered
+    // from the version before the push.
+    const rritet = [kategori("a", "A")];
+    expect(emriIPlote(rritet, "b", "?")).toBe("?");
+    rritet.push(kategori("b", "B", { prindi: "a" }));
+    expect(emriIPlote(rritet, "b")).toBe("A › B");
   });
 });

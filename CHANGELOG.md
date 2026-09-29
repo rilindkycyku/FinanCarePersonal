@@ -9,6 +9,107 @@ e fundit kur rregullohet diçka, dhe e para vetëm kur ndryshon vetë forma e pr
 herë, te `2.0.0`, kur të dhënat mësuan të dalin nga shfletuesi. Datat janë ato të commit-it që e
 ngriti versionin.
 
+## [2.30.0] - 2026-09-29
+
+### Shtuar
+- **Kategoritë e pushimeve: 10 nënkategori të reja te Udhëtime.** *Udhëtime* ishte ndarë për
+  udhëtimin që rezervohet — bileta, hoteli, makina me qira — dhe ndalej aty, pikërisht ku fillon një
+  javë në det. Faturat që vijnë pasi arrini nuk kishin ku të shkonin: shezlongu e çadra çdo mëngjes,
+  kafeja në shëtitore, rezervuari i mbushur rrugës dhe pagesa te tuneli, taksia pas darkës, trageti,
+  roamingu. Të shënuara te rreshtat e përditshëm (*Kafe*, *Benzinë*, *Taksi*) bënin dy dëme
+  njëherësh: pushimet nuk mblidheshin kurrë në një shifër, dhe muaji kur ranë dukej sikur i kishte
+  prishur buxhetet e zakonshme të kafesë e karburantit. Tani *Udhëtime* ka edhe:
+
+  - *Plazh & Pishinë* — shezlong, çadër, pishinë, aquapark.
+  - *Kafe, Pije & Dalje* — kafeja, pijet dhe mbrëmjet jashtë, ndarë nga ushqimi.
+  - *Karburant për Rrugë* dhe *Autostradë & Parkim* — rruga me veturë, tunelet e pagesat rrugore
+    dhe parkimi atje ku rrini.
+  - *Taksi & Transport Lokal* dhe *Traget & Varkë*.
+  - *Vizë & Dokumente*, *Roaming & Internet*, *Këmbim Valutor & Tarifa* dhe *Bagazh & Valixhe*.
+
+  Dalin vetë herën e parë që hapet aplikacioni, pa prekur asgjë nga ç'keni: një kategori që e keni
+  riemërtuar mbetet me emrin tuaj, një që e keni fshirë nuk kthehet, dhe nëse e keni fshirë vetë
+  *Udhëtime*, nënkategoritë e reja nuk ju dalin si kategori kryesore. Sigurimi i udhëtimit mbetet te
+  *Sigurime*, krah policave të tjera. Sa kushtoi një udhëtim i caktuar e thotë tani faqja e re
+  **Udhëtimet**, më poshtë.
+- **Udhëtimet.** Një faqe e re te *Planifikimi*: udhëtimi ka emër, data, një etiketë dhe - nëse doni -
+  monedhën e vendit dhe një buxhet. **Gjatë ditëve të tij çdo shpenzim i ri hapet vetë me etiketën e
+  udhëtimit** dhe, kur e keni zgjedhur, në lekë apo në monedhën tjetër me kursin tuaj, pra kafeja e
+  pestë e ditës nuk kërkon që të kujtoheni për asgjë. Nën etiketat shkruhet se u vunë vetë, dhe «Nuk i
+  përket» i heq për atë transaksion. Hyrjet dhe transferet nuk etiketohen vetë: rroga që bie më 1 të
+  muajit gjatë pushimeve nuk është pjesë e tyre.
+  <br />Gjatë udhëtimit **paneli ka një kartë të vetën**: kostoja deri tani, sa u shpenzua sot, sa
+  mbetet nga buxheti dhe sa mund të shpenzoni në ditë deri në kthim. Faqja e udhëtimit e ndan koston
+  **dita pas dite** dhe **sipas nënkategorive** (Plazh, Kafe, Karburant për rrugë - jo thjesht
+  «Udhëtime»), dhe biletat e blera muaj më parë i mban te «Para nisjes», që mesatarja ditore të mos
+  fryhet prej tyre. Kostoja është shpenzimet minus hyrjet me të njëjtën etiketë - një kthim parash apo
+  pjesa që ju ktheu një shok.
+  <br />**U kthyet dhe s'keni etiketuar asgjë?** Krijoni udhëtimin me datat e tij: faqja tregon sa
+  shpenzime të atyre ditëve nuk e kanë etiketën dhe «Shiko dhe etiketo» ju lë t'i zgjidhni. Pagesat e
+  përsëritura (qiraja, abonimet) nuk zgjidhen vetë, sepse do të ishin paguar edhe pa udhëtim. Një
+  etiketë që e keni përdorur më parë (p.sh. «pushime2026») mund të zgjidhet për udhëtimin, dhe ai i
+  mbledh menjëherë të gjitha.
+  <br />Udhëtimi nuk prek asnjë bilanc - ai vetëm lexon transaksionet me etiketën e tij - dhe
+  sinkronizohet, hyn në kopjet ZIP/JSON dhe kalon me QR si çdo gjë tjetër.
+- **Një faturë, disa kategori.** Nën kategorinë e formularit ka tani «Ndaje në disa kategori»: fatura e
+  marketit prej 50 € bëhet 38 € *Market* dhe 12 € *Higjienë*. Çdo pjesë merr kategorinë dhe vlerën e
+  vet, kategoria sipër merr atë që mbetet, dhe totali mbetet gjithmonë ai i faturës - në centë, edhe
+  kur fatura është në monedhë tjetër. Ruhen si transaksione të zakonshme me të njëjtën datë, llogari,
+  përshkrim dhe etiketa, prandaj buxhetet, statistikat dhe raportet i numërojnë secilën te kategoria e
+  saj pa ditur fare që ishin një faturë. Kur hapni njërën prej tyre, formulari e thotë se është pjesë e
+  një fature të ndarë.
+- **Faqja Raportet.** Të katër raportet - java, muaji, tremujori, viti - hapen tani brenda
+  aplikacionit, për çdo periudhë, **pa asnjë konfigurim**. Deri tani një raport shihej vetëm kur vinte
+  me email, pra pas një projekti Supabase, një funksioni dhe një çelësi Resend - dhe shumica nuk e
+  kishin parë kurrë. Por raporti ndërtohej gjithmonë në pajisjen tuaj; tani i njëjti raport shfaqet
+  këtu, me shigjeta për periudhën e mëparshme e tjetrën, dhe shkarkohet si PDF, printohet ose -
+  kur keni lidhur projektin - dërgohet me email. Te *Më Shumë*, pranë Statistikave.
+
+### Ndryshuar
+- **Raportet kanë udhëtimet.** Çdo raport, me email apo në faqe, tregon udhëtimet që ranë në periudhë:
+  koston e të gjithë udhëtimit (edhe biletën e blerë muajin më parë), sa në ditë atje, ku shkoi më
+  shumë dhe buxhetin kur ka.
+- **Raportet me Email te Cilësimet.** Secili lloj e tregon gjendjen e vet në rreshtin e vet - u
+  dërgua, nuk u dërgua dhe pse, ose pret - në vend të një liste të veçantë poshtë kartës. Pranë «Dërgo
+  tani» ka edhe **«Shiko»**, që e hap raportin te faqja e re para se ta dërgoni.
+- **Raportet dhe pasqyra PDF ndërtohen shumë më shpejt.** Emri i kategorisë së çdo rreshti kërkohej
+  duke ndërtuar nga e para listën e të gjitha kategorive (232 sipas parazgjedhjes), dhe numri i këstit
+  duke kaluar tërë librin për çdo këst. Tani të dyja lexohen nga një tregues i gatshëm: në një libër me
+  8.000 transaksione raporti vjetor bie nga ~98 ms në ~21 ms dhe pasqyra e gjithë historisë nga ~247 ms
+  në ~15 ms. Shifrat nuk ndryshuan.
+- **«Çka ka të re» hapet më lehtë.** Faqja mbante brenda gjithë historinë e versioneve (~95 kB) për të
+  treguar tetë të fundit; tani i ka vetëm ato, dhe versionet e vjetra ngarkohen kur i kërkoni. Punon
+  njësoj edhe pa internet.
+- **Emailet e raporteve thonë më shumë në krye.** Nën secilën nga tri shifrat e para shkruhet tani
+  krahasimi me periudhën e kaluar - «+57% ndaj korrikut» nën Shpenzime, me të kuqe kur shpenzimet
+  rriten e me të gjelbër kur bien - dhe nën Bilancin sa ndryshoi gjatë periudhës. Krahasimi ishte
+  vetëm në fjalinë e fundit të emailit, pikërisht aty ku lexohet më pak.
+- **Kursimi ka seksionin e vet, me objektivin tuaj.** Kur keni vendosur një objektiv kursimi te
+  Cilësimet, raporti e mat periudhën ndaj tij: «Objektivi 20% (290,00 €) u arrit», ose sa mungoi.
+- **Pasqyra PDF që vjen me email është 12 herë më e vogël.** Një muaj me dy faqe zinte ~840 kB -
+  mbi 1 MB si bashkëngjitje - sepse shkronjat dhe çdo rresht i tabelave ruheshin pa u ngjeshur. Tani
+  zë ~70 kB dhe duket njësoj; e njëjta vlen për PDF-të e tabelave dhe për pasqyrën që shkarkoni.
+- **Shumat në PDF shkruhen si kudo tjetër**: «1.854,32 €» në vend të «1854.32 €», që pasqyra të
+  lexohet njësoj si emaili me të cilin vjen.
+
+- **Versioni i ri vihet re më shpejt, dhe nuk vjen më pa fjalë.** Aplikacioni pyet për version të ri
+  sa herë ktheheni te ai (edhe kur e hapni nga sfondi në telefon), jo vetëm një herë në orë. Dhe kur
+  shfletuesi kalon vetë te versioni i ri - ndodh kur mbyllen të gjitha dritaret pa shtypur
+  «Përditëso tani» - hapja e radhës tregon një herë **«Çka ka të re te vX»**, me çdo version që
+  kaloi që nga ai që kishte kjo pajisje. Njësoj si te bridzh-online.
+
+### Rregulluar
+- **Pasqyra e javës dhe e tremujorit kanë emrin e tyre.** PDF-ja e bashkëngjitur te raporti javor apo
+  tremujor - dhe ajo e një muaji ende në vazhdim - titullohej «Pasqyra e periudhës», sepse nga datat
+  vetëm një muaj i plotë apo një vit njihen me emër. Tani titullohet si emaili: «Pasqyra e javës 10-16
+  gusht 2026». Një muaj i kërkuar me dorë para se të mbarojë ndalet te dita e sotme, si emaili.
+- **Shiritat bosh vizatohen bosh.** Në email, një shirit pa asgjë për të mbushur - një normë kursimi
+  negative, një qëllim ku s'u fut asgjë, një borxh ku s'u pagua asgjë - dilte gjysmë i mbushur, sepse
+  tabela e emailit i ndante hapësirën përgjysmë. Tani del bosh, dhe shifra pranë tij e thotë.
+- **«Sa mbeti nga çfarë hyri»** nuk duket më si rreshti i fundit i etiketave apo i udhëtimeve: ka
+  titullin e vet.
+- **Një udhëtim që mbaron bashkë me javën** nuk quhet më «ende në vazhdim» te raporti i asaj jave.
+
 ## [2.29.0] - 2026-09-26
 
 ### Shtuar
