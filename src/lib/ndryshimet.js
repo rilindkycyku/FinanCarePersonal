@@ -108,6 +108,20 @@ export function ndryshimetPas(lista = [], versioniAktual) {
   return lista.filter((v) => krahasoVersionet(v.versioni, versioniAktual) > 0);
 }
 
+/**
+ * The releases a device moved through without being asked - after `pare` (the version it last ran)
+ * up to and including `tani` (the one running now) - newest first.
+ *
+ * The update prompt covers the usual way to a new version, but not the other one: when every
+ * window of the app is closed, the browser starts the waiting version on the next launch by itself.
+ * The app then opened on something new without a word about it. This is the list shown once after
+ * such an opening, so nobody finds themselves on a new version without knowing what changed.
+ */
+export function ndryshimetMes(lista = [], pare, tani) {
+  if (!pare || !tani || krahasoVersionet(tani, pare) <= 0) return [];
+  return lista.filter((v) => krahasoVersionet(v.versioni, pare) > 0 && krahasoVersionet(v.versioni, tani) <= 0);
+}
+
 const escape = (s) =>
   String(s)
     .replace(/&/g, "&amp;")

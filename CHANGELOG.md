@@ -92,6 +92,12 @@ ngriti versionin.
 - **Shumat në PDF shkruhen si kudo tjetër**: «1.854,32 €» në vend të «1854.32 €», që pasqyra të
   lexohet njësoj si emaili me të cilin vjen.
 
+- **Versioni i ri vihet re më shpejt, dhe nuk vjen më pa fjalë.** Aplikacioni pyet për version të ri
+  sa herë ktheheni te ai (edhe kur e hapni nga sfondi në telefon), jo vetëm një herë në orë. Dhe kur
+  shfletuesi kalon vetë te versioni i ri - ndodh kur mbyllen të gjitha dritaret pa shtypur
+  «Përditëso tani» - hapja e radhës tregon një herë **«Çka ka të re te vX»**, me çdo version që
+  kaloi që nga ai që kishte kjo pajisje. Njësoj si te bridzh-online.
+
 ### Rregulluar
 - **Pasqyra e javës dhe e tremujorit kanë emrin e tyre.** PDF-ja e bashkëngjitur te raporti javor apo
   tremujor - dhe ajo e një muaji ende në vazhdim - titullohej «Pasqyra e periudhës», sepse nga datat

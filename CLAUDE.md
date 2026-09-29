@@ -31,7 +31,7 @@ npm run dev       # vite --host
 npm run build
 npm run preview
 npm run lint      # eslint . — must stay at 0 errors (4 pre-existing warnings)
-npm test          # vitest run — 32 files, 753 tests, all green
+npm test          # vitest run — 32 files, 755 tests, all green
 npm run test:watch
 npm run ikonat    # regenerates the icons and the two wordmark PNGs from Logo.svg (Playwright)
 ```
@@ -284,7 +284,11 @@ again.
 The changelog is also **shown to users**: the build parses it (`lib/ndryshimet.js`, a small plugin
 in `vite.config.js`) into `/ndryshimet.json`, and the service worker runs in `prompt` mode — a new
 version waits while `Components/PerditesimiIRi.jsx` lists every release newer than the running one
-and asks before `updateServiceWorker(true)`. So write entries for the person reading that dialog,
+and asks before `updateServiceWorker(true)`. The same component also checks for a new version every 30 minutes and whenever the app becomes
+visible again, and - because a browser starts the waiting version by itself once every window is
+closed - shows «Çka ka të re te vX» once after such an opening, from the version this device last ran
+(`localStorage` key `fcp-versioni-i-pare`, `ndryshimetMes`). So write entries for the person reading
+that dialog,
 keep the heading format exact, and keep the newest version at the top: `ndryshimet.test.js` fails
 when the first entry is not `package.json`'s version. `/ndryshimet.json` must stay out of the
 precache, or a waiting version would be described by the old copy.

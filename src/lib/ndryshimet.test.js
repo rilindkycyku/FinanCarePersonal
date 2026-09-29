@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { krahasoVersionet, lexoNdryshimet, ndajZerin, ndryshimetPas, zeriNeHtml } from "./ndryshimet";
+import { krahasoVersionet, lexoNdryshimet, ndajZerin, ndryshimetMes, ndryshimetPas, zeriNeHtml } from "./ndryshimet";
 import { version as VERSIONI } from "../../package.json";
 
 const MD = `# Historiku i ndryshimeve
@@ -131,5 +131,21 @@ describe("ndajZerin", () => {
   it("një zë i shkurtër nuk ka çka të hapë", () => {
     expect(ndajZerin("Një rregullim.")).toEqual({ titulli: "Një rregullim.", trupi: "" });
     expect(ndajZerin("**Vetëm titull.**")).toEqual({ titulli: "**Vetëm titull.**", trupi: "" });
+  });
+});
+
+describe("ndryshimetMes", () => {
+  const lista = ["2.30.0", "2.29.0", "2.28.2", "2.28.1", "2.28.0"].map((versioni) => ({ versioni }));
+
+  it("lists what changed since the version this device last ran, up to the one running now", () => {
+    expect(ndryshimetMes(lista, "2.28.1", "2.30.0").map((v) => v.versioni)).toEqual(["2.30.0", "2.29.0", "2.28.2"]);
+    // A device two releases behind the list it was given still stops at the one it is running.
+    expect(ndryshimetMes(lista, "2.28.0", "2.29.0").map((v) => v.versioni)).toEqual(["2.29.0", "2.28.2", "2.28.1"]);
+  });
+
+  it("has nothing to show on a first opening, the same version, or a step back", () => {
+    expect(ndryshimetMes(lista, null, "2.30.0")).toEqual([]);
+    expect(ndryshimetMes(lista, "2.30.0", "2.30.0")).toEqual([]);
+    expect(ndryshimetMes(lista, "2.30.0", "2.29.0")).toEqual([]);
   });
 });
