@@ -266,6 +266,14 @@ shows it at the bottom of every page. When a change is user-visible:
    voice (what the problem was, what changed, what the calculation still does).
 3. Update `README.md` if the feature list or the sync/privacy story changed.
 
+**One version per piece of work.** Everything done on one branch / in one session ships as a
+**single** version: bump `version` once, on the first user-visible change, and fold every later
+change on the same branch into that same `CHANGELOG.md` section (a new bullet, or a widened one)
+instead of bumping again. If a later change is bigger than the first (a fix first, then a new
+capability), raise that one version to match (patch → minor) rather than adding a second one. Check
+`git log` / the top of the changelog before bumping: if this branch already bumped, do not bump
+again.
+
 The changelog is also **shown to users**: the build parses it (`lib/ndryshimet.js`, a small plugin
 in `vite.config.js`) into `/ndryshimet.json`, and the service worker runs in `prompt` mode — a new
 version waits while `Components/PerditesimiIRi.jsx` lists every release newer than the running one
