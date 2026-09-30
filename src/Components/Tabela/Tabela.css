@@ -280,3 +280,15 @@
 .premium-karta-detajet dl:last-child { margin-bottom: 0; }
 /* A finger, not a cursor: the 28px table buttons grow to a size a thumb can hit. */
 .premium-karta-veprimet .btn-action { width: 38px; height: 38px; border-radius: 10px; }
+
+/* A folded summary list (palosurNeTelefon): one row that says how much is behind it. */
+.premium-shfaq-listen {
+  display: flex; align-items: center; gap: 0.5rem; width: 100%;
+  background: var(--sp-surface-2); border: 1px dashed var(--sp-border); border-radius: 12px;
+  color: var(--sp-text-soft); font-size: 0.8rem; font-weight: 700; padding: 0.65rem 0.8rem;
+}
+.premium-shfaq-listen svg { margin-left: auto; color: var(--sp-text-muted); }
+.premium-shfaq-listen-nr {
+  background: var(--sp-surface-3); border-radius: 999px; font-size: 0.68rem; padding: 0.05rem 0.5rem;
+  color: var(--sp-text-muted);
+}

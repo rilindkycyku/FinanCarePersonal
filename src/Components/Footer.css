@@ -132,20 +132,26 @@ body.light-mode .fcp-footer {
     font-size: 0.7rem;
   }
 
+  /* Every one of these is in the ☰ menu a thumb's reach away; here they were two wrapped rows at
+     the bottom of every page. */
   .fcp-footer-links {
-    justify-content: center;
-    gap: 0.35rem 1rem;
+    display: none;
+  }
+
+  .fcp-footer-top {
+    padding-bottom: 0.8rem;
   }
 
   .fcp-footer-bottom {
     justify-content: center;
+    margin-top: 0;
+    padding-top: 0.7rem;
+    font-size: 0.7rem;
+    gap: 0.35rem 0.5rem;
   }
 
   .fcp-footer-version {
     margin-left: 0;
-    flex-basis: 100%;
-    justify-self: center;
-    width: fit-content;
-    margin-inline: auto;
+    padding: 0.1rem 0.55rem;
   }
 }

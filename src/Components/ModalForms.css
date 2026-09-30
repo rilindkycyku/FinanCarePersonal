@@ -1018,15 +1018,6 @@ body.light-mode .fcp-cat-trigger {
     padding: 0.5rem 0.75rem;
   }
 
-  /* One line of each hint, "…" at the end; a tap opens the rest (Ndihme.jsx). */
-  .fcp-ndihme:not(.hapur) {
-    display: -webkit-box;
-    -webkit-line-clamp: 1;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    cursor: pointer;
-  }
-
   /* Tags used before: one row to swipe through, not three rows of chips pushing the form down. */
   .fcp-etiketa-sugjerime {
     flex-wrap: nowrap;

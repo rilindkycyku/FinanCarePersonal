@@ -551,7 +551,7 @@ function Borxhet() {
           </div>
         </Container>
 
-        {rows.length > 0 && <Tabela data={rows} tableName="Borxhet & Kartelat" filterField="Statusi" mosShfaqID />}
+        {rows.length > 0 && <Tabela data={rows} tableName="Borxhet & Kartelat" filterField="Statusi" mosShfaqID palosurNeTelefon />}
 
         <ShtoBorxhin
           show={showDebt}

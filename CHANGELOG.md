@@ -32,6 +32,18 @@ ngriti versionin.
   filtrat e faqes së transaksioneve (kategoria, llogaria, vlera) palosen pas një butoni, me numrin e
   tyre dhe «Pastro» pranë - kështu një filtër që erdhi me një lidhje (p.sh. nga një udhëtim) nuk
   fshihet pa u vënë re. Kategoritë e llojit (Hyrje, Shpenzim, Transfer) janë një rresht që rrëshqet.
+- **Faqet më të shkurtra në telefon.** Tabela përmbledhëse në fund të Buxheteve, Borxheve,
+  Qëllimeve, Llogarive, Planeve dhe Pagesave të Përsëritura përsëriste rresht për rresht kartat e
+  sipërme; në telefon tani qëndron e palosur - titulli dhe «Eksporto» mbeten, «Shfaq listën» e hap.
+  Fundi i çdo faqeje mban logon, fjalinë për privatësinë dhe një rresht me versionin; lidhjet që
+  përsërisnin menynë ☰ janë hequr që andej. «Veprimet e Shpejta» në Panel janë tri për rresht, ikona
+  mbi emër, si në një telefon - nga shtatë rreshta në pesë më të ulët.
+- **Kategori pa Buxhet: më të rëndësishmet të parat.** Kategoritë ku keni shpenzuar këtë muaj pa
+  buxhet dalin të parat, sipas shumës, pastaj të tjerat sipas alfabetit. Në telefon shihen tetë të
+  parat dhe «+N të tjera» për pjesën tjetër - më parë ishin rreth tridhjetë çipa, gjysmë ekrani.
+- **Cilësimet pa mure teksti.** Shpjegimet e gjata (monedha, limiti ditor, muaji i pagesës,
+  njoftimet, fotot, pamja, të dhënat, raportet, instalimi, një llogari) në telefon tregojnë rreshtin
+  e parë dhe hapen me një prekje, si te formularët. Paralajmërimi te «Zona e Rrezikut» mbetet i plotë.
 
 ### Rregulluar
 - **Udhëtimet nuk shfaqeshin në telefon.** Faqja *Udhëtimet* tregonte vetëm titullin dhe butonin

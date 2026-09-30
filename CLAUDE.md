@@ -181,8 +181,9 @@ Read the header comments of `sinkronizimi.js`, `db.js` and `skema.js` before cha
   Rows come from `opsionet.js` helpers.
 - **Never use `window.alert` / `confirm`** — `useDialog()` gives `alert()` and `confirm()` as
   promises, with an optional `requireText` for destructive actions.
-- Explanatory text under a form field is `<Ndihme>` rather than a bare `.fcp-modal-hint`: it folds to
-  one line on phones (tap to open) and shows in full on wider screens. Errors stay plain hints.
+- Explanatory text under a form field - or a long explanation on a settings card - is `<Ndihme>`
+  rather than a bare `.fcp-modal-hint`: it folds to one line on phones (tap to open, `Ndihme.css`)
+  and shows in full on wider screens. Errors and warnings stay plain text.
 - Amount inputs are `VleraInput` (it carries the calculator); dates are plain `type="date"`
   controls; colour and icon pickers come from `Pickers.jsx`.
 - List pages use `Components/Tabela/Tabela.jsx`: it takes `data` as display-row objects whose keys
@@ -192,7 +193,8 @@ Read the header comments of `sinkronizimi.js`, `db.js` and `skema.js` before cha
   same rows draw as two-line cards (no sideways scroll); `lib/tabela.js` guesses the title (first
   column), the amount (last `(€)` column) and the second line, and a page corrects the guess with
   `kartela={{ titulli, vlera, nentitulli, grupoSipasDates, shenjat }}`. Every other column still
-  shows once a card is tapped.
+  shows once a card is tapped. A summary table that repeats the page's own cards takes
+  `palosurNeTelefon`: on a phone it stays folded (title + export + «Shfaq listën»).
 - Icons: lucide-react. Records persist an icon **name**, resolved through `lib/icons.js`
   (`getIcon`); unknown names fall back to `Circle`. Add new names to the `ICONS` registry.
 - Each page renders `NavBar`, `PageTitle`, `ButoniUdhezimit`, `Footer`, and `PageLoading` while

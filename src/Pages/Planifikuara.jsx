@@ -360,6 +360,7 @@ function Planifikuara() {
             filterField="Statusi"
             mosShfaqID
             kartela={{ vlera: `Planifikuar (${simboli})` }}
+            palosurNeTelefon
           />
         )}
 

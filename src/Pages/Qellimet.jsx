@@ -201,7 +201,7 @@ function Qellimet() {
           </section>
         </Container>
 
-        {rows.length > 0 && <Tabela data={rows} tableName="Qëllimet e Kursimit" filterField="Statusi" mosShfaqID />}
+        {rows.length > 0 && <Tabela data={rows} tableName="Qëllimet e Kursimit" filterField="Statusi" mosShfaqID palosurNeTelefon />}
 
         <ShtoQellimin
           show={showGoal}

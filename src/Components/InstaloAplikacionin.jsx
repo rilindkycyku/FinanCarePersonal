@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Alert, Button, Card } from "react-bootstrap";
 import { Check, Download, Share, Smartphone, X } from "lucide-react";
 import { bannerIDuhur, gjendjaInstalimit, instalo, onInstalim, shtyjBanerin } from "../lib/instalimi";
+import Ndihme from "./Ndihme";
 import "./InstaloAplikacionin.css";
 
 /** Everything the two shapes below say about iOS, where there is no button to press. */
@@ -82,13 +83,13 @@ function InstaloAplikacionin({ variant = "kartele" }) {
         <Smartphone size={18} className="me-2 text-primary" />
         Në ekranin kryesor
       </h2>
-      <p className="text-muted small mb-3">
+      <Ndihme className="text-muted small mb-3">
         I instaluar, aplikacioni hapet nga ikona si çdo aplikacion tjetër - pa shiritin e adresës,
         me të gjitha të dhënat po aty ku janë. Në iPhone kjo ka edhe një arsye praktike: Safari i
         fshin të dhënat e një faqeje që nuk hapet për shtatë ditë, kurse një aplikacion të
         instaluar nuk e prek. Mbajtja e një kopjeje te faqja <strong>Eksporto / Importo</strong>
         mbetet ideja e mirë sido që të jetë.
-      </p>
+      </Ndihme>
 
       {gjendja === "instaluar" && (
         <Alert variant="success" className="small py-2 mb-0">

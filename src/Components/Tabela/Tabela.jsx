@@ -106,6 +106,7 @@ function Tabela({
   funksionZgjedhjes,
   veprimetEZgjedhura,
   kartela,
+  palosurNeTelefon,
 }) {
   // Unique per instance, so the filter labels point at their own controls even if a page ever grows
   // a second table.
@@ -121,6 +122,11 @@ function Tabela({
   const [filtratHapur, setFiltratHapur] = useState(false);
   // One card open at a time, so opening the next one does not leave the list growing behind it.
   const [kartaHapur, setKartaHapur] = useState(null);
+  // The summary lists under a page's own cards (budgets, debts, goals...) repeat those cards row
+  // for row; on a phone that is a second copy of the page to scroll past. Folded there, the title
+  // and the export stay, and one tap brings the list back.
+  const [listaEHapur, setListaEHapur] = useState(false);
+  const ePalosur = Boolean(palosurNeTelefon && eshteTelefon && !listaEHapur);
 
   // Distinct values of `filterField` present in the data (e.g. every "Lloji" that actually appears
   // in the list), so a pill never offers a choice with zero results. Compared on text content, since
@@ -348,341 +354,353 @@ function Tabela({
             </div>
           </div>
 
-          {!mosShfaqKerkimin && (
-            <div className={`premium-filter-bar mb-3${filtratHapur ? " hapur" : ""}`}>
-              <Row className="g-2 align-items-end">
-                <Col md={3} lg={3}>
-                  <Form.Label htmlFor={`${idBaza}-kerko`} className="premium-filter-label">
-                    <Search size={14} className="me-1" /> Kërko
-                  </Form.Label>
-                  <div className="d-flex gap-2">
-                    <InputGroup className="premium-input-group">
-                      <Form.Control id={`${idBaza}-kerko`} type="text" placeholder="Filtroni të dhënat..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
-                    </InputGroup>
-                    {/* Phones only - wider screens have the room to leave every filter out. */}
-                    <button
-                      type="button"
-                      className={`premium-filter-toggle d-sm-none${filtratHapur ? " hapur" : ""}`}
-                      onClick={() => setFiltratHapur((h) => !h)}
-                      aria-expanded={filtratHapur}
-                      aria-controls={`${idBaza}-filtrat`}
-                    >
-                      <SlidersHorizontal size={15} />
-                      <span>Filtrat</span>
-                      {filtraAktive > 0 && <span className="premium-filter-toggle-nr">{filtraAktive}</span>}
-                    </button>
-                  </div>
-                </Col>
+          {ePalosur && (
+            <button type="button" className="premium-shfaq-listen" onClick={() => setListaEHapur(true)}>
+              <span>Shfaq listën</span>
+              <span className="premium-shfaq-listen-nr">{data.length}</span>
+              <ChevronDown size={16} />
+            </button>
+          )}
 
-                {eshteTelefon && (
-                  <Col xs={12} className="premium-filter-shtese" id={`${idBaza}-filtrat`}>
-                    <Form.Label htmlFor={`${idBaza}-renditja`} className="premium-filter-label">
-                      Renditja
-                    </Form.Label>
-                    {/* The column headers are the sort control on the table; the cards have none, so
-                        the same choice lives here. */}
-                    <div className="d-flex gap-2">
-                      <div className="flex-grow-1">
-                        <Zgjedhesi
-                          id={`${idBaza}-renditja`}
-                          value={sortConfig?.key || ""}
-                          onChange={(v) => {
-                            requestSort(v || null, v ? sortConfig?.direction || "descending" : undefined);
-                            goToPage(0);
-                          }}
-                          opsionet={filteredHeaders.map((h) => ({ value: h, label: h }))}
-                          emptyLabel="Si janë"
-                          placeholder="Si janë"
-                          titulli="Rendit sipas"
-                        />
-                      </div>
-                      {sortConfig?.key && (
+          {!ePalosur && (
+            <>
+              {!mosShfaqKerkimin && (
+                <div className={`premium-filter-bar mb-3${filtratHapur ? " hapur" : ""}`}>
+                  <Row className="g-2 align-items-end">
+                    <Col md={3} lg={3}>
+                      <Form.Label htmlFor={`${idBaza}-kerko`} className="premium-filter-label">
+                        <Search size={14} className="me-1" /> Kërko
+                      </Form.Label>
+                      <div className="d-flex gap-2">
+                        <InputGroup className="premium-input-group">
+                          <Form.Control id={`${idBaza}-kerko`} type="text" placeholder="Filtroni të dhënat..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+                        </InputGroup>
+                        {/* Phones only - wider screens have the room to leave every filter out. */}
                         <button
                           type="button"
-                          className="premium-filter-toggle"
-                          onClick={() =>
-                            requestSort(sortConfig.key, sortConfig.direction === "ascending" ? "descending" : "ascending")
-                          }
-                          aria-label={sortConfig.direction === "ascending" ? "Rritës - kthe në zbritës" : "Zbritës - kthe në rritës"}
-                          title={sortConfig.direction === "ascending" ? "Nga më i vogli" : "Nga më i madhi"}
+                          className={`premium-filter-toggle d-sm-none${filtratHapur ? " hapur" : ""}`}
+                          onClick={() => setFiltratHapur((h) => !h)}
+                          aria-expanded={filtratHapur}
+                          aria-controls={`${idBaza}-filtrat`}
                         >
-                          {sortConfig.direction === "ascending" ? <ArrowUpNarrowWide size={16} /> : <ArrowDownWideNarrow size={16} />}
+                          <SlidersHorizontal size={15} />
+                          <span>Filtrat</span>
+                          {filtraAktive > 0 && <span className="premium-filter-toggle-nr">{filtraAktive}</span>}
                         </button>
-                      )}
-                    </div>
-                  </Col>
-                )}
+                      </div>
+                    </Col>
 
-                {dateField && (
-                  <Col md={4} lg={4} className="premium-filter-shtese">
-                    {/* One heading over two inputs, so the heading cannot be the label for either of
-                        them - each says which end of the range it is on its own. */}
-                    <Form.Label as="div" className="premium-filter-label">
-                      <Filter size={14} className="me-1" /> Filtrimi sipas Datës
-                    </Form.Label>
-                    <div className="d-flex gap-2">
-                      <Form.Control aria-label="Data nga" className="premium-select" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
-                      <Form.Control aria-label="Data deri" className="premium-select" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
-                    </div>
-                  </Col>
-                )}
+                    {eshteTelefon && (
+                      <Col xs={12} className="premium-filter-shtese" id={`${idBaza}-filtrat`}>
+                        <Form.Label htmlFor={`${idBaza}-renditja`} className="premium-filter-label">
+                          Renditja
+                        </Form.Label>
+                        {/* The column headers are the sort control on the table; the cards have none, so
+                            the same choice lives here. */}
+                        <div className="d-flex gap-2">
+                          <div className="flex-grow-1">
+                            <Zgjedhesi
+                              id={`${idBaza}-renditja`}
+                              value={sortConfig?.key || ""}
+                              onChange={(v) => {
+                                requestSort(v || null, v ? sortConfig?.direction || "descending" : undefined);
+                                goToPage(0);
+                              }}
+                              opsionet={filteredHeaders.map((h) => ({ value: h, label: h }))}
+                              emptyLabel="Si janë"
+                              placeholder="Si janë"
+                              titulli="Rendit sipas"
+                            />
+                          </div>
+                          {sortConfig?.key && (
+                            <button
+                              type="button"
+                              className="premium-filter-toggle"
+                              onClick={() =>
+                                requestSort(sortConfig.key, sortConfig.direction === "ascending" ? "descending" : "ascending")
+                              }
+                              aria-label={sortConfig.direction === "ascending" ? "Rritës - kthe në zbritës" : "Zbritës - kthe në rritës"}
+                              title={sortConfig.direction === "ascending" ? "Nga më i vogli" : "Nga më i madhi"}
+                            >
+                              {sortConfig.direction === "ascending" ? <ArrowUpNarrowWide size={16} /> : <ArrowDownWideNarrow size={16} />}
+                            </button>
+                          )}
+                        </div>
+                      </Col>
+                    )}
 
-                {dateField && (
-                  <Col md={2} lg={2} className="premium-filter-shtese">
-                    <Form.Label htmlFor={`${idBaza}-periudha`} className="premium-filter-label">
-                      Periudha
-                    </Form.Label>
-                    <Zgjedhesi
-                      id={`${idBaza}-periudha`}
-                      value=""
-                      onChange={(v) => {
-                        const preset = PERIUDHAT_E_SHPEJTA.find((p) => p.value === v);
-                        if (!preset) return;
-                        const { start, end } = preset.gjej();
-                        setStartDate(start);
-                        setEndDate(end);
-                        goToPage(0);
-                      }}
-                      opsionet={PERIUDHAT_E_SHPEJTA}
-                      placeholder="Zgjidh periudhën..."
-                      titulli="Zgjidh periudhën"
-                    />
-                  </Col>
-                )}
+                    {dateField && (
+                      <Col md={4} lg={4} className="premium-filter-shtese">
+                        {/* One heading over two inputs, so the heading cannot be the label for either of
+                            them - each says which end of the range it is on its own. */}
+                        <Form.Label as="div" className="premium-filter-label">
+                          <Filter size={14} className="me-1" /> Filtrimi sipas Datës
+                        </Form.Label>
+                        <div className="d-flex gap-2">
+                          <Form.Control aria-label="Data nga" className="premium-select" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+                          <Form.Control aria-label="Data deri" className="premium-select" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+                        </div>
+                      </Col>
+                    )}
 
-                {!mosShfaqPaginimin && (
-                  <Col md={2} lg={2} className="premium-filter-shtese">
-                    <Form.Label htmlFor={`${idBaza}-rreshta`} className="premium-filter-label">
-                      Rreshta
-                    </Form.Label>
-                    <Zgjedhesi
-                      id={`${idBaza}-rreshta`}
-                      value={itemsPerPage}
-                      onChange={(v) => {
-                        setItemsPerPage(parseInt(v, 10));
-                        goToPage(0);
-                      }}
-                      opsionet={[20, 50, 100].map((n) => ({ value: n, label: `${n} Rreshta` }))}
-                      titulli="Sa rreshta për faqe"
-                    />
-                  </Col>
-                )}
+                    {dateField && (
+                      <Col md={2} lg={2} className="premium-filter-shtese">
+                        <Form.Label htmlFor={`${idBaza}-periudha`} className="premium-filter-label">
+                          Periudha
+                        </Form.Label>
+                        <Zgjedhesi
+                          id={`${idBaza}-periudha`}
+                          value=""
+                          onChange={(v) => {
+                            const preset = PERIUDHAT_E_SHPEJTA.find((p) => p.value === v);
+                            if (!preset) return;
+                            const { start, end } = preset.gjej();
+                            setStartDate(start);
+                            setEndDate(end);
+                            goToPage(0);
+                          }}
+                          opsionet={PERIUDHAT_E_SHPEJTA}
+                          placeholder="Zgjidh periudhën..."
+                          titulli="Zgjidh periudhën"
+                        />
+                      </Col>
+                    )}
 
-                <Col md="auto" className="premium-filter-shtese">
-                  <Button
-                    variant="light"
-                    className="btn-premium-pastro"
-                    onClick={() => {
-                      setSearchQuery("");
-                      requestSort(null);
-                      goToPage(0);
-                      setStartDate("");
-                      setEndDate("");
-                      setFilterValue("");
-                    }}
-                  >
-                    <Eraser size={16} className="me-2" /> Pastro Filtrat
-                  </Button>
-                </Col>
-              </Row>
+                    {!mosShfaqPaginimin && (
+                      <Col md={2} lg={2} className="premium-filter-shtese">
+                        <Form.Label htmlFor={`${idBaza}-rreshta`} className="premium-filter-label">
+                          Rreshta
+                        </Form.Label>
+                        <Zgjedhesi
+                          id={`${idBaza}-rreshta`}
+                          value={itemsPerPage}
+                          onChange={(v) => {
+                            setItemsPerPage(parseInt(v, 10));
+                            goToPage(0);
+                          }}
+                          opsionet={[20, 50, 100].map((n) => ({ value: n, label: `${n} Rreshta` }))}
+                          titulli="Sa rreshta për faqe"
+                        />
+                      </Col>
+                    )}
 
-              {filterField && filterOptions.length > 0 && (
-                <div className="premium-filter-pills-wrap">
-                  <Form.Label className="premium-filter-label d-block mb-2">{filterField}:</Form.Label>
-                  <div className="premium-filter-pills">
-                    <button
-                      type="button"
-                      className={`premium-filter-pill${filterValue === "" ? " active" : ""}`}
-                      style={{ "--pill-color": "var(--sp-emerald)" }}
-                      onClick={() => {
-                        setFilterValue("");
-                        goToPage(0);
-                      }}
-                    >
-                      Të gjitha
-                    </button>
-                    {filterOptions.map((opt, i) => (
-                      <button
-                        key={opt}
-                        type="button"
-                        className={`premium-filter-pill${filterValue === opt ? " active" : ""}`}
-                        style={{ "--pill-color": PILL_COLORS[i % PILL_COLORS.length] }}
+                    <Col md="auto" className="premium-filter-shtese">
+                      <Button
+                        variant="light"
+                        className="btn-premium-pastro"
                         onClick={() => {
-                          setFilterValue(opt);
+                          setSearchQuery("");
+                          requestSort(null);
                           goToPage(0);
+                          setStartDate("");
+                          setEndDate("");
+                          setFilterValue("");
                         }}
                       >
-                        {opt}
-                      </button>
-                    ))}
-                  </div>
+                        <Eraser size={16} className="me-2" /> Pastro Filtrat
+                      </Button>
+                    </Col>
+                  </Row>
+
+                  {filterField && filterOptions.length > 0 && (
+                    <div className="premium-filter-pills-wrap">
+                      <Form.Label className="premium-filter-label d-block mb-2">{filterField}:</Form.Label>
+                      <div className="premium-filter-pills">
+                        <button
+                          type="button"
+                          className={`premium-filter-pill${filterValue === "" ? " active" : ""}`}
+                          style={{ "--pill-color": "var(--sp-emerald)" }}
+                          onClick={() => {
+                            setFilterValue("");
+                            goToPage(0);
+                          }}
+                        >
+                          Të gjitha
+                        </button>
+                        {filterOptions.map((opt, i) => (
+                          <button
+                            key={opt}
+                            type="button"
+                            className={`premium-filter-pill${filterValue === opt ? " active" : ""}`}
+                            style={{ "--pill-color": PILL_COLORS[i % PILL_COLORS.length] }}
+                            onClick={() => {
+                              setFilterValue(opt);
+                              goToPage(0);
+                            }}
+                          >
+                            {opt}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
-            </div>
-          )}
 
-          {kaZgjedhje && teZgjedhurat.size > 0 && (
-            <div className="premium-selection-bar mb-3">
-              <span className="premium-selection-count">
-                {teZgjedhurat.size} {teZgjedhurat.size === 1 ? "i zgjedhur" : "të zgjedhur"}
-              </span>
-              {veprimetEZgjedhura}
-              <Button variant="link" size="sm" className="premium-selection-clear" onClick={() => ndrysho([])}>
-                Hiq zgjedhjen
-              </Button>
-            </div>
-          )}
-
-          {eshteTelefon ? (
-            total > 0 && (
-              <ListaEKartave
-                items={items}
-                plani={planiKartes}
-                kartela={kartela}
-                kaButona={kaButona}
-                renderVeprimet={renderVeprimet}
-                kaZgjedhje={kaZgjedhje}
-                teZgjedhurat={teZgjedhurat}
-                kthejeRreshtin={kthejeRreshtin}
-                kthejiTeGjitha={kthejiTeGjitha}
-                teGjithaZgjedhura={teGjithaZgjedhura}
-                disaZgjedhura={disaZgjedhura}
-                nrNeListe={idetENjohura.length}
-                kartaHapur={kartaHapur}
-                setKartaHapur={setKartaHapur}
-              />
-            )
-          ) : (
-            <div className="premium-table-scroll-wrap">
-              <div ref={scrollRef} className={`premium-table-container ${data.length > 0 ? "" : "d-none"}`}>
-                <table className="premium-table mb-0">
-                  <thead>
-                    <tr>
-                      {kaZgjedhje && (
-                        <th className="premium-th premium-th-zgjedhje">
-                          <input
-                            ref={kutiaEGjithcka}
-                            type="checkbox"
-                            className="form-check-input"
-                            checked={teGjithaZgjedhura}
-                            onChange={kthejiTeGjitha}
-                            disabled={idetENjohura.length === 0}
-                            aria-label="Zgjidh të gjitha rreshtat e filtruar"
-                            title="Zgjidh të gjitha rreshtat që lanë filtrat"
-                          />
-                        </th>
-                      )}
-                      {filteredHeaders.map((header) => (
-                        <th
-                          key={header}
-                          onClick={() => requestSort(header)}
-                          onKeyDown={onHeaderKeyDown(header)}
-                          className="premium-th"
-                          tabIndex={0}
-                          aria-sort={
-                            sortConfig?.key === header
-                              ? sortConfig.direction === "ascending"
-                                ? "ascending"
-                                : "descending"
-                              : "none"
-                          }
-                          title={`Rendit sipas "${header}"`}
-                        >
-                          <div className="d-flex align-items-center justify-content-between">
-                            <span>{header}</span>
-                            <span className="th-sort-icon">
-                              {sortConfig?.key === header ? <SortIcon direction={sortConfig.direction} type="text" /> : <SortIcon />}
-                            </span>
-                          </div>
-                        </th>
-                      ))}
-                      {kaButona && <th className="premium-th text-center">Veprime</th>}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {items.map((item) => (
-                      <tr key={item.ID} className={`premium-tr${teZgjedhurat.has(item.ID) ? " e-zgjedhur" : ""}`}>
-                        {kaZgjedhje && (
-                          <td className="premium-td premium-td-zgjedhje">
-                            <input
-                              type="checkbox"
-                              className="form-check-input"
-                              checked={teZgjedhurat.has(item.ID)}
-                              onChange={() => kthejeRreshtin(item.ID)}
-                              aria-label="Zgjidh këtë rresht"
-                            />
-                          </td>
-                        )}
-                        {filteredHeaders.map((header) => (
-                          <td key={`${item.ID}-${header}`} className="premium-td">
-                            {header === dateField ? <span className="date-badge">{formatDate(item[header])}</span> : renderCellContent(item[header])}
-                          </td>
-                        ))}
-                        {kaButona && (
-                          <td className="text-center premium-td">
-                            <div className="d-flex justify-content-center gap-2">
-                              {renderVeprimet(item)}
-                            </div>
-                          </td>
-                        )}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              {teketOverflow && <div className="premium-scroll-hint">← Rrëshqit për të parë më shumë →</div>}
-            </div>
-          )}
-
-          {/* `total` and not `data.length`: a search that matches nothing still leaves rows in
-              `data`, and without this the table showed an empty grid with no explanation. */}
-          {total === 0 && (
-            <div className="premium-empty-state">
-              <div className="empty-icon-wrapper">
-                <Search size={48} />
-              </div>
-              <h3 className="fcp-card-title">Nuk u gjet asnjë të dhënë</h3>
-              <p>Provoni të ndryshoni filtrat ose të shtoni të dhëna të reja.</p>
-            </div>
-          )}
-
-          {total > 0 && !mosShfaqPaginimin && (
-            <div className="premium-pagination-wrapper mt-4">
-              <div className="pagination-info">
-                Duke shfaqur <strong>{currentPage * itemsPerPage + 1}</strong> deri <strong>{Math.min((currentPage + 1) * itemsPerPage, total)}</strong> nga {total} rezultate
-              </div>
-              {pageCount > 1 && (
-                <Pagination className="premium-pagination">
-                  <Pagination.First onClick={() => goToPage(0)} disabled={currentPage === 0}>
-                    <ChevronsLeft size={16} />
-                  </Pagination.First>
-                  <Pagination.Prev onClick={() => goToPage(currentPage - 1)} disabled={currentPage === 0}>
-                    <ChevronLeft size={16} />
-                  </Pagination.Prev>
-
-                  {Array.from({ length: pageCount }, (_, i) => i).reduce((elements, pageNum) => {
-                    const isCurrentPage = pageNum === currentPage;
-                    if (pageNum === 0 || pageNum === pageCount - 1 || Math.abs(pageNum - currentPage) <= 1) {
-                      elements.push(
-                        <Pagination.Item key={pageNum} active={isCurrentPage} onClick={() => goToPage(pageNum)}>
-                          {pageNum + 1}
-                        </Pagination.Item>
-                      );
-                    } else if (elements.length > 0 && elements[elements.length - 1].type !== Pagination.Ellipsis) {
-                      elements.push(<Pagination.Ellipsis key={`el-${pageNum}`} disabled />);
-                    }
-                    return elements;
-                  }, [])}
-
-                  <Pagination.Next onClick={() => goToPage(currentPage + 1)} disabled={currentPage === pageCount - 1}>
-                    <ChevronRight size={16} />
-                  </Pagination.Next>
-                  <Pagination.Last onClick={() => goToPage(pageCount - 1)} disabled={currentPage === pageCount - 1}>
-                    <ChevronsRight size={16} />
-                  </Pagination.Last>
-                </Pagination>
+              {kaZgjedhje && teZgjedhurat.size > 0 && (
+                <div className="premium-selection-bar mb-3">
+                  <span className="premium-selection-count">
+                    {teZgjedhurat.size} {teZgjedhurat.size === 1 ? "i zgjedhur" : "të zgjedhur"}
+                  </span>
+                  {veprimetEZgjedhura}
+                  <Button variant="link" size="sm" className="premium-selection-clear" onClick={() => ndrysho([])}>
+                    Hiq zgjedhjen
+                  </Button>
+                </div>
               )}
-            </div>
+
+              {eshteTelefon ? (
+                total > 0 && (
+                  <ListaEKartave
+                    items={items}
+                    plani={planiKartes}
+                    kartela={kartela}
+                    kaButona={kaButona}
+                    renderVeprimet={renderVeprimet}
+                    kaZgjedhje={kaZgjedhje}
+                    teZgjedhurat={teZgjedhurat}
+                    kthejeRreshtin={kthejeRreshtin}
+                    kthejiTeGjitha={kthejiTeGjitha}
+                    teGjithaZgjedhura={teGjithaZgjedhura}
+                    disaZgjedhura={disaZgjedhura}
+                    nrNeListe={idetENjohura.length}
+                    kartaHapur={kartaHapur}
+                    setKartaHapur={setKartaHapur}
+                  />
+                )
+              ) : (
+                <div className="premium-table-scroll-wrap">
+                  <div ref={scrollRef} className={`premium-table-container ${data.length > 0 ? "" : "d-none"}`}>
+                    <table className="premium-table mb-0">
+                      <thead>
+                        <tr>
+                          {kaZgjedhje && (
+                            <th className="premium-th premium-th-zgjedhje">
+                              <input
+                                ref={kutiaEGjithcka}
+                                type="checkbox"
+                                className="form-check-input"
+                                checked={teGjithaZgjedhura}
+                                onChange={kthejiTeGjitha}
+                                disabled={idetENjohura.length === 0}
+                                aria-label="Zgjidh të gjitha rreshtat e filtruar"
+                                title="Zgjidh të gjitha rreshtat që lanë filtrat"
+                              />
+                            </th>
+                          )}
+                          {filteredHeaders.map((header) => (
+                            <th
+                              key={header}
+                              onClick={() => requestSort(header)}
+                              onKeyDown={onHeaderKeyDown(header)}
+                              className="premium-th"
+                              tabIndex={0}
+                              aria-sort={
+                                sortConfig?.key === header
+                                  ? sortConfig.direction === "ascending"
+                                    ? "ascending"
+                                    : "descending"
+                                  : "none"
+                              }
+                              title={`Rendit sipas "${header}"`}
+                            >
+                              <div className="d-flex align-items-center justify-content-between">
+                                <span>{header}</span>
+                                <span className="th-sort-icon">
+                                  {sortConfig?.key === header ? <SortIcon direction={sortConfig.direction} type="text" /> : <SortIcon />}
+                                </span>
+                              </div>
+                            </th>
+                          ))}
+                          {kaButona && <th className="premium-th text-center">Veprime</th>}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {items.map((item) => (
+                          <tr key={item.ID} className={`premium-tr${teZgjedhurat.has(item.ID) ? " e-zgjedhur" : ""}`}>
+                            {kaZgjedhje && (
+                              <td className="premium-td premium-td-zgjedhje">
+                                <input
+                                  type="checkbox"
+                                  className="form-check-input"
+                                  checked={teZgjedhurat.has(item.ID)}
+                                  onChange={() => kthejeRreshtin(item.ID)}
+                                  aria-label="Zgjidh këtë rresht"
+                                />
+                              </td>
+                            )}
+                            {filteredHeaders.map((header) => (
+                              <td key={`${item.ID}-${header}`} className="premium-td">
+                                {header === dateField ? <span className="date-badge">{formatDate(item[header])}</span> : renderCellContent(item[header])}
+                              </td>
+                            ))}
+                            {kaButona && (
+                              <td className="text-center premium-td">
+                                <div className="d-flex justify-content-center gap-2">
+                                  {renderVeprimet(item)}
+                                </div>
+                              </td>
+                            )}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  {teketOverflow && <div className="premium-scroll-hint">← Rrëshqit për të parë më shumë →</div>}
+                </div>
+              )}
+
+              {/* `total` and not `data.length`: a search that matches nothing still leaves rows in
+                  `data`, and without this the table showed an empty grid with no explanation. */}
+              {total === 0 && (
+                <div className="premium-empty-state">
+                  <div className="empty-icon-wrapper">
+                    <Search size={48} />
+                  </div>
+                  <h3 className="fcp-card-title">Nuk u gjet asnjë të dhënë</h3>
+                  <p>Provoni të ndryshoni filtrat ose të shtoni të dhëna të reja.</p>
+                </div>
+              )}
+
+              {total > 0 && !mosShfaqPaginimin && (
+                <div className="premium-pagination-wrapper mt-4">
+                  <div className="pagination-info">
+                    Duke shfaqur <strong>{currentPage * itemsPerPage + 1}</strong> deri <strong>{Math.min((currentPage + 1) * itemsPerPage, total)}</strong> nga {total} rezultate
+                  </div>
+                  {pageCount > 1 && (
+                    <Pagination className="premium-pagination">
+                      <Pagination.First onClick={() => goToPage(0)} disabled={currentPage === 0}>
+                        <ChevronsLeft size={16} />
+                      </Pagination.First>
+                      <Pagination.Prev onClick={() => goToPage(currentPage - 1)} disabled={currentPage === 0}>
+                        <ChevronLeft size={16} />
+                      </Pagination.Prev>
+
+                      {Array.from({ length: pageCount }, (_, i) => i).reduce((elements, pageNum) => {
+                        const isCurrentPage = pageNum === currentPage;
+                        if (pageNum === 0 || pageNum === pageCount - 1 || Math.abs(pageNum - currentPage) <= 1) {
+                          elements.push(
+                            <Pagination.Item key={pageNum} active={isCurrentPage} onClick={() => goToPage(pageNum)}>
+                              {pageNum + 1}
+                            </Pagination.Item>
+                          );
+                        } else if (elements.length > 0 && elements[elements.length - 1].type !== Pagination.Ellipsis) {
+                          elements.push(<Pagination.Ellipsis key={`el-${pageNum}`} disabled />);
+                        }
+                        return elements;
+                      }, [])}
+
+                      <Pagination.Next onClick={() => goToPage(currentPage + 1)} disabled={currentPage === pageCount - 1}>
+                        <ChevronRight size={16} />
+                      </Pagination.Next>
+                      <Pagination.Last onClick={() => goToPage(pageCount - 1)} disabled={currentPage === pageCount - 1}>
+                        <ChevronsRight size={16} />
+                      </Pagination.Last>
+                    </Pagination>
+                  )}
+                </div>
+              )}
+            </>
           )}
         </Card.Body>
       </Card>

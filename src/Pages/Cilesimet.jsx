@@ -21,6 +21,7 @@ import { DEFAULT_CURRENCY } from "../lib/options";
 import { pastroRregullat } from "../lib/rregullat";
 import { currencySymbol, formatMoney, toNumber } from "../lib/format";
 import VleraInput from "../Components/VleraInput";
+import Ndihme from "../Components/Ndihme";
 import { kerkoLeje, lejaAktuale } from "../lib/njoftimet";
 import { CILESITE_FATURAVE, CILESIA_PARAZGJEDHUR } from "../lib/images";
 import { emriIPlote } from "../lib/kategorite";
@@ -253,9 +254,9 @@ function Cilesimet() {
                     opsionet={opsionetMonedhave()}
                     titulli="Monedha"
                   />
-                  <div className="fcp-row-sub mt-1">
+                  <Ndihme className="fcp-row-sub mt-1">
                     Ndryshimi i monedhës ndryshon vetëm simbolin e shfaqur - vlerat e ruajtura nuk konvertohen.
-                  </div>
+                  </Ndihme>
                 </Form.Group>
 
                 <Form.Group as={Col} md={6} controlId="form-teardhuratmujore">
@@ -301,12 +302,12 @@ function Cilesimet() {
                     placeholder="p.sh. 20.00"
                     compact
                   />
-                  <div className="fcp-row-sub mt-1">
+                  <Ndihme className="fcp-row-sub mt-1">
                     Lëreni bosh dhe limiti llogaritet vetë: bilanci që keni për të shpenzuar (pa kursimet e
                     investimet), plus hyrjet që priten këtë muaj, minus pagesat e përsëritura të pakonfirmuara dhe
                     shpenzimet e planifikuara - të ndara mbi ditët që kanë mbetur. Me objektiv kursimi, nuk kalon
                     as atë që muaji mund të shpenzojë pa e prishur objektivin.
-                  </div>
+                  </Ndihme>
                 </Form.Group>
 
                 <Form.Group as={Col} md={12} controlId="form-periudha">
@@ -318,7 +319,7 @@ function Cilesimet() {
                     checked={form.figuratSipasPeriudhes}
                     onChange={(e) => setField("figuratSipasPeriudhes", e.target.checked)}
                   />
-                  <div className="fcp-row-sub mt-1">
+                  <Ndihme className="fcp-row-sub mt-1">
                     Te pagesat e përsëritura tregoni «për cilin muaj është» - qiraja e shtatorit merret në
                     fund të gushtit, rroga e gushtit vjen më 1 shtator. Me këtë çelës të ndezur, hyrjet dhe
                     shpenzimet e muajit te Paneli, Statistikat dhe Viti numërohen te muaji që pagesa mbulon.
@@ -327,7 +328,7 @@ function Cilesimet() {
                     «kursimi i muajit» mund të mos përputhet me sa u rrit bilanci. Pasqyra PDF dhe raportet me
                     email numërojnë gjithashtu sipas datës reale: ato janë lista lëvizjesh, jo përgjigje për
                     muajin.
-                  </div>
+                  </Ndihme>
                 </Form.Group>
 
                 <Form.Group as={Col} md={6} controlId="form-njoftimelimiti">
@@ -360,13 +361,13 @@ function Cilesimet() {
                     checked={form.njoftimePagesa}
                     onChange={(e) => setField("njoftimePagesa", e.target.checked)}
                   />
-                  <div className="fcp-row-sub mt-1">
+                  <Ndihme className="fcp-row-sub mt-1">
                     {leja === "unsupported"
                       ? "Ky shfletues nuk i mbështet njoftimet."
                       : leja === "denied"
                         ? "Njoftimet janë bllokuar për këtë faqe - hapini nga cilësimet e shfletuesit."
                         : "Njoftimi vjen kur diçka kalon vijën - shpenzimi që e kalon limitin, blerja që e mbaron buxhetin - jo për çdo shpenzim pas saj. Pagesat që presin kujtohen një herë në ditë."}
-                  </div>
+                  </Ndihme>
                   {(form.njoftimeLimiti || form.njoftimeBuxheti || form.njoftimeQellimi || form.njoftimePagesa) &&
                     leja === "default" && (
                     <Button
@@ -393,10 +394,10 @@ function Cilesimet() {
                     }))}
                     titulli="Cilësia e fotove"
                   />
-                  <div className="fcp-row-sub mt-1">
+                  <Ndihme className="fcp-row-sub mt-1">
                     {CILESITE_FATURAVE[form.cilesiaFaturave]?.ndihma} Vlen për fotot e reja; ato ekzistuese
                     ngjishen me butonin te faqja Eksporto / Importo.
-                  </div>
+                  </Ndihme>
                 </Form.Group>
 
                 <Col md={12}>
@@ -415,10 +416,10 @@ function Cilesimet() {
           <Card className="profile-card border-0 p-4 mb-4">
             <h2 className="fcp-card-title fw-bold mb-3">Kujtesa e Kategorive</h2>
             {rregullaAktive.length === 0 ? (
-              <p className="text-muted small mb-0">
+              <Ndihme className="text-muted small mb-0">
                 Ende asnjë rregull. Sa herë që regjistroni një transaksion me përshkrim e kategori, aplikacioni e mban
                 mend çiftin dhe herën tjetër e propozon vetë - edhe kur importoni një ekstrakt të tërë nga CSV.
-              </p>
+              </Ndihme>
             ) : (
               <>
                 <p className="text-muted small">
@@ -450,12 +451,12 @@ function Cilesimet() {
 
           <Card className="profile-card border-0 p-4 mb-4">
             <h2 className="fcp-card-title fw-bold mb-3">Pamja</h2>
-            <p className="text-muted small">
+            <Ndihme className="text-muted small mb-3">
               Zgjedhja ruhet në këtë shfletues.{" "}
               {tema === "sistemi"
                 ? `Tani ndiqet pajisja, e cila po kërkon temën ${sistemi === "dark" ? "e errët" : "e bardhë"} - nëse ajo ndërron vetë në mbrëmje, ndërron edhe faqja.`
                 : `Tani është zgjedhur tema ${theme === "dark" ? "e errët" : "e bardhë"}, pavarësisht se çka kërkon pajisja.`}
-            </p>
+            </Ndihme>
             <div className="d-flex flex-wrap gap-2">
               <Button
                 variant={tema === "sistemi" ? "primary" : "outline-light"}
@@ -486,12 +487,12 @@ function Cilesimet() {
 
           <Card className="profile-card border-0 p-4 mb-4">
             <h2 className="fcp-card-title fw-bold mb-3">Të Dhënat</h2>
-            <p className="text-muted small mb-3">
+            <Ndihme className="text-muted small mb-3">
               Të dhënat ruhen vetëm në IndexedDB të këtij shfletuesi - asnjë server, asnjë llogari. Pastrimi i të
               dhënave të faqes i fshin ato, pra mbani një kopje JSON te faqja <strong>Eksporto / Importo</strong>.
               Aktualisht ruhen {transactions.length} transaksione, {accounts.length} llogari,{" "}
               {categories.length} kategori dhe {borxhet.length} borxhe.
-            </p>
+            </Ndihme>
             <p className="text-muted small mb-3">
               {lidhur ? (
                 <>

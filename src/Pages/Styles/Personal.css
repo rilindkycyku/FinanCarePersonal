@@ -2588,3 +2588,9 @@ body.light-mode .card.profile-card.fcp-zona-rrezik:hover {
 @media (max-width: 575.98px) {
   .fcp-tx-filtrat:not(.hapur) { display: none; }
 }
+
+/* Buxhetet: past the first few, the unbudgeted categories wait behind «+N të tjera» on a phone. */
+@media (max-width: 575.98px) {
+  .fcp-chips:not(.hapur) .fcp-chip-teprice { display: none; }
+}
+.fcp-chip-me-shume { border-style: dashed; color: var(--sp-text-muted); }
