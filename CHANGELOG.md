@@ -9,7 +9,13 @@ e fundit kur rregullohet diçka, dhe e para vetëm kur ndryshon vetë forma e pr
 herë, te `2.0.0`, kur të dhënat mësuan të dalin nga shfletuesi. Datat janë ato të commit-it që e
 ngriti versionin.
 
-## [2.30.1] - 2026-09-30
+## [2.31.0] - 2026-09-30
+
+### Shtuar
+- **Udhëtimet me një prekje.** Faqja arrihej vetëm nga menyja. Tani ka kartën e vet te lidhjet e
+  shpejta në Panel, dhe - nëse aplikacionin e keni në ekranin kryesor të telefonit - del edhe kur e
+  mbani të shtypur ikonën, pranë «Shto transaksion». Karta e udhëtimit në vazhdim në Panel mbetet si
+  ishte: shfaqet vetë gjatë udhëtimit dhe pak ditë para nisjes.
 
 ### Rregulluar
 - **Udhëtimet nuk shfaqeshin në telefon.** Faqja *Udhëtimet* tregonte vetëm titullin dhe butonin

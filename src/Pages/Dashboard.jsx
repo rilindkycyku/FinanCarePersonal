@@ -5,7 +5,7 @@ import {
   LayoutDashboard, Wallet, TrendingUp, TrendingDown, PiggyBank, Percent, PlusCircle,
   ArrowRightLeft, Tags, Target, Repeat, BarChart3, Settings, DatabaseBackup, CalendarClock,
   Receipt, ClipboardList, LineChart, TriangleAlert, FileSpreadsheet, Paperclip, BookOpen,
-  ChevronRight,
+  ChevronRight, Plane,
 } from "lucide-react";
 import NavBar from "../Components/NavBar";
 import PageTitle from "../Components/PageTitle";
@@ -44,6 +44,7 @@ const QUICK_ACTIONS = [
   { to: "/buxhetet", label: "Buxhetet", icon: PiggyBank },
   { to: "/qellimet", label: "Qëllimet e Kursimit", icon: Target },
   { to: "/te-perseritura", label: "Pagesat e Përsëritura", icon: Repeat },
+  { to: "/udhetimet", label: "Udhëtimet", icon: Plane },
   { to: "/statistikat", label: "Statistikat", icon: BarChart3 },
   { to: "/cilesimet", label: "Cilësimet", icon: Settings },
   { to: "/te-dhena", label: "Të dhënat & Sinkronizimi", icon: DatabaseBackup },
