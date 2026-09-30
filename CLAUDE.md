@@ -31,7 +31,7 @@ npm run dev       # vite --host
 npm run build
 npm run preview
 npm run lint      # eslint . — must stay at 0 errors (4 pre-existing warnings)
-npm test          # vitest run — 33 files, 773 tests, all green
+npm test          # vitest run — 33 files, 777 tests, all green
 npm run test:watch
 npm run ikonat    # regenerates the icons and the two wordmark PNGs from Logo.svg (Playwright)
 ```
@@ -234,7 +234,11 @@ Stores are declared in `STORES` in `db.js`. Ids are `makeId(prefix)` → `tx_…
 - `recurring`: `emri`, `lloji`, `vlera`, `frekuenca`, `dataETjetres`, `dataFundit`, `nrKesteve`,
   `periudhaZhvendosje` (which month the money belongs to), `borxhiId`, `aktiv`, `automatike`.
 - `borxhet`: `emri`, `lloji`, `vleraTotale`, `kreditori`, `pagesat[]`, `dataFillimit/Mbarimit`,
-  `arkivuar`. Direction comes from `DEBT_TYPES[].drejtimi` (`detyrim` vs `kerkese`).
+  `arkivuar`, `transaksioniFillestarId` (the transaction that moved the opening amount, when a new
+  loan between people was booked on an account). Direction comes from `DEBT_TYPES[].drejtimi`
+  (`detyrim` vs `kerkese`). For loans between people (`huadhene`, `borxh`) the line's money
+  direction and default category come from `llojiITransaksionitTeBorxhit` / `kategoriaEHuase` in
+  options.js (the «Hua & Borxhe» families); a «shtesë» there is real money too.
 - `planet`: `emri`, `vlera`, `kategoriaId`, `muaji`, `afati`, `prioriteti`, `kryer`,
   `transaksioniId`.
 - `grupet`: `emri`, `ngjyra`, `kategoriaId`, `anetaret[]` (`{ id, emri }`, the user is the implicit

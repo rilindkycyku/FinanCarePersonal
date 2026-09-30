@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { CATEGORY_ICONS, DEFAULT_CATEGORIES } from "./options";
+import {
+  CATEGORY_ICONS, DEFAULT_CATEGORIES, DEBT_TYPES, eshteHuaPersonale, kategoriaEHuase, llojiITransaksionitTeBorxhit,
+} from "./options";
 import { ICONS } from "./icons";
 import { nenkategorite, pemaKategorive } from "./kategorite";
 
@@ -80,6 +82,46 @@ describe("DEFAULT_CATEGORIES", () => {
       r.femijet.forEach((f) => {
         expect(f.prindi).toBe(r.id);
         expect(nenkategorite(DEFAULT_CATEGORIES, f.id)).toEqual([]);
+      });
+    });
+  });
+});
+
+describe("debts between people and their categories", () => {
+  it("says which way the money moves on each kind of line", () => {
+    // Someone repays you: in. You lend them more: out.
+    expect(llojiITransaksionitTeBorxhit("huadhene", "pagese")).toBe("hyrje");
+    expect(llojiITransaksionitTeBorxhit("huadhene", "shtese")).toBe("shpenzim");
+    // You repay a friend: out. You borrow more: in.
+    expect(llojiITransaksionitTeBorxhit("borxh", "pagese")).toBe("shpenzim");
+    expect(llojiITransaksionitTeBorxhit("borxh", "shtese")).toBe("hyrje");
+    // A card payment goes out, as before.
+    expect(llojiITransaksionitTeBorxhit("karte")).toBe("shpenzim");
+  });
+
+  it("names a category only for personal debts, never for cards or bank loans", () => {
+    expect(kategoriaEHuase("huadhene")).toBe("cat_default_hua_hyrje_kthyer");
+    expect(kategoriaEHuase("huadhene", "shtese")).toBe("cat_default_hua_dhene");
+    expect(kategoriaEHuase("borxh")).toBe("cat_default_hua_kthim");
+    expect(kategoriaEHuase("borxh", "shtese")).toBe("cat_default_hua_hyrje_marre");
+    ["karte", "kredi", "keste", "e_panjohur"].forEach((l) => {
+      expect(kategoriaEHuase(l), l).toBeNull();
+      expect(eshteHuaPersonale(l), l).toBe(false);
+    });
+    expect(eshteHuaPersonale("huadhene")).toBe(true);
+    expect(eshteHuaPersonale("borxh")).toBe(true);
+  });
+
+  it("points every default at a real category on the side the money moves", () => {
+    // A mapping to a missing id, or to an expense for money coming in, would leave the picker
+    // empty and the save refusing - exactly the dead end these categories are here to remove.
+    DEBT_TYPES.forEach(({ value }) => {
+      ["pagese", "shtese"].forEach((rreshti) => {
+        const id = kategoriaEHuase(value, rreshti);
+        if (!id) return;
+        const kategoria = DEFAULT_CATEGORIES.find((c) => c.id === id);
+        expect(kategoria, id).toBeTruthy();
+        expect(kategoria.lloji, id).toBe(llojiITransaksionitTeBorxhit(value, rreshti));
       });
     });
   });

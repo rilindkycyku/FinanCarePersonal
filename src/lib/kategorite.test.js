@@ -215,16 +215,25 @@ describe("kategori të arkivuara", () => {
       expect(ids).toContain("dhurata");
     });
 
-    it("waits for the parent rather than shipping a child to the top level", () => {
-      // "Dhurata" is new in this same pass, but its children arrive on the pass after it is saved.
+    it("brings a new family in one pass - the parent and its children together", () => {
+      // "Dhurata" is new in this same pass; its children come with it rather than one opening later.
       const meFemije = [...parazgjedhurat, kategori("dhurata_dasma", "Dasma", { prindi: "dhurata" })];
-      expect(kategoriteQeMungojne(meFemije, ekzistuese).map((c) => c.id)).not.toContain("dhurata_dasma");
+      const ids = kategoriteQeMungojne(meFemije, ekzistuese, ["karburant"]).map((c) => c.id);
+      expect(ids).toContain("dhurata");
+      expect(ids).toContain("dhurata_dasma");
+      // A deleted parent still keeps its children out, new or not.
+      expect(ids).not.toContain("karburant_nafte");
+    });
+
+    it("never ships a child whose parent is neither there nor arriving", () => {
+      const jetime = [kategori("femijet_lodra", "Lodra", { prindi: "femijet" })];
+      expect(kategoriteQeMungojne(jetime, ekzistuese)).toEqual([]);
     });
 
     it("tolerates a ledger or a profile that holds nothing yet", () => {
-      expect(kategoriteQeMungojne(parazgjedhurat, [], undefined).map((c) => c.id)).toEqual([
-        "udhetime", "karburant", "dhurata",
-      ]);
+      expect(kategoriteQeMungojne(parazgjedhurat, [], undefined).map((c) => c.id)).toEqual(
+        parazgjedhurat.map((c) => c.id)
+      );
       expect(kategoriteQeMungojne(undefined, ekzistuese)).toEqual([]);
     });
   });

@@ -17,6 +17,23 @@ ngriti versionin.
   mbani të shtypur ikonën, pranë «Shto transaksion». Karta e udhëtimit në vazhdim në Panel mbetet si
   ishte: shfaqet vetë gjatë udhëtimit dhe pak ditë para nisjes.
 
+- **Kategori për huatë mes njerëzve: Hua & Borxhe.** Kur i jepnit dikujt para hua, nuk kishte ku
+  të shkonte: 200 € dilnin si «Shpenzime të Tjera» (ose nuk dilnin fare, dhe bilanci i keshit mbetej
+  200 € më lart), dhe ditën që ktheheshin hynin si «Hyrje të Tjera», pa asgjë që thoshte se ishin të
+  njëjtat para. Tani ka një familje në secilën anë: te shpenzimet *Hua e Dhënë* dhe *Kthim Borxhi
+  Personal*, te hyrjet *Hua e Kthyer* dhe *Hua e Marrë*. Kartelat dhe kreditë bankare mbeten te
+  «Kredi & Kamata».
+- **Huaja lëviz edhe llogarinë, nëse doni.** Një «Hua e dhënë» ose «Borxh personal» i ri ofron
+  «Zbrite shumën edhe nga llogaria» (ose «Shtoje në llogari»): paratë dalin nga keshi apo banka si
+  *Hua e Dhënë* dhe, kur t'ju kthehen, «Kthim» i shton si *Hua e Kthyer* - kategorinë e zgjedh
+  formulari vetë. Te këto hua edhe një *Shtesë* (i jepni ose merrni edhe 50 €) mund të lidhet me
+  llogarinë; te kartelat shtesa mbetet vetëm shënim, si më parë. Fshirja e borxhit i lë
+  transaksionet në historik dhe e thotë sa janë.
+- **Disa kategori që mungonin:** *Ndihmë për Familjen* (te Dhurata - paratë që u dërgoni prindërve,
+  si pasqyrë e «Ndihmë nga Familja» te hyrjet), *Para Xhepi* (te Fëmijët), *Posta & Dërgesa* dhe
+  *Gjoba & Penalltira* (te Shpenzime të Tjera). Dalin vetë herën e parë që hapet aplikacioni; një
+  kategori që e keni fshirë nuk kthehet.
+
 ### Ndryshuar
 - **Listat në telefon: karta në vend të tabelës, pa rrëshqitje anash.** Tabela e transaksioneve ka
   dhjetë kolona; në telefon hynin vetëm tri të parat, kështu që vlera - arsyeja pse hapet lista - dhe
@@ -46,6 +63,9 @@ ngriti versionin.
   e parë dhe hapen me një prekje, si te formularët. Paralajmërimi te «Zona e Rrezikut» mbetet i plotë.
 
 ### Rregulluar
+- **Një familje e re kategorish vjen e plotë.** Kur një version shtonte një kategori kryesore
+  bashkë me nënkategoritë e saj, herën e parë dilte vetëm kryesorja dhe nënkategoritë vetëm pas
+  rihapjes së dytë. Tani vijnë bashkë.
 - **Udhëtimet nuk shfaqeshin në telefon.** Faqja *Udhëtimet* tregonte vetëm titullin dhe butonin
   «Udhëtim i Ri», edhe pse udhëtimet ishin ruajtur. Lista e tyre përdorte pa dashje të njëjtin emër
   stili si lista e *Udhëzuesit*, e cila në ekran të ngushtë mblidhet derisa ta hapni - kështu që

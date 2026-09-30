@@ -67,6 +67,10 @@ sa shpenzohet, sa mbetet dhe sa po kursesh.
   e rrit - me ecuri, afat dhe arkivim. Pagesa mbetet vetëm shënim, përveç kur e shënjoni
   <em>&laquo;Zbrite edhe nga llogaria&raquo;</em>: atëherë krijohet edhe një transaksion i vërtetë,
   sepse ato para dolën vërtet nga banka.
+  <br />Për huatë **mes njerëzve** (hua e dhënë, borxh personal) ka kategori të veta, **Hua & Borxhe**
+  në të dy anët (Hua e Dhënë / Kthim Borxhi Personal, Hua e Kthyer / Hua e Marrë), dhe formularët i
+  zgjedhin vetë. Një hua e re mund ta lëvizë menjëherë shumën në llogari, dhe një *shtesë* - kur i
+  jepni ose merrni edhe më - lidhet me llogarinë njësoj si një pagesë.
   <br />Çdo borxh mban edhe **normën vjetore të kamatës** (opsionale, shkruhet si në kontratë).
   Me të, ritmi më poshtë e ndan pagesën në dysh - sa e zbret borxhin dhe sa shkon te kamata - dhe e
   thotë rastin që nuk duket me sy: një pagesë më e vogël se kamata e muajit nuk e zvogëlon borxhin

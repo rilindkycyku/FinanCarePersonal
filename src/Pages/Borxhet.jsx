@@ -115,12 +115,14 @@ function Borxhet() {
   const onDelete = async (debt) => {
     // The real transactions some payments created are actual money that left the account, so they
     // stay in the ledger - only the note goes, exactly like deleting a savings goal.
-    const lidhura = (debt.pagesat || []).filter(
-      (p) => p.transaksioniId && transactions.some((tx) => tx.id === p.transaksioniId)
-    ).length;
+    const lidhura =
+      (debt.pagesat || []).filter((p) => p.transaksioniId && transactions.some((tx) => tx.id === p.transaksioniId))
+        .length + (debt.transaksioniFillestarId && transactions.some((tx) => tx.id === debt.transaksioniFillestarId) ? 1 : 0);
     const ok = await dialog.confirm(
       lidhura
-        ? `Ta fshij borxhin "${debt.emri}" me ${debt.pagesat.length} rreshta? ${lidhura} transaksione të vërteta mbeten në historik, sepse ato para kanë dalë vërtet nga llogaria.`
+        ? `Ta fshij borxhin "${debt.emri}"? ${lidhura} ${
+            lidhura === 1 ? "transaksion i vërtetë mbetet" : "transaksione të vërteta mbeten"
+          } në historik, sepse ato para kanë lëvizur vërtet nga llogaria.`
         : `Ta fshij borxhin "${debt.emri}"? Historiku i pagesave shkon bashkë me të.`,
       { title: "Fshi Borxhin" }
     );

@@ -579,7 +579,61 @@ export const DEFAULT_CATEGORIES = [
   { id: "cat_default_udhetime_roaming", emri: "Roaming & Internet", lloji: "shpenzim", prindi: "cat_default_udhetime", ngjyra: "#22c55e", ikona: "Wifi" },
   { id: "cat_default_udhetime_kembim", emri: "Këmbim Valutor & Tarifa", lloji: "shpenzim", prindi: "cat_default_udhetime", ngjyra: "#22c55e", ikona: "Coins" },
   { id: "cat_default_udhetime_bagazh", emri: "Bagazh & Valixhe", lloji: "shpenzim", prindi: "cat_default_udhetime", ngjyra: "#22c55e", ikona: "Luggage" },
+
+  // ── Hua & Borxhe ────────────────────────────────────────────────────────────
+  // Money lent to a friend, or borrowed from one, had no home: the 200 € handed over went out of the
+  // account under "Shpenzime të Tjera" (or not at all, leaving the balance 200 € too high), and the
+  // day it came back it arrived as "Hyrje të Tjera", beside nothing that said it was the same money.
+  // One family on each side, so both halves sit under one name and read as a pair in the
+  // statistics. Cards and bank loans keep "Kredi & Kamata" - these are debts between people.
+  // The debt-note forms pick the fitting one on their own (`kategoriaEHuase` below).
+  { id: "cat_default_hua", emri: "Hua & Borxhe", lloji: "shpenzim", ngjyra: "#0ea5e9", ikona: "HandCoins" },
+  { id: "cat_default_hua_dhene", emri: "Hua e Dhënë", lloji: "shpenzim", prindi: "cat_default_hua", ngjyra: "#0ea5e9", ikona: "Handshake" },
+  { id: "cat_default_hua_kthim", emri: "Kthim Borxhi Personal", lloji: "shpenzim", prindi: "cat_default_hua", ngjyra: "#0ea5e9", ikona: "Banknote" },
+  { id: "cat_default_hua_hyrje", emri: "Hua & Borxhe", lloji: "hyrje", ngjyra: "#0ea5e9", ikona: "HandCoins" },
+  { id: "cat_default_hua_hyrje_kthyer", emri: "Hua e Kthyer", lloji: "hyrje", prindi: "cat_default_hua_hyrje", ngjyra: "#0ea5e9", ikona: "Handshake" },
+  { id: "cat_default_hua_hyrje_marre", emri: "Hua e Marrë", lloji: "hyrje", prindi: "cat_default_hua_hyrje", ngjyra: "#0ea5e9", ikona: "Banknote" },
+
+  // ── Të tjera që s'kishin vend ───────────────────────────────────────────────
+  // Money sent home is not a gift for an occasion and not charity - it is its own regular line
+  // for a lot of households, and the income side already had "Ndihmë nga Familja" as its mirror.
+  { id: "cat_default_dhurata_ndihme_familje", emri: "Ndihmë për Familjen", lloji: "shpenzim", prindi: "cat_default_dhurata", ngjyra: "#ef4444", ikona: "HeartHandshake" },
+  { id: "cat_default_femijet_xhep", emri: "Para Xhepi", lloji: "shpenzim", prindi: "cat_default_femijet", ngjyra: "#f97316", ikona: "Coins" },
+  { id: "cat_default_tjera_posta", emri: "Posta & Dërgesa", lloji: "shpenzim", prindi: "cat_default_tjera_shp", ngjyra: "#94a3b8", ikona: "Package" },
+  { id: "cat_default_tjera_gjoba", emri: "Gjoba & Penalltira", lloji: "shpenzim", prindi: "cat_default_tjera_shp", ngjyra: "#94a3b8", ikona: "Stamp" },
 ];
+
+/**
+ * The category a debt-note line books its transaction under, when the note itself does not name
+ * one that fits: a friend repaying you is "Hua e Kthyer", lending them more is "Hua e Dhënë", and
+ * the same two moves on money you borrowed are "Kthim Borxhi Personal" and "Hua e Marrë". Cards,
+ * bank loans and instalment plans return null - "Kredi & Kamata" and its children are already
+ * the obvious place, and guessing between them would be wrong half the time.
+ */
+const KATEGORITE_E_HUAVE = {
+  huadhene: { pagese: "cat_default_hua_hyrje_kthyer", shtese: "cat_default_hua_dhene" },
+  borxh: { pagese: "cat_default_hua_kthim", shtese: "cat_default_hua_hyrje_marre" },
+};
+
+export function kategoriaEHuase(llojiBorxhit, llojiRreshtit = "pagese") {
+  return KATEGORITE_E_HUAVE[llojiBorxhit]?.[llojiRreshtit] || null;
+}
+
+/** A debt between people, where both a payment and a new amount really move money on an account. */
+export function eshteHuaPersonale(llojiBorxhit) {
+  return Boolean(KATEGORITE_E_HUAVE[llojiBorxhit]);
+}
+
+/**
+ * Whether a debt-note line's transaction is money in or out. A payment on something you owe goes
+ * out and one on money you are owed comes in; a "shtesë" is the reverse - lending a friend more
+ * is money out, borrowing more is money in.
+ */
+export function llojiITransaksionitTeBorxhit(llojiBorxhit, llojiRreshtit = "pagese") {
+  const kerkese = debtTypeMeta(llojiBorxhit).drejtimi === "kerkese";
+  const shtese = llojiRreshtit === "shtese";
+  return kerkese !== shtese ? "hyrje" : "shpenzim";
+}
 
 export const DEFAULT_ACCOUNTS = [
   { id: "acc_default_kesh", emri: "Kesh", lloji: "kesh", bilanciFillestar: 0, ngjyra: "#10b981", shenim: "", arkivuar: false },

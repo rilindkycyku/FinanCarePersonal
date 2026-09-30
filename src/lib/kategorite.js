@@ -272,7 +272,8 @@ export function prindiPerRuajtje(categories, kategoria, prindiId) {
  *
  * Three rows are held back. One that is already there, under whatever name the user gave it. One
  * whose id is in `hequra` - the profile's `kategoriTeHequra`, left behind when a default is deleted
- * - because a category thrown away stays gone. And a subcategory whose parent is missing: someone
+ * - because a category thrown away stays gone. And a subcategory whose parent is missing (and not
+ * arriving in the same pass): someone
  * who deleted "Udhëtime" said they do not track trips, and shipping its new children into their
  * list as top-level categories is not what they asked for.
  *
@@ -282,7 +283,9 @@ export function prindiPerRuajtje(categories, kategoria, prindiId) {
 export function kategoriteQeMungojne(parazgjedhurat, ekzistuese, hequra = []) {
   const kaId = new Set(lista(ekzistuese).map((c) => c.id));
   const teHequra = new Set(hequra || []);
-  return (parazgjedhurat || []).filter(
-    (c) => !kaId.has(c.id) && !teHequra.has(c.id) && (!c.prindi || kaId.has(c.prindi))
-  );
+  const mungojne = (parazgjedhurat || []).filter((c) => !kaId.has(c.id) && !teHequra.has(c.id));
+  // A parent shipped in the same release as its children counts as there: checking only the
+  // ledger added "Hua & Borxhe" on the first opening and its four children on the second.
+  const shtohen = new Set(mungojne.filter((c) => !c.prindi).map((c) => c.id));
+  return mungojne.filter((c) => !c.prindi || kaId.has(c.prindi) || shtohen.has(c.prindi));
 }

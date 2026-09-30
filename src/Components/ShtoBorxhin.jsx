@@ -3,13 +3,13 @@ import { Modal, Button, Form, Row, Col, Alert } from "react-bootstrap";
 import { useData } from "../Context/DataContext";
 import { makeId, STORES } from "../lib/db";
 import { toNumber, todayISO } from "../lib/format";
-import { DEBT_TYPES, debtTypeMeta } from "../lib/options";
+import { DEBT_TYPES, debtTypeMeta, eshteHuaPersonale, kategoriaEHuase, llojiITransaksionitTeBorxhit } from "../lib/options";
 import VleraInput from "./VleraInput";
 import ZgjedhesiKategorive from "./ZgjedhesiKategorive";
 import { ColorPicker } from "./Pickers";
 import "./ModalForms.css";
 import Zgjedhesi from "./Zgjedhesi";
-import { opsionetEThjeshta } from "../lib/opsionet";
+import { opsionetEThjeshta, opsionetLlogarive } from "../lib/opsionet";
 
 const BLANK = {
   emri: "",
@@ -33,9 +33,14 @@ const BLANK = {
  * form carries through untouched on edit so re-saving a note can never lose its history.
  */
 function ShtoBorxhin({ show, onHide, initial, llojiFillestar }) {
-  const { categories, save, simboli } = useData();
+  const { categories, accounts, save, saveMany, simboli, njeLlogari, llogariaKryesore } = useData();
   const [debt, setDebt] = useState(BLANK);
   const [error, setError] = useState("");
+  // The money handed over (or received) when a loan between people starts. Only offered on a new
+  // note: lending 200 € from the wallet is 200 € the wallet no longer has, and without this the
+  // note was the only record of it, so the cash balance stayed 200 € too high.
+  const [fillimi, setFillimi] = useState({ lidh: true, llogariaId: "", kategoriaId: "" });
+  const aktive = accounts.filter((a) => !a.arkivuar);
 
   useEffect(() => {
     if (!show) return;
@@ -56,12 +61,32 @@ function ShtoBorxhin({ show, onHide, initial, llojiFillestar }) {
           // section the user pressed decides which way the new note points.
           { ...BLANK, lloji: llojiFillestar || BLANK.lloji }
     );
+    setFillimi({
+      lidh: true,
+      llogariaId: (njeLlogari ? llogariaKryesore?.id : aktive.length === 1 ? aktive[0].id : "") || "",
+      kategoriaId: "",
+    });
+    // Reset on opening only; the account list changing under an open form must not undo a choice.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [show, initial, llojiFillestar]);
 
   const setField = (name, value) => setDebt((prev) => ({ ...prev, [name]: value }));
 
   const meta = debtTypeMeta(debt.lloji);
   const kerkese = meta.drejtimi === "kerkese";
+  // Lending is money out, borrowing is money in - the same move as a "shtesë" on the note.
+  const llojiFillimit = llojiITransaksionitTeBorxhit(debt.lloji, "shtese");
+  const ofrohetFillimi = !initial && eshteHuaPersonale(debt.lloji) && aktive.length > 0;
+  const lidhFillimin = ofrohetFillimi && fillimi.lidh;
+  // What the picker shows until the user picks: "Hua e Dhënë" / "Hua e Marrë" when the ledger
+  // still has it open. Worked out on every render, so switching the type swaps it too.
+  const kategoriaFillimit = (() => {
+    const zgjedhur = categories.find((c) => c.id === fillimi.kategoriaId);
+    if (zgjedhur && zgjedhur.lloji === llojiFillimit) return zgjedhur.id;
+    const id = kategoriaEHuase(debt.lloji, "shtese");
+    const parazgjedhur = categories.find((c) => c.id === id);
+    return parazgjedhur && !parazgjedhur.arkivuar && parazgjedhur.lloji === llojiFillimit ? id : "";
+  })();
 
   const handleSave = async (e) => {
     e.preventDefault();
@@ -75,10 +100,14 @@ function ShtoBorxhin({ show, onHide, initial, llojiFillestar }) {
     if (debt.normaVjetore !== "" && !(toNumber(debt.normaVjetore) >= 0 && toNumber(debt.normaVjetore) <= 100)) {
       return setError("Norma vjetore duhet të jetë mes 0 dhe 100 për qind.");
     }
+    if (lidhFillimin && !fillimi.llogariaId) return setError("Zgjidhni llogarinë nga e cila lëvizën paratë.");
+    if (lidhFillimin && !kategoriaFillimit) return setError("Zgjidhni kategorinë e transaksionit.");
     setError("");
 
-    await save(STORES.borxhet, {
-      id: debt.id || makeId("debt"),
+    const id = debt.id || makeId("debt");
+    const transaksioniFillestarId = lidhFillimin ? makeId("tx") : debt.transaksioniFillestarId || null;
+    const shenimi = {
+      id,
       emri: debt.emri.trim(),
       lloji: debt.lloji,
       vleraTotale: toNumber(debt.vleraTotale),
@@ -91,7 +120,38 @@ function ShtoBorxhin({ show, onHide, initial, llojiFillestar }) {
       shenim: debt.shenim.trim(),
       arkivuar: Boolean(debt.arkivuar),
       pagesat: Array.isArray(debt.pagesat) ? debt.pagesat : [],
-    });
+      // Kept so deleting the note can say that this transaction stays behind, like the payments'.
+      transaksioniFillestarId,
+    };
+
+    if (lidhFillimin) {
+      await saveMany([
+        [STORES.borxhet, shenimi],
+        [
+          STORES.transactions,
+          {
+            id: transaksioniFillestarId,
+            data: shenimi.dataFillimit,
+            lloji: llojiFillimit,
+            vlera: shenimi.vleraTotale,
+            llogariaId: fillimi.llogariaId,
+            llogariaDestinacionId: null,
+            kategoriaId: kategoriaFillimit,
+            pershkrimi: `${kerkese ? "Hua e dhënë" : "Hua e marrë"}: ${shenimi.kreditori || shenimi.emri}`,
+            shenim: "",
+            qellimiId: null,
+            perseritjaId: null,
+            borxhiId: id,
+            monedhaOrigjinale: null,
+            vleraOrigjinale: null,
+            kursi: null,
+            krijuar: new Date().toISOString(),
+          },
+        ],
+      ]);
+    } else {
+      await save(STORES.borxhet, shenimi);
+    }
 
     onHide();
   };
@@ -202,21 +262,76 @@ function ShtoBorxhin({ show, onHide, initial, llojiFillestar }) {
               </div>
             </Form.Group>
 
-            <Form.Group as={Col} md={6} controlId="debt-kategoriaid">
-              <Form.Label>Kategoria e Parazgjedhur (opsional)</Form.Label>
-              <ZgjedhesiKategorive
-                id="debt-kategoriaid"
-                categories={categories}
-                lloji="shpenzim"
-                value={debt.kategoriaId}
-                onChange={(kategoriaId) => setField("kategoriaId", kategoriaId)}
-                placeholder="Pa kategori"
-                emptyLabel="Pa kategori"
-              />
-              <div className="fcp-modal-hint">
-                Përdoret vetëm kur zgjidhni ta zbrisni një pagesë edhe nga një llogari e vërtetë.
-              </div>
-            </Form.Group>
+            {/* Between people the forms already know the category ("Hua & Borxhe"), so the field
+                only stays for a note that was given one before. */}
+            {(!eshteHuaPersonale(debt.lloji) || debt.kategoriaId) && (
+              <Form.Group as={Col} md={6} controlId="debt-kategoriaid">
+                <Form.Label>Kategoria e Parazgjedhur (opsional)</Form.Label>
+                <ZgjedhesiKategorive
+                  id="debt-kategoriaid"
+                  categories={categories}
+                  lloji="shpenzim"
+                  value={debt.kategoriaId}
+                  onChange={(kategoriaId) => setField("kategoriaId", kategoriaId)}
+                  placeholder="Pa kategori"
+                  emptyLabel="Pa kategori"
+                />
+                <div className="fcp-modal-hint">
+                  Përdoret vetëm kur zgjidhni ta zbrisni një pagesë edhe nga një llogari e vërtetë.
+                </div>
+              </Form.Group>
+            )}
+
+            {ofrohetFillimi && (
+              <Col md={12}>
+                <Form.Check
+                  type="checkbox"
+                  id="debt-fillimi-lidh"
+                  checked={fillimi.lidh}
+                  onChange={(e) => setFillimi((f) => ({ ...f, lidh: e.target.checked }))}
+                  label={kerkese ? "Zbrite shumën edhe nga llogaria" : "Shtoje shumën edhe në llogari"}
+                />
+                <div className="fcp-modal-hint">
+                  {fillimi.lidh
+                    ? kerkese
+                      ? "Paratë që dhatë dalin nga llogaria si «Hua e Dhënë», dhe kur t'ju kthehen, «Kthim» i shton përsëri."
+                      : "Paratë që morët hyjnë në llogari si «Hua e Marrë», dhe çdo pagesë që ktheni i zbret përsëri."
+                    : "E lënë e pashënjuar, borxhi mbetet vetëm shënim dhe asnjë llogari nuk preket."}
+                </div>
+              </Col>
+            )}
+
+            {lidhFillimin && !njeLlogari && (
+              <Form.Group as={Col} md={6} controlId="debt-fillimi-llogaria">
+                <Form.Label>
+                  Llogaria <span className="text-danger">*</span>
+                </Form.Label>
+                <Zgjedhesi
+                  id="debt-fillimi-llogaria"
+                  value={fillimi.llogariaId}
+                  onChange={(v) => setFillimi((f) => ({ ...f, llogariaId: v }))}
+                  opsionet={opsionetLlogarive(aktive)}
+                  placeholder="Zgjidh llogarinë..."
+                  titulli="Zgjidh llogarinë"
+                />
+              </Form.Group>
+            )}
+
+            {lidhFillimin && (
+              <Form.Group as={Col} md={njeLlogari ? 12 : 6} controlId="debt-fillimi-kategoria">
+                <Form.Label>
+                  Kategoria e transaksionit <span className="text-danger">*</span>
+                </Form.Label>
+                <ZgjedhesiKategorive
+                  id="debt-fillimi-kategoria"
+                  categories={categories}
+                  lloji={llojiFillimit}
+                  value={kategoriaFillimit}
+                  onChange={(kategoriaId) => setFillimi((f) => ({ ...f, kategoriaId }))}
+                  required
+                />
+              </Form.Group>
+            )}
 
             <Col md={12}>
               <ColorPicker value={debt.ngjyra} onChange={(c) => setField("ngjyra", c)} />

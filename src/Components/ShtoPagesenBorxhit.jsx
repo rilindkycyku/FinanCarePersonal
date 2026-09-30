@@ -7,7 +7,7 @@ import ZgjedhesiKategorive from "./ZgjedhesiKategorive";
 import { makeId, STORES } from "../lib/db";
 import { toNumber, todayISO, formatMoney } from "../lib/format";
 import { debtProgress } from "../lib/finance";
-import { debtTypeMeta } from "../lib/options";
+import { debtTypeMeta, eshteHuaPersonale, kategoriaEHuase, llojiITransaksionitTeBorxhit } from "../lib/options";
 import { kategoriTeHapura } from "../lib/kategorite";
 import "./ModalForms.css";
 import Zgjedhesi from "./Zgjedhesi";
@@ -43,8 +43,13 @@ function ShtoPagesenBorxhit({ show, onHide, borxhi, initial }) {
 
   const meta = debtTypeMeta(borxhi?.lloji);
   const kerkese = meta.drejtimi === "kerkese";
-  // Getting money back from someone you lent to is income; every other payment is an expense.
-  const txLloji = kerkese ? "hyrje" : "shpenzim";
+  // Between people a "shtesë" is money that really changes hands - lending a friend another 50 €,
+  // borrowing more - so it can be booked like a payment, in the other direction. On a card it is a
+  // purchase already booked elsewhere, or interest, and stays a note.
+  const personale = eshteHuaPersonale(borxhi?.lloji);
+  // Getting money back from someone you lent to is income; paying back is an expense; a "shtesë"
+  // turns either around (llojiITransaksionitTeBorxhit in options.js).
+  const txLloji = llojiITransaksionitTeBorxhit(borxhi?.lloji, entry.lloji);
 
   const aktive = useMemo(() => accounts.filter((a) => !a.arkivuar), [accounts]);
 
@@ -71,10 +76,8 @@ function ShtoPagesenBorxhit({ show, onHide, borxhi, initial }) {
     // below cannot even show (it lists income categories only) and which files the return under a
     // spending category. Anything that does not fit the transaction is dropped, so the field is
     // empty and has to be answered - the save already refuses to go through without it.
-    const kategoriaQePershtatet = (id) => {
-      const kategoria = categories.find((c) => c.id === id);
-      return kategoria?.lloji === txLloji ? id : "";
-    };
+    const llojiRreshtit = initial?.lloji || "pagese";
+    const kategoriaQePershtatet = (id) => kategoriaQeShkon(id, llojiRreshtit);
     setEntry(
       initial
         ? {
@@ -90,21 +93,49 @@ function ShtoPagesenBorxhit({ show, onHide, borxhi, initial }) {
               (njeLlogari ? llogariaKryesore?.id : aktive.length === 1 ? aktive[0].id : "") ||
               "",
             kategoriaId:
-              kategoriaQePershtatet(lidhur?.kategoriaId) || kategoriaQePershtatet(borxhi?.kategoriaId),
+              kategoriaQePershtatet(lidhur?.kategoriaId) ||
+              kategoriaQePershtatet(borxhi?.kategoriaId) ||
+              kategoriaQePershtatet(kategoriaEHuase(borxhi?.lloji, llojiRreshtit)),
           }
         : {
             ...blank(),
             llogariaId: (njeLlogari ? llogariaKryesore?.id : aktive.length === 1 ? aktive[0].id : "") || "",
-            kategoriaId: kategoriaQePershtatet(borxhi?.kategoriaId),
+            kategoriaId:
+              kategoriaQePershtatet(borxhi?.kategoriaId) ||
+              kategoriaQePershtatet(kategoriaEHuase(borxhi?.lloji, llojiRreshtit)),
           }
     );
-  }, [show, initial, borxhi, transactions, categories, txLloji, aktive, njeLlogari, llogariaKryesore]);
+    // `kategoriaQeShkon` reads only `categories` and `borxhi`, both listed.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [show, initial, borxhi, transactions, categories, aktive, njeLlogari, llogariaKryesore]);
+
+  /** `id` when it is an open category on the side this kind of line moves money, else "". */
+  function kategoriaQeShkon(id, llojiRreshtit) {
+    const kategoria = categories.find((c) => c.id === id);
+    const pritet = llojiITransaksionitTeBorxhit(borxhi?.lloji, llojiRreshtit);
+    return kategoria && !kategoria.arkivuar && kategoria.lloji === pritet ? id : "";
+  }
+
+  /**
+   * Switching between "Kthim" and "Shtesë" on a loan between people flips the transaction from
+   * income to expense, so a category picked for one no longer fits the other: it is swapped for
+   * the one that does, rather than left for the save to refuse.
+   */
+  const ndryshoLlojin = (llojiRreshtit) =>
+    setEntry((prev) => ({
+      ...prev,
+      lloji: llojiRreshtit,
+      kategoriaId:
+        kategoriaQeShkon(prev.kategoriaId, llojiRreshtit) ||
+        kategoriaQeShkon(borxhi?.kategoriaId, llojiRreshtit) ||
+        kategoriaQeShkon(kategoriaEHuase(borxhi?.lloji, llojiRreshtit), llojiRreshtit),
+    }));
 
   const setField = (name, value) => setEntry((prev) => ({ ...prev, [name]: value }));
 
   const isShtese = entry.lloji === "shtese";
   // A new charge on a card never leaves a bank account, so there is nothing to book against one.
-  const mundLidhet = !isShtese && aktive.length > 0;
+  const mundLidhet = (!isShtese || personale) && aktive.length > 0;
 
   // Quick-amount chips for debt lines: repeating instalments from past payments, any recurring
   // payment linked to this debt note (e.g. fixed card/loan instalment), and the remaining balance.
@@ -177,7 +208,7 @@ function ShtoPagesenBorxhit({ show, onHide, borxhi, initial }) {
     if (!(vlera > 0)) return setError("Vlera duhet të jetë një numër më i madh se zero.");
 
     const lidhet = mundLidhet && lidh;
-    if (lidhet && !entry.llogariaId) return setError("Zgjidhni llogarinë nga e cila zbritet pagesa.");
+    if (lidhet && !entry.llogariaId) return setError("Zgjidhni llogarinë e transaksionit.");
     if (lidhet && !entry.kategoriaId) return setError("Zgjidhni kategorinë e transaksionit.");
     setError("");
 
@@ -226,7 +257,9 @@ function ShtoPagesenBorxhit({ show, onHide, borxhi, initial }) {
           llogariaId: entry.llogariaId,
           llogariaDestinacionId: null,
           kategoriaId: entry.kategoriaId,
-          pershkrimi: `${kerkese ? "Kthim borxhi" : "Pagesë borxhi"}: ${borxhi.emri}`,
+          pershkrimi: `${
+            isShtese ? (kerkese ? "Hua e dhënë" : "Hua e marrë") : kerkese ? "Kthim borxhi" : "Pagesë borxhi"
+          }: ${borxhi.emri}`,
           shenim: entry.shenim.trim(),
           qellimiId: null,
           perseritjaId: null,
@@ -261,7 +294,7 @@ function ShtoPagesenBorxhit({ show, onHide, borxhi, initial }) {
             <button
               type="button"
               className={`fcp-type-btn hyrje${!isShtese ? " active" : ""}`}
-              onClick={() => setField("lloji", "pagese")}
+              onClick={() => ndryshoLlojin("pagese")}
             >
               <TrendingDown size={15} />
               {kerkese ? "Kthim" : "Pagesë"}
@@ -269,7 +302,7 @@ function ShtoPagesenBorxhit({ show, onHide, borxhi, initial }) {
             <button
               type="button"
               className={`fcp-type-btn shpenzim${isShtese ? " active" : ""}`}
-              onClick={() => setField("lloji", "shtese")}
+              onClick={() => ndryshoLlojin("shtese")}
             >
               <PlusCircle size={15} />
               Shtesë
@@ -318,7 +351,7 @@ function ShtoPagesenBorxhit({ show, onHide, borxhi, initial }) {
             </Form.Group>
 
             <Col md={12}>
-              {isShtese ? (
+              {isShtese && !personale ? (
                 <div className="fcp-modal-hint">
                   Një shtesë e rrit borxhin - blerje e re me kartelë, kamatë ose tarifë. Mbetet vetëm
                   shënim, nuk prek asnjë llogari.
@@ -331,15 +364,19 @@ function ShtoPagesenBorxhit({ show, onHide, borxhi, initial }) {
                     checked={lidh}
                     onChange={(e) => setLidh(e.target.checked)}
                     label={
-                      kerkese
+                      txLloji === "hyrje"
                         ? "Shtoja edhe si hyrje në një llogari të vërtetë"
                         : "Zbrite edhe nga një llogari e vërtetë"
                     }
                   />
                   <div className="fcp-modal-hint">
                     {lidh
-                      ? "Krijohet edhe një transaksion i vërtetë, pra bilanci i llogarisë ndryshon. Borxhi zbritet gjithsesi."
-                      : "E lënë e pashënjuar, pagesa zbret vetëm borxhin - asnjë llogari nuk preket."}
+                      ? `Krijohet edhe një transaksion i vërtetë, pra bilanci i llogarisë ndryshon. Borxhi ${
+                          isShtese ? "rritet" : "zbritet"
+                        } gjithsesi.`
+                      : isShtese
+                        ? "E lënë e pashënjuar, shtesa rrit vetëm borxhin - asnjë llogari nuk preket."
+                        : "E lënë e pashënjuar, pagesa zbret vetëm borxhin - asnjë llogari nuk preket."}
                   </div>
                 </>
               ) : (
