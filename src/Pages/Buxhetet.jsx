@@ -340,7 +340,16 @@ function Buxhetet() {
           )}
         </Container>
 
-        {rows.length > 0 && <Tabela data={rows} tableName={`Buxhetet - ${monthLabel(muaji)}`} mosShfaqID />}
+        {rows.length > 0 && (
+          <Tabela
+            data={rows}
+            tableName={`Buxhetet - ${monthLabel(muaji)}`}
+            mosShfaqID
+            // On a phone card the amount beside the name is what is left, not the daily figure
+            // that happens to be the last money column.
+            kartela={{ vlera: `Mbetur (${simboli})`, nentitulli: ["Vlefshmëria", "Përqindja"] }}
+          />
+        )}
 
         <ShtoBuxhetin
           show={showModal}

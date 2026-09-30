@@ -2582,3 +2582,9 @@ body.light-mode .card.profile-card.fcp-zona-rrezik:hover {
 .fcp-ndarja-hap {
   font-size: 0.8rem;
 }
+
+/* Transaksionet on a phone: the page's own filters fold behind one button (see Transaksionet.jsx). */
+.fcp-tx-filtrat-celes { display: flex; gap: 0.5rem; }
+@media (max-width: 575.98px) {
+  .fcp-tx-filtrat:not(.hapur) { display: none; }
+}

@@ -17,6 +17,22 @@ ngriti versionin.
   mbani të shtypur ikonën, pranë «Shto transaksion». Karta e udhëtimit në vazhdim në Panel mbetet si
   ishte: shfaqet vetë gjatë udhëtimit dhe pak ditë para nisjes.
 
+### Ndryshuar
+- **Listat në telefon: karta në vend të tabelës, pa rrëshqitje anash.** Tabela e transaksioneve ka
+  dhjetë kolona; në telefon hynin vetëm tri të parat, kështu që vlera - arsyeja pse hapet lista - dhe
+  butonat mbeteshin djathtas, pas një rrëshqitjeje anash për çdo rresht. Tani në ekran të ngushtë
+  çdo rresht është një kartë me dy rreshta: emri dhe vlera sipër, kategoria, llogaria dhe etiketat
+  poshtë. Transaksionet grupohen sipas ditës («Sot», «Dje», «E hënë, 28 Shtator»), pra data nuk
+  përsëritet në çdo rresht. Një prekje mbi kartë hap pjesën tjetër - lloji, vendi, faturat - dhe
+  butonat, më të mëdhenj se më parë që të kapen me gisht. Shenja «Mujor» mbetet e dukshme pa e hapur.
+  E njëjta pamje vlen për Buxhetet, Kategoritë, Llogaritë, Qëllimet, Borxhet, Planet dhe Pagesat e
+  Përsëritura; në kompjuter tabela mbetet si ishte.
+- **Filtrat nuk zënë më gjysmë ekrani.** Në telefon mbetet i dukshëm vetëm kërkimi; data, periudha,
+  numri i rreshtave dhe renditja janë pas butonit «Filtrat», që tregon sa filtra janë ndezur. Edhe
+  filtrat e faqes së transaksioneve (kategoria, llogaria, vlera) palosen pas një butoni, me numrin e
+  tyre dhe «Pastro» pranë - kështu një filtër që erdhi me një lidhje (p.sh. nga një udhëtim) nuk
+  fshihet pa u vënë re. Kategoritë e llojit (Hyrje, Shpenzim, Transfer) janë një rresht që rrëshqet.
+
 ### Rregulluar
 - **Udhëtimet nuk shfaqeshin në telefon.** Faqja *Udhëtimet* tregonte vetëm titullin dhe butonin
   «Udhëtim i Ri», edhe pse udhëtimet ishin ruajtur. Lista e tyre përdorte pa dashje të njëjtin emër

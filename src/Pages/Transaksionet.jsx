@@ -3,7 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { Container, Row, Col, Form, Button } from "react-bootstrap";
 import {
   TrendingUp, TrendingDown, Percent, Hash, Filter, X, CopyPlus, Paperclip, CalendarDays, Sun,
-  ArrowRightLeft,
+  ArrowRightLeft, SlidersHorizontal,
 } from "lucide-react";
 import NavBar from "../Components/NavBar";
 import Footer from "../Components/Footer";
@@ -36,6 +36,8 @@ function Transaksionet() {
   const { accounts, categories, goals, transactions, faturat, save, saveMany, destroy, simboli, money,
     loading, njeLlogari } = useData();
   const [filtri, setFiltri] = useState({ kategoria: "", llogaria: "", etiketa: "", min: "", max: "" });
+  // Phones only: the five pickers stood between the totals and the first transaction on every visit.
+  const [filtratHapur, setFiltratHapur] = useState(false);
   const dialog = useDialog();
   const [searchParams, setSearchParams] = useSearchParams();
   const [showModal, setShowModal] = useState(false);
@@ -101,6 +103,7 @@ function Transaksionet() {
   }, [transactions, categories, filtri]);
 
   const kaFiltra = Object.values(filtri).some(Boolean);
+  const nrFiltrave = Object.values(filtri).filter(Boolean).length;
   const flows = useMemo(() => cashflow(teFiltruara), [teFiltruara]);
 
   const llogariteAktive = useMemo(() => accounts.filter((a) => !a.arkivuar), [accounts]);
@@ -350,7 +353,31 @@ function Transaksionet() {
               color="violet"
             />
           </Row>
-          <Row className="g-2 align-items-end mt-1 mb-1">
+          {/* Folded on a phone, with the count on the button - so a filter that arrived with a link
+              (a trip's tag, an account's page) is still announced rather than silently narrowing. */}
+          <div className="fcp-tx-filtrat-celes d-sm-none mt-2">
+            <button
+              type="button"
+              className={`premium-filter-toggle${filtratHapur ? " hapur" : ""}`}
+              onClick={() => setFiltratHapur((h) => !h)}
+              aria-expanded={filtratHapur}
+              aria-controls="fcp-tx-filtrat"
+            >
+              <SlidersHorizontal size={15} />
+              <span>Kategoria, llogaria, vlera</span>
+              {nrFiltrave > 0 && <span className="premium-filter-toggle-nr">{nrFiltrave}</span>}
+            </button>
+            {kaFiltra && (
+              <button
+                type="button"
+                className="premium-filter-toggle"
+                onClick={() => setFiltri({ kategoria: "", llogaria: "", etiketa: "", min: "", max: "" })}
+              >
+                <X size={14} /> Pastro
+              </button>
+            )}
+          </div>
+          <Row id="fcp-tx-filtrat" className={`g-2 align-items-end mt-1 mb-1 fcp-tx-filtrat${filtratHapur ? " hapur" : ""}`}>
             <Form.Group as={Col} xs={6} md={3} controlId="filtri-kategoria">
               <Form.Label className="fcp-row-sub mb-1">
                 <Filter size={12} className="me-1" />
@@ -471,6 +498,18 @@ function Transaksionet() {
           dateField="Data"
           filterField="Lloji"
           mosShfaqID
+          kartela={{
+            titulli: ["Përshkrimi", "Kategoria", "Lloji"],
+            vlera: `Vlera (${simboli})`,
+            nentitulli: ["Kategoria", "Llogaria", "Etiketat"],
+            grupoSipasDates: true,
+            // The row's "Mujor" pill lives in the type column, which a card leaves for its details;
+            // it explains a figure on the dashboard, so on a card too it has to show unopened.
+            shenjat: (rreshti) => {
+              const tx = transactions.find((t) => t.id === rreshti.ID);
+              return tx && eshteMujore(tx) ? <span className="fcp-pill fcp-pill-mujor">Mujor</span> : null;
+            },
+          }}
           kaZgjedhje={mundZhvendoset}
           zgjedhjet={zgjedhjet}
           funksionZgjedhjes={setZgjedhjet}

@@ -359,6 +359,7 @@ function Planifikuara() {
             tableName={`Shpenzimet e Planifikuara - ${monthLabel(muaji)}`}
             filterField="Statusi"
             mosShfaqID
+            kartela={{ vlera: `Planifikuar (${simboli})` }}
           />
         )}
 
