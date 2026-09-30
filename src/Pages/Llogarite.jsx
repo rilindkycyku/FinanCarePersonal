@@ -325,7 +325,7 @@ function Llogarite() {
         </Container>
 
         {rows.length > 0 && !(njeLlogari && accounts.length === 1) && (
-          <Tabela data={rows} tableName="Përmbledhje e Llogarive" mosShfaqID />
+          <Tabela data={rows} tableName="Përmbledhje e Llogarive" mosShfaqID palosurNeTelefon />
         )}
 
         <ShtoLlogarine

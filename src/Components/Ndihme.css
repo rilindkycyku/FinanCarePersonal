@@ -1,0 +1,14 @@
+/* The fold of Ndihme.jsx. Its own file, imported by the component, rather than a rule inside
+   ModalForms.css: a page that is not a form (Cilësimet) only has ModalForms.css once some modal
+   happens to have pulled it in, so there the same hint folded on one visit and not the next. */
+
+/* One line of each hint, "…" at the end; a tap opens the rest. */
+@media (max-width: 575.98px) {
+  .fcp-ndihme:not(.hapur) {
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    cursor: pointer;
+  }
+}

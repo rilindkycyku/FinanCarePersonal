@@ -26,6 +26,9 @@ import "./Styles/PremiumTheme.css";
 import "./Styles/DizajniPergjithshem.css";
 import "./Styles/Personal.css";
 
+// How many «Kategori pa Buxhet» chips a phone shows before «+N të tjera».
+const CHIPE_NE_TELEFON = 8;
+
 function Buxhetet() {
   const { categories, transactions, budgets, destroy, save, money, simboli, loading } = useData();
   const dialog = useDialog();
@@ -100,20 +103,27 @@ function Buxhetet() {
    * covers every one of them, so listing all of them would turn a short prompt into a wall of chips
    * for detail nobody has budgeted at that level.
    */
+  const [chipetHapur, setChipetHapur] = useState(false);
   const paBuxhet = useMemo(() => {
     const mbuluara = new Set(effectiveBudgets(budgets, muaji).map((b) => b.kategoriaId));
     const { start, end } = monthKeyBounds(muaji);
-    const perdorura = new Set(
-      transactions
-        .filter((tx) => tx.lloji === "shpenzim" && tx.data >= start && tx.data <= end)
-        .map((tx) => tx.kategoriaId)
-    );
+    // What went out this month per category, a parent also counting its children - so the chips
+    // where money is actually going unbudgeted come first, and on a phone, where only the first few
+    // show, those are the few that show.
+    const shpenzuar = new Map();
+    for (const tx of transactions) {
+      if (tx.lloji !== "shpenzim" || tx.data < start || tx.data > end) continue;
+      const vlera = Number(tx.vlera) || 0;
+      shpenzuar.set(tx.kategoriaId, (shpenzuar.get(tx.kategoriaId) || 0) + vlera);
+      const rrenja = rrenjaE(categories, tx.kategoriaId);
+      if (rrenja && rrenja !== tx.kategoriaId) shpenzuar.set(rrenja, (shpenzuar.get(rrenja) || 0) + vlera);
+    }
     return kategoriTeHapura(categories)
       .filter((c) => c.lloji === "shpenzim" && !mbuluara.has(c.id))
       .filter((c) => !mbuluara.has(rrenjaE(categories, c.id)))
-      .filter((c) => !c.prindi || perdorura.has(c.id))
-      .map((c) => ({ ...c, emri: emriIPlote(categories, c.id, c.emri) }))
-      .sort((a, b) => a.emri.localeCompare(b.emri, "sq"));
+      .filter((c) => !c.prindi || shpenzuar.has(c.id))
+      .map((c) => ({ ...c, emri: emriIPlote(categories, c.id, c.emri), shpenzuar: shpenzuar.get(c.id) || 0 }))
+      .sort((a, b) => b.shpenzuar - a.shpenzuar || a.emri.localeCompare(b.emri, "sq"));
   }, [budgets, categories, transactions, muaji]);
 
   const openNew = (kategoriaId = "") => {
@@ -328,19 +338,40 @@ function Buxhetet() {
                 <Plus size={20} className="text-primary" />
                 Kategori pa Buxhet
               </h2>
-              <div className="fcp-chips">
-                {paBuxhet.map((c) => (
-                  <button type="button" className="fcp-chip" key={c.id} onClick={() => openNew(c.id)}>
+              <div className={`fcp-chips${chipetHapur ? " hapur" : ""}`}>
+                {paBuxhet.map((c, i) => (
+                  <button
+                    type="button"
+                    className={`fcp-chip${i >= CHIPE_NE_TELEFON ? " fcp-chip-teprice" : ""}`}
+                    key={c.id}
+                    onClick={() => openNew(c.id)}
+                  >
                     <span className="fcp-dot" style={{ background: c.ngjyra }} />
                     {c.emri}
                   </button>
                 ))}
+                {/* Phones only: thirty chips were half a screen of the page. */}
+                {!chipetHapur && paBuxhet.length > CHIPE_NE_TELEFON && (
+                  <button type="button" className="fcp-chip fcp-chip-me-shume d-sm-none" onClick={() => setChipetHapur(true)}>
+                    +{paBuxhet.length - CHIPE_NE_TELEFON} të tjera
+                  </button>
+                )}
               </div>
             </section>
           )}
         </Container>
 
-        {rows.length > 0 && <Tabela data={rows} tableName={`Buxhetet - ${monthLabel(muaji)}`} mosShfaqID />}
+        {rows.length > 0 && (
+          <Tabela
+            data={rows}
+            tableName={`Buxhetet - ${monthLabel(muaji)}`}
+            mosShfaqID
+            palosurNeTelefon
+            // On a phone card the amount beside the name is what is left, not the daily figure
+            // that happens to be the last money column.
+            kartela={{ vlera: `Mbetur (${simboli})`, nentitulli: ["Vlefshmëria", "Përqindja"] }}
+          />
+        )}
 
         <ShtoBuxhetin
           show={showModal}

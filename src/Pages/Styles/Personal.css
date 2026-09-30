@@ -2295,6 +2295,14 @@ body.light-mode .card.profile-card.fcp-zona-rrezik:hover {
 
 /* ── Udhëtimet ─────────────────────────────────────────────────────────────── */
 
+/* Its own name on purpose: the guide page already owns .fcp-udh-lista, which folds away on phones
+   behind its «Udhëzimet» switch - borrowed here, it hid every trip on a phone. */
+.fcp-udhetimet-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
 /* The trip's own colour runs down the left edge of its card, so a list of three trips reads as
    three trips before a single name is read. */
 .fcp-udh-karta {
@@ -2574,3 +2582,15 @@ body.light-mode .card.profile-card.fcp-zona-rrezik:hover {
 .fcp-ndarja-hap {
   font-size: 0.8rem;
 }
+
+/* Transaksionet on a phone: the page's own filters fold behind one button (see Transaksionet.jsx). */
+.fcp-tx-filtrat-celes { display: flex; gap: 0.5rem; }
+@media (max-width: 575.98px) {
+  .fcp-tx-filtrat:not(.hapur) { display: none; }
+}
+
+/* Buxhetet: past the first few, the unbudgeted categories wait behind «+N të tjera» on a phone. */
+@media (max-width: 575.98px) {
+  .fcp-chips:not(.hapur) .fcp-chip-teprice { display: none; }
+}
+.fcp-chip-me-shume { border-style: dashed; color: var(--sp-text-muted); }

@@ -199,3 +199,96 @@
     padding-right: 1.2rem !important;
   }
 }
+
+/* ── Phone: the folding filters and the cards ────────────────────────────────
+   Below 576px Tabela.jsx draws the rows as cards (lib/tabela.js decides which column goes where)
+   and folds every filter but the search behind «Filtrat». */
+.premium-filter-toggle {
+  display: inline-flex; align-items: center; gap: 0.35rem; flex-shrink: 0;
+  background: var(--sp-surface-3); border: 1px solid var(--sp-border); border-radius: 8px;
+  color: var(--sp-text-soft); font-size: 0.78rem; font-weight: 700; padding: 0 0.7rem; min-height: 36px;
+}
+.premium-filter-toggle.hapur { border-color: var(--sp-emerald); color: var(--sp-emerald); }
+.premium-filter-toggle-nr {
+  background: var(--sp-emerald); color: #0b1220; border-radius: 999px;
+  font-size: 0.66rem; min-width: 1.1rem; height: 1.1rem; display: inline-flex; align-items: center; justify-content: center;
+}
+
+@media (max-width: 575.98px) {
+  .premium-filter-bar:not(.hapur) .premium-filter-shtese { display: none; }
+  /* One swipeable line of chips instead of two or three wrapped rows above the list. */
+  .premium-filter-pills-wrap { margin-top: 0.5rem; padding-top: 0.5rem; }
+  .premium-filter-pills-wrap > .premium-filter-label { display: none !important; }
+  .premium-filter-pills { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin: 0 -0.5rem; padding: 0 0.5rem; }
+  .premium-filter-pills::-webkit-scrollbar { display: none; }
+  .premium-main-card > .card-body > .d-flex:first-child { margin-bottom: 0.6rem !important; }
+}
+
+.premium-kartat { display: flex; flex-direction: column; gap: 0.5rem; }
+.premium-kartat-dita {
+  font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--sp-text-muted); margin: 0.2rem 0.2rem 0.3rem;
+}
+.premium-kartat-te-gjitha {
+  display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; font-weight: 600;
+  color: var(--sp-text-muted); padding: 0 0.2rem;
+}
+.premium-kartat-te-gjitha .form-check-input,
+.premium-karta-kutia { margin: 0; flex-shrink: 0; background-color: var(--sp-surface-3); border-color: var(--sp-border); }
+.premium-kartat-te-gjitha .form-check-input:checked, .premium-kartat-te-gjitha .form-check-input:indeterminate,
+.premium-karta-kutia:checked { background-color: var(--sp-emerald); border-color: var(--sp-emerald); }
+
+.premium-kartat-kuti {
+  background: var(--sp-surface-2); border: 1px solid var(--sp-border); border-radius: 12px; overflow: hidden;
+}
+.premium-karta + .premium-karta { border-top: 1px solid var(--sp-border); }
+.premium-karta.hapur { background: var(--sp-surface-3); }
+.premium-karta.e-zgjedhur { background: var(--sp-surface-3); box-shadow: inset 3px 0 0 var(--sp-emerald); }
+.premium-karta-koka { display: flex; align-items: center; gap: 0.6rem; padding: 0.5rem 0.7rem; }
+.premium-karta-trupi { flex: 1; min-width: 0; }
+.premium-karta-trupi.hapet { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.premium-karta-trupi:focus-visible { outline: 2px solid var(--sp-emerald); outline-offset: 3px; border-radius: 6px; }
+.premium-karta-rreshti { display: flex; align-items: baseline; gap: 0.5rem; }
+.premium-karta-titulli {
+  flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-size: 0.86rem; font-weight: 600; color: var(--sp-text);
+}
+.premium-karta-vlera { font-size: 0.88rem; font-weight: 700; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.premium-karta-shigjeta { flex-shrink: 0; align-self: center; color: var(--sp-text-muted); transition: transform 0.15s ease; }
+.premium-karta.hapur .premium-karta-shigjeta { transform: rotate(180deg); }
+/* One line, always: every part may shrink to an ellipsis rather than push the card to a third. */
+.premium-karta-meta {
+  display: flex; align-items: center; gap: 0.45rem; margin-top: 0.15rem; overflow: hidden;
+  font-size: 0.72rem; color: var(--sp-text-muted); line-height: 1.35; white-space: nowrap;
+}
+.premium-karta-meta > * { flex: 0 1 auto; min-width: 0; }
+.premium-karta-meta > .fcp-pill, .premium-karta-meta > .date-badge { flex-shrink: 0; }
+.premium-karta-meta .fcp-pill { font-size: 0.62rem; padding: 0.05rem 0.4rem; }
+/* A dot between two plain parts, none after a pill or a chip - those already have an edge. */
+.premium-karta-meta-pjesa { overflow: hidden; text-overflow: ellipsis; }
+.premium-karta-meta-pjesa + .premium-karta-meta-pjesa::before { content: "·"; margin-right: 0.45rem; }
+
+.premium-karta-detajet { border-top: 1px solid var(--sp-border); padding: 0.55rem 0.7rem 0.65rem; }
+.premium-karta-detajet dl { display: grid; grid-template-columns: auto 1fr; gap: 0.3rem 0.8rem; margin: 0 0 0.55rem; font-size: 0.76rem; }
+.premium-karta-detajet dl > div { display: contents; }
+.premium-karta-detajet dt {
+  font-weight: 700; color: var(--sp-text-muted); text-transform: uppercase; font-size: 0.62rem;
+  letter-spacing: 0.05em; align-self: center;
+}
+.premium-karta-detajet dd { margin: 0; color: var(--sp-text); min-width: 0; overflow-wrap: anywhere; }
+.premium-karta-veprimet { display: flex; flex-wrap: wrap; gap: 0.45rem; justify-content: flex-end; }
+.premium-karta-detajet dl:last-child { margin-bottom: 0; }
+/* A finger, not a cursor: the 28px table buttons grow to a size a thumb can hit. */
+.premium-karta-veprimet .btn-action { width: 38px; height: 38px; border-radius: 10px; }
+
+/* A folded summary list (palosurNeTelefon): one row that says how much is behind it. */
+.premium-shfaq-listen {
+  display: flex; align-items: center; gap: 0.5rem; width: 100%;
+  background: var(--sp-surface-2); border: 1px dashed var(--sp-border); border-radius: 12px;
+  color: var(--sp-text-soft); font-size: 0.8rem; font-weight: 700; padding: 0.65rem 0.8rem;
+}
+.premium-shfaq-listen svg { margin-left: auto; color: var(--sp-text-muted); }
+.premium-shfaq-listen-nr {
+  background: var(--sp-surface-3); border-radius: 999px; font-size: 0.68rem; padding: 0.05rem 0.5rem;
+  color: var(--sp-text-muted);
+}

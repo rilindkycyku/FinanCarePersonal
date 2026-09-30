@@ -19,6 +19,7 @@ import KODI_FUNKSIONIT from "../../supabase/functions/raporti/index.ts?raw";
 import { LLOJET_RAPORTIT, bashkengjitjaERaportit } from "../lib/raportet";
 import { MUJOR, celesiPeriudhes, emriPeriudhes, etiketaPeriudhes, periudhatPerZgjedhje } from "../lib/periudhat";
 import { dataEParaERegjistruar } from "../lib/finance";
+import Ndihme from "./Ndihme";
 
 const SEKRETI = "RESEND_API_KEY";
 
@@ -246,11 +247,11 @@ function Raportet() {
         <Mail size={18} className="me-2 text-primary" />
         Raportet me Email
       </h2>
-      <p className="text-muted small mb-3">
+      <Ndihme className="text-muted small mb-3">
         Sa herë mbyllet një periudhë - një javë, një muaj, një tremujor, një vit - hera e parë që
         hapet aplikacioni pas saj dërgon me email pasqyrën e asaj periudhe. Emaili niset nga
         projekti juaj i Supabase-it: asnjë server i këtij aplikacioni nuk i sheh të dhënat tuaja.
-      </p>
+      </Ndihme>
 
       {!lidhur ? (
         <Alert variant="secondary" className="small mb-0">

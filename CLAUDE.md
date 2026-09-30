@@ -31,7 +31,7 @@ npm run dev       # vite --host
 npm run build
 npm run preview
 npm run lint      # eslint . — must stay at 0 errors (4 pre-existing warnings)
-npm test          # vitest run — 32 files, 755 tests, all green
+npm test          # vitest run — 33 files, 773 tests, all green
 npm run test:watch
 npm run ikonat    # regenerates the icons and the two wordmark PNGs from Logo.svg (Playwright)
 ```
@@ -107,6 +107,7 @@ imports, so keep doing that unless you are converting deliberately.
 | `images.js` / `zip.js` | In-browser photo re-encoding; hand-written ZIP writer/reader |
 | `exportExcel.js` / `exportPdf.js` | Excel export and the bank-style PDF statement |
 | `calc.js` | Recursive-descent arithmetic parser for the amount fields (never `eval`) |
+| `tabela.js` | The phone half of `Tabela.jsx`: which column is a card's title/amount/second line, days for a date-sorted list |
 | `transferQr.js` | Whole-database handover to another device as a chain of deflated QR codes |
 | `instalimi.js` | Captures `beforeinstallprompt` once, at startup, so "add to home screen" can be offered |
 | `format.js`, `options.js`, `opsionet.js`, `icons.js` | Formatting, defaults, picker rows, icon registry |
@@ -180,14 +181,20 @@ Read the header comments of `sinkronizimi.js`, `db.js` and `skema.js` before cha
   Rows come from `opsionet.js` helpers.
 - **Never use `window.alert` / `confirm`** — `useDialog()` gives `alert()` and `confirm()` as
   promises, with an optional `requireText` for destructive actions.
-- Explanatory text under a form field is `<Ndihme>` rather than a bare `.fcp-modal-hint`: it folds to
-  one line on phones (tap to open) and shows in full on wider screens. Errors stay plain hints.
+- Explanatory text under a form field - or a long explanation on a settings card - is `<Ndihme>`
+  rather than a bare `.fcp-modal-hint`: it folds to one line on phones (tap to open, `Ndihme.css`)
+  and shows in full on wider screens. Errors and warnings stay plain text.
 - Amount inputs are `VleraInput` (it carries the calculator); dates are plain `type="date"`
   controls; colour and icon pickers come from `Pickers.jsx`.
 - List pages use `Components/Tabela/Tabela.jsx`: it takes `data` as display-row objects whose keys
   are the visible column headers, each with an `ID` field, plus action callbacks
   (`funksionButonEdit`, `funksionButonFshij`, `funksionButonExtra*`, …). Cell values may contain
-  markup via `markup()`; the Excel export strips it back to text with `cellText()`.
+  markup via `markup()`; the Excel export strips it back to text with `cellText()`. Below 576px the
+  same rows draw as two-line cards (no sideways scroll); `lib/tabela.js` guesses the title (first
+  column), the amount (last `(€)` column) and the second line, and a page corrects the guess with
+  `kartela={{ titulli, vlera, nentitulli, grupoSipasDates, shenjat }}`. Every other column still
+  shows once a card is tapped. A summary table that repeats the page's own cards takes
+  `palosurNeTelefon`: on a phone it stays folded (title + export + «Shfaq listën»).
 - Icons: lucide-react. Records persist an icon **name**, resolved through `lib/icons.js`
   (`getIcon`); unknown names fall back to `Circle`. Add new names to the `ICONS` registry.
 - Each page renders `NavBar`, `PageTitle`, `ButoniUdhezimit`, `Footer`, and `PageLoading` while
@@ -250,7 +257,7 @@ version — and note that an upgrade blocked by another open tab is surfaced thr
 
 - Vitest, no DOM environment, no jsdom setup file. Tests sit next to the code as `*.test.js`.
 - Everything tested is pure: `finance`, `csv`, `sinkronizimi`, `kategorite`, `etiketat`, `format`,
-  `grupet`, `udhetimet`, the receipt split (`ndarja.test.js`), `vendndodhjet`, `ndryshimet`,
+  `grupet`, `udhetimet`, `tabela`, the receipt split (`ndarja.test.js`), `vendndodhjet`, `ndryshimet`,
   `options`, `calc`, `periudhat`, `raportet`, `raporti`, `raportFigurat`, `raportGrafike`,
   `raportEmail`, `paralajmerimet`, `njoftimet`, `abonimet`, `viti`, `zerat`, `skema`, `supabase`,
   `transferQr`, `pajisja`, `instalimi`, `udhezimet`, plus the naming half of `exportPdf`

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import "./Ndihme.css";
 
 /**
  * A form hint that folds to its first line on a phone.
@@ -7,7 +8,7 @@ import { useState } from "react";
  * desktop there is room for all of them. On a phone they are most of the scroll: the transaction
  * form was two screens tall mostly because of text nobody needs on the hundredth expense. Folded,
  * the first line still says what the field is for, and a tap - anywhere on it - opens the rest.
- * The fold is CSS-only (`.fcp-ndihme` in ModalForms.css), so wider screens show everything as before.
+ * The fold is CSS-only (Ndihme.css), so wider screens show everything as before.
  */
 function Ndihme({ children, className = "" }) {
   const [hapur, setHapur] = useState(false);

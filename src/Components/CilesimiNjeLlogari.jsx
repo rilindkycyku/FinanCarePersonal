@@ -8,6 +8,7 @@ import { useDialog } from "../Context/DialogContext";
 import { makeId, STORES } from "../lib/db";
 import { consolidateAccounts } from "../lib/finance";
 import { MAIN_ACCOUNT_DEFAULT } from "../lib/options";
+import Ndihme from "./Ndihme";
 // The card styling lives with the settings page, and this block is rendered on Llogaritë too.
 import "../Pages/Styles/Dashboard.css";
 import "../Pages/Styles/Personal.css";
@@ -132,10 +133,10 @@ function CilesimiNjeLlogari() {
         disabled={busy}
         onChange={(e) => run(e.target.checked ? enable : disable)}
       />
-      <div className="fcp-row-sub mt-1 mb-3">
+      <Ndihme className="fcp-row-sub mt-1 mb-3">
         Kesh, bankë dhe kartelë nuk ndahen - çdo transaksion, pagesë e përsëritur dhe kontribut shkon te një
         llogari e vetme dhe formularët nuk pyesin më për llogarinë.
-      </div>
+      </Ndihme>
 
       {accounts.length > 1 && (
         <Form.Group controlId="cilesimi-llogaria-kryesore" className="mb-3">

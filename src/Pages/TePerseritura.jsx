@@ -335,7 +335,14 @@ function TePerseritura() {
         </Container>
 
         {rows.length > 0 && (
-          <Tabela data={rows} tableName="Pagesat e Përsëritura" dateField="Data e Radhës" filterField="Statusi" mosShfaqID />
+          <Tabela
+            data={rows}
+            tableName="Pagesat e Përsëritura"
+            dateField="Data e Radhës"
+            filterField="Statusi"
+            mosShfaqID
+            palosurNeTelefon
+          />
         )}
 
         <KonfirmoPagesen

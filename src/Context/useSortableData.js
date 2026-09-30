@@ -26,7 +26,13 @@ const useSortableData = (items, config = null, search = "", itemsPerPage = 10, d
   const [sortConfig, setSortConfig] = useState(config);
   const [currentPage, setCurrentPage] = useState(0);
 
-  const sortData = (key) => {
+  // A header tap toggles; the phone's sort picker has no header to tap twice, so it names the
+  // direction outright.
+  const sortData = (key, directionExplicit) => {
+    if (directionExplicit) {
+      setSortConfig(key ? { key, direction: directionExplicit } : null);
+      return;
+    }
     let direction = "ascending";
     if (sortConfig && sortConfig.key === key && sortConfig.direction === "ascending") {
       direction = "descending";
