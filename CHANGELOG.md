@@ -29,6 +29,17 @@ ngriti versionin.
   *Gjoba & Penalltira* (te Shpenzime të Tjera). Dalin vetë herën e parë që hapet aplikacioni; një
   kategori që e keni fshirë nuk kthehet.
 
+### Ndryshuar
+- **Huatë nuk llogariten më si shpenzim apo si të ardhur.** Paratë që i jepni hua dikujt nuk janë
+  të shpenzuara - kthehen - dhe kur kthehen nuk janë rrogë. Ashtu si transferet mes llogarive tuaja,
+  kategoritë *Hua & Borxhe* tani mbeten jashtë hyrjeve, shpenzimeve dhe normës së kursimit të muajit
+  te Paneli, Statistikat, Viti dhe raportet me email, si edhe jashtë «shpenzuar sot» te limiti ditor.
+  Bilanci i llogarisë lëviz njësoj, sepse paratë lëvizën vërtet. Lista e Transaksioneve dhe detajet e
+  një llogarie apo kategorie i numërojnë, sepse aty mblidhen pikërisht rreshtat që shihni.
+- **Statistikat në telefon.** Katër skedat (Përmbledhje, Kategoritë, Ritmi, Llogaritë) hyjnë të
+  gjitha në gjerësi, me ikonën mbi emër - «Llogaritë» nuk fshihet më pas një rrëshqitjeje anash - dhe
+  zgjedhësi i periudhës zë gjithë rreshtin.
+
 ### Rregulluar
 - **Një familje e re kategorish vjen e plotë.** Kur një version shtonte një kategori kryesore
   bashkë me nënkategoritë e saj, herën e parë dilte vetëm kryesorja dhe nënkategoritë vetëm pas

@@ -610,6 +610,17 @@ export const DEFAULT_CATEGORIES = [
  * bank loans and instalment plans return null - "Kredi & Kamata" and its children are already
  * the obvious place, and guessing between them would be wrong half the time.
  */
+/**
+ * Every default category in the two «Hua & Borxhe» families. Money lent or borrowed between people
+ * is neither spending nor earning - it comes back, or goes back - so finance.js leaves these out of
+ * the month's income, spending and savings rate the same way it leaves out a transfer, while the
+ * balance still moves (see `eshteHua` there).
+ */
+export const KATEGORITE_E_HUAVE_IDS = new Set([
+  "cat_default_hua", "cat_default_hua_dhene", "cat_default_hua_kthim",
+  "cat_default_hua_hyrje", "cat_default_hua_hyrje_kthyer", "cat_default_hua_hyrje_marre",
+]);
+
 const KATEGORITE_E_HUAVE = {
   huadhene: { pagese: "cat_default_hua_hyrje_kthyer", shtese: "cat_default_hua_dhene" },
   borxh: { pagese: "cat_default_hua_kthim", shtese: "cat_default_hua_hyrje_marre" },

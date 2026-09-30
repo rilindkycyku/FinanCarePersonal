@@ -17,6 +17,9 @@ import { formatDate, formatPercent } from "../../lib/format";
 import { getIcon } from "../../lib/icons";
 import "../../Pages/Styles/Personal.css";
 
+// An account's page is where its money went, loans included - they left this account.
+const ME_HUA = { perfshiHuat: true };
+
 /**
  * One account, opened up - and deliberately not the same thing as a category opened up.
  *
@@ -74,10 +77,10 @@ function DetajetELlogarise({ show, onHide, zeri, kufijte, titulliPeriudhes }) {
       kufijte.end
     );
     return {
-      shpenzimet: totalsByCategory(brenda, categories, "shpenzim"),
-      hyrjet: totalsByCategory(brenda, categories, "hyrje"),
+      shpenzimet: totalsByCategory(brenda, categories, "shpenzim", ME_HUA),
+      hyrjet: totalsByCategory(brenda, categories, "hyrje", ME_HUA),
       etiketat: totalsByTag(brenda, "shpenzim"),
-      kosha: amountBuckets(brenda, "shpenzim"),
+      kosha: amountBuckets(brenda, "shpenzim", ME_HUA),
       transferet: pasqyra.ditet
         .flatMap((d) => d.transaksionet)
         .filter((tx) => tx.lloji === "transfer"),

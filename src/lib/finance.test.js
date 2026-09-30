@@ -12,7 +12,7 @@ import {
   MAX_DITE_SERIE, accountBalance, accountStatement, amountBuckets, annualOutlook, backupStatus,
   balanceHistory,
   budgetForCategory, budgetProgress, cashflow, categoryComparison, consolidateAccounts,
-  dailyEntries, dailySpending,
+  dailyEntries, dailySpending, eshteHua, sumByType,
   filterByItem, PA_KATEGORI, reassignAccount,
   reconciliation,
   dataEParaERegjistruar,
@@ -1828,5 +1828,67 @@ describe("dataEParaERegjistruar", () => {
 
   it("steps over a row with no date rather than reading it as the earliest", () => {
     expect(dataEParaERegjistruar([{ id: "a", data: "" }, { id: "b", data: "2026-01-09" }])).toBe("2026-01-09");
+  });
+});
+
+describe("loans between people (eshteHua)", () => {
+  const huaDhene = (id, extra = {}) => tx(id, { kategoriaId: "cat_default_hua_dhene", vlera: 500, ...extra });
+  const huaKthyer = (id, extra = {}) =>
+    tx(id, { lloji: "hyrje", kategoriaId: "cat_default_hua_hyrje_kthyer", vlera: 500, ...extra });
+  const muaji = [
+    tx("rroga", { lloji: "hyrje", vlera: 1000, kategoriaId: "rroga" }),
+    tx("market", { vlera: 300, kategoriaId: "ushqim" }),
+    huaDhene("h1"),
+  ];
+
+  it("recognises every default of both «Hua & Borxhe» families, and nothing else", () => {
+    expect(eshteHua(huaDhene("x"))).toBe(true);
+    expect(eshteHua(tx("x", { kategoriaId: "cat_default_hua" }))).toBe(true);
+    expect(eshteHua(tx("x", { kategoriaId: "cat_default_hua_hyrje_marre" }))).toBe(true);
+    expect(eshteHua(tx("x", { kategoriaId: "cat_default_kredi_kesti" }))).toBe(false);
+    expect(eshteHua(tx("x"))).toBe(false);
+    expect(eshteHua(null)).toBe(false);
+  });
+
+  it("leaves a loan out of the month's spending and savings rate, like a transfer", () => {
+    // Lending 500 € is not spending it: without the rule this month saved 20%, not 70%.
+    expect(cashflow(muaji)).toEqual({ hyrjet: 1000, shpenzimet: 300, neto: 700, normaKursimit: 70 });
+    // And getting it back is not a pay rise.
+    expect(cashflow([...muaji, huaKthyer("k1")]).hyrjet).toBe(1000);
+  });
+
+  it("counts it when the view lists exactly those rows", () => {
+    expect(cashflow(muaji, { perfshiHuat: true }).shpenzimet).toBe(800);
+    expect(sumByType(muaji, "shpenzim", { perfshiHuat: true })).toBe(800);
+  });
+
+  it("keeps it out of the category split and the daily chart unless asked", () => {
+    const kategorite = [
+      { id: "ushqim", emri: "Ushqim" },
+      { id: "cat_default_hua_dhene", emri: "Hua e Dhënë" },
+    ];
+    expect(totalsByCategory(muaji, kategorite).map((k) => k.id)).toEqual(["ushqim"]);
+    expect(totalsByCategory(muaji, kategorite, "shpenzim", { perfshiHuat: true }).map((k) => k.id)).toContain(
+      "cat_default_hua_dhene"
+    );
+    const dita = dailySpending(muaji, "2026-08-10", "2026-08-10");
+    expect(dita[0].vlera).toBe(300);
+    expect(monthlyTrend(muaji, 1, new Date(2026, 7, 15))[0].shpenzimet).toBe(300);
+  });
+
+  it("still moves the balance - the money really left the account", () => {
+    expect(accountBalance({ id: "a", bilanciFillestar: 0 }, muaji)).toBe(200);
+  });
+
+  it("is not today's spending in the daily allowance: the balance already paid for it", () => {
+    const pa = dailyLimit({ accounts: [account("a", { bilanciFillestar: 1000 })], today: "2026-08-10", transactions: [] });
+    const me = dailyLimit({
+      accounts: [account("a", { bilanciFillestar: 1000 })],
+      today: "2026-08-10",
+      transactions: [huaDhene("h", { vlera: 200 })],
+    });
+    expect(me.shpenzuarSot).toBe(0);
+    // The pool is 200 lower for good, not added back as if the day could still spend it.
+    expect(me.disponueshme).toBe(pa.disponueshme - 200);
   });
 });

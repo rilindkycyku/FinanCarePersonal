@@ -392,7 +392,7 @@ function Statistika() {
             />
           </div>
 
-          <nav className="fcp-faqe-tabs fcp-tabs-rrjedh" aria-label="Pamjet e statistikave">
+          <nav className="fcp-faqe-tabs fcp-tabs-rrjedh fcp-tabs-ikona" aria-label="Pamjet e statistikave">
             {pamjet.map((p) => {
               const Ikona = p.ikona;
               return (

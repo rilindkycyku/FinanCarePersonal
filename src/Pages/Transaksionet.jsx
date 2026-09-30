@@ -104,7 +104,9 @@ function Transaksionet() {
 
   const kaFiltra = Object.values(filtri).some(Boolean);
   const nrFiltrave = Object.values(filtri).filter(Boolean).length;
-  const flows = useMemo(() => cashflow(teFiltruara), [teFiltruara]);
+  // The totals above the list add up the rows in it, loans included: filtered to «Hua & Borxhe»
+  // they would otherwise read zero over a list full of them.
+  const flows = useMemo(() => cashflow(teFiltruara, { perfshiHuat: true }), [teFiltruara]);
 
   const llogariteAktive = useMemo(() => accounts.filter((a) => !a.arkivuar), [accounts]);
   // Picking rows to move only means something when there is somewhere to move them to: with one

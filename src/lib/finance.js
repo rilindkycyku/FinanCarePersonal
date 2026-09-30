@@ -12,11 +12,15 @@
  *  - `tx.vlera` is always a positive number; the direction comes from `tx.lloji`.
  *  - A `transfer` moves money between two of the user's own accounts, so it is neither income
  *    nor expense - it only shifts balances.
+ *  - A loan between people (the «Hua & Borxhe» categories, `eshteHua`) is treated the same way in
+ *    the period figures: it moves the balance, but lending 500 € is not spending it and getting it
+ *    back is not earning it. Views that list exactly those rows pass `{ perfshiHuat: true }`.
  */
 
 import { addDays, addMonths, addWeeks, addYears, format, parseISO } from "date-fns";
 import {
   BALANCE_ADJUSTMENT_CATEGORIES, debtTypeMeta, planPriorityMeta, DAYS_LONG, DAYS_SHORT, FREQUENCIES, MONTHS_SHORT,
+  KATEGORITE_E_HUAVE_IDS,
 } from "./options";
 import { monthKey, monthLabel, toNumber } from "./format";
 import { emriIPlote, familjaSet, rrenjaE } from "./kategorite";
@@ -439,17 +443,31 @@ export function sortByDateDesc(transactions) {
 
 // ── Cashflow ────────────────────────────────────────────────────────────────
 
-export function sumByType(transactions, lloji) {
+/**
+ * Money lent to or borrowed from someone, or paid back either way. Recognised by the default
+ * «Hua & Borxhe» categories: that is where the debt forms book it. Before those existed a month
+ * with 500 € lent out read as 500 € spent, its savings rate collapsed, and the month the money came
+ * back looked like a pay rise.
+ */
+export function eshteHua(tx) {
+  return KATEGORITE_E_HUAVE_IDS.has(tx?.kategoriaId);
+}
+
+const neShifra = (perfshiHuat) => (tx) => perfshiHuat || !eshteHua(tx);
+
+export function sumByType(transactions, lloji, { perfshiHuat = false } = {}) {
   return transactions
     .filter((tx) => tx.lloji === lloji)
+    .filter(neShifra(perfshiHuat))
     .reduce((sum, tx) => sum + toNumber(tx.vlera), 0);
 }
 
 /** Income, expense, net and savings rate for a set of transactions. Transfers are excluded
- * from all four - moving money between your own accounts is not earning or spending it. */
-export function cashflow(transactions) {
-  const hyrjet = sumByType(transactions, "hyrje");
-  const shpenzimet = sumByType(transactions, "shpenzim");
+ * from all four - moving money between your own accounts is not earning or spending it - and so
+ * are loans between people, unless asked for (`eshteHua`). */
+export function cashflow(transactions, { perfshiHuat = false } = {}) {
+  const hyrjet = sumByType(transactions, "hyrje", { perfshiHuat });
+  const shpenzimet = sumByType(transactions, "shpenzim", { perfshiHuat });
   const neto = hyrjet - shpenzimet;
   return {
     hyrjet,
@@ -540,8 +558,10 @@ export function dailyLimit({
   // Clamped so a date outside the month (a clock set oddly) can never divide by zero or negatives.
   const ditetMbetura = Math.min(Math.max(ditetGjithsej - Number(today.slice(8, 10)) + 1, 1), ditetGjithsej);
 
+  // A loan handed over today is not today's spending: the balance already went down by it, and
+  // counting it here too would add it back into the pool as if the day could still spend it.
   const sotShpenzimet = transactions.filter(
-    (tx) => tx.lloji === "shpenzim" && tx.data === today && !tx.perseritjaId && !tx.planiId
+    (tx) => tx.lloji === "shpenzim" && tx.data === today && !tx.perseritjaId && !tx.planiId && !eshteHua(tx)
   );
   const shpenzuarSot = sotShpenzimet
     .filter((tx) => !eshteMujore(tx))
@@ -675,12 +695,13 @@ export const PA_KATEGORI = "__pa_kategori__";
  * shares would no longer add up to a month. So the top line stays the parent, and the detail sits
  * inside it for whoever wants to open it - which is the whole point of having subcategories.
  */
-export function totalsByCategory(transactions, categories, lloji = "shpenzim") {
+export function totalsByCategory(transactions, categories, lloji = "shpenzim", { perfshiHuat = false } = {}) {
   const byId = new Map(categories.map((c) => [c.id, c]));
   const totals = new Map();
 
   transactions
     .filter((tx) => tx.lloji === lloji)
+    .filter(neShifra(perfshiHuat))
     .forEach((tx) => {
       const key = byId.has(tx.kategoriaId) ? tx.kategoriaId : PA_KATEGORI;
       const prev = totals.get(key) || { vlera: 0, numri: 0 };
@@ -761,11 +782,16 @@ export function dataEParaERegjistruar(transactions = []) {
 }
 
 /** Income/expense per month for the last `months` months, oldest first. */
-export function monthlyTrend(transactions, months = 6, reference = new Date(), { sipasPeriudhes = false } = {}) {
+export function monthlyTrend(
+  transactions,
+  months = 6,
+  reference = new Date(),
+  { sipasPeriudhes = false, perfshiHuat = false } = {}
+) {
   return Array.from({ length: months }, (_, i) => {
     const d = new Date(reference.getFullYear(), reference.getMonth() - (months - 1 - i), 1);
     const { start, end } = monthBounds(d);
-    const flows = cashflow(filterByRange(transactions, start, end, { sipasPeriudhes }));
+    const flows = cashflow(filterByRange(transactions, start, end, { sipasPeriudhes }), { perfshiHuat });
     return {
       key: format(d, "yyyy-MM"),
       label: MONTHS_SHORT[d.getMonth()],
@@ -812,10 +838,11 @@ function numriIDiteve(start, end) {
  * the calendar - the average per occurrence of that weekday is the comparison that means something.
  * The totals are carried alongside, because "480 € on Saturdays" is what a reader recognises.
  */
-export function spendingByWeekday(transactions, start, end, lloji = "shpenzim") {
+export function spendingByWeekday(transactions, start, end, lloji = "shpenzim", { perfshiHuat = false } = {}) {
   const totalet = Array.from({ length: 7 }, () => ({ vlera: 0, numri: 0 }));
   transactions
     .filter((tx) => tx.lloji === lloji)
+    .filter(neShifra(perfshiHuat))
     .forEach((tx) => {
       const dita = totalet[ditaEJaves(tx.data)];
       dita.vlera += toNumber(tx.vlera);
@@ -854,12 +881,13 @@ export const MAX_DITE_SERIE = 800;
  * Every day in the range is present, spent or not. A series that skipped its empty days would draw
  * a flat week as a steep one, because the line would have no points to stay level across.
  */
-export function dailySpending(transactions, start, end, lloji = "shpenzim") {
+export function dailySpending(transactions, start, end, lloji = "shpenzim", { perfshiHuat = false } = {}) {
   if (!start || !end || start > end) return [];
 
   const sipasDites = new Map();
   transactions
     .filter((tx) => tx.lloji === lloji && tx.data >= start && tx.data <= end)
+    .filter(neShifra(perfshiHuat))
     .forEach((tx) => {
       const rreshti = sipasDites.get(tx.data) || { vlera: 0, numri: 0 };
       rreshti.vlera += toNumber(tx.vlera);
@@ -1060,7 +1088,7 @@ export function filterByItem(transactions = [], zeri, categories = []) {
  */
 export const KUFIJTE_MADHESISE = [10, 50, 100, 500];
 
-export function amountBuckets(transactions, lloji = "shpenzim") {
+export function amountBuckets(transactions, lloji = "shpenzim", { perfshiHuat = false } = {}) {
   const kufijte = KUFIJTE_MADHESISE;
   const kosha = [
     ...kufijte.map((k, i) => ({ emri: i === 0 ? `Nën ${k}` : `${kufijte[i - 1]} - ${k}`, min: i === 0 ? 0 : kufijte[i - 1], max: k })),
@@ -1069,6 +1097,7 @@ export function amountBuckets(transactions, lloji = "shpenzim") {
 
   transactions
     .filter((tx) => tx.lloji === lloji)
+    .filter(neShifra(perfshiHuat))
     .forEach((tx) => {
       const vlera = toNumber(tx.vlera);
       // `<` on the upper edge, so 50 € lands in "50 - 100" and not in "10 - 50". Every boundary

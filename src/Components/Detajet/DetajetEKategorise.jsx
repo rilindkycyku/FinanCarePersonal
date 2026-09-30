@@ -19,6 +19,10 @@ import { formatDate, formatPercent } from "../../lib/format";
 import { getIcon } from "../../lib/icons";
 import "../../Pages/Styles/Personal.css";
 
+// This view adds up exactly the rows it lists, so a loan among them counts - the page figures
+// leave loans out (`eshteHua` in finance.js), but here that would show «Hua & Borxhe» as empty.
+const ME_HUA = { perfshiHuat: true };
+
 /**
  * A category, a subcategory or a tag, opened up.
  *
@@ -92,20 +96,20 @@ function DetajetEKategorise({
     // the days add up to less than the header says.
     const ditet = dailyEntries(brenda, null, null, lloji);
     return {
-      gjithsej: sumByType(brenda, lloji),
+      gjithsej: sumByType(brenda, lloji, ME_HUA),
       numri: brenda.length,
       ditet,
       meIMadhi: ditet.reduce((max, d) => (d.vlera > (max?.vlera || 0) ? d : max), null),
       // The calendar and the weekday chart are shapes of a month, so they are drawn on the days the
       // money actually moved; a period-shifted row simply has no cell to sit in.
-      qelizat: dailySpending(brenda, kufijte.start, kufijte.end, lloji),
-      ecuria: dailySpending(brenda, derTani.start, derTani.end, lloji),
-      javet: spendingByWeekday(brenda, derTani.start, derTani.end, lloji),
-      kosha: amountBuckets(brenda, lloji),
+      qelizat: dailySpending(brenda, kufijte.start, kufijte.end, lloji, ME_HUA),
+      ecuria: dailySpending(brenda, derTani.start, derTani.end, lloji, ME_HUA),
+      javet: spendingByWeekday(brenda, derTani.start, derTani.end, lloji, ME_HUA),
+      kosha: amountBuckets(brenda, lloji, ME_HUA),
       etiketat: totalsByTag(brenda, lloji),
-      kategorite: totalsByCategory(brenda, categories, lloji),
+      kategorite: totalsByCategory(brenda, categories, lloji, ME_HUA),
       llogarite: totalsByAccount(brenda, accounts.filter((a) => !a.arkivuar)).filter((a) => a.numri > 0),
-      trendi: monthlyTrend(gjithcka, 6, new Date(), { sipasPeriudhes }),
+      trendi: monthlyTrend(gjithcka, 6, new Date(), { sipasPeriudhes, ...ME_HUA }),
     };
   }, [brenda, gjithcka, categories, accounts, kufijte, derTani, lloji, sipasPeriudhes]);
 
@@ -116,14 +120,14 @@ function DetajetEKategorise({
   const krahasimi = useMemo(() => {
     if (!aktiv || !para) return null;
     const perpara = filterByRange(gjithcka, para.start, para.end, { sipasPeriudhes });
-    const vleraPara = sumByType(perpara, lloji);
+    const vleraPara = sumByType(perpara, lloji, ME_HUA);
     return {
       vleraPara,
       ndryshimi: shifrat.gjithsej - vleraPara,
       // Null rather than Infinity when there was nothing before: "e re" is the honest reading of a
       // jump from zero, and no percentage describes it - the same rule `categoryComparison` uses.
       perqindja: vleraPara > 0 ? ((shifrat.gjithsej - vleraPara) / vleraPara) * 100 : null,
-      ecuria: dailySpending(perpara, para.start, para.end, lloji),
+      ecuria: dailySpending(perpara, para.start, para.end, lloji, ME_HUA),
     };
   }, [aktiv, para, gjithcka, shifrat.gjithsej, lloji, sipasPeriudhes]);
 

@@ -31,7 +31,7 @@ npm run dev       # vite --host
 npm run build
 npm run preview
 npm run lint      # eslint . — must stay at 0 errors (4 pre-existing warnings)
-npm test          # vitest run — 33 files, 777 tests, all green
+npm test          # vitest run — 33 files, 783 tests, all green
 npm run test:watch
 npm run ikonat    # regenerates the icons and the two wordmark PNGs from Logo.svg (Playwright)
 ```
@@ -122,6 +122,11 @@ planned purchases, the daily allowance (`dailyLimit` — the lower of the balanc
 Pages stay thin and derive every figure from these functions, so the dashboard and the statistics
 page can never disagree.
 
+- Loans between people (the «Hua & Borxhe» default categories, `eshteHua`) are left out of the
+  period figures like transfers - `cashflow`, `sumByType`, `totalsByCategory`, `monthlyTrend`,
+  `dailySpending`, the rhythm charts and today's spending in `dailyLimit` - but still move balances.
+  A view that sums exactly the rows it lists (Transaksionet, account/category details) passes
+  `{ perfshiHuat: true }`.
 - No `new Date()` deep inside a calculation: anything time-dependent takes "today" as an
   argument (`todayStr`, `reference`, `sot`), which is what makes it testable.
 - No database access, no browser APIs, no React.

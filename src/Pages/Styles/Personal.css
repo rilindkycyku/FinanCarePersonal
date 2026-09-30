@@ -856,6 +856,21 @@ body.light-mode .fcp-detaje-tabs .fcp-faqe-tab.active {
   white-space: nowrap;
 }
 
+/* Statistikat on a phone: four tabs with the icon over the label fit the width, where side by side
+   the last one ("Llogaritë") sat half off-screen behind a swipe nobody knew to make. The period
+   picker beside the heading takes the full row there too, instead of stopping 30px short. */
+@media (max-width: 575.98px) {
+  .fcp-tabs-ikona .fcp-faqe-tab {
+    flex: 1 1 0;
+    flex-direction: column;
+    gap: 0.2rem;
+    padding: 0.45rem 0.2rem;
+    font-size: 0.68rem;
+    min-width: 0;
+  }
+  .fcp-page-head .fcp-zgj-i-ngushte { max-width: none; width: 100%; }
+}
+
 /* ── Statistika: rhythm charts ────────────────────────────── */
 
 /* Seven weekday columns, one bar each. Shorter than the six-month chart because it carries a
