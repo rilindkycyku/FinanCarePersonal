@@ -9,6 +9,15 @@ e fundit kur rregullohet diçka, dhe e para vetëm kur ndryshon vetë forma e pr
 herë, te `2.0.0`, kur të dhënat mësuan të dalin nga shfletuesi. Datat janë ato të commit-it që e
 ngriti versionin.
 
+## [2.30.1] - 2026-09-30
+
+### Rregulluar
+- **Udhëtimet nuk shfaqeshin në telefon.** Faqja *Udhëtimet* tregonte vetëm titullin dhe butonin
+  «Udhëtim i Ri», edhe pse udhëtimet ishin ruajtur. Lista e tyre përdorte pa dashje të njëjtin emër
+  stili si lista e *Udhëzuesit*, e cila në ekran të ngushtë mblidhet derisa ta hapni - kështu që
+  mblidhej edhe lista e udhëtimeve, pa asnjë çelës për ta hapur. Tani ka stilin e vet dhe udhëtimet
+  duken kudo. Asgjë nuk ishte humbur: të dhënat ishin aty gjatë gjithë kohës.
+
 ## [2.30.0] - 2026-09-29
 
 ### Shtuar

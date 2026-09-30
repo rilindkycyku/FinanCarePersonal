@@ -2295,6 +2295,14 @@ body.light-mode .card.profile-card.fcp-zona-rrezik:hover {
 
 /* ── Udhëtimet ─────────────────────────────────────────────────────────────── */
 
+/* Its own name on purpose: the guide page already owns .fcp-udh-lista, which folds away on phones
+   behind its «Udhëzimet» switch - borrowed here, it hid every trip on a phone. */
+.fcp-udhetimet-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
 /* The trip's own colour runs down the left edge of its card, so a list of three trips reads as
    three trips before a single name is read. */
 .fcp-udh-karta {

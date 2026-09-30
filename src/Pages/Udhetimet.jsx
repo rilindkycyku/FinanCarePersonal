@@ -133,7 +133,7 @@ function Udhetimet() {
                   tashmë, krijojeni - shpenzimet e atyre ditëve mund t'i etiketoni me një prekje.
                 </Empty>
               ) : (
-                <div className="fcp-udh-lista">
+                <div className="fcp-udhetimet-lista">
                   {lista.map(({ u, p }) => (
                     <button
                       type="button"
