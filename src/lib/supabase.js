@@ -615,6 +615,19 @@ export async function lexoVersioninSkemes() {
     `${TABELA}?store=eq.${STORI_META}&record_id=eq.${ID_SKEMES}&select=data&limit=1`
   );
   const versioni = Number(rreshtat?.[0]?.data?.versioni);
+  if (Number.isFinite(versioni) && versioni >= VERSIONI_I_PAJISJES) return versioni;
+
+  // Nëse nuk ka shënim ose shënimi ka mbetur te versioni 1, verifikojmë nëse kolona device_name ekziston në tabelë
+  try {
+    const k = await rest(`${TABELA}?select=device_name&limit=0`);
+    if (Array.isArray(k)) {
+      shenoVersioninSkemes(VERSIONI_I_PAJISJES).catch(() => undefined);
+      return VERSIONI_I_PAJISJES;
+    }
+  } catch {
+    // kolona mungon, është versioni 1
+  }
+
   return Number.isFinite(versioni) && versioni > 0 ? versioni : VERSIONI_PARA_NUMERIMIT;
 }
 

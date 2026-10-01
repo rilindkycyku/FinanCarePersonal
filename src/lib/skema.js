@@ -107,7 +107,16 @@ const sql2 = `-- FinanCarePersonal · sinkronizimi (migrimi 2)
 -- Të dyja janë shtesa: një pajisje me version të vjetër të aplikacionit vazhdon të
 -- shkruajë njësoj, thjesht i lë bosh.
 alter table public.${TABELA} add column if not exists device_id   text;
-alter table public.${TABELA} add column if not exists device_name text;`;
+alter table public.${TABELA} add column if not exists device_name text;
+
+-- Përditëso shënimin e versionit të skemës për përdoruesit ekzistues
+update public.${TABELA}
+set data = jsonb_set(coalesce(data, '{}'::jsonb), '{versioni}', '2'::jsonb)
+where store = 'meta' and record_id = 'skema';
+
+-- Rifreskimi i keshit të PostgREST (Data API)
+notify pgrst, 'reload schema';
+`;
 
 /**
  * The migrations, in order. `emri` is what the user is told is about to happen to their database -

@@ -3,8 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { Alert, Button, Card, Col, Form, InputGroup, Row, Spinner } from "react-bootstrap";
 import {
   AlertTriangle, ArrowDownToLine, ArrowUpFromLine, Check, Cloud, CloudOff, Code2, Copy, Database, ExternalLink,
-  KeyRound, Laptop, LogIn, RefreshCw, Save, ScrollText, ShieldCheck, Smartphone, Trash2, UserPlus,
-  Wand2, X,
+  KeyRound, Laptop, LogIn, RefreshCw, Save, ScrollText, ShieldCheck, Smartphone, Trash2, Wand2, X,
 } from "lucide-react";
 import ModaliKonfigurimit from "./ModaliKonfigurimit";
 import ModaliLidhjes from "./ModaliLidhjes";
@@ -14,7 +13,7 @@ import { useDialog } from "../../Context/DialogContext";
 import { useSync } from "../../Context/SyncContext";
 import {
   dil, gjendjaSkemes, hyr, kontrolloCelesin, ndryshoCelesin, normalizoUrl, pastroKonfigurimin,
-  regjistrohu, ruajKonfigurimin,
+  ruajKonfigurimin,
 } from "../../lib/supabase";
 import {
   MENYRAT, fshiCloud, harroPajisjen, lexoPajisjet, ndryshimetEFundit, numeroCloud, numeroLokal,
@@ -69,6 +68,42 @@ function saMePare(vlera) {
  */
 const adresaEFaqes = typeof window === "undefined" ? "" : window.location.origin;
 
+/**
+ * Lexon parametrat e konfigurimit nga linku (query ose hash) nëse dikush hap një link të gjeneruar.
+ * Mbështet:
+ *  - ?url=...&key=... (ose sb_url / sb_key)
+ *  - ?setup=base64(JSON({ url, anonKey }))
+ */
+function lexoParametratKonfigurimit() {
+  if (typeof window === "undefined") return { url: null, anonKey: null };
+  const params = new URLSearchParams(window.location.search);
+  let hashQuery = "";
+  if (window.location.hash && window.location.hash.includes("?")) {
+    hashQuery = window.location.hash.slice(window.location.hash.indexOf("?"));
+  }
+  const hashParams = new URLSearchParams(hashQuery);
+
+  let url = hashParams.get("sb_url") || hashParams.get("url") || params.get("sb_url") || params.get("url");
+  let anonKey =
+    hashParams.get("sb_key") ||
+    hashParams.get("key") ||
+    hashParams.get("anonKey") ||
+    params.get("sb_key") ||
+    params.get("key") ||
+    params.get("anonKey");
+  const setupEncoded = hashParams.get("setup") || params.get("setup");
+
+  if (setupEncoded) {
+    try {
+      const decoded = JSON.parse(atob(setupEncoded));
+      if (decoded?.url) url = decoded.url;
+      if (decoded?.anonKey || decoded?.key) anonKey = decoded.anonKey || decoded.key;
+    } catch {}
+  }
+
+  return { url: url ? url.trim() : null, anonKey: anonKey ? anonKey.trim() : null };
+}
+
 function PanelaSinkronizimit() {
   const dialog = useDialog();
   const { konfigurimi, lidhur, automatik, duke, gabim, sinkronizoTani, pastroGabimin } = useSync();
@@ -76,12 +111,28 @@ function PanelaSinkronizimit() {
   // Prefilled from what is already saved, for the one case where this form comes back on a device
   // that was connected: a refresh the project refused (password changed, project paused) drops the
   // session but keeps the project. Only the password is missing, so only the password is asked.
-  const [form, setForm] = useState(() => ({
-    url: konfigurimi.url || "",
-    anonKey: konfigurimi.anonKey || "",
-    email: konfigurimi.email || "",
-    password: "",
-  }));
+  const [form, setForm] = useState(() => {
+    const ngaLinku = lexoParametratKonfigurimit();
+    return {
+      url: ngaLinku.url || konfigurimi.url || "",
+      anonKey: ngaLinku.anonKey || konfigurimi.anonKey || "",
+      email: konfigurimi.email || "",
+      password: "",
+    };
+  });
+  const [konfiguruarNgaLinku, setKonfiguruarNgaLinku] = useState(() => {
+    const ngaLinku = lexoParametratKonfigurimit();
+    return Boolean(ngaLinku.url && ngaLinku.anonKey);
+  });
+
+  useEffect(() => {
+    if (konfiguruarNgaLinku) {
+      try {
+        const pastruar = window.location.pathname + window.location.hash.split("?")[0];
+        window.history.replaceState({}, document.title, pastruar);
+      } catch {}
+    }
+  }, [konfiguruarNgaLinku]);
   const [pune, setPune] = useState(null);
   const [searchParams, setSearchParams] = useSearchParams();
   const [nCloud, setNCloud] = useState(null);
@@ -334,10 +385,17 @@ function PanelaSinkronizimit() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lidhur, sqlHapur, duhetVendim, nCloud, nLokal, skema, konfigurimi.oraServerit]);
 
-  const lidhu = async (mode) => {
+  const lidhu = async () => {
     const url = normalizoUrl(form.url);
     if (!url) {
       njofto("danger", "Adresa e projektit nuk duket e vlefshme - kopjoni «Project URL» nga Supabase (p.sh. https://abcdefgh.supabase.co).");
+      return;
+    }
+    if (url.includes("supabase-hub.rilindkycyku.dev")) {
+      njofto(
+        "danger",
+        "«https://supabase-hub.rilindkycyku.dev» është adresa e panelit Supabase Hub (Site URL). Këtu kërkohet «Project URL» i bazës suaj Supabase (duket si https://abcdefgh.supabase.co nga Supabase Dashboard → Project Settings → API)."
+      );
       return;
     }
     const celesi = kontrolloCelesin(form.anonKey);
@@ -346,34 +404,18 @@ function PanelaSinkronizimit() {
       return;
     }
     if (!form.email.trim() || !form.password) {
-      njofto("danger", "Shkruani email-in dhe fjalëkalimin e llogarisë brenda projektit tuaj.");
+      njofto("danger", "Shkruani email-in dhe fjalëkalimin e llogarisë suaj brenda projektit Supabase.");
       return;
     }
 
-    setPune(mode);
+    setPune("hyr");
     pastroGabimin();
     try {
-      if (mode === "regjistrohu") {
-        const { konfirmim } = await regjistrohu({ email: form.email, password: form.password, url, anonKey: celesi.celesi });
-        if (konfirmim) {
-          await njofto(
-            "warning",
-            "Llogaria u krijua, por projekti kërkon konfirmim me email. Hapni linkun që sapo ju erdhi dhe pastaj shtypni «Hyr»."
-          );
-          return;
-        }
-      } else {
-        await hyr({ email: form.email, password: form.password, url, anonKey: celesi.celesi });
-      }
-      // A device that has just connected knows nothing about what is up there, so the first run
-      // takes the whole cloud copy - and, until the dialog below is answered, sends nothing at
-      // all. The watermarks are reset so that first run really does see everything.
+      await hyr({ email: form.email, password: form.password, url, anonKey: celesi.celesi });
       rivendosKufijte();
       const permbledhja = await sinkronizoTani();
       setForm((prev) => ({ ...prev, password: "" }));
       if (permbledhja?.kerkohetVendim) {
-        // The dialog opens by itself a moment later; this says why, so the numbers on the page do
-        // not look like a sync that half worked.
         njofto(
           "info",
           `U lidh me projektin dhe u morën ${permbledhja.marre} ndryshime. Kjo pajisje nuk ka dërguar ende asgjë - zgjidhni më poshtë çfarë duhet të ndodhë me kopjen në cloud.`
@@ -703,87 +745,46 @@ function PanelaSinkronizimit() {
           )}
 
           <Card className="profile-card border-0 p-4 mb-4">
-            <h2 className="fcp-card-title fw-bold mb-3">
-              <Database size={18} className="me-2 text-primary" />
-              Hapi 1 - Krijoni projektin dhe tabelën
-            </h2>
-            {/* Udhëzimi i plotë — krijimi i projektit, çelësat, Site URL — rrinte këtu dhe
-                po aq te tri aplikacionet e tjera: të njëjtat fjalë te katër vende, që
-                zhvendoseshin veç e veç. Tani rri te një i vetëm. Këtu mbetet vetëm ajo që askush
-                tjetër nuk e thotë dot për këtë aplikacion: adresa e vet, dhe skripti i vet. */}
-            <p className="text-muted small mb-2">
-              Ngritja bëhet një herë, te një projekt Supabase që e zotëroni ju - dhe një projekt i
-              vetëm i mban të gjitha aplikacionet tuaja, secili me tabelën e vet.
-            </p>
-            <p className="mb-3">
-              <a href="https://supabase-hub.rilindkycyku.dev" target="_blank" rel="noreferrer">
-                Si ngrihet projekti - udhëzimi i plotë <ExternalLink size={12} />
-              </a>
-            </p>
-
-            <p className="text-muted small mb-1">
-              Shtoni adresën e këtij aplikacioni te <strong>Redirect URLs</strong> te projekti juaj
-              (<strong>Authentication → URL Configuration</strong>). Site URL-në lëreni atij
-              aplikacioni që e zuri i pari - regjistrimi e kërkon këtë adresë me emër:
-            </p>
-            <div className="fcp-adresa-faqes">
-              <code>{adresaEFaqes}</code>
-              <Button variant="outline-light" size="sm" onClick={kopjoAdresen}>
-                {adresaKopjuar ? <Check size={14} className="me-1" /> : <Copy size={14} className="me-1" />}
-                {adresaKopjuar ? "U kopjua" : "Kopjo"}
-              </Button>
-            </div>
-
-            <p className="text-muted small mb-3">
-              Pastaj shtypni <strong>Konfiguro projektin</strong>: hapet redaktori juaj SQL me
-              skriptin e këtij aplikacioni brenda dhe mjafton <strong>Run</strong>. Krijon vetëm{" "}
-              <code>financare_records</code> dhe nuk prek asgjë tjetër; përsëritja nuk prish gjë. Tabelën
-              nuk e krijon dot çelësi që ngjitni te Hapi 2 - dhe kjo është mbrojtje, jo mangësi.
-            </p>
-
-            <div>
-              <Button className="btn-primary" onClick={() => setSqlHapur(true)}>
-                <Wand2 size={16} className="me-1" /> Konfiguro projektin
-              </Button>
-            </div>
-          </Card>
-
-          <Card className="profile-card border-0 p-4 mb-4">
-            <h2 className="fcp-card-title fw-bold mb-3">
-              <LogIn size={18} className="me-2 text-primary" />
-              Hapi 2 - Lidhni këtë pajisje
-            </h2>
-            <p className="text-muted small mb-3">
-              Llogaria krijohet brenda projektit tuaj, jo diku tjetër. Përdorni të njëjtin email
-              dhe fjalëkalim në çdo pajisje që doni të mbani në hap. Herën e parë shtypni{" "}
-              <strong>Krijo llogari</strong>, në pajisjet e tjera <strong>Hyr</strong>.
-            </p>
-            {/* Both answers to "which button?" - and both read once. Collapsed next to the two
-                buttons that raise the question rather than stacked above the form. */}
-            <details className="fcp-shpjegim mb-3">
-              <summary>Krijo llogari, apo Hyr?</summary>
-              <div className="text-muted small mt-2">
-                <p className="mb-2">
-                  Llogaria i takon projektit, jo aplikacionit - pra është <strong>një e vetme</strong>{" "}
-                  për të gjitha aplikacionet tuaja që e ndajnë atë projekt (FinanCarePersonal,
-                  GuestSeat, Tavolina). Krijojeni një herë, te cilido prej tyre, dhe te të tjerat
-                  shtypni <strong>Hyr</strong>.
-                </p>
-                <p className="mb-0">
-                  Prandaj edhe linku i konfirmimit kthehet vetëm te <strong>një</strong> adresë - ajo e
-                  aplikacionit që e zuri i pari <strong>Site URL</strong>-në - dhe mund t&apos;ju hapë
-                  një aplikacion tjetër tuajin e jo atë ku shtypët <strong>Krijo llogari</strong>. Kjo
-                  nuk është prishje: llogarinë e konfirmon vetë Supabase para se t&apos;ju dërgojë
-                  diku, pra ajo mbetet e konfirmuar - kthehuni këtu dhe shtypni <strong>Hyr</strong>.
-                  Që linku të bjerë te vendi i duhur, shtoni adresën e secilit aplikacion te{" "}
-                  <strong>Redirect URLs</strong> (Hapi 1).
-                </p>
+            <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+              <div>
+                <h2 className="fcp-card-title fw-bold mb-1">
+                  <LogIn size={18} className="me-2 text-primary" />
+                  Lidhja me Supabase
+                </h2>
+                <div className="fcp-row-sub">
+                  Shkruani të dhënat e projektit dhe llogarisë suaj për t'u kyçur dhe sinkronizuar.
+                </div>
               </div>
-            </details>
+              <Button
+                variant="outline-primary"
+                size="sm"
+                href="https://supabase-hub.rilindkycyku.dev"
+                target="_blank"
+                rel="noreferrer"
+                className="d-inline-flex align-items-center gap-1"
+              >
+                Udhëzimi te Supabase Hub <ExternalLink size={13} />
+              </Button>
+            </div>
+
+            <Alert variant="info" className="py-2 px-3 small mb-3">
+              Konfigurimi i bazës (tabelat dhe llogaria e përdoruesit) kryhet në <strong>Supabase Dashboard</strong> ose përmes <strong>Supabase Hub</strong>. Këtu kryhet vetëm hyrja (Login).
+            </Alert>
+
+            {konfiguruarNgaLinku && (
+              <Alert variant="success" className="py-2 px-3 small mb-3 d-flex align-items-center gap-2">
+                <Check size={18} className="text-success flex-shrink-0" />
+                <div>
+                  <strong>Projekti u ngarkua automatikisht përmes linkut!</strong>
+                  <div className="small">Project URL dhe Çelësi u plotësuan automatikisht. Tani shkruani vetëm Email-in dhe Fjalëkalimin tuaj për të hyrë.</div>
+                </div>
+              </Alert>
+            )}
+
             <Form
               onSubmit={(e) => {
                 e.preventDefault();
-                lidhu("hyr");
+                lidhu();
               }}
             >
               <Row className="g-3">
@@ -796,6 +797,7 @@ function PanelaSinkronizimit() {
                     autoComplete="off"
                     spellCheck={false}
                   />
+                  <div className="fcp-row-sub mt-1">Nga Supabase: Project Settings → Data API → URL</div>
                 </Form.Group>
 
                 <FushaSekrete
@@ -806,7 +808,7 @@ function PanelaSinkronizimit() {
                   value={form.anonKey}
                   onChange={(e) => setField("anonKey", e.target.value)}
                   autoComplete="off"
-                  ndihma="Publishable (ose anon i vjetër) - çelësi i destinuar për shfletues."
+                  ndihma="Nga Supabase: Project Settings → Data API → Anon / Publishable key"
                 />
 
                 <Form.Group as={Col} md={6} controlId="sync-email">
@@ -818,19 +820,21 @@ function PanelaSinkronizimit() {
                     onChange={(e) => setField("email", e.target.value)}
                     autoComplete="username"
                   />
+                  <div className="fcp-row-sub mt-1">Emaili i llogarisë në Supabase Auth</div>
                 </Form.Group>
 
                 <FushaSekrete
                   id="sync-password"
                   md={6}
                   label="Fjalëkalimi"
-                  placeholder="të paktën 6 karaktere"
+                  placeholder="••••••••"
                   value={form.password}
                   onChange={(e) => setField("password", e.target.value)}
                   autoComplete="current-password"
+                  ndihma="Fjalëkalimi i llogarisë së përdoruesit"
                 />
 
-                <Col md={12} className="d-flex flex-wrap gap-2">
+                <Col md={12} className="d-flex flex-wrap align-items-center gap-2 mt-2">
                   <Button type="submit" className="btn-primary" disabled={Boolean(pune)}>
                     {pune === "hyr" ? (
                       <Spinner animation="border" size="sm" className="me-2" />
@@ -838,14 +842,6 @@ function PanelaSinkronizimit() {
                       <LogIn size={16} className="me-1" />
                     )}
                     Hyr dhe sinkronizo
-                  </Button>
-                  <Button variant="outline-light" onClick={() => lidhu("regjistrohu")} disabled={Boolean(pune)}>
-                    {pune === "regjistrohu" ? (
-                      <Spinner animation="border" size="sm" className="me-2" />
-                    ) : (
-                      <UserPlus size={16} className="me-1" />
-                    )}
-                    Krijo llogari
                   </Button>
                 </Col>
               </Row>
