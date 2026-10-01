@@ -97,6 +97,7 @@ body {
 .alert-danger    { background: rgba(239, 68, 68, 0.12);  border-color: rgba(239, 68, 68, 0.4);  color: #fca5a5; }
 .alert-warning   { background: rgba(245, 158, 11, 0.12); border-color: rgba(245, 158, 11, 0.4); color: #fcd34d; }
 .alert-info      { background: rgba(6, 182, 212, 0.12);  border-color: rgba(6, 182, 212, 0.4);  color: #67e8f9; }
+.alert-success   { background: rgba(16, 185, 129, 0.12); border-color: rgba(16, 185, 129, 0.4); color: #6ee7b7; }
 .alert-secondary { background: var(--sp-surface-2);      border-color: var(--sp-border);        color: var(--sp-text-soft); }
 
 /* Bootstrap gives `strong` and links inside an alert their own darker colour, which undoes the
@@ -110,6 +111,27 @@ body {
 body.light-mode .alert-danger  { background: rgba(220, 38, 38, 0.08);  border-color: rgba(220, 38, 38, 0.3);  color: #991b1b; }
 body.light-mode .alert-warning { background: rgba(180, 83, 9, 0.10);   border-color: rgba(180, 83, 9, 0.3);   color: #92400e; }
 body.light-mode .alert-info    { background: rgba(2, 132, 199, 0.08);  border-color: rgba(2, 132, 199, 0.3);  color: #075985; }
+body.light-mode .alert-success { background: rgba(16, 185, 129, 0.10); border-color: rgba(16, 185, 129, 0.3); color: #065f46; }
+
+.btn-outline-primary {
+  border: 1px solid var(--sp-emerald) !important;
+  background: transparent !important;
+  color: var(--sp-emerald) !important;
+}
+.btn-outline-primary:hover,
+.btn-outline-primary:focus-visible {
+  background: var(--sp-emerald) !important;
+  border-color: var(--sp-emerald) !important;
+  color: #000000 !important;
+}
+body.light-mode .btn-outline-primary:hover,
+body.light-mode .btn-outline-primary:focus-visible {
+  color: #ffffff !important;
+}
+
+.text-primary {
+  color: var(--sp-emerald) !important;
+}
 
 /* `btn-outline-light` is Bootstrap's near-white outline button, which the pages use as their
    secondary action. It only ever worked over a dark surface, and vanished both on the pale alerts

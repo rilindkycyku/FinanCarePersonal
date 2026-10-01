@@ -9,6 +9,16 @@ e fundit kur rregullohet diçka, dhe e para vetëm kur ndryshon vetë forma e pr
 herë, te `2.0.0`, kur të dhënat mësuan të dalin nga shfletuesi. Datat janë ato të commit-it që e
 ngriti versionin.
 
+## [2.32.0] - 2026-10-01
+
+Integrimi i plotë me Supabase Hub, konfigurimi 1-klik përmes parametrave të linkut dhe përmirësimi i përputhshmërisë së temave.
+
+### Shtuar
+- **Konfigurimi 1-klik me link:** Mundëson bartjen automatike të Project URL dhe Çelësit në parametra të koduar, duke e lidhur pajisjen menjëherë vetëm me email dhe fjalëkalim.
+
+### Ndryshuar
+- **Përputhshmëria e temave:** Stilet e njoftimeve (.alert-success) dhe butonave të Supabase Hub janë përshtatur plotësisht me temën e errët dhe të çelët.
+
 ## [2.31.0] - 2026-09-30
 
 ### Shtuar
