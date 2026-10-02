@@ -9,6 +9,28 @@ e fundit kur rregullohet diçka, dhe e para vetëm kur ndryshon vetë forma e pr
 herë, te `2.0.0`, kur të dhënat mësuan të dalin nga shfletuesi. Datat janë ato të commit-it që e
 ngriti versionin.
 
+## [2.34.0] - 2026-10-02
+
+### Shtuar
+- **Kyçja me gjurmë gishti / Face ID.** Deri tani, kushdo që e merrte telefonin e zhbllokuar i
+  shihte të gjitha financat - dhe kushdo që i kopjonte skedarët e shfletuesit i lexonte pa e hapur
+  fare aplikacionin. Te **Cilësimet → Siguria** aplikacioni tani mund të kyçet me gjurmë gishti,
+  Face ID ose Windows Hello. Nuk është vetëm një ekran sipër të dhënave: çdo transaksion, llogari,
+  kategori, buxhet, foto fature dhe vetë profili **shifrohen** në pajisje, dhe çelësi hapet vetëm
+  nga gjurma juaj (përmes një *passkey* me shtesën PRF). Pa të, në shfletues mbetet vetëm tekst i
+  palexueshëm - edhe për dikë që i hap mjetet e zhvilluesit.
+  <br />Gjithçka ndodh në pajisje: nuk ka server, dhe çelësi nuk largohet kurrë prej saj.
+  <br />Kur e aktivizoni, shfaqet një herë **kodi i rikthimit** (24 shenja). Ai i hap të dhënat nëse
+  gjurma nuk funksionon më - telefon i ri, pajisje e rikthyer në fabrikë - dhe me të mund ta
+  regjistroni gjurmën sërish ose ta çaktivizoni kyçjen. Pa gjurmën dhe pa kodin, të dhënat nuk i
+  rikthen dot askush, prandaj aktivizimi nuk nis pa konfirmuar që e keni ruajtur. Mund të krijoni
+  një kod të ri kurdo (i vjetri pushon së punuari).
+  <br />Aplikacioni kyçet vetë kur qëndron në sfond më shumë se koha që zgjidhni (1 minutë deri 1
+  orë), ose menjëherë me **«Kyç tani»**.
+  <br />Nëse jeni të lidhur me Supabase, edhe sesioni i ruajtur shifrohet me të njëjtin çelës, që
+  askush të mos e marrë kopjen në re përmes kësaj pajisjeje. Kopja te projekti juaj Supabase dhe
+  kopjet që i eksportoni vetë (ZIP, JSON, Excel) mbeten si ishin.
+
 ## [2.33.0] - 2026-10-02
 
 ### Shtuar

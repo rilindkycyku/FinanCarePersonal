@@ -382,6 +382,28 @@ Për ta matur: një vit me 3-4 fatura në ditë (≈1.278 foto) zë rreth **167 
 bajtët e fotove janë praktikisht gjithë kostoja. Në atë shkallë aplikacioni ngarkohet po njësoj
 (rreth 1,1 s deri sa faqja bëhet e përdorshme, sepse në memorie hyjnë vetëm miniaturat).
 
+### Kyçja me gjurmë / Face ID
+
+Te **Cilësimet → Siguria** aplikacioni mund të kyçet me gjurmë gishti, Face ID ose Windows Hello -
+dhe kyçja nuk është një perde sipër të dhënave, por **shifrim**. Kur aktivizohet, krijohet një çelës
+i rastësishëm 256-bit për të dhënat; me të shifrohet (AES-GCM) çdo rekord në IndexedDB - profili,
+llogaritë, kategoritë, transaksionet, buxhetet, qëllimet, borxhet, planet, grupet, udhëtimet dhe
+fotot e faturave. Vetë çelësi ruhet vetëm i mbështjellë dy herë:
+
+- nga një **passkey** i pajisjes, përmes shtesës WebAuthn **PRF**: passkey-i jep 32 bajtë që
+  vetëm ai i prodhon, dhe vetëm pasi pajisja e ka verifikuar gjurmën/fytyrën;
+- nga **kodi i rikthimit** (24 shenja, PBKDF2-SHA256 me 600.000 përsëritje), i shfaqur një herë.
+
+Pa njërin nga këto dy, në shfletues mbetet vetëm tekst i shifruar - edhe për dikë që hap mjetet e
+zhvilluesit ose kopjon skedarët e profilit. Nuk ka server në asnjë hap: verifikimi i gjurmës bëhet
+nga pajisja, shifrimi nga shfletuesi. Jashtë shifrimit mbeten vetëm id-të që i duhen vetë
+IndexedDB-së, varret e sinkronizimit (një emër stori, një id, një kohë) dhe cilësimet e kyçjes.
+Me Supabase të lidhur, edhe tokenët e sesionit në `localStorage` shifrohen me të njëjtin çelës;
+kopja te projekti juaj dhe eksportet (ZIP/JSON/Excel) nuk shifrohen.
+
+Kërkon një shfletues me PRF: Chrome/Edge të rinj (Android, Windows, macOS) dhe Safari në iOS/macOS
+18 e lart. Logjika është në `src/lib/shifrimi.js` (i testuar) dhe `src/lib/kycja.js`.
+
 Meqë nuk ka server, «shfletuesi i fshiu» do të thoshte humbje e plotë. Prandaj aplikacioni kërkon
 **ruajtje të qëndrueshme** (`navigator.storage.persist()`) sapo të keni të dhëna për të humbur -
 jo në hapjen e parë, që të mos dalë një kërkesë leje mbi një aplikacion ende bosh. Chrome-i dhe
@@ -624,7 +646,8 @@ src/
               supabase.js (klienti i vogël i projektit tuaj), sinkronizimi.js (rregullat e bashkimit),
               format.js, options.js, exportExcel.js,
               udhezimet.js (teksti i Udhëzuesit: një udhëzim për çdo faqe, i kërkueshëm),
-              grupet.js (ndarja e faturave dhe kalimi te borxhet), vendndodhjet.js (vendet)
+              grupet.js (ndarja e faturave dhe kalimi te borxhet), vendndodhjet.js (vendet),
+              shifrimi.js (shifrimi i të dhënave), kycja.js (kyçja me gjurmë / Face ID)
   Components/ NavBar, Footer, Tabela (kërkim/renditje/eksport), modalet e shtimit, Ui.jsx,
               ZgjedhesiKategorive (zgjedhësi me dritare i çdo fushe kategorie),
               Faturat/ (fusha e fotove, galeria e një transaksioni, shikuesi)
