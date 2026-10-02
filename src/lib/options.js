@@ -64,17 +64,26 @@ export function accountTypeMeta(value) {
  * someone owes you - which is all that changes in the wording ("paguar" vs "kthyer").
  */
 export const DEBT_TYPES = [
-  { value: "karte", label: "Kartelë Krediti", short: "Kartelë", icon: "CreditCard", drejtimi: "detyrim" },
+  { value: "karte", label: "Kartelë me Këste (Bonus, Star Cash…)", short: "Kartelë", icon: "CreditCard", drejtimi: "detyrim" },
   { value: "kredi", label: "Kredi Bankare", short: "Kredi", icon: "Landmark", drejtimi: "detyrim" },
-  { value: "keste", label: "Blerje me Këste", short: "Këste", icon: "Receipt", drejtimi: "detyrim" },
   { value: "borxh", label: "Borxh Personal (i kam borxh dikujt)", short: "Borxh", icon: "Coins", drejtimi: "detyrim" },
   { value: "huadhene", label: "Hua e Dhënë (dikush më ka borxh)", short: "Hua e dhënë", icon: "Banknote", drejtimi: "kerkese" },
 ];
 
+/**
+ * Types that used to be offered and were folded into another. "Blerje me Këste" was its own type,
+ * but in Kosovo a credit card *is* an instalment card - Bonus Kartela, Star Cash, TopKartela all
+ * split each purchase into months - so two entries for the same product only made the user guess.
+ * Notes saved under the old value keep it on the record (synced copies on other devices hold it
+ * too) and are read as the type they were merged into; the form rewrites it on the next save.
+ */
+export const LLOJET_E_BASHKUARA = { keste: "karte" };
+
 /** Never returns undefined, so a note holding a type that was removed still renders. */
 export function debtTypeMeta(value) {
+  const lloji = LLOJET_E_BASHKUARA[value] || value;
   return (
-    DEBT_TYPES.find((t) => t.value === value) || {
+    DEBT_TYPES.find((t) => t.value === lloji) || {
       value,
       label: value,
       short: value,

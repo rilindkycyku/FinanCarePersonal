@@ -14,8 +14,8 @@ ngriti versionin.
 ### Shtuar
 - **Këstet te borxhet.** Një kartelë me këste (si një kartelë bonus) e ndan çdo blerje në numrin e
   vet të muajve, kështu që shuma që ju bie çdo muaj ndryshon sa herë nis ose mbaron një blerje -
-  dhe faqja deri tani dinte vetëm sa ka mbetur gjithsej. Tani, te «Kartelë Krediti» dhe «Blerje me
-  Këste», çdo «Shtesë» ka fushën **«Në sa këste»**, dhe edhe shuma fillestare mund ta ketë të vetën.
+  dhe faqja deri tani dinte vetëm sa ka mbetur gjithsej. Tani, te kartela, çdo «Shtesë» ka fushën
+  **«Në sa këste»**, dhe edhe shuma fillestare mund ta ketë të vetën.
   Nën borxh del **kësti i këtij muaji** (shuma e të gjitha blerjeve që janë ende duke u paguar),
   sa është paguar prej tij këtë muaj, sa bie muajin tjetër dhe kur bie kësti i fundit, me secilën
   blerje veç e veç - p.sh. «Airfryer 7,90 € (2/6)». Kësti i parë llogaritet muajin pas blerjes, si
@@ -27,6 +27,13 @@ ngriti versionin.
   kamatën.
 - Te pagesa, butoni i shpejtë **«Kësti i muajit»** e mbush vlerën me atë që ka mbetur pa u paguar këtë
   muaj, dhe karta «Ritmi Mujor» sipër faqes tregon sa bëjnë gjithsej këstet e muajit.
+
+### Ndryshuar
+- **«Kartelë Krediti» dhe «Blerje me Këste» janë një lloj i vetëm.** Në Kosovë kartela e kreditit
+  është vetë kartela me këste - Bonus Kartela, Star Cash, TopKartela - kështu që dy rreshta për të
+  njëjtën gjë vetëm ju bënin të hamendësonit. Tani lloji quhet «Kartelë me Këste». Borxhet e
+  ruajtura më parë si «Blerje me Këste» shfaqen si kartelë pa asnjë ndryshim në shuma, dhe e marrin
+  llojin e ri herën tjetër që i ruani.
 
 ### Rregulluar
 - Te një borxh pa normë kamate, ritmi i shlyerjes shkruante herë pas here «Nga to, rreth 35 € janë

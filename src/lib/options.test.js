@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CATEGORY_ICONS, DEFAULT_CATEGORIES } from "./options";
+import { CATEGORY_ICONS, DEBT_TYPES, DEFAULT_CATEGORIES, debtTypeMeta } from "./options";
 import { ICONS } from "./icons";
 import { nenkategorite, pemaKategorive } from "./kategorite";
 
@@ -82,5 +82,16 @@ describe("DEFAULT_CATEGORIES", () => {
         expect(nenkategorite(DEFAULT_CATEGORIES, f.id)).toEqual([]);
       });
     });
+  });
+});
+
+describe("debtTypeMeta", () => {
+  it("reads the merged \"Blerje me Këste\" as the card it became, without offering it twice", () => {
+    expect(DEBT_TYPES.map((t) => t.value)).not.toContain("keste");
+    expect(debtTypeMeta("keste")).toBe(debtTypeMeta("karte"));
+  });
+
+  it("still renders a type it has never heard of", () => {
+    expect(debtTypeMeta("tjeter")).toMatchObject({ value: "tjeter", short: "tjeter", drejtimi: "detyrim" });
   });
 });

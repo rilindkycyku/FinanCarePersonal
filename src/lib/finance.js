@@ -1625,7 +1625,8 @@ export function debtRequiredPayment(debt, sot = format(new Date(), "yyyy-MM-dd")
 }
 
 /** The debt types whose instalments come per purchase (a card that splits each purchase into its
- * own run of months), as against a single fixed instalment for the whole note (a loan). */
+ * own run of months), as against a single fixed instalment for the whole note (a loan). "keste" is
+ * the old "Blerje me Këste", since merged into "karte" but still on notes saved before that. */
 export const LLOJET_ME_KESTE_PER_BLERJE = ["karte", "keste"];
 
 /** Calendar months from `nga` to `deri` (both `YYYY-MM`), negative when `deri` comes first. */
@@ -1643,7 +1644,7 @@ function muajiPas(muaji, hapi) {
  *
  * Two shapes, because the two products really work differently:
  *
- * - **Per purchase** (`karte`, `keste` - an instalment card like a bonus card): every purchase is
+ * - **Per purchase** (`karte` - in Kosovo every credit card is an instalment card): every purchase is
  *   split into its own number of instalments, so the month's bill is the sum of every run still
  *   going, and it changes each time a purchase starts or finishes. The opening amount can have its
  *   own run too (`nrKesteve` on the note), and each "shtesë" line its own (`nrKesteve` on the line).

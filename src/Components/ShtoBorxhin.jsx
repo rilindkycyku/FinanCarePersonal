@@ -3,7 +3,7 @@ import { Modal, Button, Form, Row, Col, Alert } from "react-bootstrap";
 import { useData } from "../Context/DataContext";
 import { makeId, STORES } from "../lib/db";
 import { toNumber, todayISO } from "../lib/format";
-import { DEBT_TYPES, debtTypeMeta } from "../lib/options";
+import { DEBT_TYPES, LLOJET_E_BASHKUARA, debtTypeMeta } from "../lib/options";
 import { LLOJET_ME_KESTE_PER_BLERJE } from "../lib/finance";
 import VleraInput from "./VleraInput";
 import Ndihme from "./Ndihme";
@@ -49,6 +49,8 @@ function ShtoBorxhin({ show, onHide, initial, llojiFillestar }) {
         ? {
             ...BLANK,
             ...initial,
+            // A merged type opens as the one it became, so the picker shows a real row.
+            lloji: LLOJET_E_BASHKUARA[initial.lloji] || initial.lloji,
             vleraTotale: String(initial.vleraTotale ?? ""),
             dataMbarimit: initial.dataMbarimit || "",
             normaVjetore: initial.normaVjetore ? String(initial.normaVjetore) : "",
@@ -141,7 +143,7 @@ function ShtoBorxhin({ show, onHide, initial, llojiFillestar }) {
                 Emri <span className="text-danger">*</span>
               </Form.Label>
               <Form.Control
-                placeholder="p.sh. Kartela e kreditit, Borxhi te Arditi"
+                placeholder="p.sh. Bonus Kartela, Borxhi te Arditi"
                 value={debt.emri}
                 onChange={(e) => setField("emri", e.target.value)}
                 autoFocus
