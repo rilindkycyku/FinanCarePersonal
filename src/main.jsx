@@ -17,6 +17,7 @@ import { ThemeProvider } from "./Context/ThemeContext";
 import { DialogProvider } from "./Context/DialogContext";
 import { DataProvider } from "./Context/DataContext";
 import { SyncProvider } from "./Context/SyncContext";
+import PortaEKycjes from "./Components/Kycja/PortaEKycjes";
 import { nisInstalimin } from "./lib/instalimi";
 
 // Chrome fires `beforeinstallprompt` once and early - before React has rendered anything - so the
@@ -33,26 +34,30 @@ root.render(
     <BrowserRouter>
       <ThemeProvider>
         <DialogProvider>
-          <DataProvider>
-            {/* Inside the data provider because it reloads the ledger after pulling changes down,
-                and does nothing at all until the user connects a Supabase project of their own. */}
-            <SyncProvider>
-              <App />
-              {/* A transfer that arrived as a link is offered as soon as the app opens. */}
-              <ImportoNgaLinku />
-              {/* The first opening of a new month is the only schedule a browser can keep, so the
-                  monthly report is checked here rather than by anything resembling a cron. */}
-              <RaportiAutomatik />
-              {/* Reminders that belong to opening the app, not to saving something. */}
-              <Paralajmerimet />
-              {/* A new version waits for the user: its changelog first, then «Përditëso tani». */}
-              <PerditesimiIRi />
-              {/* Page views only - no financial data leaves the browser, since every figure lives in
-                  IndexedDB and none of it is passed to the tracker. Inside the router so client-side
-                  navigations between the pages are counted too. */}
-              <Analytics />
-            </SyncProvider>
-          </DataProvider>
+          {/* Before anything that reads the ledger: with the fingerprint / Face ID lock on, nothing
+              below is mounted until the data key is in memory. */}
+          <PortaEKycjes>
+            <DataProvider>
+              {/* Inside the data provider because it reloads the ledger after pulling changes down,
+                  and does nothing at all until the user connects a Supabase project of their own. */}
+              <SyncProvider>
+                <App />
+                {/* A transfer that arrived as a link is offered as soon as the app opens. */}
+                <ImportoNgaLinku />
+                {/* The first opening of a new month is the only schedule a browser can keep, so the
+                    monthly report is checked here rather than by anything resembling a cron. */}
+                <RaportiAutomatik />
+                {/* Reminders that belong to opening the app, not to saving something. */}
+                <Paralajmerimet />
+                {/* A new version waits for the user: its changelog first, then «Përditëso tani». */}
+                <PerditesimiIRi />
+                {/* Page views only - no financial data leaves the browser, since every figure lives in
+                    IndexedDB and none of it is passed to the tracker. Inside the router so client-side
+                    navigations between the pages are counted too. */}
+                <Analytics />
+              </SyncProvider>
+            </DataProvider>
+          </PortaEKycjes>
         </DialogProvider>
       </ThemeProvider>
     </BrowserRouter>

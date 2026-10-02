@@ -10,10 +10,11 @@ import { kategoriteQeMungojne } from "./kategorite";
 import { todayISO } from "./format";
 import { blobNeDataUrl, dataUrlNeBlob, emriSkedarit, ringjeshFaturen, thumbNeDataUrl } from "./images";
 import { krijoZip, lexoZip } from "./zip";
-import { pastroKonfigurimin, ruajKonfigurimin } from "./supabase";
+import { pastroKonfigurimin, ruajKonfigurimin, vendosCelesinESesionit } from "./supabase";
+import { dekripto, dekriptoBlob, enkripto, enkriptoBlob, eshteZarf } from "./shifrimi";
 
 const DB_NAME = "financarepersonal";
-const DB_VERSION = 7;
+const DB_VERSION = 8;
 
 export const STORES = {
   profile: "profile",
@@ -52,6 +53,16 @@ export const STORES = {
 };
 
 const PROFILE_KEY = "main";
+
+/**
+ * The lock's own settings: the wrapped data key, the passkey it belongs to, the recovery code's
+ * salt (see kycja.js). Deliberately *not* in `STORES`: it is not ledger data, it never syncs, it is
+ * never exported, and "Pastro të gjitha të dhënat" - which clears every store in `STORES` - must
+ * leave the lock standing. A wipe that quietly removed the lock would hand the next person who
+ * picks up the phone an unlocked app.
+ */
+const STORI_SIGURISE = "siguria";
+const CELESI_KYCJES = "kycja";
 
 /**
  * The stores whose records take part in sync, and the id of the profile record inside it. Invoice
@@ -203,6 +214,10 @@ function openDb() {
         db.createObjectStore(STORES.udhetimet, { keyPath: "id" });
         if (e.oldVersion > 0) kerkoShkarkimTePlote();
       }
+      // Added in DB_VERSION 8, for the fingerprint / Face ID lock. One record, out-of-line key.
+      if (!db.objectStoreNames.contains(STORI_SIGURISE)) {
+        db.createObjectStore(STORI_SIGURISE);
+      }
     };
     // The request keeps waiting either way; these only decide whether the user is told about it.
     let njoftuar = false;
@@ -266,6 +281,266 @@ function withStores(stores, mode, body) {
   );
 }
 
+// ---- encryption at rest ----
+//
+// When the lock is on, every ledger record is stored encrypted (lib/shifrimi.js) and decrypted on
+// the way out, here, so nothing above this file - DataContext, sync, the exports - ever sees the
+// difference. The tombstones are the one store left in the clear: they hold a store name, an id
+// and a timestamp, and sync reads them without caring about anything else.
+
+/** Stores whose records are encrypted while the lock is on. */
+const STORET_E_SHIFRUARA = new Set(Object.values(STORES).filter((s) => s !== STORES.fshirjet));
+
+/** What stays readable beside the envelope: the keyPath IndexedDB needs to file the record, and
+ * the one indexed field. Ids only - never an amount, a name or a date. */
+function fushatHapur(store) {
+  if (store === STORES.profile || store === STORES.faturaSkedaret) return [];
+  if (store === STORES.faturat) return ["id", "transaksioniId"];
+  return ["id"];
+}
+
+/** Where a ciphertext belongs, bound into it (AES-GCM additional data) - see shifrimi.js. */
+const kontekstiRekordit = (store, celesi) => `${store}:${celesi}`;
+
+/**
+ * The data key while the app is unlocked, null otherwise. Lives only in this page's memory: a
+ * reload, or the auto-lock (which is a reload), is what forgets it.
+ */
+let celesiDhenave = null;
+
+/** The lock's settings as last read or written here, `undefined` until the first read. */
+let metaKycjes;
+
+/** Decrypted records, keyed by store and id, valid while the stored envelope keeps the same iv.
+ * Every save reloads the whole ledger (DataContext), and without this each reload would decrypt
+ * every transaction again for the sake of the one that changed. */
+const kujtesa = new Map();
+
+const shenjaIv = (zarfi) => Array.from(zarfi.iv, (b) => b.toString(16).padStart(2, "0")).join("");
+
+export class GabimKycjeje extends Error {}
+
+/**
+ * Whether a value in this shape may be written given the lock settings stored *right now*. Checked
+ * inside every write transaction (see `shkruaj`), against the record read in that same transaction,
+ * because the copy of the settings in this tab's memory can be stale: another tab may have switched
+ * the lock on or off a second ago. Writing plain data under a lock, or encrypted data nothing can
+ * open any more, are both refused instead.
+ *
+ * `migrimi: "hapje"` is a lock being switched off: the data key is still there to read, but every
+ * write already goes out in the clear, which is what lets the sweep in `rishifro` finish.
+ */
+function formaLejohet(meta, eshteIShifruar) {
+  const shkruhetHapur = !meta || meta.migrimi === "hapje";
+  return eshteIShifruar ? !shkruhetHapur : shkruhetHapur;
+}
+
+function shkruhetShifruar() {
+  return Boolean(metaKycjes) && metaKycjes.migrimi !== "hapje";
+}
+
+async function siguroMeten() {
+  if (metaKycjes === undefined) await lexoKycjen();
+}
+
+/** A record as it goes to disk: encrypted when the lock says so, untouched otherwise. */
+async function pergatit(store, rekordi, celesi) {
+  if (!STORET_E_SHIFRUARA.has(store)) return rekordi;
+  await siguroMeten();
+  if (!shkruhetShifruar()) return rekordi;
+  if (!celesiDhenave) throw new GabimKycjeje("Aplikacioni është i kyçur - hapeni para se të ruani.");
+  const konteksti = kontekstiRekordit(store, celesi);
+  if (store === STORES.faturaSkedaret) return enkriptoBlob(celesiDhenave, rekordi, konteksti);
+  return enkripto(celesiDhenave, rekordi, konteksti, fushatHapur(store));
+}
+
+/** A record as it comes off disk. Plain records pass through whatever the lock says: a lock being
+ * switched on encrypts the database in passes, and is readable at every point in between. */
+async function hap(store, vlera, celesi) {
+  if (!eshteZarf(vlera)) return vlera;
+  if (!celesiDhenave) throw new GabimKycjeje("Të dhënat janë të kyçura.");
+  const konteksti = kontekstiRekordit(store, celesi);
+  if (store === STORES.faturaSkedaret) return dekriptoBlob(celesiDhenave, vlera, konteksti);
+
+  const shenja = shenjaIv(vlera);
+  const ruajtur = kujtesa.get(konteksti);
+  if (ruajtur?.shenja === shenja) return structuredClone(ruajtur.rekordi);
+  const rekordi = await dekripto(celesiDhenave, vlera, konteksti);
+  kujtesa.set(konteksti, { shenja, rekordi });
+  return structuredClone(rekordi);
+}
+
+/** The id a stored value is filed under - for decrypting a `getAll`, where the keys are not handed
+ * back beside the values. */
+const celesiIVleres = (store, vlera) => (store === STORES.profile ? PROFILE_KEY : vlera?.id);
+
+/**
+ * The one way prepared values reach disk: in a transaction that also reads the lock's settings, and
+ * that aborts rather than write a value whose form those settings do not allow (`formaLejohet`).
+ * `hyrjet` are `[store, vlera, celesi?]` - the key only for the out-of-line stores.
+ */
+function shkruaj(hyrjet) {
+  const storet = [...new Set(hyrjet.map(([store]) => store)), STORI_SIGURISE];
+  return openDb().then(
+    (db) =>
+      new Promise((resolve, reject) => {
+        const tx = db.transaction(storet, "readwrite");
+        let refuzuar = false;
+        const kerkesa = tx.objectStore(STORI_SIGURISE).get(CELESI_KYCJES);
+        kerkesa.onsuccess = () => {
+          const meta = kerkesa.result;
+          const keq = hyrjet.some(([store, vlera]) => STORET_E_SHIFRUARA.has(store) && !formaLejohet(meta, eshteZarf(vlera)));
+          if (keq) {
+            refuzuar = true;
+            metaKycjes = meta;
+            tx.abort();
+            return;
+          }
+          hyrjet.forEach(([store, vlera, celesi]) => {
+            if (celesi === undefined) tx.objectStore(store).put(vlera);
+            else tx.objectStore(store).put(vlera, celesi);
+          });
+        };
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
+        tx.onabort = () =>
+          reject(
+            refuzuar
+              ? new GabimKycjeje("Kyçja e aplikacionit ndryshoi në një dritare tjetër. Rifreskoni faqen.")
+              : tx.error
+          );
+      })
+  );
+}
+
+/** The lock's settings, or null when there is no lock. */
+export function lexoKycjen() {
+  return withStore(STORI_SIGURISE, "readonly", (s) => s.get(CELESI_KYCJES)).then((meta) => {
+    metaKycjes = meta ?? null;
+    return metaKycjes;
+  });
+}
+
+export function ruajKycjen(meta) {
+  return withStore(STORI_SIGURISE, "readwrite", (s) => s.put(meta, CELESI_KYCJES)).then(() => {
+    metaKycjes = meta;
+  });
+}
+
+export function fshiKycjen() {
+  return withStore(STORI_SIGURISE, "readwrite", (s) => s.delete(CELESI_KYCJES)).then(() => {
+    metaKycjes = null;
+  });
+}
+
+/** Hands this page the data key (after an unlock) or takes it away. The saved Supabase session is
+ * encrypted with the same key, so it is told too. */
+export async function vendosCelesin(celesi) {
+  celesiDhenave = celesi;
+  kujtesa.clear();
+  await vendosCelesinESesionit(celesi);
+}
+
+export function eshteIHapur() {
+  return Boolean(celesiDhenave);
+}
+
+/**
+ * Brings every stored record to one form: `"shifro"` encrypts what is still plain, `"hap"` decrypts
+ * what is still encrypted. Run when the lock is switched on or off; the settings must already say
+ * which way writes go (see `formaLejohet`), so anything saved meanwhile lands in the target form
+ * by itself.
+ *
+ * Done store by store rather than in one transaction, because the photos alone can be hundreds of
+ * megabytes and would all have to sit in memory at once. That is safe for the same reason reads
+ * accept both forms: a sweep interrupted halfway (a closed tab, a dead battery) leaves a database
+ * that still opens and still reads, and the next unlock simply carries on (`migrimi` in the
+ * settings says it has to).
+ *
+ * Each record is written back only if it is *still* in the old form inside the writing
+ * transaction. Since every other write already produces the new form, "still old" means "nobody
+ * touched it since it was read" - so the sweep can never put an older version of a record over an
+ * edit made while it ran.
+ */
+export async function rishifro(drejtimi, onProgres) {
+  if (!celesiDhenave) throw new GabimKycjeje("Aplikacioni është i kyçur.");
+  const neSynim = (vlera) => (drejtimi === "shifro" ? eshteZarf(vlera) : !eshteZarf(vlera));
+  const kthe = async (store, vlera, celesi) => {
+    const konteksti = kontekstiRekordit(store, celesi);
+    if (drejtimi === "hap") {
+      return store === STORES.faturaSkedaret ? dekriptoBlob(celesiDhenave, vlera, konteksti) : dekripto(celesiDhenave, vlera, konteksti);
+    }
+    return store === STORES.faturaSkedaret
+      ? enkriptoBlob(celesiDhenave, vlera, konteksti)
+      : enkripto(celesiDhenave, vlera, konteksti, fushatHapur(store));
+  };
+
+  const storet = [...STORET_E_SHIFRUARA].filter((s) => s !== STORES.faturaSkedaret);
+  const fotot = await withStore(STORES.faturaSkedaret, "readonly", (s) => s.getAllKeys());
+  const gjithsej = storet.length + (fotot?.length ?? 0);
+  let bere = 0;
+  onProgres?.(bere, gjithsej);
+
+  for (const store of storet) {
+    const [vlerat, celesat] = await Promise.all([
+      withStore(store, "readonly", (s) => s.getAll()),
+      withStore(store, "readonly", (s) => s.getAllKeys()),
+    ]);
+    const hyrjet = [];
+    for (let i = 0; i < (vlerat ?? []).length; i++) {
+      if (neSynim(vlerat[i])) continue;
+      hyrjet.push([celesat[i], await kthe(store, vlerat[i], celesat[i])]);
+    }
+    await shkruajNeseNukNdryshoi(store, hyrjet, neSynim);
+    onProgres?.(++bere, gjithsej);
+  }
+
+  // One picture at a time: read, convert, write back - never the whole album in memory.
+  for (const id of fotot ?? []) {
+    const vlera = await withStore(STORES.faturaSkedaret, "readonly", (s) => s.get(id));
+    if (vlera !== undefined && !neSynim(vlera)) {
+      await shkruajNeseNukNdryshoi(STORES.faturaSkedaret, [[id, await kthe(STORES.faturaSkedaret, vlera, id)]], neSynim);
+    }
+    onProgres?.(++bere, gjithsej);
+  }
+  kujtesa.clear();
+}
+
+/** The conditional write behind `rishifro`: each value goes in only if what is stored under its key
+ * is still not in the target form. */
+function shkruajNeseNukNdryshoi(store, hyrjet, neSynim) {
+  if (hyrjet.length === 0) return Promise.resolve();
+  const jashteRreshtit = store === STORES.profile || store === STORES.faturaSkedaret;
+  return openDb().then(
+    (db) =>
+      new Promise((resolve, reject) => {
+        const tx = db.transaction([store, STORI_SIGURISE], "readwrite");
+        const objektet = tx.objectStore(store);
+        let refuzuar = false;
+        const kerkesa = tx.objectStore(STORI_SIGURISE).get(CELESI_KYCJES);
+        kerkesa.onsuccess = () => {
+          if (!formaLejohet(kerkesa.result, eshteZarf(hyrjet[0][1]))) {
+            refuzuar = true;
+            tx.abort();
+            return;
+          }
+          hyrjet.forEach(([celesi, vlera]) => {
+            const tani = objektet.get(celesi);
+            tani.onsuccess = () => {
+              if (tani.result === undefined || neSynim(tani.result)) return;
+              if (jashteRreshtit) objektet.put(vlera, celesi);
+              else objektet.put(vlera);
+            };
+          });
+        };
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
+        tx.onabort = () =>
+          reject(refuzuar ? new GabimKycjeje("Kyçja e aplikacionit ndryshoi në një dritare tjetër.") : tx.error);
+      })
+  );
+}
+
 export function makeId(prefix) {
   return `${prefix}_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
 }
@@ -273,11 +548,13 @@ export function makeId(prefix) {
 // ---- generic list-store helpers ----
 
 export function getAll(store) {
-  return withStore(store, "readonly", (s) => s.getAll()).then((all) => all ?? []);
+  return withStore(store, "readonly", (s) => s.getAll()).then((all) =>
+    Promise.all((all ?? []).map((v) => hap(store, v, celesiIVleres(store, v))))
+  );
 }
 
 export function getOne(store, id) {
-  return withStore(store, "readonly", (s) => s.get(id));
+  return withStore(store, "readonly", (s) => s.get(id)).then((v) => hap(store, v, id));
 }
 
 /**
@@ -300,16 +577,17 @@ export function getOne(store, id) {
  * replacing it with "now" would make an old edit look like the newest one everywhere. That path
  * uses `putRaw`.
  */
-export function put(store, record) {
+export async function put(store, record) {
   const stamped = { ...record, perditesuar: Date.now(), sinkPezull: true };
-  return withStore(store, "readwrite", (s) => s.put(stamped))
-    .then(() => njoftoNdryshim())
-    .then(() => stamped);
+  await shkruaj([[store, await pergatit(store, stamped, stamped.id)]]);
+  njoftoNdryshim();
+  return stamped;
 }
 
 /** Writes a record exactly as given, keeping its own `perditesuar`. For the sync apply path. */
-export function putRaw(store, record) {
-  return withStore(store, "readwrite", (s) => s.put(record)).then(() => record);
+export async function putRaw(store, record) {
+  await shkruaj([[store, await pergatit(store, record, record.id)]]);
+  return record;
 }
 
 /**
@@ -336,11 +614,11 @@ export const KOHA_PARA_SINKRONIZIMIT = 1;
  * uploaded when the cloud has never heard of it, and it loses every time the cloud has anything of
  * its own to say about that id.
  */
-export function putSeed(store, record) {
+export async function putSeed(store, record) {
   const stamped = { ...record, perditesuar: KOHA_PARA_SINKRONIZIMIT, sinkPezull: true };
-  return withStore(store, "readwrite", (s) => s.put(stamped))
-    .then(() => njoftoNdryshim())
-    .then(() => stamped);
+  await shkruaj([[store, await pergatit(store, stamped, stamped.id)]]);
+  njoftoNdryshim();
+  return stamped;
 }
 
 /**
@@ -376,12 +654,12 @@ export function kerkoShkarkimTePlote() {
  * commit — and it is also all-or-nothing, so an interrupted sync leaves a batch either fully
  * applied or not at all.
  */
-export function putRawShume(store, records) {
-  if (records.length === 0) return Promise.resolve();
-  return withStore(store, "readwrite", (s) => {
-    records.forEach((record) => s.put(record));
-    return null;
-  });
+export async function putRawShume(store, records) {
+  if (records.length === 0) return;
+  // Encrypted before the transaction opens: IndexedDB commits a transaction the moment it is left
+  // waiting on anything that is not one of its own requests, WebCrypto included.
+  const gati = await Promise.all(records.map(async (record) => [store, await pergatit(store, record, record.id)]));
+  await shkruaj(gati);
 }
 
 /** Deletes many records of one store and leaves their tombstones, in one transaction across both
@@ -551,16 +829,21 @@ export function getAllData() {
 // ---- invoice photos ----
 
 /** Metadata + picture in one transaction, so a half-written invoice can never be left behind. */
-export function ruajFaturen(meta, blob) {
-  return withStores([STORES.faturat, STORES.faturaSkedaret], "readwrite", (faturat, skedaret) => {
-    faturat.put(meta);
-    skedaret.put(blob, meta.id);
-  }).then(() => meta);
+export async function ruajFaturen(meta, blob) {
+  const [metaGati, blobGati] = await Promise.all([
+    pergatit(STORES.faturat, meta, meta.id),
+    pergatit(STORES.faturaSkedaret, blob, meta.id),
+  ]);
+  await shkruaj([
+    [STORES.faturat, metaGati],
+    [STORES.faturaSkedaret, blobGati, meta.id],
+  ]);
+  return meta;
 }
 
 /** The full-size image, read on demand when a picture is opened. */
 export function getFaturaBlob(id) {
-  return withStore(STORES.faturaSkedaret, "readonly", (s) => s.get(id));
+  return withStore(STORES.faturaSkedaret, "readonly", (s) => s.get(id)).then((v) => hap(STORES.faturaSkedaret, v, id));
 }
 
 export function fshiFaturen(id) {
@@ -573,7 +856,7 @@ export function fshiFaturen(id) {
 export function faturatPerTransaksion(transaksioniId) {
   return withStore(STORES.faturat, "readonly", (s) =>
     s.index("transaksioniId").getAll(transaksioniId)
-  ).then((all) => all ?? []);
+  ).then((all) => Promise.all((all ?? []).map((v) => hap(STORES.faturat, v, v.id))));
 }
 
 /**
@@ -673,14 +956,14 @@ export async function kerkoRuajtjeQendrueshme() {
 // ---- profile: single record keyed by a constant ----
 
 export function getProfile() {
-  return withStore(STORES.profile, "readonly", (s) => s.get(PROFILE_KEY));
+  return withStore(STORES.profile, "readonly", (s) => s.get(PROFILE_KEY)).then((v) => hap(STORES.profile, v, PROFILE_KEY));
 }
 
-export function putProfile(record) {
+export async function putProfile(record) {
   const stamped = { ...record, perditesuar: Date.now(), sinkPezull: true };
-  return withStore(STORES.profile, "readwrite", (s) => s.put(stamped, PROFILE_KEY))
-    .then(() => njoftoNdryshim())
-    .then(() => stamped);
+  await shkruaj([[STORES.profile, await pergatit(STORES.profile, stamped, PROFILE_KEY), PROFILE_KEY]]);
+  njoftoNdryshim();
+  return stamped;
 }
 
 /**
@@ -714,8 +997,9 @@ export async function pastroProfilin() {
 }
 
 /** The profile as it came down from the cloud, keeping its own timestamp - see `putRaw`. */
-export function putProfileRaw(record) {
-  return withStore(STORES.profile, "readwrite", (s) => s.put(record, PROFILE_KEY)).then(() => record);
+export async function putProfileRaw(record) {
+  await shkruaj([[STORES.profile, await pergatit(STORES.profile, record, PROFILE_KEY), PROFILE_KEY]]);
+  return record;
 }
 
 // ---- whole-database export / import (JSON backup) ----

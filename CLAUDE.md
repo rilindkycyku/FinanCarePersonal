@@ -31,7 +31,7 @@ npm run dev       # vite --host
 npm run build
 npm run preview
 npm run lint      # eslint . — must stay at 0 errors (4 pre-existing warnings)
-npm test          # vitest run — 33 files, 773 tests, all green
+npm test          # vitest run — 35 files, 789 tests, all green
 npm run test:watch
 npm run ikonat    # regenerates the icons and the two wordmark PNGs from Logo.svg (Playwright)
 ```
@@ -109,6 +109,8 @@ imports, so keep doing that unless you are converting deliberately.
 | `calc.js` | Recursive-descent arithmetic parser for the amount fields (never `eval`) |
 | `tabela.js` | The phone half of `Tabela.jsx`: which column is a card's title/amount/second line, days for a date-sorted list |
 | `transferQr.js` | Whole-database handover to another device as a chain of deflated QR codes |
+| `shifrimi.js` | Encryption at rest, pure WebCrypto: the data key, wrapping it with the passkey PRF output / the recovery code, record envelopes (`__shifruar`) |
+| `kycja.js` | The fingerprint / Face ID lock: WebAuthn passkey + PRF, switch on/off, unlock, recovery code, cross-tab notice |
 | `instalimi.js` | Captures `beforeinstallprompt` once, at startup, so "add to home screen" can be offered |
 | `format.js`, `options.js`, `opsionet.js`, `icons.js` | Formatting, defaults, picker rows, icon registry |
 
@@ -207,7 +209,25 @@ Read the header comments of `sinkronizimi.js`, `db.js` and `skema.js` before cha
 3. Add a guide entry in `lib/udhezimet.js` with the matching `shtegu` — `ButoniUdhezimit` finds
    the guide by route, so a page without one silently shows no help button.
 
-## Data model (IndexedDB `financarepersonal`, version 7)
+### 7. Encryption at rest (the fingerprint / Face ID lock)
+
+With the lock on, every store except `fshirjet` holds envelopes, not records. **All of it lives in
+`db.js`**: `pergatit` encrypts on the way in, `hap` decrypts on the way out, so DataContext, sync and
+the exports never see the difference. Rules:
+
+- Never write to a ledger store except through `put` / `putRaw` / `putSeed` / `putRawShume` /
+  `putProfile*` / `ruajFaturen`. They all end in `shkruaj`, which re-reads the lock settings
+  inside the write transaction and aborts a write in the wrong form (plain under a lock, or
+  ciphertext with no lock) - that is what makes a stale second tab safe.
+- Encrypt *before* opening a transaction: an IndexedDB transaction auto-commits while it waits on
+  WebCrypto.
+- Reads accept both forms on purpose: switching the lock on/off (`rishifro`) runs store by store and
+  may be interrupted.
+- The lock settings live in the `siguria` store, outside `STORES`: never synced, exported or wiped.
+- `PortaEKycjes` (main.jsx) mounts nothing below it until the key is in memory. Locking is a reload.
+- The Supabase tokens are encrypted with the same key (`vendosCelesinESesionit` in supabase.js).
+
+## Data model (IndexedDB `financarepersonal`, version 8)
 
 Stores are declared in `STORES` in `db.js`. Ids are `makeId(prefix)` → `tx_…`, `acc_…`, `cat_…`,
 `goal_…`, `rec_…`, `debt_…`, `plan_…`, `grp_…`, `trip_…`; a split receipt's shared `ndarjaId` is `spl_…`.
@@ -247,6 +267,8 @@ Stores are declared in `STORES` in `db.js`. Ids are `makeId(prefix)` → `tx_…
   *expense* with, and what "per day" means.
 - `faturat` / `faturaSkedaret`: photo metadata + full blobs.
 - `fshirjet`: tombstones keyed `${store}:${id}`.
+- `siguria` (not in `STORES`, key `kycja`): the lock's settings - wrapped data key, passkey id + PRF
+  salt, recovery-code salt, `afatiMinuta`, and `migrimi` while a switch on/off is under way.
 
 Every synced record also carries `perditesuar` and `sinkPezull` (written by `db.js`, never by
 forms). Bumping `DB_VERSION` requires an `onupgradeneeded` branch that is safe on every older

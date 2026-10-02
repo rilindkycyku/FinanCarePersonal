@@ -1,0 +1,130 @@
+/* The lock screen, and the recovery code shown once in Cilësimet. Same card language as
+   BazaEBllokuar (Personal.css): one centred box on the page background. */
+
+.fcp-kycja {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  background: var(--sp-bg);
+}
+
+.fcp-kycja-kuti {
+  max-width: 400px;
+  width: 100%;
+  text-align: center;
+  padding: 2rem 1.5rem 1.5rem;
+  border-radius: 20px;
+  border: 1px solid var(--sp-border);
+  background: var(--sp-surface-2);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
+}
+
+.fcp-kycja-ikona {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 58px;
+  height: 58px;
+  margin-bottom: 0.9rem;
+  border-radius: 18px;
+  color: var(--sp-emerald);
+  background: var(--sp-emerald-glow);
+}
+
+.fcp-kycja-kuti h5 {
+  font-weight: 700;
+  color: var(--sp-text);
+  margin-bottom: 0.5rem;
+}
+
+.fcp-kycja-kuti p {
+  font-size: 0.85rem;
+  color: var(--sp-text-muted);
+  margin-bottom: 1.25rem;
+}
+
+.fcp-kycja-buton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+}
+
+.fcp-kycja-lidhje {
+  display: block;
+  width: 100%;
+  margin-top: 0.85rem;
+  padding: 0.35rem;
+  border: 0;
+  background: none;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--sp-text-muted);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.fcp-kycja-lidhje:hover:not(:disabled) {
+  color: var(--sp-text);
+}
+
+.fcp-kycja-kodi {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.fcp-kycja-gabim {
+  margin-top: 1rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  text-align: left;
+  color: var(--sp-red-text);
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+/* The recovery code itself: big, monospaced, wraps by group on a narrow phone. */
+.fcp-kodi-rikthimit {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.35rem 0.6rem;
+  margin: 0.75rem 0;
+  padding: 0.9rem;
+  border-radius: 12px;
+  border: 1px dashed var(--sp-border);
+  background: var(--sp-tint);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--sp-text);
+  user-select: all;
+}
+
+.fcp-kycja-statusi {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.9rem;
+  font-weight: 600;
+}
+
+.fcp-kycja-statusi.ndezur {
+  color: var(--sp-emerald);
+}
+
+.fcp-kycja-veprimet {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+body.light-mode .fcp-kycja-kuti {
+  background: #ffffff;
+}

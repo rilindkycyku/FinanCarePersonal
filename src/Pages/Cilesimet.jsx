@@ -8,6 +8,7 @@ import PageTitle from "../Components/PageTitle";
 import PageLoading from "../Components/PageLoading";
 import ButoniUdhezimit from "../Components/ButoniUdhezimit";
 import CilesimiNjeLlogari from "../Components/CilesimiNjeLlogari";
+import CilesimiKycjes from "../Components/Kycja/CilesimiKycjes";
 import Raportet from "../Components/Raportet";
 import InstaloAplikacionin from "../Components/InstaloAplikacionin";
 import { useData } from "../Context/DataContext";
@@ -410,6 +411,8 @@ function Cilesimet() {
           </Card>
 
           <CilesimiNjeLlogari />
+
+          <CilesimiKycjes />
 
           {/* The memory is built from the user's own choices, so they get to see what it learned and
               throw it away - a suggestion nobody can inspect or undo is just the app being odd. */}
