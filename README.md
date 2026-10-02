@@ -67,6 +67,10 @@ sa shpenzohet, sa mbetet dhe sa po kursesh.
   e rrit - me ecuri, afat dhe arkivim. Pagesa mbetet vetëm shënim, përveç kur e shënjoni
   <em>&laquo;Zbrite edhe nga llogaria&raquo;</em>: atëherë krijohet edhe një transaksion i vërtetë,
   sepse ato para dolën vërtet nga banka.
+  <br />**Këstet:** te një kartelë me këste çdo blerje («Shtesë») ka numrin e vet të kësteve, dhe nën
+  borxh del kësti i këtij muaji - shuma e blerjeve që janë ende duke u paguar, secila veç e veç - sa
+  është paguar prej tij dhe kur bie kësti i fundit. Te kreditë shkruhet një **kësti mujor** i vetëm,
+  dhe faqja tregon a është paguar ky muaj dhe kur mbyllet kredia.
   <br />Çdo borxh mban edhe **normën vjetore të kamatës** (opsionale, shkruhet si në kontratë).
   Me të, ritmi më poshtë e ndan pagesën në dysh - sa e zbret borxhin dhe sa shkon te kamata - dhe e
   thotë rastin që nuk duket me sy: një pagesë më e vogël se kamata e muajit nuk e zvogëlon borxhin

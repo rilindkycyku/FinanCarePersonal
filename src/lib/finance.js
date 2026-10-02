@@ -1587,7 +1587,10 @@ export function debtPace(debt, sot = format(new Date(), "yyyy-MM-dd")) {
     nukZvogelohet,
     // What the note will still cost in interest if this pace holds: every payment made from here,
     // less the balance those payments are clearing. Only where there is an end to count to.
-    interesiIMbetur: perTeteje ? null : Math.max(mesatarjaMujore * muajTeMbetur - ecuria.mbetur, 0),
+    // Zero without a rate: the last payment is only what is left, so "months × average" overshoots
+    // the balance by a rounding remainder that is not interest at all - and was being shown as such
+    // on notes marked "pa kamatë".
+    interesiIMbetur: perTeteje ? null : norma > 0 ? Math.max(mesatarjaMujore * muajTeMbetur - ecuria.mbetur, 0) : 0,
     // Only meaningful against a deadline the note actually carries. Late by the projection is not
     // late yet - it is the warning that arrives while there is still time to change the pace.
     afatiMbahet: !ecuria.dataMbarimit || perTeteje ? null : dataParashikuar <= ecuria.dataMbarimit,
@@ -1619,6 +1622,140 @@ export function debtRequiredPayment(debt, sot = format(new Date(), "yyyy-MM-dd")
   const norma = debtMonthlyRate(debt);
   if (norma <= 0) return mbetur / muaj;
   return (mbetur * norma) / (1 - Math.pow(1 + norma, -muaj));
+}
+
+/** The debt types whose instalments come per purchase (a card that splits each purchase into its
+ * own run of months), as against a single fixed instalment for the whole note (a loan). */
+export const LLOJET_ME_KESTE_PER_BLERJE = ["karte", "keste"];
+
+/** Calendar months from `nga` to `deri` (both `YYYY-MM`), negative when `deri` comes first. */
+function muajMes(nga, deri) {
+  return (Number(deri.slice(0, 4)) - Number(nga.slice(0, 4))) * 12 + (Number(deri.slice(5, 7)) - Number(nga.slice(5, 7)));
+}
+
+/** `YYYY-MM` moved by `hapi` months. */
+function muajiPas(muaji, hapi) {
+  return format(addMonths(parseISO(`${muaji}-01`), hapi), "yyyy-MM");
+}
+
+/**
+ * What a note asks for this month, when the note says how it is meant to be repaid.
+ *
+ * Two shapes, because the two products really work differently:
+ *
+ * - **Per purchase** (`karte`, `keste` - an instalment card like a bonus card): every purchase is
+ *   split into its own number of instalments, so the month's bill is the sum of every run still
+ *   going, and it changes each time a purchase starts or finishes. The opening amount can have its
+ *   own run too (`nrKesteve` on the note), and each "shtesë" line its own (`nrKesteve` on the line).
+ *   The first instalment falls in the month *after* the purchase - the way a card statement bills
+ *   it - and the run is counted on the calendar, not from the payments: the bank's schedule does
+ *   not stop because a month was missed, it is the debt that grows. A purchase without a count is
+ *   not on any schedule and is simply not part of this figure.
+ * - **Fixed** (`kestiMujor` on the note - a loan, or a personal debt repaid at an agreed amount):
+ *   the same instalment every month until it is clear, the last one only what is left.
+ *
+ * Payments are not allocated to purchases: a bank takes one payment against the whole statement,
+ * so this compares the month's total due with what was paid in that month (`paguarKeteMuaj`).
+ *
+ * Returns null when there is nothing to say - a closed note, or one with no plan on it.
+ */
+export function debtInstallments(debt, sot = format(new Date(), "yyyy-MM-dd")) {
+  const ecuria = debtProgress(debt);
+  if (ecuria.mbetur <= 0) return null;
+  const muaji = sot.slice(0, 7);
+
+  const paguarKeteMuaj = ecuria.pagesat
+    .filter((p) => p.lloji !== "shtese" && p.data?.slice(0, 7) === muaji)
+    .reduce((sum, p) => sum + toNumber(p.vlera), 0);
+
+  const kestiFiks = toNumber(debt.kestiMujor);
+  if (kestiFiks > 0) {
+    // Against what was owed when the month began: this month's payments are already off `mbetur`,
+    // and measuring against it would shrink the instalment the user just paid.
+    const kesti = Math.min(kestiFiks, ecuria.mbetur + paguarKeteMuaj);
+    const norma = debtMonthlyRate(debt);
+    // Same amortisation as `debtPace`: with a rate, part of every instalment is interest, and an
+    // instalment that does not cover it never ends the loan.
+    const nukZvogelohet = norma > 0 && kestiFiks <= ecuria.mbetur * norma;
+    const muajTeMbetur = nukZvogelohet
+      ? Infinity
+      : norma > 0
+        ? Math.ceil(-Math.log(1 - (norma * ecuria.mbetur) / kestiFiks) / Math.log(1 + norma))
+        : Math.ceil(ecuria.mbetur / kestiFiks);
+    const perTeteje = nukZvogelohet || muajTeMbetur > MUAJT_MAX_PARASHIKIM;
+    // `mbetur` already has this month's payments off it, so once the month's instalment is in, the
+    // remaining ones start next month.
+    const ePaguar = paguarKeteMuaj >= kesti;
+    return {
+      menyra: "fiks",
+      kestiKeteMuaj: kesti,
+      paguarKeteMuaj,
+      mbetetKeteMuaj: Math.max(kesti - paguarKeteMuaj, 0),
+      zerat: [],
+      muajTeMbetur,
+      perTeteje,
+      nukZvogelohet,
+      muajiFundit: perTeteje ? null : muajiPas(muaji, muajTeMbetur - (ePaguar ? 0 : 1)),
+    };
+  }
+
+  if (!LLOJET_ME_KESTE_PER_BLERJE.includes(debt.lloji)) return null;
+
+  const burimet = [
+    { id: "fillestare", emri: "Shuma fillestare", data: debt.dataFillimit, vlera: debt.vleraTotale, nrKesteve: debt.nrKesteve },
+    ...ecuria.pagesat
+      .filter((p) => p.lloji === "shtese")
+      .map((p) => ({ id: p.id, emri: p.shenim || "Shtesë", data: p.data, vlera: p.vlera, nrKesteve: p.nrKesteve })),
+  ];
+
+  const zerat = burimet
+    .filter((b) => b.data && toNumber(b.vlera) > 0 && Math.floor(toNumber(b.nrKesteve)) >= 1)
+    .map((b) => {
+      const n = Math.floor(toNumber(b.nrKesteve));
+      const muajiPare = muajiPas(b.data.slice(0, 7), 1);
+      const kaluar = muajMes(muajiPare, muaji);
+      return {
+        id: b.id,
+        emri: b.emri,
+        vlera: toNumber(b.vlera),
+        nrKesteve: n,
+        kesti: toNumber(b.vlera) / n,
+        // Which instalment this month is (1-based), 0 while the run has not started yet.
+        kestiAktual: kaluar < 0 ? 0 : Math.min(kaluar + 1, n),
+        muajiPare,
+        muajiFundit: muajiPas(muajiPare, n - 1),
+        neKete: kaluar >= 0 && kaluar < n,
+      };
+    })
+    // Finished runs drop out; ones not started yet stay, so a purchase made this month already
+    // shows what it will add from next month.
+    .filter((z) => z.muajiFundit >= muaji)
+    .sort((a, b) => (a.muajiFundit < b.muajiFundit ? -1 : a.muajiFundit > b.muajiFundit ? 1 : 0));
+
+  if (zerat.length === 0) return null;
+
+  // Capped at what is left: a run the user has already paid ahead on cannot ask for more than the
+  // note still owes.
+  const kestiKeteMuaj = Math.min(
+    zerat.filter((z) => z.neKete).reduce((sum, z) => sum + z.kesti, 0),
+    ecuria.mbetur + paguarKeteMuaj
+  );
+  const muajiFundit = zerat[zerat.length - 1].muajiFundit;
+  return {
+    menyra: "keste",
+    kestiKeteMuaj,
+    paguarKeteMuaj,
+    mbetetKeteMuaj: Math.max(kestiKeteMuaj - paguarKeteMuaj, 0),
+    // Next month's bill, so a purchase made this month is visible before its first instalment.
+    kestiMuajitTjeter: zerat
+      .filter((z) => muajMes(z.muajiPare, muajiPas(muaji, 1)) >= 0 && z.muajiFundit >= muajiPas(muaji, 1))
+      .reduce((sum, z) => sum + z.kesti, 0),
+    zerat,
+    muajTeMbetur: muajMes(muaji, muajiFundit) + 1,
+    perTeteje: false,
+    nukZvogelohet: false,
+    muajiFundit,
+  };
 }
 
 /** The two orders a set of debts can be cleared in, once there is spare money to put at one of

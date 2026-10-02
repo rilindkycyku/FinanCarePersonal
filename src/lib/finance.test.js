@@ -17,7 +17,7 @@ import {
   reconciliation,
   dataEParaERegjistruar,
   convertedAmount, currencyFields, dailyLimit, debtMonthlyInterest, debtMonthlyRate, debtPace,
-  debtPayoffOrder, debtPaymentsFromTransactions, debtProgress, debtRequiredPayment,
+  debtInstallments, debtPayoffOrder, debtPaymentsFromTransactions, debtProgress, debtRequiredPayment,
   debtTotals, dueRecurring, effectiveBudgets, enteredAt, filterByRange, generateDueTransactions,
   muajiEfektiv,
   idIPerseritjes,
@@ -867,6 +867,12 @@ describe("debt payoff pace", () => {
     // And what the extra months cost is what the interest is.
     expect(paNorme.interesiIMbetur).toBe(0);
     expect(meNorme.interesiIMbetur).toBeGreaterThan(0);
+  });
+
+  it("never calls the rounding remainder of a note without a rate interest", () => {
+    // 1.200 € left at 70 € a month is 17 full payments and a short one: not 10 € of interest.
+    const ritmi = debtPace(kredi([pagese("2026-03-10", 70)]), "2026-03-31");
+    expect(ritmi.interesiIMbetur).toBe(0);
   });
 
   it("reads the monthly rate off the note and charges it on what is left", () => {
@@ -1828,5 +1834,90 @@ describe("dataEParaERegjistruar", () => {
 
   it("steps over a row with no date rather than reading it as the earliest", () => {
     expect(dataEParaERegjistruar([{ id: "a", data: "" }, { id: "b", data: "2026-01-09" }])).toBe("2026-01-09");
+  });
+});
+
+describe("debtInstallments", () => {
+  const karte = (extra = {}) => ({
+    id: "k1",
+    emri: "Bonus Kartela",
+    lloji: "keste",
+    vleraTotale: 120,
+    dataFillimit: "2026-06-15",
+    nrKesteve: 6,
+    pagesat: [],
+    ...extra,
+  });
+  const shtese = (id, data, vlera, nrKesteve, shenim = "") => ({ id, data, lloji: "shtese", vlera, nrKesteve, shenim });
+
+  it("returns null for a note with no plan on it", () => {
+    expect(debtInstallments(karte({ nrKesteve: null }), "2026-10-02")).toBeNull();
+    expect(debtInstallments({ id: "b", lloji: "borxh", vleraTotale: 100, pagesat: [] }, "2026-10-02")).toBeNull();
+  });
+
+  it("adds up every purchase whose run is still going this month", () => {
+    const plan = debtInstallments(
+      karte({
+        pagesat: [
+          shtese("s1", "2026-08-01", 60, 6, "Kreveti"),
+          shtese("s2", "2026-08-29", 48, 3, "Airfryer"),
+          shtese("s3", "2026-09-10", 30, null, "pa këste"),
+        ],
+      }),
+      "2026-10-02"
+    );
+    // Opening run: Jul..Dec (20/month), Kreveti: Sep..Feb (10), Airfryer: Sep..Nov (16).
+    expect(plan.menyra).toBe("keste");
+    expect(plan.kestiKeteMuaj).toBeCloseTo(46);
+    expect(plan.zerat.map((z) => [z.emri, z.kestiAktual])).toEqual([
+      ["Airfryer", 2],
+      ["Shuma fillestare", 4],
+      ["Kreveti", 2],
+    ]);
+    expect(plan.muajiFundit).toBe("2027-02");
+    expect(plan.muajTeMbetur).toBe(5);
+  });
+
+  it("starts a purchase's run the month after it, and drops finished runs", () => {
+    const plan = debtInstallments(karte({ pagesat: [shtese("s1", "2026-10-01", 30, 3)] }), "2026-10-02");
+    const blerja = plan.zerat.find((z) => z.id === "s1");
+    expect(blerja).toMatchObject({ kestiAktual: 0, neKete: false, muajiPare: "2026-11" });
+    expect(plan.kestiKeteMuaj).toBeCloseTo(20);
+    expect(plan.kestiMuajitTjeter).toBeCloseTo(30);
+
+    const mevone = debtInstallments(karte({ pagesat: [shtese("s1", "2026-10-01", 30, 3)] }), "2027-01-05");
+    expect(mevone.zerat.map((z) => z.id)).toEqual(["s1"]);
+  });
+
+  it("compares the month's bill with what was paid in that month", () => {
+    const plan = debtInstallments(
+      karte({ pagesat: [{ id: "p1", data: "2026-10-01", lloji: "pagese", vlera: 15 }] }),
+      "2026-10-20"
+    );
+    expect(plan.kestiKeteMuaj).toBeCloseTo(20);
+    expect(plan.paguarKeteMuaj).toBe(15);
+    expect(plan.mbetetKeteMuaj).toBeCloseTo(5);
+  });
+
+  it("runs a fixed instalment until the loan is clear", () => {
+    const kredi = { id: "c1", lloji: "kredi", vleraTotale: 1000, kestiMujor: 300, pagesat: [] };
+    const plan = debtInstallments(kredi, "2026-10-02");
+    expect(plan).toMatchObject({ menyra: "fiks", kestiKeteMuaj: 300, muajTeMbetur: 4, muajiFundit: "2027-01" });
+
+    const paguar = debtInstallments(
+      { ...kredi, pagesat: [{ id: "p", data: "2026-10-01", lloji: "pagese", vlera: 300 }] },
+      "2026-10-02"
+    );
+    // This month's instalment is in: three left, from November.
+    expect(paguar).toMatchObject({ kestiKeteMuaj: 300, mbetetKeteMuaj: 0, muajTeMbetur: 3, muajiFundit: "2027-01" });
+  });
+
+  it("says when a fixed instalment does not even cover the interest", () => {
+    const plan = debtInstallments(
+      { id: "c2", lloji: "kredi", vleraTotale: 10000, kestiMujor: 100, normaVjetore: 24, pagesat: [] },
+      "2026-10-02"
+    );
+    expect(plan.nukZvogelohet).toBe(true);
+    expect(plan.muajiFundit).toBeNull();
   });
 });

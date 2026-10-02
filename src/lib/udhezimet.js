@@ -327,6 +327,14 @@ export const UDHEZIMET = [
           "kthen para, borxhi zbret dhe llogaria juaj shtohet.",
       },
       {
+        titulli: "Këstet",
+        teksti:
+          "Te një kartelë me këste, çdo «Shtesë» ka fushën «Në sa këste»: blerja ndahet në aq muaj, me këstin e " +
+          "parë muajin pas blerjes. Nën borxh del kësti i këtij muaji - shuma e të gjitha blerjeve që janë ende " +
+          "duke u paguar - sa është paguar prej tij dhe kur bie kësti i fundit. Te një kredi shkruani «Kësti " +
+          "mujor» në formularin e borxhit, dhe faqja tregon a është paguar ky muaj dhe kur mbyllet kredia.",
+      },
+      {
         titulli: "«Zbrite edhe nga llogaria»",
         teksti:
           "Kur ato para dolën vërtet nga banka, shënjojeni këtë kuti te pagesa: krijohet edhe një transaksion " +

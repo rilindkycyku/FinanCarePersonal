@@ -9,6 +9,30 @@ e fundit kur rregullohet diçka, dhe e para vetëm kur ndryshon vetë forma e pr
 herë, te `2.0.0`, kur të dhënat mësuan të dalin nga shfletuesi. Datat janë ato të commit-it që e
 ngriti versionin.
 
+## [2.33.0] - 2026-10-02
+
+### Shtuar
+- **Këstet te borxhet.** Një kartelë me këste (si një kartelë bonus) e ndan çdo blerje në numrin e
+  vet të muajve, kështu që shuma që ju bie çdo muaj ndryshon sa herë nis ose mbaron një blerje -
+  dhe faqja deri tani dinte vetëm sa ka mbetur gjithsej. Tani, te «Kartelë Krediti» dhe «Blerje me
+  Këste», çdo «Shtesë» ka fushën **«Në sa këste»**, dhe edhe shuma fillestare mund ta ketë të vetën.
+  Nën borxh del **kësti i këtij muaji** (shuma e të gjitha blerjeve që janë ende duke u paguar),
+  sa është paguar prej tij këtë muaj, sa bie muajin tjetër dhe kur bie kësti i fundit, me secilën
+  blerje veç e veç - p.sh. «Airfryer 7,90 € (2/6)». Kësti i parë llogaritet muajin pas blerjes, si
+  në pasqyrën e bankës, dhe muajt numërohen në kalendar: një muaj i papaguar nuk e shtyn orarin, e
+  rrit borxhin.
+- **Kësti mujor për kreditë.** Te kreditë, borxhet personale dhe huatë e dhëna shkruhet një shumë e
+  vetme në muaj. Faqja tregon a është paguar kësti i këtij muaji dhe kur mbyllet borxhi me atë këst -
+  me kamatën e llogaritur, nëse borxhi ka normë, dhe me paralajmërim kur kësti nuk e mbulon as
+  kamatën.
+- Te pagesa, butoni i shpejtë **«Kësti i muajit»** e mbush vlerën me atë që ka mbetur pa u paguar këtë
+  muaj, dhe karta «Ritmi Mujor» sipër faqes tregon sa bëjnë gjithsej këstet e muajit.
+
+### Rregulluar
+- Te një borxh pa normë kamate, ritmi i shlyerjes shkruante herë pas here «Nga to, rreth 35 € janë
+  kamatë». Nuk ishte kamatë: pagesa e fundit është vetëm sa ka mbetur, dhe «muaj × mesatare» e
+  kalonte borxhin për një mbetje rrumbullakimi. Pa normë, kamata tani është zero.
+
 ## [2.32.0] - 2026-10-01
 
 Integrimi i plotë me Supabase Hub, konfigurimi 1-klik përmes parametrave të linkut dhe përmirësimi i përputhshmërisë së temave.

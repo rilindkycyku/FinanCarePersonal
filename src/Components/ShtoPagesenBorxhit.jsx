@@ -3,10 +3,11 @@ import { Modal, Button, Form, Row, Col, Alert } from "react-bootstrap";
 import { TrendingDown, PlusCircle } from "lucide-react";
 import { useData } from "../Context/DataContext";
 import VleraInput from "./VleraInput";
+import Ndihme from "./Ndihme";
 import ZgjedhesiKategorive from "./ZgjedhesiKategorive";
 import { makeId, STORES } from "../lib/db";
 import { toNumber, todayISO, formatMoney } from "../lib/format";
-import { debtProgress } from "../lib/finance";
+import { LLOJET_ME_KESTE_PER_BLERJE, debtInstallments, debtProgress } from "../lib/finance";
 import { debtTypeMeta } from "../lib/options";
 import { kategoriTeHapura } from "../lib/kategorite";
 import "./ModalForms.css";
@@ -17,6 +18,7 @@ const blank = (lloji = "pagese") => ({
   lloji,
   data: todayISO(),
   vlera: "",
+  nrKesteve: "",
   shenim: "",
   llogariaId: "",
   kategoriaId: "",
@@ -81,6 +83,7 @@ function ShtoPagesenBorxhit({ show, onHide, borxhi, initial }) {
             ...blank(initial.lloji || "pagese"),
             ...initial,
             vlera: String(initial.vlera ?? ""),
+            nrKesteve: initial.nrKesteve ? String(initial.nrKesteve) : "",
             shenim: initial.shenim || "",
             // Falls back to the same starting point a new payment gets - which, with more than one
             // account, is now no account at all: the line says which one the money left, and that
@@ -105,6 +108,9 @@ function ShtoPagesenBorxhit({ show, onHide, borxhi, initial }) {
   const isShtese = entry.lloji === "shtese";
   // A new charge on a card never leaves a bank account, so there is nothing to book against one.
   const mundLidhet = !isShtese && aktive.length > 0;
+  // On an instalment card each purchase is split into its own number of months.
+  const kestePerBlerje = isShtese && LLOJET_ME_KESTE_PER_BLERJE.includes(borxhi?.lloji);
+  const nrKesteve = Math.floor(toNumber(entry.nrKesteve));
 
   // Quick-amount chips for debt lines: repeating instalments from past payments, any recurring
   // payment linked to this debt note (e.g. fixed card/loan instalment), and the remaining balance.
@@ -125,7 +131,21 @@ function ShtoPagesenBorxhit({ show, onHide, borxhi, initial }) {
       }
     }
 
-    // 2. Any recurring payment tied to this debt note (e.g. card/loan instalment)
+    // 2. What the note's own instalments ask for this month - the sum of every purchase's run on a
+    // card, or the agreed amount on a loan. What is still unpaid of it when part is already in.
+    if (entry.lloji === "pagese") {
+      const plani = debtInstallments(borxhi, todayISO());
+      const kesti = Math.round((plani?.mbetetKeteMuaj || plani?.kestiKeteMuaj || 0) * 100) / 100;
+      if (kesti > 0) {
+        lista.push({
+          vlera: kesti,
+          arsyeja: "kestiMuajit",
+          label: `Kësti i muajit: ${formatMoney(kesti, monedha)}`,
+        });
+      }
+    }
+
+    // 3. Any recurring payment tied to this debt note (e.g. card/loan instalment)
     const perseritje = (recurring || []).find((r) => r.borxhiId === borxhi.id && r.vlera > 0);
     if (perseritje) {
       const kesti = Math.round(perseritje.vlera * 100) / 100;
@@ -136,7 +156,7 @@ function ShtoPagesenBorxhit({ show, onHide, borxhi, initial }) {
       });
     }
 
-    // 3. Past lines of the same direction on this debt
+    // 4. Past lines of the same direction on this debt
     const pagesat = (Array.isArray(borxhi.pagesat) ? borxhi.pagesat : [])
       .filter((p) => p.id !== initial?.id && p.lloji === entry.lloji && p.vlera > 0)
       .map((p) => Math.round(p.vlera * 100) / 100);
@@ -175,6 +195,9 @@ function ShtoPagesenBorxhit({ show, onHide, borxhi, initial }) {
     const vlera = toNumber(entry.vlera);
     if (!entry.data) return setError("Data është e detyrueshme.");
     if (!(vlera > 0)) return setError("Vlera duhet të jetë një numër më i madh se zero.");
+    if (kestePerBlerje && entry.nrKesteve !== "" && !(Number.isInteger(Number(entry.nrKesteve)) && nrKesteve >= 1 && nrKesteve <= 120)) {
+      return setError("Numri i kësteve duhet të jetë një numër i plotë nga 1 deri në 120.");
+    }
 
     const lidhet = mundLidhet && lidh;
     if (lidhet && !entry.llogariaId) return setError("Zgjidhni llogarinë nga e cila zbritet pagesa.");
@@ -196,6 +219,7 @@ function ShtoPagesenBorxhit({ show, onHide, borxhi, initial }) {
       data: entry.data,
       lloji: isShtese ? "shtese" : "pagese",
       vlera,
+      nrKesteve: kestePerBlerje && entry.nrKesteve !== "" ? nrKesteve : null,
       shenim: entry.shenim.trim(),
       llogariaId: lidhet ? entry.llogariaId : null,
       transaksioniId,
@@ -316,6 +340,27 @@ function ShtoPagesenBorxhit({ show, onHide, borxhi, initial }) {
                 required
               />
             </Form.Group>
+
+            {kestePerBlerje && (
+              <Form.Group as={Col} md={12} controlId="dpay-nrkesteve">
+                <Form.Label>Në sa këste</Form.Label>
+                <Form.Control
+                  type="number"
+                  inputMode="numeric"
+                  min="1"
+                  max="120"
+                  step="1"
+                  placeholder="p.sh. 6"
+                  value={entry.nrKesteve}
+                  onChange={(e) => setField("nrKesteve", e.target.value)}
+                />
+                <Ndihme>
+                  {nrKesteve >= 1 && toNumber(entry.vlera) > 0
+                    ? `${nrKesteve} × ${formatMoney(toNumber(entry.vlera) / nrKesteve, monedha)} në muaj, kësti i parë muajin pas blerjes.`
+                    : "Sa muaj ndahet kjo blerje. Faqja e shton këstin e saj te shuma që ju bie çdo muaj, derisa të mbarojë. Bosh = pa këste."}
+                </Ndihme>
+              </Form.Group>
+            )}
 
             <Col md={12}>
               {isShtese ? (
