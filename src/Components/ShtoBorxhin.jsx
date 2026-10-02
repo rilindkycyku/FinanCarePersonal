@@ -4,7 +4,9 @@ import { useData } from "../Context/DataContext";
 import { makeId, STORES } from "../lib/db";
 import { toNumber, todayISO } from "../lib/format";
 import { DEBT_TYPES, debtTypeMeta } from "../lib/options";
+import { LLOJET_ME_KESTE_PER_BLERJE } from "../lib/finance";
 import VleraInput from "./VleraInput";
+import Ndihme from "./Ndihme";
 import ZgjedhesiKategorive from "./ZgjedhesiKategorive";
 import { ColorPicker } from "./Pickers";
 import "./ModalForms.css";
@@ -19,6 +21,8 @@ const BLANK = {
   dataFillimit: todayISO(),
   dataMbarimit: "",
   normaVjetore: "",
+  nrKesteve: "",
+  kestiMujor: "",
   kategoriaId: "",
   ngjyra: "#f43f5e",
   shenim: "",
@@ -48,6 +52,8 @@ function ShtoBorxhin({ show, onHide, initial, llojiFillestar }) {
             vleraTotale: String(initial.vleraTotale ?? ""),
             dataMbarimit: initial.dataMbarimit || "",
             normaVjetore: initial.normaVjetore ? String(initial.normaVjetore) : "",
+            nrKesteve: initial.nrKesteve ? String(initial.nrKesteve) : "",
+            kestiMujor: initial.kestiMujor ? String(initial.kestiMujor) : "",
             kategoriaId: initial.kategoriaId || "",
             kreditori: initial.kreditori || "",
             shenim: initial.shenim || "",
@@ -62,6 +68,10 @@ function ShtoBorxhin({ show, onHide, initial, llojiFillestar }) {
 
   const meta = debtTypeMeta(debt.lloji);
   const kerkese = meta.drejtimi === "kerkese";
+  // A card splits each purchase into its own run of instalments, so the note asks only how many
+  // the opening amount was split into (the purchases get theirs on their own lines); a loan or a
+  // personal debt is repaid at one fixed amount a month instead.
+  const kestePerBlerje = LLOJET_ME_KESTE_PER_BLERJE.includes(debt.lloji);
 
   const handleSave = async (e) => {
     e.preventDefault();
@@ -75,6 +85,12 @@ function ShtoBorxhin({ show, onHide, initial, llojiFillestar }) {
     if (debt.normaVjetore !== "" && !(toNumber(debt.normaVjetore) >= 0 && toNumber(debt.normaVjetore) <= 100)) {
       return setError("Norma vjetore duhet të jetë mes 0 dhe 100 për qind.");
     }
+    if (kestePerBlerje && debt.nrKesteve !== "" && !(Number.isInteger(Number(debt.nrKesteve)) && Number(debt.nrKesteve) >= 1 && Number(debt.nrKesteve) <= 120)) {
+      return setError("Numri i kësteve duhet të jetë një numër i plotë nga 1 deri në 120.");
+    }
+    if (!kestePerBlerje && debt.kestiMujor !== "" && !(toNumber(debt.kestiMujor) > 0)) {
+      return setError("Kësti mujor duhet të jetë më i madh se zero.");
+    }
     setError("");
 
     await save(STORES.borxhet, {
@@ -86,6 +102,10 @@ function ShtoBorxhin({ show, onHide, initial, llojiFillestar }) {
       dataFillimit: debt.dataFillimit || todayISO(),
       dataMbarimit: debt.dataMbarimit || null,
       normaVjetore: debt.normaVjetore === "" ? null : toNumber(debt.normaVjetore),
+      // Only the field that fits the type is kept: a fixed instalment left behind on a note changed
+      // to a card would quietly override its per-purchase schedule.
+      nrKesteve: kestePerBlerje && debt.nrKesteve !== "" ? Number(debt.nrKesteve) : null,
+      kestiMujor: !kestePerBlerje && debt.kestiMujor !== "" ? toNumber(debt.kestiMujor) : null,
       kategoriaId: debt.kategoriaId || null,
       ngjyra: debt.ngjyra,
       shenim: debt.shenim.trim(),
@@ -182,6 +202,41 @@ function ShtoBorxhin({ show, onHide, initial, llojiFillestar }) {
                 onChange={(e) => setField("dataMbarimit", e.target.value)}
               />
             </Form.Group>
+
+            {kestePerBlerje ? (
+              <Form.Group as={Col} md={6} controlId="debt-nrkesteve">
+                <Form.Label>Në sa këste (opsional)</Form.Label>
+                <Form.Control
+                  type="number"
+                  inputMode="numeric"
+                  min="1"
+                  max="120"
+                  step="1"
+                  placeholder="p.sh. 6"
+                  value={debt.nrKesteve}
+                  onChange={(e) => setField("nrKesteve", e.target.value)}
+                />
+                <Ndihme>
+                  Për shumën fillestare. Çdo blerje e re me kartelë shtohet si &quot;Shtesë&quot; me numrin e
+                  vet të kësteve, dhe faqja mbledh sa ju bie për të paguar çdo muaj. Kësti i parë
+                  llogaritet muajin pas blerjes.
+                </Ndihme>
+              </Form.Group>
+            ) : (
+              <Form.Group as={Col} md={6} controlId="debt-kestimujor">
+                <Form.Label>{kerkese ? "Kthimi mujor (opsional)" : "Kësti mujor (opsional)"}</Form.Label>
+                <VleraInput
+                  value={debt.kestiMujor}
+                  onChange={(vlera) => setField("kestiMujor", vlera)}
+                  simboli={simboli}
+                  titulliKalkulatorit="Kësti mujor"
+                />
+                <Ndihme>
+                  Shuma që paguhet çdo muaj sipas marrëveshjes. Me të, faqja ju tregon kësti i këtij muaji
+                  a është paguar dhe kur mbyllet borxhi.
+                </Ndihme>
+              </Form.Group>
+            )}
 
             <Form.Group as={Col} md={6} controlId="debt-norma">
               <Form.Label>Norma Vjetore e Kamatës (opsional)</Form.Label>

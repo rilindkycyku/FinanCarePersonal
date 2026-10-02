@@ -4,7 +4,7 @@ import { Container, Row, Button, Alert } from "react-bootstrap";
 import { differenceInCalendarDays, parseISO } from "date-fns";
 import {
   Receipt, Plus, Edit3, Trash2, Archive, ArchiveRestore, CheckCircle2, CalendarClock,
-  ChevronDown, ChevronUp, HandCoins, Wallet, Info, Repeat, TrendingDown, Percent, ListOrdered,
+  ChevronDown, ChevronUp, HandCoins, Wallet, Info, Repeat, TrendingDown, Percent, ListOrdered, CalendarCheck,
 } from "lucide-react";
 import NavBar from "../Components/NavBar";
 import Footer from "../Components/Footer";
@@ -19,10 +19,10 @@ import { useData } from "../Context/DataContext";
 import { useDialog } from "../Context/DialogContext";
 import { STORES } from "../lib/db";
 import {
-  MUAJT_MAX_PARASHIKIM, RENDITJET_BORXHIT, debtPace, debtPayoffOrder, debtProgress,
+  MUAJT_MAX_PARASHIKIM, RENDITJET_BORXHIT, debtInstallments, debtPace, debtPayoffOrder, debtProgress,
   debtRequiredPayment, debtTotals, frequencyLabel,
 } from "../lib/finance";
-import { formatDate, formatPercent, markup, monthLabel, plainAmount, todayISO } from "../lib/format";
+import { formatDate, formatPercent, markup, monthLabel, monthLabelGenitive, plainAmount, todayISO } from "../lib/format";
 import { debtTypeMeta } from "../lib/options";
 import { opsionetEThjeshta } from "../lib/opsionet";
 import Zgjedhesi from "../Components/Zgjedhesi";
@@ -63,6 +63,7 @@ function Borxhet() {
           ...debtProgress(d),
           ritmi: debtPace(d, sot),
           kestiIDuhur: debtRequiredPayment(d, sot),
+          kestet: debtInstallments(d, sot),
         }))
         .sort(
           (a, b) =>
@@ -87,6 +88,11 @@ function Borxhet() {
   const ritmiMujor = miat
     .filter((d) => !d.perfunduar && d.ritmi)
     .reduce((sum, d) => sum + d.ritmi.mesatarjaMujore, 0);
+
+  // What this month's instalments ask for across every note that has a plan on it.
+  const kesteKeteMuaj = miat
+    .filter((d) => d.kestet)
+    .reduce((sum, d) => sum + d.kestet.kestiKeteMuaj, 0);
 
   const radha = useMemo(() => debtPayoffOrder(borxhet, renditja), [borxhet, renditja]);
 
@@ -285,6 +291,49 @@ function Borxhet() {
           </div>
         )}
 
+        {/* The month's bill from the note's own instalments: on a card the sum of every purchase's
+            run still going, on a loan the agreed amount - against what was paid this month. */}
+        {!d.perfunduar && !d.arkivuar && d.kestet && (
+          <div className="fcp-debt-kestet mt-2">
+            <div className={`fcp-row-sub${d.kestet.mbetetKeteMuaj > 0 ? "" : " fcp-pos"}`}>
+              <CalendarCheck size={12} className="me-1" />
+              {d.kestet.kestiKeteMuaj > 0 ? (
+                <>
+                  Kësti i {monthLabelGenitive(sot.slice(0, 7))}: <strong>{money(d.kestet.kestiKeteMuaj)}</strong>
+                  {d.kestet.paguarKeteMuaj > 0 &&
+                    (d.kestet.mbetetKeteMuaj > 0
+                      ? ` · paguar ${money(d.kestet.paguarKeteMuaj)}, mbeten ${money(d.kestet.mbetetKeteMuaj)}`
+                      : " · i paguar ✓")}
+                  .
+                </>
+              ) : (
+                "Këtë muaj nuk bie asnjë këst."
+              )}
+              {d.kestet.menyra === "keste" &&
+                d.kestet.kestiMuajitTjeter > 0 &&
+                Math.abs(d.kestet.kestiMuajitTjeter - d.kestet.kestiKeteMuaj) > 0.005 &&
+                ` Muajin tjetër: ${money(d.kestet.kestiMuajitTjeter)}.`}
+              {d.kestet.nukZvogelohet
+                ? " Ky këst nuk e mbulon as kamatën e muajit - borxhi nuk zvogëlohet."
+                : d.kestet.muajiFundit &&
+                  ` Kësti i fundit: ${monthLabel(d.kestet.muajiFundit)}${
+                    d.kestet.muajTeMbetur > 0 ? ` (edhe ${d.kestet.muajTeMbetur === 1 ? "një muaj" : `${d.kestet.muajTeMbetur} muaj`})` : ""
+                  }.`}
+            </div>
+            {d.kestet.zerat.length > 0 && (
+              <div className="fcp-row-sub mt-1">
+                {d.kestet.zerat
+                  .map((z) =>
+                    z.kestiAktual === 0
+                      ? `${z.emri} ${money(z.kesti)} (nis ${monthLabel(z.muajiPare)})`
+                      : `${z.emri} ${money(z.kesti)} (${z.kestiAktual}/${z.nrKesteve})`
+                  )
+                  .join(" · ")}
+              </div>
+            )}
+          </div>
+        )}
+
         {d.shenim && <div className="fcp-row-sub mt-2">{d.shenim}</div>}
 
         {/* Visible from this end too, so a card whose instalment is already scheduled does not get
@@ -322,6 +371,7 @@ function Borxhet() {
                       <div className="fcp-row-title">
                         {shtese ? "Shtesë" : kerkese ? "Kthim" : "Pagesë"}
                         {p.shenim && ` · ${p.shenim}`}
+                        {shtese && p.nrKesteve > 0 && ` · ${p.nrKesteve} këste`}
                       </div>
                       <div className="fcp-row-sub">
                         {formatDate(p.data)}
@@ -421,7 +471,11 @@ function Borxhet() {
             <Kpi
               label="Ritmi Mujor"
               value={money(ritmiMujor)}
-              sub={`${progress.reduce((s, d) => s + d.pagesat.length, 0)} rreshta të regjistruara`}
+              sub={
+                kesteKeteMuaj > 0
+                  ? `Këste këtë muaj: ${money(kesteKeteMuaj)}`
+                  : `${progress.reduce((s, d) => s + d.pagesat.length, 0)} rreshta të regjistruara`
+              }
               icon={TrendingDown}
               color="violet"
             />
