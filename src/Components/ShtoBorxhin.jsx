@@ -3,7 +3,7 @@ import { Modal, Button, Form, Row, Col, Alert } from "react-bootstrap";
 import { useData } from "../Context/DataContext";
 import { makeId, STORES } from "../lib/db";
 import { toNumber, todayISO } from "../lib/format";
-import { DEBT_TYPES, debtTypeMeta } from "../lib/options";
+import { DEBT_TYPES, KATEGORIA_SIPAS_LLOJIT_TE_BORXHIT, LLOJET_E_BASHKUARA, debtTypeMeta } from "../lib/options";
 import { LLOJET_ME_KESTE_PER_BLERJE } from "../lib/finance";
 import VleraInput from "./VleraInput";
 import Ndihme from "./Ndihme";
@@ -41,30 +41,56 @@ function ShtoBorxhin({ show, onHide, initial, llojiFillestar }) {
   const [debt, setDebt] = useState(BLANK);
   const [error, setError] = useState("");
 
+  // The starter category for a type, but only while it is there to pick: one the user deleted or
+  // archived is not brought back through this field.
+  const kategoriaESugjeruar = (lloji) => {
+    const id = KATEGORIA_SIPAS_LLOJIT_TE_BORXHIT[lloji];
+    return categories.some((c) => c.id === id && !c.arkivuar) ? id : "";
+  };
+
   useEffect(() => {
     if (!show) return;
     setError("");
+    const lloji = initial ? LLOJET_E_BASHKUARA[initial.lloji] || initial.lloji : llojiFillestar || BLANK.lloji;
     setDebt(
       initial
         ? {
             ...BLANK,
             ...initial,
+            // A merged type opens as the one it became, so the picker shows a real row.
+            lloji: LLOJET_E_BASHKUARA[initial.lloji] || initial.lloji,
             vleraTotale: String(initial.vleraTotale ?? ""),
             dataMbarimit: initial.dataMbarimit || "",
             normaVjetore: initial.normaVjetore ? String(initial.normaVjetore) : "",
             nrKesteve: initial.nrKesteve ? String(initial.nrKesteve) : "",
             kestiMujor: initial.kestiMujor ? String(initial.kestiMujor) : "",
-            kategoriaId: initial.kategoriaId || "",
+            // A note saved without one gets its type's suggestion - visible here, so nothing is
+            // filled in behind the user's back.
+            kategoriaId: initial.kategoriaId || kategoriaESugjeruar(lloji),
             kreditori: initial.kreditori || "",
             shenim: initial.shenim || "",
           }
         : // The page adds from two separate sections ("what I owe" / "what I am owed"), so the
           // section the user pressed decides which way the new note points.
-          { ...BLANK, lloji: llojiFillestar || BLANK.lloji }
+          { ...BLANK, lloji, kategoriaId: kategoriaESugjeruar(lloji) }
     );
+    // `categories` is left out on purpose: a reload while the form is open must not reset what the
+    // user has typed. The suggestion only needs the list as it was when the form opened.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [show, initial, llojiFillestar]);
 
   const setField = (name, value) => setDebt((prev) => ({ ...prev, [name]: value }));
+
+  // Changing the type moves the category with it - but only while the field still holds what the
+  // old type suggested (or nothing): a category the user picked by hand stays, unless it now points
+  // the wrong way (an expense category on a loan given out, whose returns are income).
+  const setLloji = (lloji) =>
+    setDebt((prev) => {
+      const drejtimi = debtTypeMeta(lloji).drejtimi === "kerkese" ? "hyrje" : "shpenzim";
+      const zgjedhur = categories.find((c) => c.id === prev.kategoriaId);
+      const mbetet = zgjedhur && zgjedhur.lloji === drejtimi && prev.kategoriaId !== kategoriaESugjeruar(prev.lloji);
+      return { ...prev, lloji, kategoriaId: mbetet ? prev.kategoriaId : kategoriaESugjeruar(lloji) };
+    });
 
   const meta = debtTypeMeta(debt.lloji);
   const kerkese = meta.drejtimi === "kerkese";
@@ -141,7 +167,7 @@ function ShtoBorxhin({ show, onHide, initial, llojiFillestar }) {
                 Emri <span className="text-danger">*</span>
               </Form.Label>
               <Form.Control
-                placeholder="p.sh. Kartela e kreditit, Borxhi te Arditi"
+                placeholder="p.sh. Bonus Kartela, Borxhi te Arditi"
                 value={debt.emri}
                 onChange={(e) => setField("emri", e.target.value)}
                 autoFocus
@@ -154,7 +180,7 @@ function ShtoBorxhin({ show, onHide, initial, llojiFillestar }) {
               <Zgjedhesi
                 id="debt-lloji"
                 value={debt.lloji}
-                onChange={(v) => setField("lloji", v)}
+                onChange={setLloji}
                 opsionet={opsionetEThjeshta(DEBT_TYPES)}
                 titulli="Lloji i borxhit"
               />
@@ -262,7 +288,7 @@ function ShtoBorxhin({ show, onHide, initial, llojiFillestar }) {
               <ZgjedhesiKategorive
                 id="debt-kategoriaid"
                 categories={categories}
-                lloji="shpenzim"
+                lloji={kerkese ? "hyrje" : "shpenzim"}
                 value={debt.kategoriaId}
                 onChange={(kategoriaId) => setField("kategoriaId", kategoriaId)}
                 placeholder="Pa kategori"

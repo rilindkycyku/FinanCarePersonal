@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CATEGORY_ICONS, DEFAULT_CATEGORIES } from "./options";
+import { CATEGORY_ICONS, DEBT_TYPES, DEFAULT_CATEGORIES, KATEGORIA_SIPAS_LLOJIT_TE_BORXHIT, debtTypeMeta } from "./options";
 import { ICONS } from "./icons";
 import { nenkategorite, pemaKategorive } from "./kategorite";
 
@@ -81,6 +81,28 @@ describe("DEFAULT_CATEGORIES", () => {
         expect(f.prindi).toBe(r.id);
         expect(nenkategorite(DEFAULT_CATEGORIES, f.id)).toEqual([]);
       });
+    });
+  });
+});
+
+describe("debtTypeMeta", () => {
+  it("reads the merged \"Blerje me Këste\" as the card it became, without offering it twice", () => {
+    expect(DEBT_TYPES.map((t) => t.value)).not.toContain("keste");
+    expect(debtTypeMeta("keste")).toBe(debtTypeMeta("karte"));
+  });
+
+  it("still renders a type it has never heard of", () => {
+    expect(debtTypeMeta("tjeter")).toMatchObject({ value: "tjeter", short: "tjeter", drejtimi: "detyrim" });
+  });
+});
+
+describe("KATEGORIA_SIPAS_LLOJIT_TE_BORXHIT", () => {
+  it("suggests a real starter category for every debt type, in the direction its payments go", () => {
+    DEBT_TYPES.forEach((t) => {
+      const kategoria = DEFAULT_CATEGORIES.find((c) => c.id === KATEGORIA_SIPAS_LLOJIT_TE_BORXHIT[t.value]);
+      expect(kategoria, t.value).toBeTruthy();
+      // Money coming back from a loan you gave is income; every other payment is an expense.
+      expect(kategoria.lloji, t.value).toBe(t.drejtimi === "kerkese" ? "hyrje" : "shpenzim");
     });
   });
 });

@@ -64,17 +64,26 @@ export function accountTypeMeta(value) {
  * someone owes you - which is all that changes in the wording ("paguar" vs "kthyer").
  */
 export const DEBT_TYPES = [
-  { value: "karte", label: "Kartelë Krediti", short: "Kartelë", icon: "CreditCard", drejtimi: "detyrim" },
+  { value: "karte", label: "Kartelë me Këste (Bonus, Star Cash…)", short: "Kartelë", icon: "CreditCard", drejtimi: "detyrim" },
   { value: "kredi", label: "Kredi Bankare", short: "Kredi", icon: "Landmark", drejtimi: "detyrim" },
-  { value: "keste", label: "Blerje me Këste", short: "Këste", icon: "Receipt", drejtimi: "detyrim" },
   { value: "borxh", label: "Borxh Personal (i kam borxh dikujt)", short: "Borxh", icon: "Coins", drejtimi: "detyrim" },
   { value: "huadhene", label: "Hua e Dhënë (dikush më ka borxh)", short: "Hua e dhënë", icon: "Banknote", drejtimi: "kerkese" },
 ];
 
+/**
+ * Types that used to be offered and were folded into another. "Blerje me Këste" was its own type,
+ * but in Kosovo a credit card *is* an instalment card - Bonus Kartela, Star Cash, TopKartela all
+ * split each purchase into months - so two entries for the same product only made the user guess.
+ * Notes saved under the old value keep it on the record (synced copies on other devices hold it
+ * too) and are read as the type they were merged into; the form rewrites it on the next save.
+ */
+export const LLOJET_E_BASHKUARA = { keste: "karte" };
+
 /** Never returns undefined, so a note holding a type that was removed still renders. */
 export function debtTypeMeta(value) {
+  const lloji = LLOJET_E_BASHKUARA[value] || value;
   return (
-    DEBT_TYPES.find((t) => t.value === value) || {
+    DEBT_TYPES.find((t) => t.value === lloji) || {
       value,
       label: value,
       short: value,
@@ -83,6 +92,20 @@ export function debtTypeMeta(value) {
     }
   );
 }
+
+/**
+ * The starter category a new debt note of each type pre-fills, so its payments stop asking for one
+ * every time. Only a suggestion: the form leaves it alone when the category is not there (deleted
+ * by the user, or not seeded yet) and the user can change it. "keste" is the old instalment type,
+ * merged into "karte" but still on older notes.
+ */
+export const KATEGORIA_SIPAS_LLOJIT_TE_BORXHIT = {
+  karte: "cat_default_keste",
+  keste: "cat_default_keste",
+  kredi: "cat_default_kredi_kesti",
+  borxh: "cat_default_kredi_borxh",
+  huadhene: "cat_default_rimbursim_borxh",
+};
 
 /** A line on a debt note: `pagese` brings the balance down, `shtese` puts it back up (a new
  * purchase on the card, interest, a late fee). */
@@ -579,6 +602,24 @@ export const DEFAULT_CATEGORIES = [
   { id: "cat_default_udhetime_roaming", emri: "Roaming & Internet", lloji: "shpenzim", prindi: "cat_default_udhetime", ngjyra: "#22c55e", ikona: "Wifi" },
   { id: "cat_default_udhetime_kembim", emri: "Këmbim Valutor & Tarifa", lloji: "shpenzim", prindi: "cat_default_udhetime", ngjyra: "#22c55e", ikona: "Coins" },
   { id: "cat_default_udhetime_bagazh", emri: "Bagazh & Valixhe", lloji: "shpenzim", prindi: "cat_default_udhetime", ngjyra: "#22c55e", ikona: "Luggage" },
+
+  // ── Borxhet, pensionet dhe paratë e familjes ───────────────────────────────
+  // What the debt page needed and could not find: paying a friend back is not a bank loan, and a
+  // loan coming back to you is not a refund or "other income" - the payment form asks for a
+  // category of the right direction, and there was none. Pension, social support and scholarships
+  // are the regular income of whole groups of users who have no salary to file them under, and money
+  // sent home from the diaspora is a regular line in many Kosovo households.
+  { id: "cat_default_kredi_borxh", emri: "Kthim Borxhi Personal", lloji: "shpenzim", prindi: "cat_default_kredi", ngjyra: "#64748b", ikona: "Handshake" },
+  { id: "cat_default_taksa_gjoba", emri: "Gjoba & Penale", lloji: "shpenzim", prindi: "cat_default_taksa", ngjyra: "#64748b", ikona: "Scale" },
+  { id: "cat_default_dhurata_fetare", emri: "Bajrami & Festat Fetare", lloji: "shpenzim", prindi: "cat_default_dhurata", ngjyra: "#ef4444", ikona: "Sparkles" },
+  { id: "cat_default_dhurata_familja", emri: "Ndihmë për Familjen", lloji: "shpenzim", prindi: "cat_default_dhurata", ngjyra: "#ef4444", ikona: "HandHeart" },
+  { id: "cat_default_rimbursim_borxh", emri: "Borxh i Kthyer (Hua)", lloji: "hyrje", prindi: "cat_default_rimbursim", ngjyra: "#14b8a6", ikona: "HandCoins" },
+  { id: "cat_default_dhurata_hyrje_diaspora", emri: "Para nga Diaspora", lloji: "hyrje", prindi: "cat_default_dhurata_hyrje", ngjyra: "#ec4899", ikona: "Plane" },
+  { id: "cat_default_pension", emri: "Pension & Përfitime", lloji: "hyrje", ngjyra: "#84cc16", ikona: "PiggyBank" },
+  { id: "cat_default_pension_pension", emri: "Pension", lloji: "hyrje", prindi: "cat_default_pension", ngjyra: "#84cc16", ikona: "Armchair" },
+  { id: "cat_default_pension_sociale", emri: "Ndihmë Sociale", lloji: "hyrje", prindi: "cat_default_pension", ngjyra: "#84cc16", ikona: "HeartHandshake" },
+  { id: "cat_default_pension_burse", emri: "Bursë Studimi", lloji: "hyrje", prindi: "cat_default_pension", ngjyra: "#84cc16", ikona: "GraduationCap" },
+  { id: "cat_default_pension_femije", emri: "Leje Lindjeje & Shtesa për Fëmijë", lloji: "hyrje", prindi: "cat_default_pension", ngjyra: "#84cc16", ikona: "Baby" },
 ];
 
 export const DEFAULT_ACCOUNTS = [
