@@ -19,8 +19,16 @@
  * the key saved here is the **public** one - see `kontrolloCelesin`, which refuses a service-role
  * key outright, since that one bypasses row-level security and would turn a stolen backup of
  * localStorage into full access to the database.
+ *
+ * With the fingerprint / Face ID lock on (kycja.js) that changes: the ledger is encrypted, and a
+ * session left readable beside it would be a way round the lock - copy the refresh token, and the
+ * cloud copy of every transaction downloads in the clear. So under a lock the two tokens are
+ * stored encrypted with the ledger's own data key (`sekretetShifruar`), held decrypted only in this
+ * page's memory, and exist nowhere in the clear on disk. The URL, the public key and the email stay
+ * readable: none of them opens anything without a token.
  */
 
+import { dekriptoTekst, enkriptoTekst } from "./shifrimi";
 import {
   ID_SKEMES, MIGRIMET, SKEMA_VERSIONI, SQL_INSTALIMI, STORI_META, TABELA, VERSIONI_PARA_NUMERIMIT,
   migrimetPezull,
@@ -78,22 +86,114 @@ function njofto(konfigurimi) {
   degjuesit.forEach((fn) => fn(konfigurimi));
 }
 
-export function lexoKonfigurimin() {
+// ---- the session under the lock ----
+
+const SEKRETET = ["accessToken", "refreshToken"];
+const KONTEKSTI_SEKRETEVE = "supabase:sesioni";
+
+/** The ledger's data key while the app is unlocked (set by db.js), null otherwise. */
+let celesiISesionit = null;
+/** The tokens, decrypted, while unlocked - what `lexoKonfigurimin` hands out in place of the ones
+ * that are no longer on disk. */
+let sekretetNeMemorie = null;
+/** Encryption is asynchronous and `ruajKonfigurimin` is not, so the encrypted copy is written a
+ * moment after the rest; this keeps a slow encryption from landing over a newer one. */
+let radhaShifrimit = 0;
+
+function lexoTeRuajturen() {
   try {
     const raw = localStorage.getItem(CELESI_RUAJTJES);
-    return raw ? { ...BOSH, ...JSON.parse(raw) } : { ...BOSH };
+    return raw ? JSON.parse(raw) : null;
   } catch {
     // Private-browsing modes and a corrupted entry look the same from here: no configuration.
-    return { ...BOSH };
+    return null;
   }
+}
+
+function shkruajTeRuajturen(vlera) {
+  try {
+    localStorage.setItem(CELESI_RUAJTJES, JSON.stringify(vlera));
+  } catch {
+    // Nothing to do: the sync still works for this session, it just will not be remembered.
+  }
+}
+
+const paSekrete = (k) => {
+  const kopja = { ...k };
+  SEKRETET.forEach((s) => delete kopja[s]);
+  return kopja;
+};
+
+/** Encrypts the tokens and patches them into what is stored, unless a newer write overtook this
+ * one while the encryption ran. */
+async function shifroSekretet(sekretet) {
+  const radha = ++radhaShifrimit;
+  const celesi = celesiISesionit;
+  const sekretetShifruar = await enkriptoTekst(celesi, sekretet, KONTEKSTI_SEKRETEVE);
+  if (radha !== radhaShifrimit || celesi !== celesiISesionit) return;
+  const tani = lexoTeRuajturen();
+  if (tani) shkruajTeRuajturen({ ...paSekrete(tani), sekretetShifruar });
+}
+
+/**
+ * Called by db.js whenever the data key appears (unlock) or goes (lock switched off). On unlock the
+ * stored tokens are decrypted into memory - and tokens still stored in the clear, from before the
+ * lock existed, are encrypted and removed. With the key gone they are written back in the clear,
+ * which is exactly what switching the lock off means.
+ */
+export async function vendosCelesinESesionit(celesi) {
+  const ruajtur = lexoTeRuajturen();
+  if (celesi) {
+    celesiISesionit = celesi;
+    if (ruajtur?.sekretetShifruar) {
+      try {
+        sekretetNeMemorie = await dekriptoTekst(celesi, ruajtur.sekretetShifruar, KONTEKSTI_SEKRETEVE);
+      } catch {
+        // A session encrypted under another key (a lock switched off and on again somewhere this
+        // page did not see) - unusable, so it is treated as signed out: the project stays saved
+        // and signing in again is all it takes.
+        sekretetNeMemorie = null;
+      }
+    } else if (ruajtur && SEKRETET.some((s) => ruajtur[s])) {
+      sekretetNeMemorie = Object.fromEntries(SEKRETET.map((s) => [s, ruajtur[s] ?? ""]));
+      shkruajTeRuajturen(paSekrete(ruajtur));
+      await shifroSekretet(sekretetNeMemorie);
+    }
+  } else {
+    if (ruajtur && sekretetNeMemorie) {
+      const { sekretetShifruar: _hequr, ...tjera } = ruajtur;
+      shkruajTeRuajturen({ ...tjera, ...sekretetNeMemorie });
+    }
+    radhaShifrimit++;
+    celesiISesionit = null;
+    sekretetNeMemorie = null;
+  }
+  njofto(lexoKonfigurimin());
+}
+
+export function lexoKonfigurimin() {
+  const ruajtur = lexoTeRuajturen();
+  if (!ruajtur) return { ...BOSH };
+  const { sekretetShifruar: _shifruar, ...tjera } = ruajtur;
+  // Under the lock the tokens on disk are ciphertext and the live ones are in memory; until the app
+  // is unlocked this device simply looks signed out, which nothing can get past anyway - the whole
+  // app waits behind the lock. Without a lock `sekretetNeMemorie` is null and the disk is the truth.
+  return { ...BOSH, ...tjera, ...(sekretetNeMemorie ?? {}) };
 }
 
 export function ruajKonfigurimin(patch) {
   const i = { ...lexoKonfigurimin(), ...patch };
-  try {
-    localStorage.setItem(CELESI_RUAJTJES, JSON.stringify(i));
-  } catch {
-    // Nothing to do: the sync still works for this session, it just will not be remembered.
+  const ruajtur = lexoTeRuajturen();
+  if (celesiISesionit) {
+    sekretetNeMemorie = Object.fromEntries(SEKRETET.map((s) => [s, i[s] ?? ""]));
+    shkruajTeRuajturen({ ...paSekrete(i), sekretetShifruar: ruajtur?.sekretetShifruar ?? "" });
+    shifroSekretet(sekretetNeMemorie).catch(() => undefined);
+  } else if (ruajtur?.sekretetShifruar) {
+    // Locked, and something wrote a setting anyway (the startup's "download everything" flag):
+    // the encrypted tokens are carried over untouched rather than replaced with empty ones.
+    shkruajTeRuajturen({ ...paSekrete(i), sekretetShifruar: ruajtur.sekretetShifruar });
+  } else {
+    shkruajTeRuajturen(i);
   }
   njofto(i);
   return i;
@@ -107,6 +207,8 @@ export function pastroKonfigurimin() {
   } catch {
     // See above.
   }
+  sekretetNeMemorie = null;
+  radhaShifrimit++;
   njofto({ ...BOSH });
   return { ...BOSH };
 }
