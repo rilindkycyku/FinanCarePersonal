@@ -113,7 +113,7 @@ sa shpenzohet, sa mbetet dhe sa po kursesh.
   dhe me numërimin e përdorimit real të secilës. Çdo kategori mund të ketë **nënkategori** - p.sh.
   *Ushqim & Pije › Market*, *› Furra*, *› Pije & Ujë*, ose *Kafe & Restorant › Kafe*, *› Drekë në
   Punë*, *› Fast Food* - që i përgjigjen pyetjes që lista e sheshtë nuk e mbulonte: ishte market,
-  drekë në punë apo restorant? Lista e parazgjedhur vjen me **193 nënkategori te 39 kategori
+  drekë në punë apo restorant? Lista e parazgjedhur vjen me **203 nënkategori te 40 kategori
   kryesore** - ushqimi i ndarë deri te bulmeti dhe të ngrirat, karburanti deri te benzina, nafta,
   gazi e rikarikimi elektrik, riparimet deri te hidrauliku, elektricisti dhe bojaxhiu, fatura sipas
   llojit, udhëtimi i ndarë në bileta, fjetje e transferë deri te plazhi, kafeja në pushime,

@@ -93,6 +93,20 @@ export function debtTypeMeta(value) {
   );
 }
 
+/**
+ * The starter category a new debt note of each type pre-fills, so its payments stop asking for one
+ * every time. Only a suggestion: the form leaves it alone when the category is not there (deleted
+ * by the user, or not seeded yet) and the user can change it. "keste" is the old instalment type,
+ * merged into "karte" but still on older notes.
+ */
+export const KATEGORIA_SIPAS_LLOJIT_TE_BORXHIT = {
+  karte: "cat_default_keste",
+  keste: "cat_default_keste",
+  kredi: "cat_default_kredi_kesti",
+  borxh: "cat_default_kredi_borxh",
+  huadhene: "cat_default_rimbursim_borxh",
+};
+
 /** A line on a debt note: `pagese` brings the balance down, `shtese` puts it back up (a new
  * purchase on the card, interest, a late fee). */
 export const DEBT_ENTRY_TYPES = [
@@ -588,6 +602,24 @@ export const DEFAULT_CATEGORIES = [
   { id: "cat_default_udhetime_roaming", emri: "Roaming & Internet", lloji: "shpenzim", prindi: "cat_default_udhetime", ngjyra: "#22c55e", ikona: "Wifi" },
   { id: "cat_default_udhetime_kembim", emri: "Këmbim Valutor & Tarifa", lloji: "shpenzim", prindi: "cat_default_udhetime", ngjyra: "#22c55e", ikona: "Coins" },
   { id: "cat_default_udhetime_bagazh", emri: "Bagazh & Valixhe", lloji: "shpenzim", prindi: "cat_default_udhetime", ngjyra: "#22c55e", ikona: "Luggage" },
+
+  // ── Borxhet, pensionet dhe paratë e familjes ───────────────────────────────
+  // What the debt page needed and could not find: paying a friend back is not a bank loan, and a
+  // loan coming back to you is not a refund or "other income" - the payment form asks for a
+  // category of the right direction, and there was none. Pension, social support and scholarships
+  // are the regular income of whole groups of users who have no salary to file them under, and money
+  // sent home from the diaspora is a regular line in many Kosovo households.
+  { id: "cat_default_kredi_borxh", emri: "Kthim Borxhi Personal", lloji: "shpenzim", prindi: "cat_default_kredi", ngjyra: "#64748b", ikona: "Handshake" },
+  { id: "cat_default_taksa_gjoba", emri: "Gjoba & Penale", lloji: "shpenzim", prindi: "cat_default_taksa", ngjyra: "#64748b", ikona: "Scale" },
+  { id: "cat_default_dhurata_fetare", emri: "Bajrami & Festat Fetare", lloji: "shpenzim", prindi: "cat_default_dhurata", ngjyra: "#ef4444", ikona: "Sparkles" },
+  { id: "cat_default_dhurata_familja", emri: "Ndihmë për Familjen", lloji: "shpenzim", prindi: "cat_default_dhurata", ngjyra: "#ef4444", ikona: "HandHeart" },
+  { id: "cat_default_rimbursim_borxh", emri: "Borxh i Kthyer (Hua)", lloji: "hyrje", prindi: "cat_default_rimbursim", ngjyra: "#14b8a6", ikona: "HandCoins" },
+  { id: "cat_default_dhurata_hyrje_diaspora", emri: "Para nga Diaspora", lloji: "hyrje", prindi: "cat_default_dhurata_hyrje", ngjyra: "#ec4899", ikona: "Plane" },
+  { id: "cat_default_pension", emri: "Pension & Përfitime", lloji: "hyrje", ngjyra: "#84cc16", ikona: "PiggyBank" },
+  { id: "cat_default_pension_pension", emri: "Pension", lloji: "hyrje", prindi: "cat_default_pension", ngjyra: "#84cc16", ikona: "Armchair" },
+  { id: "cat_default_pension_sociale", emri: "Ndihmë Sociale", lloji: "hyrje", prindi: "cat_default_pension", ngjyra: "#84cc16", ikona: "HeartHandshake" },
+  { id: "cat_default_pension_burse", emri: "Bursë Studimi", lloji: "hyrje", prindi: "cat_default_pension", ngjyra: "#84cc16", ikona: "GraduationCap" },
+  { id: "cat_default_pension_femije", emri: "Leje Lindjeje & Shtesa për Fëmijë", lloji: "hyrje", prindi: "cat_default_pension", ngjyra: "#84cc16", ikona: "Baby" },
 ];
 
 export const DEFAULT_ACCOUNTS = [
