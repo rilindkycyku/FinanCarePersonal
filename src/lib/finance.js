@@ -14,7 +14,7 @@
  *    nor expense - it only shifts balances.
  */
 
-import { addDays, addMonths, addWeeks, addYears, format, parseISO } from "date-fns";
+import { addDays, addMonths, addWeeks, addYears, differenceInCalendarDays, format, getDaysInMonth, parseISO } from "date-fns";
 import {
   BALANCE_ADJUSTMENT_CATEGORIES, debtTypeMeta, planPriorityMeta, DAYS_LONG, DAYS_SHORT, FREQUENCIES, MONTHS_SHORT,
 } from "./options";
@@ -1430,6 +1430,24 @@ export function debtEntries(debt) {
   });
 }
 
+/**
+ * The credit limit on a card note, or null when it has none.
+ *
+ * A card is not a loan that counts down to zero: the bank lends up to a limit, every purchase takes
+ * from it and every payment gives it back. Without the limit on the record the note could only say
+ * what is owed, and the question a card actually raises at the till - how much can I still spend on
+ * it - had nowhere to come from; people were writing the limit into the note's text and typing
+ * 0.01 as the opening amount to get a card with nothing on it past the form.
+ *
+ * Only read on the card types: the form drops the field when a note becomes a loan, and a limit
+ * left behind on a record from elsewhere must not turn a loan into a revolving line.
+ */
+export function debtCardLimit(debt) {
+  if (!LLOJET_ME_KESTE_PER_BLERJE.includes(debt?.lloji)) return null;
+  const limiti = toNumber(debt.limiti);
+  return limiti > 0 ? limiti : null;
+}
+
 /** Where one note stands: what it started at, what has been added, what has been paid off. */
 export function debtProgress(debt) {
   const pagesat = debtEntries(debt);
@@ -1441,6 +1459,10 @@ export function debtProgress(debt) {
     .reduce((sum, p) => sum + toNumber(p.vlera), 0);
   const totali = toNumber(debt.vleraTotale) + shtuar;
   const perqindja = totali > 0 ? Math.min((paguar / totali) * 100, 100) : 0;
+  // Clamped: an overpayment is a data-entry slip, not a debt that owes money back, and letting it go
+  // negative would quietly cancel out other notes in the totals below.
+  const mbetur = Math.max(totali - paguar, 0);
+  const limiti = debtCardLimit(debt);
   return {
     ...debt,
     pagesat,
@@ -1450,12 +1472,21 @@ export function debtProgress(debt) {
     totali,
     shtuar,
     paguar,
-    // Clamped: an overpayment is a data-entry slip, not a debt that owes money back, and letting
-    // it go negative would quietly cancel out other notes in the totals below.
-    mbetur: Math.max(totali - paguar, 0),
+    mbetur,
     perqindja,
-    perfunduar: totali > 0 && paguar >= totali,
+    // A card with a limit is a line of credit, not a debt that ends: paying it down to zero gives
+    // the whole limit back, it does not close anything - the card is still in the wallet. Only
+    // archiving takes it off the list, the same as an account that is no longer used.
+    perfunduar: !limiti && totali > 0 && paguar >= totali,
     nrPagesave: pagesat.filter((p) => p.lloji !== "shtese").length,
+    limiti,
+    // What can still go on the card: the limit less what is owed on it. Never below zero - a card
+    // over its limit has nothing left to spend, and how far over it is gets its own figure.
+    neDispozicion: limiti ? Math.max(limiti - mbetur, 0) : null,
+    mbiLimit: limiti ? Math.max(mbetur - limiti, 0) : 0,
+    // How much of the limit is in use. Not clamped, so a card over its limit reads as 110% rather
+    // than as a full one; the bar that draws it clamps on its own.
+    perqindjaLimitit: limiti ? (mbetur / limiti) * 100 : null,
   };
 }
 
@@ -1759,6 +1790,103 @@ export function debtInstallments(debt, sot = format(new Date(), "yyyy-MM-dd")) {
   };
 }
 
+/**
+ * When the month's payment on a note is due, from the day of the month it is expected on - the
+ * "Afati i fundit i pagesës: 15.10.2026" of a card statement, the 5th of a loan.
+ *
+ * A day is stored rather than a date because it repeats: a statement closes every month and is due
+ * on the same day of the next one, so a date typed in once would be stale thirty days later. The
+ * day is clamped to the month's length, so a 31 lands on 30 November and on 28 February instead of
+ * spilling into the month after.
+ *
+ * `afati` is this month's due date and `afatiTjeter` next month's, for once this month's is paid.
+ * `ditet` counts down to `afati` and goes negative once it has passed. Null without a day.
+ */
+export function debtDueDate(debt, sot = format(new Date(), "yyyy-MM-dd")) {
+  const dita = Math.floor(toNumber(debt?.ditaPageses));
+  if (!(dita >= 1 && dita <= 31)) return null;
+  const neMuaj = (muaji) => {
+    const fundi = getDaysInMonth(parseISO(`${muaji}-01`));
+    return `${muaji}-${String(Math.min(dita, fundi)).padStart(2, "0")}`;
+  };
+  const muaji = sot.slice(0, 7);
+  const afati = neMuaj(muaji);
+  return {
+    dita,
+    afati,
+    afatiTjeter: neMuaj(muajiPas(muaji, 1)),
+    ditet: differenceInCalendarDays(parseISO(afati), parseISO(sot)),
+  };
+}
+
+/**
+ * The one payment a note is waiting on: how much, and by when. This is the line at the top of a
+ * card statement - "Shuma minimale për pagesë 50.66 €, afati 15.10.2026" - and on an instalment
+ * card the bank's minimum *is* this month's instalments added up, which `debtInstallments` already
+ * knows; the due day only says by when.
+ *
+ * Until this month's share is paid it is the one owed, and once its day has gone by it is late
+ * (`kaloi`) rather than quietly rolled forward - the bank does not forget it either. Once it is
+ * paid (or nothing falls due this month) the next month's takes its place, so the line always
+ * answers "what do I still have to pay, and when".
+ *
+ * `vlera` is null when the note has a due day but no plan to count an amount from - a card whose
+ * purchases carry no instalment count still has a date worth showing. Null altogether when there
+ * is nothing owed, or neither a plan nor a due day to speak of.
+ */
+export function debtNextPayment(debt, sot = format(new Date(), "yyyy-MM-dd")) {
+  const { mbetur } = debtProgress(debt);
+  if (mbetur <= 0) return null;
+  const plani = debtInstallments(debt, sot);
+  const afati = debtDueDate(debt, sot);
+  if (!plani && !afati) return null;
+
+  const muaji = sot.slice(0, 7);
+  if (!plani) {
+    // No amount to name, so the date alone: this month's until its day is over, then the next.
+    const tjeter = afati.ditet < 0;
+    const data = tjeter ? afati.afatiTjeter : afati.afati;
+    return {
+      vlera: null,
+      afati: data,
+      ditet: differenceInCalendarDays(parseISO(data), parseISO(sot)),
+      kaloi: false,
+      muaji: tjeter ? muajiPas(muaji, 1) : muaji,
+      eTjetra: tjeter,
+      paguarKeteMuaj: false,
+    };
+  }
+
+  if (plani.mbetetKeteMuaj > 0) {
+    return {
+      vlera: plani.mbetetKeteMuaj,
+      afati: afati?.afati || null,
+      ditet: afati ? afati.ditet : null,
+      kaloi: Boolean(afati) && afati.ditet < 0,
+      muaji,
+      eTjetra: false,
+      paguarKeteMuaj: false,
+    };
+  }
+
+  // This month is settled (or asked for nothing), so the next bill. On a card that is next month's
+  // runs; on a fixed instalment it is the same amount again, capped at what is left.
+  const vlera =
+    plani.menyra === "keste"
+      ? Math.min(plani.kestiMuajitTjeter, mbetur)
+      : Math.min(toNumber(debt.kestiMujor), mbetur);
+  if (!(vlera > 0)) return null;
+  return {
+    vlera,
+    afati: afati?.afatiTjeter || null,
+    ditet: afati ? differenceInCalendarDays(parseISO(afati.afatiTjeter), parseISO(sot)) : null,
+    kaloi: false,
+    muaji: muajiPas(muaji, 1),
+    eTjetra: true,
+    paguarKeteMuaj: plani.kestiKeteMuaj > 0,
+  };
+}
+
 /** The two orders a set of debts can be cleared in, once there is spare money to put at one of
  * them. `ortek` (avalanche) takes the most expensive rate first and costs the least; `debora`
  * (snowball) takes the smallest balance first and closes a note soonest. Both are real answers to
@@ -1806,7 +1934,9 @@ export function debtPayoffOrder(debts = [], renditja = "ortek") {
 /** Totals across the notes, split by direction - what you owe vs. what is owed to you. Archived
  * notes are left out, the same way archived accounts are left out of the net worth. */
 export function debtTotals(debts) {
-  const empty = () => ({ totali: 0, paguar: 0, mbetur: 0, numri: 0, perfunduara: 0 });
+  // `limiti` / `neDispozicion` only add up the cards that carry a limit: a note without one has
+  // nothing to spend from, and counting its balance against no limit would just shrink the total.
+  const empty = () => ({ totali: 0, paguar: 0, mbetur: 0, numri: 0, perfunduara: 0, limiti: 0, neDispozicion: 0, nrMeLimit: 0 });
   const totals = { detyrimet: empty(), kerkesat: empty() };
 
   debts
@@ -1819,6 +1949,11 @@ export function debtTotals(debts) {
       bucket.mbetur += d.mbetur;
       bucket.numri += 1;
       if (d.perfunduar) bucket.perfunduara += 1;
+      if (d.limiti) {
+        bucket.limiti += d.limiti;
+        bucket.neDispozicion += d.neDispozicion;
+        bucket.nrMeLimit += 1;
+      }
     });
 
   return totals;

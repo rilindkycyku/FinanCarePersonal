@@ -17,7 +17,7 @@ import {
   reconciliation,
   dataEParaERegjistruar,
   convertedAmount, currencyFields, dailyLimit, debtMonthlyInterest, debtMonthlyRate, debtPace,
-  debtInstallments, debtPayoffOrder, debtPaymentsFromTransactions, debtProgress, debtRequiredPayment,
+  debtCardLimit, debtDueDate, debtInstallments, debtNextPayment, debtPayoffOrder, debtPaymentsFromTransactions, debtProgress, debtRequiredPayment,
   debtTotals, dueRecurring, effectiveBudgets, enteredAt, filterByRange, generateDueTransactions,
   muajiEfektiv,
   idIPerseritjes,
@@ -746,6 +746,62 @@ describe("debt notes", () => {
     ]);
     expect(totals.detyrimet).toMatchObject({ mbetur: 950, numri: 1 });
     expect(totals.kerkesat).toMatchObject({ mbetur: 300, numri: 1 });
+  });
+
+  it("reads a card's limit into what can still be spent and what is owed", () => {
+    // A new card: nothing owed yet, the whole limit free.
+    const eRe = debtProgress({ id: "k", lloji: "karte", vleraTotale: 0, limiti: 1000, pagesat: [] });
+    expect(eRe).toMatchObject({ limiti: 1000, mbetur: 0, neDispozicion: 1000, mbiLimit: 0, perqindjaLimitit: 0 });
+
+    // 1000 opening + 150 bought - 200 paid = 950 owed, 50 still free on a 1000 limit.
+    expect(debtProgress({ ...card, limiti: 1000 })).toMatchObject({
+      limiti: 1000,
+      mbetur: 950,
+      neDispozicion: 50,
+      mbiLimit: 0,
+      perqindjaLimitit: 95,
+    });
+  });
+
+  it("says how far over the limit a card is instead of a negative amount to spend", () => {
+    const mbi = debtProgress({ ...card, limiti: 800 });
+    expect(mbi.neDispozicion).toBe(0);
+    expect(mbi.mbiLimit).toBe(150);
+    expect(mbi.perqindjaLimitit).toBeCloseTo(118.75);
+  });
+
+  it("never closes a card with a limit just because it was paid down to zero", () => {
+    // Paid off, the card is still in the wallet with its whole limit back - not a settled note.
+    const shlyer = debtProgress({
+      ...card,
+      limiti: 2000,
+      pagesat: [...card.pagesat, { id: "p3", data: "2026-08-01", lloji: "pagese", vlera: 950 }],
+    });
+    expect(shlyer.mbetur).toBe(0);
+    expect(shlyer.perfunduar).toBe(false);
+    expect(shlyer.neDispozicion).toBe(2000);
+    // The same note without a limit is a debt like any other, and paying it off ends it.
+    expect(debtProgress({ ...shlyer, limiti: null }).perfunduar).toBe(true);
+  });
+
+  it("ignores a limit left on a note that is not a card", () => {
+    // A card turned into a loan elsewhere must not keep behaving like a line of credit.
+    const kredi = debtProgress({ id: "k", lloji: "kredi", vleraTotale: 500, limiti: 1000, pagesat: [] });
+    expect(kredi).toMatchObject({ limiti: null, neDispozicion: null, mbiLimit: 0, perqindjaLimitit: null });
+    expect(debtCardLimit({ lloji: "keste", limiti: "750" })).toBe(750);
+    expect(debtCardLimit({ lloji: "karte", limiti: 0 })).toBeNull();
+    expect(debtCardLimit({ lloji: "karte" })).toBeNull();
+  });
+
+  it("adds up the free limit only across the cards that have one", () => {
+    const totals = debtTotals([
+      { ...card, limiti: 1000 },
+      { id: "d4", lloji: "karte", vleraTotale: 0, limiti: 500, pagesat: [] },
+      { id: "d5", lloji: "kredi", vleraTotale: 3000, pagesat: [] },
+      { id: "d6", lloji: "karte", vleraTotale: 0, limiti: 900, pagesat: [], arkivuar: true },
+    ]);
+    expect(totals.detyrimet).toMatchObject({ limiti: 1500, neDispozicion: 550, nrMeLimit: 2, mbetur: 3950, numri: 3 });
+    expect(totals.kerkesat).toMatchObject({ limiti: 0, neDispozicion: 0, nrMeLimit: 0 });
   });
 
   it("turns booked transactions into debt lines that keep their transaction id", () => {
@@ -1919,5 +1975,105 @@ describe("debtInstallments", () => {
     );
     expect(plan.nukZvogelohet).toBe(true);
     expect(plan.muajiFundit).toBeNull();
+  });
+});
+
+describe("debtDueDate", () => {
+  it("puts the due day in this month and the next, clamped to each month's length", () => {
+    expect(debtDueDate({ ditaPageses: 15 }, "2026-10-05")).toEqual({
+      dita: 15,
+      afati: "2026-10-15",
+      afatiTjeter: "2026-11-15",
+      ditet: 10,
+    });
+    // A 31 is the last day of a short month, never the 1st of the one after.
+    expect(debtDueDate({ ditaPageses: 31 }, "2026-10-31")).toMatchObject({ afati: "2026-10-31", afatiTjeter: "2026-11-30", ditet: 0 });
+    expect(debtDueDate({ ditaPageses: 31 }, "2027-01-20")).toMatchObject({ afatiTjeter: "2027-02-28" });
+    expect(debtDueDate({ ditaPageses: 15 }, "2026-10-20").ditet).toBe(-5);
+  });
+
+  it("returns null without a usable day", () => {
+    expect(debtDueDate({}, "2026-10-05")).toBeNull();
+    expect(debtDueDate({ ditaPageses: 0 }, "2026-10-05")).toBeNull();
+    expect(debtDueDate({ ditaPageses: 32 }, "2026-10-05")).toBeNull();
+  });
+});
+
+describe("debtNextPayment", () => {
+  // A Raiffeisen Bonus statement for September 2026, purchase by purchase: limit 1000, minimum
+  // payment 50.66, due 15.10.2026, 854.21 still available. Each purchase is its instalment times
+  // its count; one payment line stands in for everything paid before.
+  const shtese = (id, data, kesti, nrKesteve) => ({ id, data, lloji: "shtese", vlera: Math.round(kesti * nrKesteve * 100) / 100, nrKesteve });
+  const bonus = (pagesat = [], extra = {}) => ({
+    id: "bonus",
+    lloji: "karte",
+    vleraTotale: 0,
+    limiti: 1000,
+    ditaPageses: 15,
+    dataFillimit: "2025-12-01",
+    pagesat: [
+      shtese("s1", "2025-12-23", 14.15, 10),
+      shtese("s2", "2026-05-29", 6.8, 5),
+      shtese("s3", "2026-05-31", 5.3, 5),
+      shtese("s4", "2026-06-15", 2.95, 6),
+      shtese("s5", "2026-07-22", 3.31, 4),
+      shtese("s6", "2026-07-31", 4.6, 5),
+      shtese("s7", "2026-08-02", 5.65, 10),
+      shtese("s8", "2026-08-30", 7.9, 6),
+      { id: "p0", data: "2026-09-03", lloji: "pagese", vlera: 214.05 },
+      ...pagesat,
+    ],
+    ...extra,
+  });
+
+  it("matches the statement: what is owed, what is free, the minimum and its due date", () => {
+    const ecuria = debtProgress(bonus());
+    expect(ecuria.mbetur).toBeCloseTo(145.79);
+    expect(ecuria.neDispozicion).toBeCloseTo(854.21);
+
+    const pagesa = debtNextPayment(bonus(), "2026-10-05");
+    expect(pagesa.vlera).toBeCloseTo(50.66);
+    expect(pagesa).toMatchObject({ afati: "2026-10-15", ditet: 10, kaloi: false, eTjetra: false, muaji: "2026-10" });
+  });
+
+  it("calls an unpaid month late once its day has gone by, instead of moving on", () => {
+    const pagesa = debtNextPayment(bonus(), "2026-10-20");
+    expect(pagesa.vlera).toBeCloseTo(50.66);
+    expect(pagesa).toMatchObject({ afati: "2026-10-15", ditet: -5, kaloi: true, eTjetra: false });
+  });
+
+  it("moves on to next month's bill once this month's is paid", () => {
+    const pagesa = debtNextPayment(
+      bonus([{ id: "p1", data: "2026-10-08", lloji: "pagese", vlera: 50.66 }]),
+      "2026-10-09"
+    );
+    // November: the runs from June, both in July, and both in August are still going.
+    expect(pagesa.vlera).toBeCloseTo(2.95 + 3.31 + 4.6 + 5.65 + 7.9);
+    expect(pagesa).toMatchObject({ afati: "2026-11-15", ditet: 37, eTjetra: true, paguarKeteMuaj: true, muaji: "2026-11" });
+  });
+
+  it("names the amount without a date when the note has no due day", () => {
+    const pagesa = debtNextPayment(bonus([], { ditaPageses: null }), "2026-10-05");
+    expect(pagesa.vlera).toBeCloseTo(50.66);
+    expect(pagesa).toMatchObject({ afati: null, ditet: null, kaloi: false });
+  });
+
+  it("names the date without an amount when there is no plan to count from", () => {
+    const karte = { id: "k", lloji: "karte", vleraTotale: 300, ditaPageses: 15, pagesat: [] };
+    expect(debtNextPayment(karte, "2026-10-05")).toMatchObject({ vlera: null, afati: "2026-10-15", ditet: 10, eTjetra: false });
+    expect(debtNextPayment(karte, "2026-10-20")).toMatchObject({ vlera: null, afati: "2026-11-15", ditet: 26, eTjetra: true });
+  });
+
+  it("follows a fixed monthly instalment the same way", () => {
+    const kredi = (pagesat = []) => ({ id: "kr", lloji: "kredi", vleraTotale: 1000, kestiMujor: 120, ditaPageses: 5, pagesat });
+    expect(debtNextPayment(kredi(), "2026-10-03")).toMatchObject({ vlera: 120, afati: "2026-10-05", ditet: 2, eTjetra: false });
+    expect(
+      debtNextPayment(kredi([{ id: "p", data: "2026-10-04", lloji: "pagese", vlera: 120 }]), "2026-10-06")
+    ).toMatchObject({ vlera: 120, afati: "2026-11-05", eTjetra: true, paguarKeteMuaj: true });
+  });
+
+  it("has nothing to say about a note that is paid off or has neither a plan nor a day", () => {
+    expect(debtNextPayment({ id: "k", lloji: "karte", vleraTotale: 0, limiti: 1000, ditaPageses: 15, pagesat: [] }, "2026-10-05")).toBeNull();
+    expect(debtNextPayment({ id: "b", lloji: "borxh", vleraTotale: 200, pagesat: [] }, "2026-10-05")).toBeNull();
   });
 });

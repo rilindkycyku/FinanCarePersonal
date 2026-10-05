@@ -254,7 +254,9 @@ Stores are declared in `STORES` in `db.js`. Ids are `makeId(prefix)` → `tx_…
 - `recurring`: `emri`, `lloji`, `vlera`, `frekuenca`, `dataETjetres`, `dataFundit`, `nrKesteve`,
   `periudhaZhvendosje` (which month the money belongs to), `borxhiId`, `aktiv`, `automatike`.
 - `borxhet`: `emri`, `lloji`, `vleraTotale`, `kreditori`, `pagesat[]`, `dataFillimit/Mbarimit`,
-  `arkivuar`. Direction comes from `DEBT_TYPES[].drejtimi` (`detyrim` vs `kerkese`).
+  `kestiMujor` / `nrKesteve`, `normaVjetore`, `ditaPageses` (day of the month the payment is due,
+  `debtDueDate`), `limiti` (cards only - a card with one is a line of credit: `neDispozicion`, never
+  `perfunduar`), `arkivuar`. Direction comes from `DEBT_TYPES[].drejtimi` (`detyrim` vs `kerkese`).
 - `planet`: `emri`, `vlera`, `kategoriaId`, `muaji`, `afati`, `prioriteti`, `kryer`,
   `transaksioniId`.
 - `grupet`: `emri`, `ngjyra`, `kategoriaId`, `anetaret[]` (`{ id, emri }`, the user is the implicit

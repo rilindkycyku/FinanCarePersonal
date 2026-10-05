@@ -24,7 +24,7 @@ import { emriIPlote } from "../lib/kategorite";
 import { getIcon } from "../lib/icons";
 import { lidhjaEZerit, zeriIKategorise } from "../lib/zerat";
 import {
-  accountsWithBalances, budgetProgress, cashflow, debtProgress, debtTotals, dueRecurring,
+  accountsWithBalances, budgetProgress, cashflow, debtNextPayment, debtProgress, debtTotals, dueRecurring,
   filterByRange, forecast, goalProgress, monthBounds, overduePlans, planTotals, plansForMonth,
   sortByDateDesc, totalBalance, totalsByCategory, upcomingRecurring,
 } from "../lib/finance";
@@ -83,7 +83,7 @@ function Dashboard() {
       // Notes only - deliberately not folded into `bilanci` above (see finance.js).
       borxhet: borxhet
         .filter((d) => !d.arkivuar)
-        .map((d) => debtProgress(d))
+        .map((d) => ({ ...debtProgress(d), pagesaRadhes: debtNextPayment(d, today) }))
         .filter((d) => !d.perfunduar)
         .sort((a, b) => b.mbetur - a.mbetur)
         .slice(0, 4),
@@ -524,6 +524,10 @@ function Dashboard() {
                 <Panel title="Borxhet & Kartelat" icon={Receipt} action="Të gjitha" actionTo="/borxhet">
                   {stats.borxhet.map((d) => {
                     const Icon = getIcon(debtTypeMeta(d.lloji).icon);
+                    // Same reading as the Borxhet page: a card with a limit shows how much of it is in
+                    // use, and a note with a due day says what to pay by when.
+                    const meLimit = Boolean(d.limiti);
+                    const pagesa = d.pagesaRadhes?.afati && d.pagesaRadhes.vlera > 0 ? d.pagesaRadhes : null;
                     return (
                       <div className="mb-3" key={d.id}>
                         <div className="d-flex justify-content-between align-items-center mb-1">
@@ -532,13 +536,26 @@ function Dashboard() {
                             {d.emri}
                           </span>
                           <span className="fcp-row-sub">
-                            {money(d.paguar)} / {money(d.totali)}
+                            {meLimit ? `${money(d.mbetur)} / ${money(d.limiti)}` : `${money(d.paguar)} / ${money(d.totali)}`}
                           </span>
                         </div>
-                        <ProgressBar value={d.perqindja} color={d.ngjyra} />
+                        <ProgressBar
+                          value={meLimit ? d.perqindjaLimitit : d.perqindja}
+                          color={d.ngjyra}
+                          over={meLimit && d.mbiLimit > 0}
+                        />
                         <div className="fcp-row-sub mt-1">
-                          {d.drejtimi === "kerkese" ? "Për t'u marrë" : "Mbeten"} {money(d.mbetur)}
-                          {d.dataMbarimit ? ` · afati ${formatDate(d.dataMbarimit)}` : ""}
+                          {meLimit
+                            ? d.mbiLimit > 0
+                              ? `${money(d.mbiLimit)} mbi limit`
+                              : `Në dispozicion ${money(d.neDispozicion)}`
+                            : `${d.drejtimi === "kerkese" ? "Për t'u marrë" : "Mbeten"} ${money(d.mbetur)}`}
+                          {pagesa && (
+                            <span className={pagesa.kaloi ? "fcp-neg" : ""}>
+                              {` · ${money(pagesa.vlera)} ${pagesa.kaloi ? "pa paguar, afati" : "deri më"} ${formatDate(pagesa.afati)}`}
+                            </span>
+                          )}
+                          {d.dataMbarimit && !meLimit ? ` · afati ${formatDate(d.dataMbarimit)}` : ""}
                         </div>
                       </div>
                     );

@@ -335,6 +335,15 @@ export const UDHEZIMET = [
           "mujor» në formularin e borxhit, dhe faqja tregon a është paguar ky muaj dhe kur mbyllet kredia.",
       },
       {
+        titulli: "Limiti dhe afati i kartelës",
+        teksti:
+          "Te formulari i kartelës shkruani «Limiti i kartelës» (p.sh. 1000) dhe «Afati i pagesës çdo muaj» " +
+          "(p.sh. 15, si «Afati i fundit i pagesës» te pasqyra e bankës). Nën kartelë dalin pastaj tri shifra: " +
+          "sa keni ende në dispozicion për të shpenzuar, sa keni për të paguar deri më atë ditë - shuma e " +
+          "kësteve të muajit, pra shuma minimale e pasqyrës - dhe sa është borxhi gjithsej. Me limit, kartela " +
+          "mund të nisë edhe pa asnjë borxh, dhe nuk «mbyllet» kur e shlyeni: limiti thjesht lirohet sërish.",
+      },
+      {
         titulli: "«Zbrite edhe nga llogaria»",
         teksti:
           "Kur ato para dolën vërtet nga banka, shënjojeni këtë kuti te pagesa: krijohet edhe një transaksion " +
