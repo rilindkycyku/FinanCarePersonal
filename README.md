@@ -71,6 +71,12 @@ sa shpenzohet, sa mbetet dhe sa po kursesh.
   borxh del kësti i këtij muaji - shuma e blerjeve që janë ende duke u paguar, secila veç e veç - sa
   është paguar prej tij dhe kur bie kësti i fundit. Te kreditë shkruhet një **kësti mujor** i vetëm,
   dhe faqja tregon a është paguar ky muaj dhe kur mbyllet kredia.
+  <br />**Limiti dhe afati i pagesës:** një kartelë mund të mbajë **limitin** (p.sh. 1000 €) dhe
+  **ditën e pagesës** çdo muaj (p.sh. 15). Nën të dalin atëherë tri shifra, si te pasqyra e bankës:
+  sa keni **në dispozicion** për të shpenzuar, sa keni **për të paguar** deri më atë ditë (shuma e
+  kësteve të muajit, që është vetë shuma minimale e bankës) me ditët që kanë mbetur, dhe **borxhin
+  gjithsej**. Një kartelë me limit mund të nisë pa asnjë borxh dhe nuk «mbyllet» kur shlyhet - limiti
+  vetëm lirohet. Dita e pagesës vlen edhe për kreditë dhe borxhet me këst mujor.
   <br />Çdo borxh mban edhe **normën vjetore të kamatës** (opsionale, shkruhet si në kontratë).
   Me të, ritmi më poshtë e ndan pagesën në dysh - sa e zbret borxhin dhe sa shkon te kamata - dhe e
   thotë rastin që nuk duket me sy: një pagesë më e vogël se kamata e muajit nuk e zvogëlon borxhin

@@ -19,8 +19,8 @@ import { useData } from "../Context/DataContext";
 import { useDialog } from "../Context/DialogContext";
 import { STORES } from "../lib/db";
 import {
-  MUAJT_MAX_PARASHIKIM, RENDITJET_BORXHIT, debtInstallments, debtPace, debtPayoffOrder, debtProgress,
-  debtRequiredPayment, debtTotals, frequencyLabel,
+  MUAJT_MAX_PARASHIKIM, RENDITJET_BORXHIT, debtInstallments, debtNextPayment, debtPace, debtPayoffOrder,
+  debtProgress, debtRequiredPayment, debtTotals, frequencyLabel,
 } from "../lib/finance";
 import { formatDate, formatPercent, markup, monthLabel, monthLabelGenitive, plainAmount, todayISO } from "../lib/format";
 import { debtTypeMeta } from "../lib/options";
@@ -35,6 +35,14 @@ import "./Styles/Personal.css";
 function daysLeft(dataMbarimit) {
   if (!dataMbarimit) return null;
   return differenceInCalendarDays(parseISO(dataMbarimit), parseISO(todayISO()));
+}
+
+/** The line under "what to pay": by when, and how long is left - or that the day has gone by. */
+function afatiIPageses(pagesa) {
+  if (!pagesa?.afati) return null;
+  if (pagesa.kaloi) return `afati kaloi më ${formatDate(pagesa.afati)}`;
+  if (pagesa.ditet === 0) return `afati është sot`;
+  return `deri më ${formatDate(pagesa.afati)} · edhe ${pagesa.ditet === 1 ? "një ditë" : `${pagesa.ditet} ditë`}`;
 }
 
 /**
@@ -64,6 +72,7 @@ function Borxhet() {
           ritmi: debtPace(d, sot),
           kestiIDuhur: debtRequiredPayment(d, sot),
           kestet: debtInstallments(d, sot),
+          pagesaRadhes: debtNextPayment(d, sot),
         }))
         .sort(
           (a, b) =>
@@ -163,6 +172,7 @@ function Borxhet() {
     Statusi: d.arkivuar ? "Arkivuar" : d.perfunduar ? "Mbyllur" : "Aktiv",
     Pala: d.kreditori || "-",
     Afati: d.dataMbarimit ? formatDate(d.dataMbarimit) : "-",
+    [`Në dispozicion (${simboli})`]: d.limiti ? plainAmount(d.neDispozicion) : "-",
     [`Totali (${simboli})`]: plainAmount(d.totali),
     [`Paguar (${simboli})`]: plainAmount(d.paguar),
     [`Mbetur (${simboli})`]: markup(
@@ -179,6 +189,12 @@ function Borxhet() {
     const ditet = daysLeft(d.dataMbarimit);
     const hapur = openId === d.id;
     const lidhura = recurring.filter((r) => r.borxhiId === d.id && r.aktiv !== false);
+    const meLimit = Boolean(d.limiti);
+    // The note read the way its statement reads: what can still be spent, what has to be paid and
+    // by when, what is owed altogether. Only once the note carries a limit or a due day - the two
+    // things a statement or a contract hands you - so a plain note keeps its one-line foot.
+    const permbledhje = !d.arkivuar && (meLimit || d.ditaPageses >= 1);
+    const pagesa = d.pagesaRadhes;
 
     return (
       <div className={`fcp-tracked${d.arkivuar ? " fcp-debt-archived" : ""}`} key={d.id}>
@@ -194,7 +210,11 @@ function Borxhet() {
               </span>
             </div>
             <div className="fcp-row-sub">
-              {money(d.paguar)} nga {money(d.totali)} · {formatPercent(d.perqindja)}
+              {/* On a card the bar is the limit in use, not the share paid off: a line of credit
+                  is never "paid" towards anything, it is only more or less used. */}
+              {meLimit
+                ? `${money(d.mbetur)} nga limiti ${money(d.limiti)} · ${formatPercent(d.perqindjaLimitit)} në përdorim`
+                : `${money(d.paguar)} nga ${money(d.totali)} · ${formatPercent(d.perqindja)}`}
               {d.kreditori && ` · ${kerkese ? "nga" : "te"} ${d.kreditori}`}
             </div>
           </div>
@@ -234,16 +254,67 @@ function Borxhet() {
           </div>
         </div>
 
-        <ProgressBar value={d.perqindja} color={d.ngjyra} />
+        <ProgressBar
+          value={meLimit ? d.perqindjaLimitit : d.perqindja}
+          color={d.ngjyra}
+          over={meLimit && d.mbiLimit > 0}
+        />
+
+        {permbledhje && (
+          <div className="fcp-debt-permbledhje">
+            {meLimit && (
+              <div>
+                <span>Në dispozicion</span>
+                <strong className={d.neDispozicion > 0 ? "fcp-pos" : "fcp-neg"}>{money(d.neDispozicion)}</strong>
+                <small className={d.mbiLimit > 0 ? "fcp-neg" : ""}>
+                  {d.mbiLimit > 0 ? `${money(d.mbiLimit)} mbi limit` : `nga ${money(d.limiti)}`}
+                </small>
+              </div>
+            )}
+            {pagesa && (
+              <div>
+                <span>
+                  {pagesa.vlera === null
+                    ? "Afati i pagesës"
+                    : pagesa.eTjetra
+                      ? kerkese
+                        ? "Kthimi i radhës"
+                        : "Pagesa e radhës"
+                      : kerkese
+                        ? "Për t'u kthyer"
+                        : "Për të paguar"}
+                </span>
+                <strong className={pagesa.kaloi ? "fcp-neg" : ""}>
+                  {pagesa.vlera === null ? formatDate(pagesa.afati) : money(pagesa.vlera)}
+                </strong>
+                <small className={pagesa.kaloi ? "fcp-neg" : ""}>
+                  {pagesa.vlera === null
+                    ? pagesa.ditet === 0
+                      ? "sot"
+                      : `edhe ${pagesa.ditet === 1 ? "një ditë" : `${pagesa.ditet} ditë`}`
+                    : afatiIPageses(pagesa) || `kësti i ${monthLabelGenitive(pagesa.muaji)}`}
+                </small>
+              </div>
+            )}
+            <div>
+              <span>{kerkese ? "Për t'u marrë" : "Borxhi gjithsej"}</span>
+              <strong className={d.mbetur > 0 ? "fcp-neg" : "fcp-pos"}>{money(d.mbetur)}</strong>
+              <small>{d.mbetur > 0 ? (kerkese ? "gjithsej" : "për t'u shlyer") : "asgjë për të paguar"}</small>
+            </div>
+          </div>
+        )}
 
         <div className="fcp-tracked-foot">
-          <span className={d.perfunduar ? "fcp-pos" : "fcp-neg"}>
-            {d.perfunduar
-              ? kerkese
-                ? "U kthye i plotë 🎉"
-                : "Borxhi u mbyll 🎉"
-              : `${kerkese ? "Për t'u marrë" : "Mbeten"} ${money(d.mbetur)}`}
-          </span>
+          {/* The summary above already says what is left, so the foot keeps only what it adds. */}
+          {!permbledhje && (
+            <span className={d.perfunduar ? "fcp-pos" : "fcp-neg"}>
+              {d.perfunduar
+                ? kerkese
+                  ? "U kthye i plotë 🎉"
+                  : "Borxhi u mbyll 🎉"
+                : `${kerkese ? "Për t'u marrë" : "Mbeten"} ${money(d.mbetur)}`}
+            </span>
+          )}
           <span className="d-flex align-items-center gap-3 flex-wrap">
             {d.shtuar > 0 && <span>Shtesa: {money(d.shtuar)}</span>}
             {d.dataMbarimit && (
@@ -443,7 +514,13 @@ function Borxhet() {
             <Kpi
               label="Borxh i Mbetur"
               value={money(totals.detyrimet.mbetur)}
-              sub={`${totals.detyrimet.numri} borxhe · ${totals.detyrimet.perfunduara} të mbyllura`}
+              sub={
+                // With cards carrying a limit, what is still free on them is the figure that answers
+                // "can I still pay for this by card" - more use here than a count of rows.
+                totals.detyrimet.nrMeLimit > 0
+                  ? `${money(totals.detyrimet.neDispozicion)} në dispozicion në kartela`
+                  : `${totals.detyrimet.numri} borxhe · ${totals.detyrimet.perfunduara} të mbyllura`
+              }
               icon={Receipt}
               color="danger"
             />

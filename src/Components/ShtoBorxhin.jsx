@@ -17,12 +17,14 @@ const BLANK = {
   emri: "",
   lloji: "karte",
   vleraTotale: "",
+  limiti: "",
   kreditori: "",
   dataFillimit: todayISO(),
   dataMbarimit: "",
   normaVjetore: "",
   nrKesteve: "",
   kestiMujor: "",
+  ditaPageses: "",
   kategoriaId: "",
   ngjyra: "#f43f5e",
   shenim: "",
@@ -60,10 +62,12 @@ function ShtoBorxhin({ show, onHide, initial, llojiFillestar }) {
             // A merged type opens as the one it became, so the picker shows a real row.
             lloji: LLOJET_E_BASHKUARA[initial.lloji] || initial.lloji,
             vleraTotale: String(initial.vleraTotale ?? ""),
+            limiti: initial.limiti ? String(initial.limiti) : "",
             dataMbarimit: initial.dataMbarimit || "",
             normaVjetore: initial.normaVjetore ? String(initial.normaVjetore) : "",
             nrKesteve: initial.nrKesteve ? String(initial.nrKesteve) : "",
             kestiMujor: initial.kestiMujor ? String(initial.kestiMujor) : "",
+            ditaPageses: initial.ditaPageses ? String(initial.ditaPageses) : "",
             // A note saved without one gets its type's suggestion - visible here, so nothing is
             // filled in behind the user's back.
             kategoriaId: initial.kategoriaId || kategoriaESugjeruar(lloji),
@@ -98,11 +102,23 @@ function ShtoBorxhin({ show, onHide, initial, llojiFillestar }) {
   // the opening amount was split into (the purchases get theirs on their own lines); a loan or a
   // personal debt is repaid at one fixed amount a month instead.
   const kestePerBlerje = LLOJET_ME_KESTE_PER_BLERJE.includes(debt.lloji);
+  // With a limit, a card can start at nothing owed - a new card, or one just paid off - because
+  // the limit is what the note is about. Without one, an empty card would be a note about nothing.
+  const meLimit = kestePerBlerje && toNumber(debt.limiti) > 0;
 
   const handleSave = async (e) => {
     e.preventDefault();
     if (!debt.emri.trim()) return setError("Emri i borxhit është i detyrueshëm.");
-    if (!(toNumber(debt.vleraTotale) > 0)) return setError("Vlera duhet të jetë më e madhe se zero.");
+    if (kestePerBlerje && debt.limiti !== "" && !(toNumber(debt.limiti) > 0)) {
+      return setError("Limiti i kartelës duhet të jetë më i madh se zero.");
+    }
+    if (meLimit ? toNumber(debt.vleraTotale) < 0 : !(toNumber(debt.vleraTotale) > 0)) {
+      return setError(
+        kestePerBlerje
+          ? "Shkruani borxhin aktual në kartelë, ose limitin e saj për një kartelë pa borxh."
+          : "Vlera duhet të jetë më e madhe se zero."
+      );
+    }
     if (debt.dataMbarimit && debt.dataFillimit && debt.dataMbarimit < debt.dataFillimit) {
       return setError("Afati i fundit nuk mund të jetë para datës së fillimit.");
     }
@@ -117,6 +133,9 @@ function ShtoBorxhin({ show, onHide, initial, llojiFillestar }) {
     if (!kestePerBlerje && debt.kestiMujor !== "" && !(toNumber(debt.kestiMujor) > 0)) {
       return setError("Kësti mujor duhet të jetë më i madh se zero.");
     }
+    if (debt.ditaPageses !== "" && !(Number.isInteger(Number(debt.ditaPageses)) && Number(debt.ditaPageses) >= 1 && Number(debt.ditaPageses) <= 31)) {
+      return setError("Dita e pagesës duhet të jetë një ditë e muajit, nga 1 deri në 31.");
+    }
     setError("");
 
     await save(STORES.borxhet, {
@@ -124,6 +143,8 @@ function ShtoBorxhin({ show, onHide, initial, llojiFillestar }) {
       emri: debt.emri.trim(),
       lloji: debt.lloji,
       vleraTotale: toNumber(debt.vleraTotale),
+      // Same rule as the instalment fields below: a limit only means something on a card.
+      limiti: meLimit ? toNumber(debt.limiti) : null,
       kreditori: debt.kreditori.trim(),
       dataFillimit: debt.dataFillimit || todayISO(),
       dataMbarimit: debt.dataMbarimit || null,
@@ -132,6 +153,8 @@ function ShtoBorxhin({ show, onHide, initial, llojiFillestar }) {
       // to a card would quietly override its per-purchase schedule.
       nrKesteve: kestePerBlerje && debt.nrKesteve !== "" ? Number(debt.nrKesteve) : null,
       kestiMujor: !kestePerBlerje && debt.kestiMujor !== "" ? toNumber(debt.kestiMujor) : null,
+      // A day of the month, not a date: the bill falls due on it every month (finance.js debtDueDate).
+      ditaPageses: debt.ditaPageses !== "" ? Number(debt.ditaPageses) : null,
       kategoriaId: debt.kategoriaId || null,
       ngjyra: debt.ngjyra,
       shenim: debt.shenim.trim(),
@@ -186,19 +209,39 @@ function ShtoBorxhin({ show, onHide, initial, llojiFillestar }) {
               />
             </Form.Group>
 
+            {kestePerBlerje && (
+              <Form.Group as={Col} md={6} controlId="debt-limiti">
+                <Form.Label>Limiti i kartelës (opsional)</Form.Label>
+                <VleraInput
+                  value={debt.limiti}
+                  onChange={(vlera) => setField("limiti", vlera)}
+                  simboli={simboli}
+                  titulliKalkulatorit="Limiti i kartelës"
+                />
+                <Ndihme>
+                  Sa ju lejon banka të shpenzoni me kartelë, p.sh. 1000. Me të, faqja tregon sa keni ende në
+                  dispozicion për të shpenzuar dhe sa keni për të paguar - dhe kartela mund të nisë pa asnjë
+                  borxh.
+                </Ndihme>
+              </Form.Group>
+            )}
+
             <Form.Group as={Col} md={6} controlId="debt-vleratotale">
               <Form.Label>
-                {kerkese ? "Shuma e dhënë" : "Shuma e plotë"} <span className="text-danger">*</span>
+                {kestePerBlerje ? "Borxhi aktual në kartelë" : kerkese ? "Shuma e dhënë" : "Shuma e plotë"}{" "}
+                {!meLimit && <span className="text-danger">*</span>}
               </Form.Label>
               <VleraInput
                 value={debt.vleraTotale}
                 onChange={(vlera) => setField("vleraTotale", vlera)}
                 simboli={simboli}
-                titulliKalkulatorit={kerkese ? "Shuma e dhënë" : "Shuma e plotë"}
-                required
+                titulliKalkulatorit={kestePerBlerje ? "Borxhi aktual" : kerkese ? "Shuma e dhënë" : "Shuma e plotë"}
+                required={!meLimit}
               />
               <div className="fcp-modal-hint">
-                Sa ishte borxhi në fillim. Blerjet e reja ose kamatat shtohen më vonë si &quot;Shtesë&quot;.
+                {meLimit
+                  ? "Sa keni për të paguar sot në kartelë - 0 për një kartelë të re ose të shlyer. Blerjet e reja shtohen më vonë si «Shtesë»."
+                  : "Sa ishte borxhi në fillim. Blerjet e reja ose kamatat shtohen më vonë si «Shtesë»."}
               </div>
             </Form.Group>
 
@@ -221,7 +264,9 @@ function ShtoBorxhin({ show, onHide, initial, llojiFillestar }) {
             </Form.Group>
 
             <Form.Group as={Col} md={6} controlId="debt-datambarimit">
-              <Form.Label>Afati i Fundit (opsional)</Form.Label>
+              {/* Not the statement's "afati i fundit i pagesës" - that one comes back every month and
+                  is the due day further down. On a card this is when the whole of it has to be gone. */}
+              <Form.Label>{kestePerBlerje ? "Shlyerja e plotë deri më (opsional)" : "Afati i Fundit (opsional)"}</Form.Label>
               <Form.Control
                 type="date"
                 value={debt.dataMbarimit || ""}
@@ -263,6 +308,31 @@ function ShtoBorxhin({ show, onHide, initial, llojiFillestar }) {
                 </Ndihme>
               </Form.Group>
             )}
+
+            <Form.Group as={Col} md={6} controlId="debt-ditapageses">
+              <Form.Label>
+                {kestePerBlerje
+                  ? "Afati i pagesës çdo muaj (opsional)"
+                  : kerkese
+                    ? "Dita e kthimit çdo muaj (opsional)"
+                    : "Dita e pagesës çdo muaj (opsional)"}
+              </Form.Label>
+              <Form.Control
+                type="number"
+                inputMode="numeric"
+                min="1"
+                max="31"
+                step="1"
+                placeholder="p.sh. 15"
+                value={debt.ditaPageses}
+                onChange={(e) => setField("ditaPageses", e.target.value)}
+              />
+              <Ndihme>
+                {kestePerBlerje
+                  ? "Dita e muajit deri kur banka e pret pagesën - te pasqyra e kartelës është «Afati i fundit i pagesës» (p.sh. 15 për 15.10). Faqja ju tregon sa keni për të paguar deri atëherë dhe sa ditë kanë mbetur."
+                  : "Dita e muajit kur bie kësti. Faqja ju tregon sa keni për të paguar deri atëherë dhe sa ditë kanë mbetur."}
+              </Ndihme>
+            </Form.Group>
 
             <Form.Group as={Col} md={6} controlId="debt-norma">
               <Form.Label>Norma Vjetore e Kamatës (opsional)</Form.Label>

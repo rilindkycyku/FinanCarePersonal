@@ -112,6 +112,24 @@ function ShtoPagesenBorxhit({ show, onHide, borxhi, initial }) {
   const kestePerBlerje = isShtese && LLOJET_ME_KESTE_PER_BLERJE.includes(borxhi?.lloji);
   const nrKesteve = Math.floor(toNumber(entry.nrKesteve));
 
+  // The card as it stands without the line being written - so editing a purchase measures its new
+  // amount against what was free before it, not against a limit the old amount is still taking.
+  const paraRreshtit = useMemo(
+    () =>
+      borxhi
+        ? debtProgress({ ...borxhi, pagesat: (Array.isArray(borxhi.pagesat) ? borxhi.pagesat : []).filter((p) => p.id !== initial?.id) })
+        : null,
+    [borxhi, initial?.id]
+  );
+  const limiti = paraRreshtit?.limiti || null;
+  const vleraEShkruar = toNumber(entry.vlera);
+  // What the limit leaves free once this line is in: a purchase takes from it, a payment gives back.
+  // Negative means over the limit - the bank decides whether it lets that through, so the form only
+  // says it rather than refusing a purchase that may well have happened.
+  const neDispozicionPas = limiti
+    ? limiti - Math.max(paraRreshtit.mbetur + (isShtese ? vleraEShkruar : -vleraEShkruar), 0)
+    : null;
+
   // Quick-amount chips for debt lines: repeating instalments from past payments, any recurring
   // payment linked to this debt note (e.g. fixed card/loan instalment), and the remaining balance.
   const shumatEShpeshta = useMemo(() => {
@@ -313,6 +331,19 @@ function ShtoPagesenBorxhit({ show, onHide, borxhi, initial }) {
                 autoFocus
                 required
               />
+              {limiti && (
+                <div className={`fcp-modal-hint${neDispozicionPas < 0 ? " fcp-neg" : ""}`}>
+                  {!(vleraEShkruar > 0)
+                    ? paraRreshtit.mbiLimit > 0
+                      ? `Kartela është ${formatMoney(paraRreshtit.mbiLimit, monedha)} mbi limitin prej ${formatMoney(limiti, monedha)}.`
+                      : `Në dispozicion tani: ${formatMoney(paraRreshtit.neDispozicion, monedha)} nga ${formatMoney(limiti, monedha)}.`
+                    : neDispozicionPas >= 0
+                      ? `Në dispozicion pas ${isShtese ? "blerjes" : "pagesës"}: ${formatMoney(neDispozicionPas, monedha)} nga ${formatMoney(limiti, monedha)}.`
+                      : isShtese
+                        ? `Kjo blerje e kalon limitin me ${formatMoney(-neDispozicionPas, monedha)} - në dispozicion janë ${formatMoney(paraRreshtit.neDispozicion, monedha)}.`
+                        : `Edhe pas pagesës kartela mbetet ${formatMoney(-neDispozicionPas, monedha)} mbi limit.`}
+                </div>
+              )}
               {shumatEShpeshta.length > 0 && (
                 <div className="d-flex align-items-center flex-wrap gap-2 mt-2">
                   {shumatEShpeshta.map((item) => (

@@ -9,6 +9,32 @@ e fundit kur rregullohet diçka, dhe e para vetëm kur ndryshon vetë forma e pr
 herë, te `2.0.0`, kur të dhënat mësuan të dalin nga shfletuesi. Datat janë ato të commit-it që e
 ngriti versionin.
 
+## [2.36.0] - 2026-10-05
+
+### Shtuar
+- **Limiti i kartelës: sa keni ende në dispozicion.** Kartela me këste mbahej si borxh që numëron
+  teposhtë - sa keni paguar nga sa - edhe pse kartela s'është kredi që mbaron: banka ju jep një
+  limit, çdo blerje merr prej tij dhe çdo pagesë e liron sërish. Limiti s'kishte ku të shkruhej,
+  prandaj shkonte te shënimi, dhe një kartelë pa borxh nuk ruhej fare pa shkruar 0.01 si shumë. Tani
+  formulari i kartelës ka **«Limiti i kartelës»**: me të, kartela mund të nisë me 0, shirit i saj
+  tregon sa nga limiti është në përdorim, dhe nën të del **«Në dispozicion»** - p.sh. 854,21 € nga
+  1.000 € - njëlloj si te pasqyra e bankës. Kur e shlyeni, kartela nuk shënohet «e mbyllur»: limiti
+  vetëm lirohet. Edhe te «Shtesë» formulari ju thotë sa mbetet në dispozicion pas blerjes, ose me sa
+  e kalon limitin.
+- **Afati i pagesës çdo muaj.** Fusha e re **«Afati i pagesës çdo muaj»** (p.sh. 15, «Afati i fundit
+  i pagesës» te pasqyra) e kthen kartelën në tri shifra: sa keni **në dispozicion**, sa keni **për
+  të paguar** deri më 15 dhe sa ditë kanë mbetur, dhe **borxhin gjithsej**. Shuma për të paguar është
+  kësti i muajit nga blerjet me këste - pra vetë shuma minimale e bankës - dhe kur afati kalon pa u
+  paguar, e thotë me të kuqe. Pasi të paguhet, del pagesa e muajit tjetër me afatin e saj. Dita vlen
+  edhe për kreditë dhe borxhet me këst mujor. Paneli i ballinës tregon gjithashtu sa keni në
+  dispozicion dhe çka bie deri kur.
+
+### Ndryshuar
+- Te kartela, «Shuma e plotë» quhet tani «Borxhi aktual në kartelë», dhe «Afati i Fundit» quhet
+  «Shlyerja e plotë deri më» - që të mos ngatërrohet me afatin e pagesës që përsëritet çdo muaj.
+  Nëse keni shkruar 0.01 dhe limitin te shënimi, mjafton ta hapni kartelën, të shkruani limitin te
+  fusha e vet dhe ta ktheni shumën në 0.
+
 ## [2.35.0] - 2026-10-02
 
 ### Shtuar
