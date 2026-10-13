@@ -5,6 +5,26 @@ import { MENYRAT, permbledhjaLidhjes } from "../../lib/sinkronizimi";
 import { emriStorit, rreshtatKrahasimit } from "./emratStoreve";
 import "../ModalForms.css";
 
+function Zgjedhja({ vlera, zgjedhur, onZgjidh, ikona, titulli, ndihma, variant = "light" }) {
+  const aktive = vlera === zgjedhur;
+  return (
+    <button
+      type="button"
+      onClick={() => onZgjidh(vlera)}
+      className={`fcp-zgjedhje w-100 text-start p-3 mb-2 border rounded-3 bg-transparent ${
+        aktive ? `border-${variant === "danger" ? "danger" : "primary"}` : "border-secondary"
+      }`}
+      aria-pressed={aktive}
+    >
+      <div className="d-flex align-items-center gap-2 fw-bold mb-1">
+        {ikona}
+        {titulli}
+      </div>
+      <div className="fcp-row-sub">{ndihma}</div>
+    </button>
+  );
+}
+
 /**
  * The question a device is asked the first time it meets a cloud copy, before it is allowed to
  * push anything at all.
