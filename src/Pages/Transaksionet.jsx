@@ -3,7 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { Container, Row, Col, Form, Button } from "react-bootstrap";
 import {
   TrendingUp, TrendingDown, Percent, Hash, Filter, X, CopyPlus, Paperclip, CalendarDays, Sun,
-  ArrowRightLeft, SlidersHorizontal,
+  ArrowRightLeft, SlidersHorizontal, ReceiptText,
 } from "lucide-react";
 import NavBar from "../Components/NavBar";
 import Footer from "../Components/Footer";
@@ -12,6 +12,7 @@ import ButoniUdhezimit from "../Components/ButoniUdhezimit";
 import PageLoading from "../Components/PageLoading";
 import Tabela from "../Components/Tabela/Tabela";
 import ShtoTransaksionin from "../Components/ShtoTransaksionin";
+import RegjistroKuponin from "../Components/RegjistroKuponin";
 import FaturatModal from "../Components/Faturat/FaturatModal";
 import ZgjedhesiKategorive from "../Components/ZgjedhesiKategorive";
 import { Kpi } from "../Components/Ui";
@@ -42,6 +43,7 @@ function Transaksionet() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState(null);
+  const [kuponiHapur, setKuponiHapur] = useState(false);
   const [faturaTx, setFaturaTx] = useState(null);
   const [zgjedhjet, setZgjedhjet] = useState([]);
   const [llogariaSynim, setLlogariaSynim] = useState("");
@@ -237,7 +239,9 @@ function Transaksionet() {
   const onRepeat = (id) => {
     const tx = transactions.find((t) => t.id === id);
     if (!tx) return;
-    const { id: _id, krijuar: _krijuar, perseritjaId: _perseritjaId, borxhiId: _borxhiId, ...fushat } = tx;
+    // A coupon is one receipt: the repeat is a new purchase, not a second claim on the same one.
+    const { id: _id, krijuar: _krijuar, perseritjaId: _perseritjaId, borxhiId: _borxhiId, kuponi: _kuponi, ...fushat } =
+      tx;
     setEditing({ ...fushat, data: todayISO() });
     setShowModal(true);
   };
@@ -333,6 +337,9 @@ function Transaksionet() {
               <p>Të gjitha hyrjet, shpenzimet dhe transferet tuaja në një vend.</p>
               <ButoniUdhezimit className="mt-2" />
             </div>
+            <Button variant="outline-light" onClick={() => setKuponiHapur(true)}>
+              <ReceiptText size={16} className="me-1" /> Kupon fiskal
+            </Button>
           </div>
 
           <Row className="g-2 g-md-4">
@@ -538,6 +545,16 @@ function Transaksionet() {
             setEditing(null);
           }}
           initial={editing}
+        />
+
+        <RegjistroKuponin
+          show={kuponiHapur}
+          onHide={() => setKuponiHapur(false)}
+          onRuaj={(fushat) => {
+            setKuponiHapur(false);
+            setEditing(fushat);
+            setShowModal(true);
+          }}
         />
 
         <FaturatModal show={Boolean(faturaTx)} transaksioni={faturaTx} onHide={() => setFaturaTx(null)} />

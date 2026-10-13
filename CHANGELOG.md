@@ -9,6 +9,41 @@ e fundit kur rregullohet diçka, dhe e para vetëm kur ndryshon vetë forma e pr
 herë, te `2.0.0`, kur të dhënat mësuan të dalin nga shfletuesi. Datat janë ato të commit-it që e
 ngriti versionin.
 
+## [2.37.0] - 2026-10-13
+
+### Shtuar
+- **Kuponi fiskal: skanoni faturën, regjistrojeni te ATK dhe ruajeni si shpenzim.** Te
+  **Paneli** dhe te **Transaksionet**, butoni i ri **«Kupon fiskal»** e regjistron një faturë si kuponin tuaj te ATK,
+  njëlloj si aplikacioni i ATK-së: shkruani një herë numrin e telefonit me të cilin jeni regjistruar
+  te ATK (ai është ID-ja juaj e qytetarit; mund ta ruani edhe te **Cilësimet**, që të merret
+  gjithmonë vetë, dhe 044 123 456 pranohet njësoj si 383 44 123 456), pastaj skanoni kodin QR të faturës
+  me kamerë, zgjidhni një foto të saj, ose ngjitni tekstin e kodit. Kamera e anashkalon vetë çdo kod
+  tjetër në faturë (faqen e dyqanit, kartelën e besnikërisë) dhe ndalet te kuponi. Pas regjistrimit,
+  ATK tregon dyqanin, datën dhe orën e faturës, totalin dhe TVSH-në - dhe **«Ruaje si shpenzim»** hap
+  formularin e zakonshëm me to të plotësuara, me datën e faturës (jo të sotmen) dhe kategorinë që
+  aplikacioni e ka mësuar për atë dyqan. Llogarinë e zgjidhni ju. Një kupon që e keni ruajtur njëherë
+  njihet kur skanohet sërish dhe nuk ruhet dy herë.
+- **Kuponi tregohet si faturë, me gjithçka që di ATK:** emrin e dyqanit pa «SH.P.K.» (dhe emrin
+  zyrtar poshtë tij), NUI-në, njësinë dhe arkën, datën dhe orën, TVSH-në sipas normës, shumën pa TVSH,
+  totalin dhe kur u regjistrua.
+- **«Te kjo pikë»: aplikacioni e njeh dyqanin ku keni qenë.** Nën faturë del sa herë keni qenë aty
+  dhe sa keni shpenzuar - p.sh. «Hera e 3-të këtu · 20,20 € në 2 vizita» - i njohur nga kuponët e
+  mëparshëm të së njëjtës njësi (NUI + njësia), ose nga shpenzimet e shkruara me dorë me emrin e
+  dyqanit. Shpenzimi i ri hapet me **vendndodhjen e vizitës së fundit** atje, me kategorinë dhe me
+  emrin që e keni përdorur ju për atë dyqan. Vendndodhja merret vetëm nga e njëjta njësi (një zinxhir
+  ka shumë dyqane me të njëjtën NUI); kur vjen vetëm sipas emrit, thuhet «kontrollojeni». Për një
+  faturë të vjetër, telefoni nuk e merr vetë vendndodhjen - përndryshe shpenzimi i muajit të kaluar do
+  të shënohej në shtëpi.
+- Kërkon sinkronizimin me Supabase: ATK nuk u përgjigjet kërkesave nga një faqe interneti, prandaj
+  thirrja kalon përmes një funksioni të vogël në projektin tuaj, **`kuponi`**. Ai nuk mban asnjë
+  sekret dhe vetëm e përcjell kërkesën; hapat e instalimit (një herë, pa sekrete) janë te vetë
+  dritarja, te «Si instalohet».
+
+### Rregulluar
+- Dritarja që pyet një pajisje të sapolidhur çka të bëjë me të dhënat që gjenden tashmë në projekt
+  (Bashko / Merr nga projekti / Dërgo këtë pajisje) rrëzohej në hapje me «Zgjedhja is not defined»
+  dhe faqja kalonte te ekrani i gabimit. Tani hapet si duhet, me të tri zgjedhjet.
+
 ## [2.36.0] - 2026-10-05
 
 ### Shtuar

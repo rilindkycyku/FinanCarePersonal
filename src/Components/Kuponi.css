@@ -1,0 +1,305 @@
+/* ── Kuponi fiskal (RegjistroKuponin.jsx) ─────────────────────────────
+   Built on the theme variables only, so light mode needs no overrides of its own. */
+
+.fcp-kuponi-modal .modal-title small {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--sp-text-muted);
+  margin-top: 0.1rem;
+}
+
+.fcp-kuponi-ikona {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  border-radius: var(--sp-radius-md);
+  background: var(--sp-emerald-glow);
+  color: var(--sp-emerald);
+}
+
+.fcp-kuponi-titull {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--sp-text-muted);
+  margin-bottom: 0.5rem;
+}
+
+/* The phone number, once known: a line, not a field. */
+.fcp-kuponi-telefoni {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 0.75rem;
+  margin-bottom: 0.9rem;
+  border: 1px solid var(--sp-border);
+  border-radius: var(--sp-radius-md);
+  background: var(--sp-tint);
+  color: var(--sp-text-muted);
+}
+
+.fcp-kuponi-telefoni > div {
+  flex: 1;
+  min-width: 0;
+}
+
+.fcp-kuponi-telefoni strong {
+  display: block;
+  color: var(--sp-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.fcp-kuponi-telefoni span {
+  font-size: 0.75rem;
+}
+
+/* The scan target. */
+.fcp-kuponi-skano {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.3rem;
+  padding: 1.4rem 1rem 1.2rem;
+  border: 1.5px dashed var(--sp-border-glow);
+  border-radius: var(--sp-radius-lg);
+  background: linear-gradient(180deg, var(--sp-emerald-glow), transparent 75%);
+}
+
+.fcp-kuponi-skano > span:not(.fcp-kuponi-skano-rrethi) {
+  font-size: 0.8rem;
+  color: var(--sp-text-muted);
+}
+
+.fcp-kuponi-skano-rrethi {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  margin-bottom: 0.35rem;
+  border-radius: 50%;
+  background: var(--sp-surface);
+  border: 1px solid var(--sp-border-glow);
+  color: var(--sp-emerald);
+}
+
+.fcp-kuponi-skano-butonat {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 0.7rem;
+}
+
+.fcp-kuponi-skano.lexuar {
+  border-style: solid;
+  border-color: var(--sp-emerald);
+}
+
+.fcp-kuponi-skano.lexuar .fcp-kuponi-skano-rrethi {
+  background: var(--sp-emerald);
+  color: #ffffff;
+  border-color: var(--sp-emerald);
+}
+
+.fcp-kuponi-skano code {
+  font-size: 0.72rem;
+  color: var(--sp-text-muted);
+}
+
+.fcp-kuponi-teksti {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.75rem;
+  word-break: break-all;
+}
+
+/* Recent coupons. */
+.fcp-kuponi-te-fundit {
+  margin-top: 1rem;
+  padding-top: 0.8rem;
+  border-top: 1px solid var(--sp-border);
+}
+
+.fcp-kuponi-rresht {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: baseline;
+  gap: 0.75rem;
+  padding: 0.3rem 0;
+  font-size: 0.85rem;
+}
+
+.fcp-kuponi-rresht > span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fcp-kuponi-rresht strong {
+  font-variant-numeric: tabular-nums;
+}
+
+/* The receipt itself: a slip of paper with a torn bottom edge. */
+.fcp-fature {
+  position: relative;
+  padding: 1.1rem 1.1rem 1.6rem;
+  background: var(--sp-surface-2);
+  border: 1px solid var(--sp-border);
+  border-bottom: 0;
+  border-radius: var(--sp-radius-md) var(--sp-radius-md) 0 0;
+  font-variant-numeric: tabular-nums;
+  -webkit-mask: radial-gradient(circle 7px at 50% 100%, transparent 98%, #000 100%) bottom / 16px 100% repeat-x;
+  mask: radial-gradient(circle 7px at 50% 100%, transparent 98%, #000 100%) bottom / 16px 100% repeat-x;
+}
+
+.fcp-fature-vula {
+  position: absolute;
+  top: 0.8rem;
+  right: 0.8rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  background: var(--sp-emerald-glow);
+  color: var(--sp-emerald);
+}
+
+.fcp-fature-koka {
+  text-align: center;
+  margin: 0.4rem 0 0.9rem;
+}
+
+.fcp-fature-koka strong {
+  display: block;
+  font-size: 1.15rem;
+}
+
+.fcp-fature-koka span {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--sp-text-muted);
+}
+
+.fcp-fature hr {
+  margin: 0.6rem 0;
+  border: 0;
+  border-top: 1.5px dashed var(--sp-border);
+  opacity: 1;
+}
+
+.fcp-fature-rresht {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.15rem 0;
+  font-size: 0.85rem;
+}
+
+.fcp-fature-rresht > span:first-child {
+  color: var(--sp-text-muted);
+}
+
+.fcp-fature-totali {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.fcp-fature-totali span {
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--sp-text-muted);
+}
+
+.fcp-fature-totali strong {
+  font-size: 1.6rem;
+  color: var(--sp-emerald);
+}
+
+.fcp-fature-fundi {
+  margin-top: 0.7rem;
+  text-align: center;
+  font-size: 0.7rem;
+  line-height: 1.5;
+  color: var(--sp-text-muted);
+}
+
+/* What the ledger knows about the counter. */
+.fcp-kuponi-pika {
+  margin-top: 1rem;
+  padding: 0.85rem 0.9rem;
+  border: 1px solid var(--sp-border);
+  border-radius: var(--sp-radius-md);
+  background: var(--sp-tint);
+}
+
+.fcp-kuponi-pika-koka strong {
+  display: block;
+}
+
+.fcp-kuponi-pika-koka span {
+  font-size: 0.8rem;
+  color: var(--sp-text-muted);
+}
+
+.fcp-kuponi-cipat {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.7rem;
+}
+
+.fcp-kuponi-cip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  max-width: 100%;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  border: 1px dashed var(--sp-border);
+  color: var(--sp-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fcp-kuponi-cip.ka {
+  border-style: solid;
+  border-color: var(--sp-border-glow);
+  background: var(--sp-emerald-glow);
+  color: var(--sp-text-soft);
+}
+
+/* The camera: a frame to aim with. */
+.fcp-kuponi-kamera {
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
+}
+
+.fcp-kuponi-korniza {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: min(62vw, 46vh);
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  border-radius: 18px;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.35);
+  outline: 3px solid rgba(16, 185, 129, 0.9);
+  pointer-events: none;
+}

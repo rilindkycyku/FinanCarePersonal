@@ -26,6 +26,7 @@ import Ndihme from "../Components/Ndihme";
 import { kerkoLeje, lejaAktuale } from "../lib/njoftimet";
 import { CILESITE_FATURAVE, CILESIA_PARAZGJEDHUR } from "../lib/images";
 import { emriIPlote } from "../lib/kategorite";
+import { pastroIdQytetarit } from "../lib/kuponat";
 import "./Styles/PremiumTheme.css";
 import "./Styles/DizajniPergjithshem.css";
 import "./Styles/Dashboard.css";
@@ -42,6 +43,7 @@ function Cilesimet() {
     njoftimeLimiti: false, njoftimeBuxheti: false, njoftimeQellimi: false, njoftimePagesa: false,
     figuratSipasPeriudhes: false,
     cilesiaFaturave: CILESIA_PARAZGJEDHUR,
+    idQytetarit: "",
   });
   // Read once on mount and refreshed after asking: the browser answer can only change through the
   // button below or through the site settings, which reload the page anyway.
@@ -60,6 +62,7 @@ function Cilesimet() {
       njoftimeQellimi: Boolean(profile.njoftimeQellimi),
       njoftimePagesa: Boolean(profile.njoftimePagesa),
       cilesiaFaturave: profile.cilesiaFaturave || CILESIA_PARAZGJEDHUR,
+      idQytetarit: profile.idQytetarit || "",
     });
   }, [profile]);
 
@@ -79,6 +82,13 @@ function Cilesimet() {
 
   const handleSave = async (e) => {
     e.preventDefault();
+    // Optional, but when it is there it has to be a number ATK can file a coupon under - a typo
+    // saved here would otherwise surface only later, as a refused coupon.
+    const telefoni = form.idQytetarit.trim() ? pastroIdQytetarit(form.idQytetarit) : { ok: true, teksti: "" };
+    if (!telefoni.ok) {
+      await dialog.alert(telefoni.gabim, { title: "Numri i telefonit", variant: "danger" });
+      return;
+    }
     await saveProfile({
       ...profile,
       emri: form.emri.trim(),
@@ -92,6 +102,7 @@ function Cilesimet() {
       njoftimeQellimi: form.njoftimeQellimi,
       njoftimePagesa: form.njoftimePagesa,
       cilesiaFaturave: form.cilesiaFaturave,
+      idQytetarit: telefoni.teksti,
     });
     await dialog.alert("Cilësimet u ruajtën.", { title: "U krye", variant: "success" });
   };
@@ -398,6 +409,22 @@ function Cilesimet() {
                   <Ndihme className="fcp-row-sub mt-1">
                     {CILESITE_FATURAVE[form.cilesiaFaturave]?.ndihma} Vlen për fotot e reja; ato ekzistuese
                     ngjishen me butonin te faqja Eksporto / Importo.
+                  </Ndihme>
+                </Form.Group>
+
+                <Form.Group as={Col} md={6} controlId="form-idqytetarit">
+                  <Form.Label>Numri i telefonit për kuponët fiskal (ATK)</Form.Label>
+                  <Form.Control
+                    type="tel"
+                    inputMode="tel"
+                    autoComplete="tel"
+                    placeholder="p.sh. 383 44 123 456"
+                    value={form.idQytetarit}
+                    onChange={(e) => setField("idQytetarit", e.target.value)}
+                  />
+                  <Ndihme className="fcp-row-sub mt-1">
+                    Numri me të cilin jeni regjistruar te ATK - ai është ID-ja juaj e qytetarit. Merret gjithmonë vetë
+                    kur regjistroni një «Kupon fiskal». Me 383 përpara; edhe 044 123 456 pranohet.
                   </Ndihme>
                 </Form.Group>
 

@@ -429,6 +429,10 @@ function ShtoTransaksionin({
       grupiId: tx.grupiId || null,
       // Which receipt this row was split from, kept through an edit like the links above.
       ndarjaId: tx.ndarjaId || null,
+      // The ATK coupon this expense was booked from (RegjistroKuponin): its id, so the same receipt
+      // scanned again is recognised instead of spent twice, and the shop's NUI and unit, which is how
+      // the next coupon from there finds this visit (kuponat.js). Kept through an edit like the links above.
+      kuponi: tx.kuponi || null,
       ...monedhat,
     };
 
@@ -856,7 +860,7 @@ function ShtoTransaksionin({
                 onChange={(v) => setField("vendndodhja", v)}
                 transactions={transactions}
                 ekskludoId={tx.id}
-                automatike={Boolean(profile.vendndodhjaAutomatike) && !initial?.id && show}
+                automatike={Boolean(profile.vendndodhjaAutomatike) && !initial?.id && initial?.vendndodhjaAutomatike !== false && show}
               />
             </Col>
 

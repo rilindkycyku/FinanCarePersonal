@@ -293,6 +293,13 @@ sa shpenzohet, sa mbetet dhe sa po kursesh.
   krahasimin me periudhën e kaluar nën secilën shifër të kreut; kur keni objektiv kursimi, periudha
   matet ndaj tij. Pasqyra PDF që u shtohet emaileve ngjeshet (~70 kB për një muaj) dhe titullohet
   sipas periudhës - edhe për javën e tremujorin.
+- **Kuponi fiskal i ATK-së (opsional)** - te **Paneli** dhe te **Transaksionet**, butoni **«Kupon fiskal»** e
+  regjistron një faturë te ATK si kuponin tuaj, me kodin QR të saj: me kamerë (edhe në iPhone, ku
+  shfletuesi s'ka lexues të vetin dhe kodi lexohet nga `jsqr`), nga një foto, ose duke ngjitur
+  tekstin. ATK kthen dyqanin, datën, totalin dhe TVSH-në, dhe **«Ruaje si shpenzim»** hap formularin
+  me to të plotësuara; një kupon që është ruajtur njëherë njihet dhe nuk ruhet dy herë. Pasi ATK nuk
+  u përgjigjet kërkesave nga shfletuesi, thirrja kalon përmes një funksioni të vogël në projektin tuaj
+  Supabase (`supabase/functions/kuponi`), që vetëm e përcjell - pa sekrete, me *Verify JWT* të ndezur.
 - **Raportet me email (opsionale)** - katër raporte, secili me çelësin e vet: **javor**, **mujor**,
   **tremujor** dhe **vjetor**. Sa herë mbyllet një periudhë, hera e parë që hapet aplikacioni pas saj
   dërgon me email pasqyrën e asaj periudhe - shifrat kryesore, grafikët e periudhës (ditët e javës,
@@ -377,6 +384,11 @@ i plotë në të njëjtin shfletues. Ajo që mban të dhënat të mbyllura ësht
 fjalëkalim nuk lexon dot asnjë rresht. Çelësat *secret* dhe *service_role* nuk pranohen fare. «Pastro të gjitha të dhënat» e harron edhe këtë
 lidhje, që një pajisje e pastruar të mos i shkarkojë të gjitha sërish në sinkronizimin e radhës;
 kopja te projekti juaj mbetet derisa ta fshini vetë nga po ajo faqe.
+
+Kuponi fiskal është rasti i dytë, dhe po ashtu vetëm me kërkesën tuaj: kur shtypni «Regjistro
+kuponin», ID-ja juaj te ATK dhe teksti i kodit QR shkojnë te funksioni `kuponi` në projektin tuaj, e
+prej aty te `fiskalizimi.atk-ks.org` - pikërisht ajo që bën edhe aplikacioni i ATK-së. Asgjë tjetër
+nga libri i llogarive nuk niset.
 
 Kufiri i vetëm është kuota që shfletuesi i jep kësaj faqeje, dhe fotot janë e vetmja gjë që i
 afrohet asaj; prandaj ato zvogëlohen para se të ruhen, ndahen nga pjesa tjetër e bazës (vetëm

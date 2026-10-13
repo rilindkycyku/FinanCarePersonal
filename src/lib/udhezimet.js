@@ -174,6 +174,15 @@ export const UDHEZIMET = [
           "prandaj buxhetet dhe statistikat i numërojnë secilën te kategoria e saj.",
       },
       {
+        titulli: "Kuponi fiskal: skanoni faturën",
+        teksti:
+          "Butoni «Kupon fiskal» (sipër kësaj faqeje dhe te Paneli) e regjistron faturën te ATK si kuponin tuaj: skanoni kodin QR me " +
+          "kamerë, zgjidhni një foto të faturës ose ngjitni tekstin e kodit. ATK kthen dyqanin, datën, totalin dhe " +
+          "TVSH-në, si dhe sa herë keni qenë te ajo pikë. «Ruaje si shpenzim» hap formularin me to të plotësuara, " +
+          "me vendndodhjen, kategorinë dhe emrin nga vizita juaj e fundit atje - ju zgjidhni vetëm llogarinë. " +
+          "Kalon përmes projektit tuaj Supabase (funksioni «kuponi»), sepse ATK nuk i përgjigjet shfletuesit direkt.",
+      },
+      {
         titulli: "Transferi është lloj më vete",
         teksti:
           "Një transfer lëviz para mes dy llogarive tuaja, prandaj nuk numërohet as si hyrje as si shpenzim " +

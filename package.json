@@ -1,7 +1,7 @@
 {
   "name": "financarepersonal",
   "private": true,
-  "version": "2.36.0",
+  "version": "2.37.0",
   "type": "module",
   "scripts": {
     "dev": "vite --host",
@@ -20,6 +20,7 @@
     "file-saver": "^2.0.5",
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.8",
+    "jsqr": "^1.4.0",
     "lucide-react": "^0.562.0",
     "pdfjs-dist": "^4.10.38",
     "qrcode": "^1.5.4",

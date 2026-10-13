@@ -5,7 +5,7 @@ import {
   LayoutDashboard, Wallet, TrendingUp, TrendingDown, PiggyBank, Percent, PlusCircle,
   ArrowRightLeft, Tags, Target, Repeat, BarChart3, Settings, DatabaseBackup, CalendarClock,
   Receipt, ClipboardList, LineChart, TriangleAlert, FileSpreadsheet, Paperclip, BookOpen,
-  ChevronRight, Plane,
+  ChevronRight, Plane, ReceiptText,
 } from "lucide-react";
 import NavBar from "../Components/NavBar";
 import PageTitle from "../Components/PageTitle";
@@ -14,6 +14,7 @@ import PageLoading from "../Components/PageLoading";
 import Footer from "../Components/Footer";
 import ButoniUdhezimit from "../Components/ButoniUdhezimit";
 import ShtoTransaksionin from "../Components/ShtoTransaksionin";
+import RegjistroKuponin from "../Components/RegjistroKuponin";
 import ButonPasqyra from "../Components/ButonPasqyra";
 import ShpenzimiDitor from "../Components/ShpenzimiDitor";
 import UdhetimiNeVazhdim from "../Components/UdhetimiNeVazhdim";
@@ -58,6 +59,9 @@ function Dashboard() {
     error,
     money, signedMoney, njeLlogari, llogariaKryesore, sipasPeriudhes } = useData();
   const [showTx, setShowTx] = useState(false);
+  // The expense a scanned coupon opens the form with; null for a plain «Transaksion i Ri».
+  const [txFillestar, setTxFillestar] = useState(null);
+  const [kuponiHapur, setKuponiHapur] = useState(false);
 
   const today = todayISO();
   const muajiKey = monthKey();
@@ -143,8 +147,18 @@ function Dashboard() {
                 <ButoniUdhezimit />
               </Col>
               <Col xs="auto" className="d-flex flex-wrap gap-2">
-                <button type="button" className="hero-cta" onClick={() => setShowTx(true)}>
+                <button
+                  type="button"
+                  className="hero-cta"
+                  onClick={() => {
+                    setTxFillestar(null);
+                    setShowTx(true);
+                  }}
+                >
                   <PlusCircle size={18} /> Transaksion i Ri
+                </button>
+                <button type="button" className="hero-cta ghost" onClick={() => setKuponiHapur(true)}>
+                  <ReceiptText size={18} /> Kupon fiskal
                 </button>
                 <ButonPasqyra />
               </Col>
@@ -675,7 +689,23 @@ function Dashboard() {
           )}
         </Container>
 
-        <ShtoTransaksionin show={showTx} onHide={() => setShowTx(false)} />
+        <ShtoTransaksionin
+          show={showTx}
+          onHide={() => {
+            setShowTx(false);
+            setTxFillestar(null);
+          }}
+          initial={txFillestar}
+        />
+        <RegjistroKuponin
+          show={kuponiHapur}
+          onHide={() => setKuponiHapur(false)}
+          onRuaj={(fushat) => {
+            setKuponiHapur(false);
+            setTxFillestar(fushat);
+            setShowTx(true);
+          }}
+        />
       </main>
 
       <Footer />
