@@ -241,6 +241,13 @@ function PanelaSinkronizimit() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gabim, sqlHapur]);
 
+  // When the last sync finished - the trigger for re-reading the cloud below. The string, not the
+  // `fundit` object: every write to the saved configuration (a refreshed token, the schema check
+  // recording its answer) parses `fundit` afresh from localStorage, so the object is new each time
+  // even when no sync happened - and since those reads themselves write the configuration, depending
+  // on the object re-ran them for ever (about 1500 requests a minute while this page was open).
+  const sinkronizuarMe = konfigurimi.fundit?.kur || "";
+
   // How much is up there, asked once per visit - the one number that answers "did it really go?".
   useEffect(() => {
     if (!lidhur) {
@@ -261,7 +268,7 @@ function PanelaSinkronizimit() {
     return () => {
       anuluar = true;
     };
-  }, [lidhur, konfigurimi.fundit]);
+  }, [lidhur, sinkronizuarMe]);
 
   // The devices this project has seen, and the last rows written to it. Both are read only on a
   // connected device and refreshed after every sync, since a sync is the only thing that changes
@@ -286,7 +293,7 @@ function PanelaSinkronizimit() {
     return () => {
       anuluar = true;
     };
-  }, [lidhur, konfigurimi.fundit]);
+  }, [lidhur, sinkronizuarMe]);
 
   /**
    * The decision dialog opens by itself the first time a connected device lands here without
@@ -320,7 +327,7 @@ function PanelaSinkronizimit() {
     return () => {
       anuluar = true;
     };
-  }, [lidhur, konfigurimi.fundit]);
+  }, [lidhur, sinkronizuarMe]);
 
   /**
    * The warnings this page can raise, said in the app's own dialog rather than only in a banner.

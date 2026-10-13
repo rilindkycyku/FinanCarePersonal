@@ -43,6 +43,10 @@ ngriti versionin.
 - Dritarja që pyet një pajisje të sapolidhur çka të bëjë me të dhënat që gjenden tashmë në projekt
   (Bashko / Merr nga projekti / Dërgo këtë pajisje) rrëzohej në hapje me «Zgjedhja is not defined»
   dhe faqja kalonte te ekrani i gabimit. Tani hapet si duhet, me të tri zgjedhjet.
+- Faqja **Sinkronizimi** pyeste projektin pa pushim sa kohë qëndronte e hapur - mijëra kërkesa në
+  minutë - sepse çdo leximi i gjendjes ruante një shënim të vogël, dhe ai shënim e nxiste sërish
+  leximin. Tani projekti pyetet një herë kur hapet faqja dhe një herë pas çdo sinkronizimi, siç ishte
+  menduar. Plani falas i Supabase-it nuk harxhohet më kot.
 
 ## [2.36.0] - 2026-10-05
 
