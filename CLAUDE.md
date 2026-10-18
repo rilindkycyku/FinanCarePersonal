@@ -39,6 +39,10 @@ npm run ikonat    # regenerates the icons and the two wordmark PNGs from Logo.sv
 Always run `npm test` and `npm run lint` before committing. `npm run ikonat` is *not* part of the
 build — the PNGs are committed; run it only if the logo changes.
 
+**Commit and push directly to `main`** - the owner's standing instruction. Do not work on a separate
+branch or open a pull request, even when a session was started on its own branch: fetch `origin main`,
+commit on top of it, and `git push origin HEAD:main`.
+
 ## Language & naming conventions
 
 This is the most surprising thing about the codebase, so get it right:
