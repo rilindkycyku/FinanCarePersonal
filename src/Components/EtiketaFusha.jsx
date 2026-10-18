@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Tag, X } from "lucide-react";
 import {
   celesiEtiketes, GJATESIA_MAX, ndajEtiketat, ngjyraEtiketes, normalizoEtiketen, NUMRI_MAX,
@@ -24,6 +24,11 @@ const KUFIRI_SUGJERIMEVE = 8;
 function EtiketaFusha({ etiketat = [], onChange, sugjerime = [], ndihma }) {
   const [teksti, setTeksti] = useState("");
   const [teGjitha, setTeGjitha] = useState(false);
+  // Set from the moment a finger/mouse goes down on a suggestion until its click lands. Tapping a
+  // suggestion blurs the input first, and the blur used to commit the half-typed text ("Clau"),
+  // which emptied the search, re-filtered the row and moved "Claude" out from under the finger -
+  // so the tap added the fragment and the suggestion itself never got its click.
+  const zgjedhSugjerim = useRef(false);
 
   const zgjedhura = useMemo(() => new Set(etiketat.map((e) => celesiEtiketes(e))), [etiketat]);
   const plot = etiketat.length >= NUMRI_MAX;
@@ -90,7 +95,15 @@ function EtiketaFusha({ etiketat = [], onChange, sugjerime = [], ndihma }) {
           onKeyDown={tastet}
           // Leaving the field keeps what was typed rather than throwing it away - the common way to
           // lose a tag is to type it and then reach straight for "Ruaj".
-          onBlur={() => shto(teksti)}
+          onBlur={() => {
+            // Skipped once, then cleared here - a press that slid off the suggestion never clicks,
+            // and must not stop the next blur from keeping what was typed.
+            if (zgjedhSugjerim.current) {
+              zgjedhSugjerim.current = false;
+              return;
+            }
+            shto(teksti);
+          }}
         />
       </div>
 
@@ -102,7 +115,15 @@ function EtiketaFusha({ etiketat = [], onChange, sugjerime = [], ndihma }) {
               key={s.celesi}
               className="fcp-etiketa-sugjerim"
               style={{ "--etiketa-color": ngjyraEtiketes(s.celesi) }}
-              onClick={() => shto(s.emri)}
+              // pointerdown comes before the input's blur on touch and mouse alike.
+              onPointerDown={() => { zgjedhSugjerim.current = true; }}
+              // A drag that becomes a scroll of the suggestion row never clicks.
+              onPointerCancel={() => { zgjedhSugjerim.current = false; }}
+              // The tapped tag replaces what was being typed (shto clears the input), it does not join it.
+              onClick={() => {
+                zgjedhSugjerim.current = false;
+                shto(s.emri);
+              }}
             >
               {s.emri}
               <span className="fcp-etiketa-numri">{s.numri}</span>

@@ -9,6 +9,15 @@ e fundit kur rregullohet diçka, dhe e para vetëm kur ndryshon vetë forma e pr
 herë, te `2.0.0`, kur të dhënat mësuan të dalin nga shfletuesi. Datat janë ato të commit-it që e
 ngriti versionin.
 
+## [2.37.1] - 2026-10-18
+
+### Rregulluar
+- **Një etiketë e sugjeruar zgjidhet sërish me një prekje, edhe kur keni filluar ta shkruani.** Po
+  të shkruanit «Clau» dhe prekni sugjerimin «Claude», në telefon shtohej «Clau» - ose asgjë - në
+  vend të «Claude». Fusha i ruan ende si etiketë shkronjat e shkruara kur e lini (që një etiketë e
+  shkruar të mos humbet kur shtypni menjëherë «Ruaj»), por tani jo kur e lini pikërisht për të prekur
+  një sugjerim: sugjerimi zë vendin e asaj që po shkruanit.
+
 ## [2.37.0] - 2026-10-13
 
 ### Shtuar
