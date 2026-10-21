@@ -24,7 +24,7 @@ import { emriIPlote, kategoriTeHapura } from "../lib/kategorite";
 import { pastroVendndodhjen } from "../lib/vendndodhjet";
 import { aplikoUdhetimin, udhetimiPerFormular } from "../lib/udhetimet";
 import { debtTypeMeta } from "../lib/options";
-import { VEPRIMET_E_BORXHIT, perditesoLidhjen, regjistroNeBorxh, sugjeroBorxhet, veprimiIBorxhit } from "../lib/huat";
+import { VEPRIMET_E_BORXHIT, kategoriaPerVeprimin, perditesoLidhjen, regjistroNeBorxh, sugjeroBorxhet, veprimiIBorxhit } from "../lib/huat";
 import "./ModalForms.css";
 
 const TYPE_BUTTONS = [
@@ -315,7 +315,12 @@ function ShtoTransaksionin({
    */
   const zgjidhVeprimin = (value) => {
     setLidhja((prev) => ({ ...prev, aktiv: true, veprimi: value }));
-    if (tx.lloji === "shpenzim" && veprimiIBorxhit("shpenzim", value)?.value === "jap") setField("ritmi", RITMI_MUJOR);
+    const veprimi = veprimiIBorxhit(tx.lloji, value);
+    if (veprimi?.value === "jap") setField("ritmi", RITMI_MUJOR);
+    // «Hua e Dhënë», «Hua e Marrë» and the two return categories - so the category is not one more
+    // thing to look for after the action already said what this is.
+    const kategoria = kategoriaPerVeprimin(veprimi, tx.kategoriaId, categories);
+    if (kategoria) setField("kategoriaId", kategoria);
   };
 
   const zgjidhBorxhin = (d) => {

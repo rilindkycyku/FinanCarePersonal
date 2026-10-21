@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { normalizoEmrin, perditesoLidhjen, regjistroNeBorxh, sugjeroBorxhet, veprimiIBorxhit } from "./huat";
+import { kategoriaPerVeprimin, normalizoEmrin, perditesoLidhjen, regjistroNeBorxh, sugjeroBorxhet, veprimiIBorxhit } from "./huat";
 
 const makeId = (p) => `${p}_x`;
 const hua = (id, extra = {}) => ({ id, emri: id, lloji: "huadhene", vleraTotale: 50, pagesat: [], ...extra });
@@ -130,5 +130,26 @@ describe("editing a linked transaction", () => {
 
   it("leaves a note alone that no longer counts this transaction", () => {
     expect(perditesoLidhjen(hua("Gzimi"), rekordi())).toBeNull();
+  });
+});
+
+describe("the category an action fills in", () => {
+  const categories = [
+    { id: "cat_default_hua_dhene", lloji: "shpenzim" },
+    { id: "cat_default_kredi_borxh", lloji: "shpenzim" },
+    { id: "cat_default_hua_marre", lloji: "hyrje", arkivuar: true },
+    { id: "ushqim", lloji: "shpenzim" },
+  ];
+
+  it("fills an empty field, and follows a switch between actions", () => {
+    expect(kategoriaPerVeprimin(veprimiIBorxhit("shpenzim", "jap"), "", categories)).toBe("cat_default_hua_dhene");
+    expect(kategoriaPerVeprimin(veprimiIBorxhit("shpenzim", "kthej"), "cat_default_hua_dhene", categories)).toBe(
+      "cat_default_kredi_borxh"
+    );
+  });
+
+  it("leaves a category picked by hand, and does not bring back an archived one", () => {
+    expect(kategoriaPerVeprimin(veprimiIBorxhit("shpenzim", "jap"), "ushqim", categories)).toBeNull();
+    expect(kategoriaPerVeprimin(veprimiIBorxhit("hyrje", "marr"), "", categories)).toBeNull();
   });
 });

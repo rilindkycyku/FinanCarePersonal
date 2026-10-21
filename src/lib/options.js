@@ -609,6 +609,11 @@ export const DEFAULT_CATEGORIES = [
   // category of the right direction, and there was none. Pension, social support and scholarships
   // are the regular income of whole groups of users who have no salary to file them under, and money
   // sent home from the diaspora is a regular line in many Kosovo households.
+  // Money lent and money borrowed are neither spending nor earning in the everyday sense, and filing
+  // them under "Të Tjera" hid them in every statistic. Their own lines make them visible - and they
+  // are what the transaction form picks by itself for «I dhashë hua» / «Mora hua» (huat.js).
+  { id: "cat_default_hua_dhene", emri: "Hua e Dhënë", lloji: "shpenzim", ngjyra: "#10b981", ikona: "HandCoins" },
+  { id: "cat_default_hua_marre", emri: "Hua e Marrë", lloji: "hyrje", ngjyra: "#f43f5e", ikona: "Handshake" },
   { id: "cat_default_kredi_borxh", emri: "Kthim Borxhi Personal", lloji: "shpenzim", prindi: "cat_default_kredi", ngjyra: "#64748b", ikona: "Handshake" },
   { id: "cat_default_taksa_gjoba", emri: "Gjoba & Penale", lloji: "shpenzim", prindi: "cat_default_taksa", ngjyra: "#64748b", ikona: "Scale" },
   { id: "cat_default_dhurata_fetare", emri: "Bajrami & Festat Fetare", lloji: "shpenzim", prindi: "cat_default_dhurata", ngjyra: "#ef4444", ikona: "Sparkles" },

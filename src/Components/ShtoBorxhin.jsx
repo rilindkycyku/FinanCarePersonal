@@ -76,7 +76,10 @@ function ShtoBorxhin({ show, onHide, initial, llojiFillestar }) {
     setLlogariaId(
       lidhur?.llogariaId || (njeLlogari ? llogariaKryesore?.id : aktive.length === 1 ? aktive[0].id : "") || ""
     );
-    setKategoriaHuas(lidhur?.kategoriaId || "");
+    setKategoriaHuas(
+      lidhur?.kategoriaId ||
+        (categories.some((c) => c.id === "cat_default_hua_dhene" && !c.arkivuar) ? "cat_default_hua_dhene" : "")
+    );
     setDebt(
       initial
         ? {

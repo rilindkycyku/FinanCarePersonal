@@ -125,7 +125,7 @@ function ShtoPagesenBorxhit({ show, onHide, borxhi, initial }) {
       if (llojiITransaksionit(prev.lloji) === llojiTx) return { ...prev, lloji };
       const ngaHuaja = borxhi?.transaksioniId ? transactions.find((t) => t.id === borxhi.transaksioniId)?.kategoriaId : null;
       const ngaShenimi = borxhi?.kategoriaId;
-      const kandidati = llojiTx === "shpenzim" ? ngaHuaja : ngaShenimi;
+      const kandidati = llojiTx === "shpenzim" ? ngaHuaja || "cat_default_hua_dhene" : ngaShenimi;
       const pershtatet = categories.some((c) => c.id === kandidati && c.lloji === llojiTx);
       return { ...prev, lloji, kategoriaId: pershtatet ? kandidati : "" };
     });

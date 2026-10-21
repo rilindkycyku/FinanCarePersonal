@@ -25,16 +25,31 @@ import { toNumber } from "./format";
 import { debtProgress } from "./finance";
 import { debtTypeMeta } from "./options";
 
+/** `kategoria` is the starter category the form fills in for the action (options.js), while it is there. */
 export const VEPRIMET_E_BORXHIT = {
   shpenzim: [
-    { value: "jap", label: "I dhashë hua", drejtimi: "kerkese", rreshti: "shtese", llojiIRi: "huadhene" },
-    { value: "kthej", label: "Ia ktheva borxhin", drejtimi: "detyrim", rreshti: "pagese" },
+    { value: "jap", label: "I dhashë hua", drejtimi: "kerkese", rreshti: "shtese", llojiIRi: "huadhene", kategoria: "cat_default_hua_dhene" },
+    { value: "kthej", label: "Ia ktheva borxhin", drejtimi: "detyrim", rreshti: "pagese", kategoria: "cat_default_kredi_borxh" },
   ],
   hyrje: [
-    { value: "kthim", label: "Më ktheu huanë", drejtimi: "kerkese", rreshti: "pagese" },
-    { value: "marr", label: "Mora hua", drejtimi: "detyrim", rreshti: "shtese", llojiIRi: "borxh" },
+    { value: "kthim", label: "Më ktheu huanë", drejtimi: "kerkese", rreshti: "pagese", kategoria: "cat_default_rimbursim_borxh" },
+    { value: "marr", label: "Mora hua", drejtimi: "detyrim", rreshti: "shtese", llojiIRi: "borxh", kategoria: "cat_default_hua_marre" },
   ],
 };
+
+/**
+ * The category to put in the form when an action is chosen, or null to leave the field alone.
+ *
+ * Only an empty field, or one still holding what another action filled in, is changed: a category
+ * the user picked by hand is their answer. The starter category has to be there and not archived -
+ * one the user deleted is not brought back through this.
+ */
+export function kategoriaPerVeprimin(veprimi, kategoriaAktuale, categories = []) {
+  if (!veprimi?.kategoria) return null;
+  const teVeprimeve = Object.values(VEPRIMET_E_BORXHIT).flat().map((v) => v.kategoria);
+  if (kategoriaAktuale && !teVeprimeve.includes(kategoriaAktuale)) return null;
+  return categories.some((c) => c.id === veprimi.kategoria && !c.arkivuar) ? veprimi.kategoria : null;
+}
 
 /** The action a transaction type offers first: lending is what started all this. */
 export function veprimiIBorxhit(llojiTx, value) {

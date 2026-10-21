@@ -34,6 +34,11 @@ ngriti versionin.
   krijon vetë një shënim të ri me atë emër. Një kthim pa asnjë hua me atë emër nuk krijon gjë - ka
   shumë gjasa që emri të jetë shkruar gabim. «I dhashë hua» e shënon vetë shpenzimin si mujor, dhe
   ndryshimi më vonë i shumës ose datës së transaksionit e ndjek edhe shënimin te Borxhet.
+- **Kategoritë e reja «Hua e Dhënë» (shpenzim) dhe «Hua e Marrë» (hyrje).** Deri tani huatë
+  përfundonin te «Të Tjera» dhe humbnin në statistika. Ato shtohen vetë te lista e kategorive (edhe në
+  pajisjet që e kanë hapur aplikacionin më parë), dhe formulari i zgjedh vetë sipas veprimit: «I
+  dhashë hua» → Hua e Dhënë, «Mora hua» → Hua e Marrë, «Ia ktheva borxhin» → Kthim Borxhi Personal,
+  «Më ktheu huanë» → Borxh i Kthyer. Një kategori e zgjedhur me dorë nuk ndërrohet.
 - Huatë e regjistruara më parë nuk preken: një shënim i vjetër hapet me kutinë të pashënjuar, që të
   mos regjistrohet dy herë një hua që e keni shënuar tashmë me dorë si shpenzim.
 
