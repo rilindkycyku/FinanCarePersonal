@@ -1534,6 +1534,43 @@ export function debtPaymentsFromTransactions(debts, transactions, makeIdFn) {
 }
 
 /**
+ * The transaction that books money lent out ("hua e dhënë") against a real account - the note's
+ * opening amount, or a "shtesë" line when more is lent later.
+ *
+ * Lent money is gone from the wallet, so it has to leave the balance and the daily allowance has to
+ * shrink with it. But it is not today's spending: charging 200 € lent to a friend to the day it was
+ * handed over reports a blown day that never happened, the same way a tank of fuel would. So it is
+ * booked as an expense marked **monthly** (`RITMI_MUJOR`), which `dailyLimit` spreads over the days
+ * left in the month instead. It still counts in the month's expense statistics - when the money comes
+ * back, the "kthim" line books it as income, and the two meet again.
+ *
+ * Pure: the caller persists the record. `borxhiId` keeps the link to the note for the record's
+ * own sake; nothing pays the note down from it (`debtPaymentsFromTransactions` only reads recurring
+ * batches), so a loan given can never be mistaken for a repayment.
+ */
+export function transaksioniIHuas({ id, borxhi, vlera, data, llogariaId, kategoriaId, shenim = "", krijuar }) {
+  return {
+    id,
+    data,
+    lloji: "shpenzim",
+    vlera: toNumber(vlera),
+    llogariaId,
+    llogariaDestinacionId: null,
+    kategoriaId,
+    pershkrimi: `Hua e dhënë: ${borxhi.kreditori || borxhi.emri}`,
+    shenim,
+    qellimiId: null,
+    perseritjaId: null,
+    borxhiId: borxhi.id,
+    ritmi: RITMI_MUJOR,
+    monedhaOrigjinale: null,
+    vleraOrigjinale: null,
+    kursi: null,
+    krijuar,
+  };
+}
+
+/**
  * How fast a note is actually being paid off, and where that pace lands it.
  *
  * A debt note already says what is left. What it never said is the thing anyone actually wants to

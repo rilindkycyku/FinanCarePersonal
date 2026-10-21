@@ -336,6 +336,14 @@ export const UDHEZIMET = [
           "kthen para, borxhi zbret dhe llogaria juaj shtohet.",
       },
       {
+        titulli: "Hua e dhënë: zbriteni nga llogaria",
+        teksti:
+          "Kur i jepni dikujt para, shënjoni «Zbrite edhe nga llogaria» - te hua e re, ose te «Shtesë» kur i " +
+          "jepni sërish dikujt që e keni tashmë në listë (edhe kur është në arkivë: shtesa e nxjerr prej saj). " +
+          "Paratë dalin nga llogaria si shpenzim mujor: «Shpenzuar sot» nuk ndryshon, por limiti ditor " +
+          "zvogëlohet pak për çdo ditë që ka mbetur në muaj.",
+      },
+      {
         titulli: "Këstet",
         teksti:
           "Te një kartelë me këste, çdo «Shtesë» ka fushën «Në sa këste»: blerja ndahet në aq muaj, me këstin e " +

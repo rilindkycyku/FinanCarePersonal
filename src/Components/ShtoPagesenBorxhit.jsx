@@ -7,7 +7,7 @@ import Ndihme from "./Ndihme";
 import ZgjedhesiKategorive from "./ZgjedhesiKategorive";
 import { makeId, STORES } from "../lib/db";
 import { toNumber, todayISO, formatMoney } from "../lib/format";
-import { LLOJET_ME_KESTE_PER_BLERJE, debtInstallments, debtProgress } from "../lib/finance";
+import { LLOJET_ME_KESTE_PER_BLERJE, debtInstallments, debtProgress, transaksioniIHuas } from "../lib/finance";
 import { debtTypeMeta } from "../lib/options";
 import { kategoriTeHapura } from "../lib/kategorite";
 import "./ModalForms.css";
@@ -35,6 +35,11 @@ const blank = (lloji = "pagese") => ({
  * deleting it can take the transaction with it. The note stays the source of truth for the debt's
  * progress, so a transaction deleted from the Transaksionet page just leaves the line as a plain
  * note instead of corrupting the balance owed.
+ *
+ * On a loan given ("hua e dhënë") a "shtesë" is more money handed over, which - unlike a new charge
+ * on a card - does leave an account. So there it can be booked too, the same way the note's opening
+ * amount is (`transaksioniIHuas`): a monthly expense, so the daily allowance shrinks without today's
+ * spending jumping.
  */
 function ShtoPagesenBorxhit({ show, onHide, borxhi, initial }) {
   const { accounts, categories, transactions, recurring, saveMany, destroyMany, simboli, monedha, njeLlogari, llogariaKryesore } =
@@ -45,8 +50,10 @@ function ShtoPagesenBorxhit({ show, onHide, borxhi, initial }) {
 
   const meta = debtTypeMeta(borxhi?.lloji);
   const kerkese = meta.drejtimi === "kerkese";
-  // Getting money back from someone you lent to is income; every other payment is an expense.
-  const txLloji = kerkese ? "hyrje" : "shpenzim";
+  // Getting money back from someone you lent to is income; lending them more, and every other
+  // payment, is an expense.
+  const llojiITransaksionit = (llojiRreshtit) => (kerkese && llojiRreshtit !== "shtese" ? "hyrje" : "shpenzim");
+  const txLloji = llojiITransaksionit(entry.lloji);
 
   const aktive = useMemo(() => accounts.filter((a) => !a.arkivuar), [accounts]);
 
@@ -73,9 +80,10 @@ function ShtoPagesenBorxhit({ show, onHide, borxhi, initial }) {
     // below cannot even show (it lists income categories only) and which files the return under a
     // spending category. Anything that does not fit the transaction is dropped, so the field is
     // empty and has to be answered - the save already refuses to go through without it.
+    const llojiTx = llojiITransaksionit(initial?.lloji || "pagese");
     const kategoriaQePershtatet = (id) => {
       const kategoria = categories.find((c) => c.id === id);
-      return kategoria?.lloji === txLloji ? id : "";
+      return kategoria?.lloji === llojiTx ? id : "";
     };
     setEntry(
       initial
@@ -101,13 +109,32 @@ function ShtoPagesenBorxhit({ show, onHide, borxhi, initial }) {
             kategoriaId: kategoriaQePershtatet(borxhi?.kategoriaId),
           }
     );
-  }, [show, initial, borxhi, transactions, categories, txLloji, aktive, njeLlogari, llogariaKryesore]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `llojiITransaksionit` only reads `kerkese`, which follows `borxhi`
+  }, [show, initial, borxhi, transactions, categories, aktive, njeLlogari, llogariaKryesore]);
 
   const setField = (name, value) => setEntry((prev) => ({ ...prev, [name]: value }));
 
+  /**
+   * Switching between "kthim" and "shtesë" on a loan given flips the transaction from income to
+   * expense, so a category picked for one cannot stay for the other. The expense side starts from
+   * the category the loan itself was booked under, when it was.
+   */
+  const ndryshoLlojin = (lloji) =>
+    setEntry((prev) => {
+      const llojiTx = llojiITransaksionit(lloji);
+      if (llojiITransaksionit(prev.lloji) === llojiTx) return { ...prev, lloji };
+      const ngaHuaja = borxhi?.transaksioniId ? transactions.find((t) => t.id === borxhi.transaksioniId)?.kategoriaId : null;
+      const ngaShenimi = borxhi?.kategoriaId;
+      const kandidati = llojiTx === "shpenzim" ? ngaHuaja : ngaShenimi;
+      const pershtatet = categories.some((c) => c.id === kandidati && c.lloji === llojiTx);
+      return { ...prev, lloji, kategoriaId: pershtatet ? kandidati : "" };
+    });
+
   const isShtese = entry.lloji === "shtese";
-  // A new charge on a card never leaves a bank account, so there is nothing to book against one.
-  const mundLidhet = !isShtese && aktive.length > 0;
+  // A new charge on a card never leaves a bank account, so there is nothing to book against one -
+  // but more money lent out does.
+  const mundLidhet = (!isShtese || kerkese) && aktive.length > 0;
+  const huaERe = kerkese && isShtese;
   // On an instalment card each purchase is split into its own number of months.
   const kestePerBlerje = isShtese && LLOJET_ME_KESTE_PER_BLERJE.includes(borxhi?.lloji);
   const nrKesteve = Math.floor(toNumber(entry.nrKesteve));
@@ -250,6 +277,9 @@ function ShtoPagesenBorxhit({ show, onHide, borxhi, initial }) {
         STORES.borxhet,
         {
           ...borxhi,
+          // More money lent on a note that was paid back and put away: it is open again, so it comes
+          // back out of the archive instead of hiding a sum still owed.
+          arkivuar: isShtese ? false : borxhi.arkivuar,
           pagesat: initial
             ? pagesat.map((p) => (p.id === rreshti.id ? rreshti : p))
             : [...pagesat, rreshti],
@@ -257,7 +287,25 @@ function ShtoPagesenBorxhit({ show, onHide, borxhi, initial }) {
       ],
     ];
 
-    if (lidhet) {
+    const krijuarTx = transactions.find((t) => t.id === transaksioniId)?.krijuar || rreshti.krijuar;
+    if (lidhet && huaERe) {
+      records.push([
+        STORES.transactions,
+        {
+          ...transactions.find((t) => t.id === transaksioniId),
+          ...transaksioniIHuas({
+            id: transaksioniId,
+            borxhi,
+            vlera,
+            data: entry.data,
+            llogariaId: entry.llogariaId,
+            kategoriaId: entry.kategoriaId,
+            shenim: entry.shenim.trim(),
+            krijuar: krijuarTx,
+          }),
+        },
+      ]);
+    } else if (lidhet) {
       records.push([
         STORES.transactions,
         {
@@ -276,7 +324,7 @@ function ShtoPagesenBorxhit({ show, onHide, borxhi, initial }) {
           monedhaOrigjinale: null,
           vleraOrigjinale: null,
           kursi: null,
-          krijuar: transactions.find((t) => t.id === transaksioniId)?.krijuar || rreshti.krijuar,
+          krijuar: krijuarTx,
         },
       ]);
     }
@@ -303,7 +351,7 @@ function ShtoPagesenBorxhit({ show, onHide, borxhi, initial }) {
             <button
               type="button"
               className={`fcp-type-btn hyrje${!isShtese ? " active" : ""}`}
-              onClick={() => setField("lloji", "pagese")}
+              onClick={() => ndryshoLlojin("pagese")}
             >
               <TrendingDown size={15} />
               {kerkese ? "Kthim" : "Pagesë"}
@@ -311,7 +359,7 @@ function ShtoPagesenBorxhit({ show, onHide, borxhi, initial }) {
             <button
               type="button"
               className={`fcp-type-btn shpenzim${isShtese ? " active" : ""}`}
-              onClick={() => setField("lloji", "shtese")}
+              onClick={() => ndryshoLlojin("shtese")}
             >
               <PlusCircle size={15} />
               Shtesë
@@ -394,7 +442,7 @@ function ShtoPagesenBorxhit({ show, onHide, borxhi, initial }) {
             )}
 
             <Col md={12}>
-              {isShtese ? (
+              {isShtese && !kerkese ? (
                 <div className="fcp-modal-hint">
                   Një shtesë e rrit borxhin - blerje e re me kartelë, kamatë ose tarifë. Mbetet vetëm
                   shënim, nuk prek asnjë llogari.
@@ -407,15 +455,19 @@ function ShtoPagesenBorxhit({ show, onHide, borxhi, initial }) {
                     checked={lidh}
                     onChange={(e) => setLidh(e.target.checked)}
                     label={
-                      kerkese
+                      kerkese && !huaERe
                         ? "Shtoja edhe si hyrje në një llogari të vërtetë"
                         : "Zbrite edhe nga një llogari e vërtetë"
                     }
                   />
                   <div className="fcp-modal-hint">
-                    {lidh
-                      ? "Krijohet edhe një transaksion i vërtetë, pra bilanci i llogarisë ndryshon. Borxhi zbritet gjithsesi."
-                      : "E lënë e pashënjuar, pagesa zbret vetëm borxhin - asnjë llogari nuk preket."}
+                    {huaERe
+                      ? lidh
+                        ? "Paratë dalin nga llogaria si shpenzim mujor: nuk hyjnë te «Shpenzuar sot», por limiti ditor zvogëlohet pak për çdo ditë që ka mbetur në muaj."
+                        : "E lënë e pashënjuar, shtesa e rrit vetëm shumën që ju kanë borxh - asnjë llogari nuk preket."
+                      : lidh
+                        ? "Krijohet edhe një transaksion i vërtetë, pra bilanci i llogarisë ndryshon. Borxhi zbritet gjithsesi."
+                        : "E lënë e pashënjuar, pagesa zbret vetëm borxhin - asnjë llogari nuk preket."}
                   </div>
                 </>
               ) : (

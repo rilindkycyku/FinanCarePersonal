@@ -1,17 +1,17 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Modal, Button, Form, Row, Col, Alert } from "react-bootstrap";
 import { useData } from "../Context/DataContext";
 import { makeId, STORES } from "../lib/db";
 import { toNumber, todayISO } from "../lib/format";
 import { DEBT_TYPES, KATEGORIA_SIPAS_LLOJIT_TE_BORXHIT, LLOJET_E_BASHKUARA, debtTypeMeta } from "../lib/options";
-import { LLOJET_ME_KESTE_PER_BLERJE } from "../lib/finance";
+import { LLOJET_ME_KESTE_PER_BLERJE, transaksioniIHuas } from "../lib/finance";
 import VleraInput from "./VleraInput";
 import Ndihme from "./Ndihme";
 import ZgjedhesiKategorive from "./ZgjedhesiKategorive";
 import { ColorPicker } from "./Pickers";
 import "./ModalForms.css";
 import Zgjedhesi from "./Zgjedhesi";
-import { opsionetEThjeshta } from "../lib/opsionet";
+import { opsionetEThjeshta, opsionetLlogarive } from "../lib/opsionet";
 
 const BLANK = {
   emri: "",
@@ -37,11 +37,28 @@ const BLANK = {
  *
  * `vleraTotale` is only the opening figure; everything after it is a line in `pagesat`, which the
  * form carries through untouched on edit so re-saving a note can never lose its history.
+ *
+ * The one exception to "only a note" is money lent out. Handing someone 200 € empties the wallet
+ * whether or not a note says so, and a note that left the balance alone kept the daily allowance
+ * 200 € too generous - the only way round it was a separate expense typed by hand, which nobody
+ * guessed. So a "hua e dhënë" can also book its amount against a real account
+ * (`transaksioniIHuas`: a monthly expense, so it shrinks the remaining days rather than blowing
+ * today). The note keeps that transaction's id in `transaksioniId`, and editing the note keeps the
+ * two in step. A note saved before this, or with the box unticked, stays a plain note: it opens
+ * unticked, so editing it can never book a loan someone already recorded by hand.
  */
 function ShtoBorxhin({ show, onHide, initial, llojiFillestar }) {
-  const { categories, save, simboli } = useData();
+  const { accounts, categories, transactions, save, saveMany, destroyMany, simboli, njeLlogari, llogariaKryesore } =
+    useData();
   const [debt, setDebt] = useState(BLANK);
   const [error, setError] = useState("");
+  // Booking the loan against an account - see the note above. Kept apart from `debt` because none
+  // of it is stored on the note except the resulting transaction's id.
+  const [lidh, setLidh] = useState(false);
+  const [llogariaId, setLlogariaId] = useState("");
+  const [kategoriaHuas, setKategoriaHuas] = useState("");
+
+  const aktive = useMemo(() => accounts.filter((a) => !a.arkivuar), [accounts]);
 
   // The starter category for a type, but only while it is there to pick: one the user deleted or
   // archived is not brought back through this field.
@@ -54,6 +71,12 @@ function ShtoBorxhin({ show, onHide, initial, llojiFillestar }) {
     if (!show) return;
     setError("");
     const lloji = initial ? LLOJET_E_BASHKUARA[initial.lloji] || initial.lloji : llojiFillestar || BLANK.lloji;
+    const lidhur = initial?.transaksioniId ? transactions.find((tx) => tx.id === initial.transaksioniId) : null;
+    setLidh(Boolean(lidhur) || (!initial && aktive.length > 0));
+    setLlogariaId(
+      lidhur?.llogariaId || (njeLlogari ? llogariaKryesore?.id : aktive.length === 1 ? aktive[0].id : "") || ""
+    );
+    setKategoriaHuas(lidhur?.kategoriaId || "");
     setDebt(
       initial
         ? {
@@ -78,8 +101,8 @@ function ShtoBorxhin({ show, onHide, initial, llojiFillestar }) {
           // section the user pressed decides which way the new note points.
           { ...BLANK, lloji, kategoriaId: kategoriaESugjeruar(lloji) }
     );
-    // `categories` is left out on purpose: a reload while the form is open must not reset what the
-    // user has typed. The suggestion only needs the list as it was when the form opened.
+    // `categories`, `transactions` and the accounts are left out on purpose: a reload while the form
+    // is open must not reset what the user has typed. They are only read as they were when it opened.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [show, initial, llojiFillestar]);
 
@@ -136,9 +159,20 @@ function ShtoBorxhin({ show, onHide, initial, llojiFillestar }) {
     if (debt.ditaPageses !== "" && !(Number.isInteger(Number(debt.ditaPageses)) && Number(debt.ditaPageses) >= 1 && Number(debt.ditaPageses) <= 31)) {
       return setError("Dita e pagesës duhet të jetë një ditë e muajit, nga 1 deri në 31.");
     }
+    const lidhet = kerkese && lidh && aktive.length > 0;
+    if (lidhet && !llogariaId) return setError("Zgjidhni llogarinë nga e cila dolën paratë.");
+    if (lidhet && !kategoriaHuas) return setError("Zgjidhni kategorinë e shpenzimit.");
     setError("");
 
-    await save(STORES.borxhet, {
+    const ekzistues = debt.transaksioniId ? transactions.find((tx) => tx.id === debt.transaksioniId) : null;
+    // Unticking the box (or turning the note into another type) takes the transaction it had
+    // booked with it - otherwise the account would keep a loan the user just detached from it.
+    if (ekzistues && !lidhet) {
+      await destroyMany([[STORES.transactions, ekzistues.id]]);
+    }
+    const transaksioniId = lidhet ? ekzistues?.id || makeId("tx") : null;
+
+    const shenimi = {
       id: debt.id || makeId("debt"),
       emri: debt.emri.trim(),
       lloji: debt.lloji,
@@ -160,7 +194,32 @@ function ShtoBorxhin({ show, onHide, initial, llojiFillestar }) {
       shenim: debt.shenim.trim(),
       arkivuar: Boolean(debt.arkivuar),
       pagesat: Array.isArray(debt.pagesat) ? debt.pagesat : [],
-    });
+      transaksioniId,
+    };
+
+    if (lidhet) {
+      // Spread over the old record so what was added to it on the Transaksionet page (tags, a
+      // location, a note) survives an edit of the loan.
+      const tx = {
+        ...ekzistues,
+        ...transaksioniIHuas({
+          id: transaksioniId,
+          borxhi: shenimi,
+          vlera: shenimi.vleraTotale,
+          data: shenimi.dataFillimit,
+          llogariaId: njeLlogari ? llogariaKryesore?.id || llogariaId : llogariaId,
+          kategoriaId: kategoriaHuas,
+          shenim: ekzistues?.shenim || "",
+          krijuar: ekzistues?.krijuar || new Date().toISOString(),
+        }),
+      };
+      await saveMany([
+        [STORES.borxhet, shenimi],
+        [STORES.transactions, tx],
+      ]);
+    } else {
+      await save(STORES.borxhet, shenimi);
+    }
 
     onHide();
   };
@@ -180,8 +239,9 @@ function ShtoBorxhin({ show, onHide, initial, llojiFillestar }) {
           )}
 
           <div className="fcp-modal-hint mb-3">
-            Borxhet mbahen vetëm si shënim - nuk hyjnë në bilancin e llogarive dhe as në hyrjet apo
-            shpenzimet e muajit. Pagesat i zbritni më pas nga vetë borxhi.
+            {kerkese
+              ? "Shënimi mban llogari kush ju ka borxh dhe sa ju ka kthyer. Më poshtë mund ta zbritni shumën edhe nga llogaria prej së cilës dolën paratë."
+              : "Borxhet mbahen vetëm si shënim - nuk hyjnë në bilancin e llogarive dhe as në hyrjet apo shpenzimet e muajit. Pagesat i zbritni më pas nga vetë borxhi."}
           </div>
 
           <Row className="g-3">
@@ -253,6 +313,56 @@ function ShtoBorxhin({ show, onHide, initial, llojiFillestar }) {
                 onChange={(e) => setField("kreditori", e.target.value)}
               />
             </Form.Group>
+
+            {kerkese && aktive.length > 0 && (
+              <Col md={12}>
+                <Form.Check
+                  type="checkbox"
+                  id="debt-lidh"
+                  checked={lidh}
+                  onChange={(e) => setLidh(e.target.checked)}
+                  label="Zbrite edhe nga llogaria"
+                />
+                <Ndihme>
+                  {lidh
+                    ? "Paratë dalin nga llogaria si shpenzim mujor: nuk hyjnë te «Shpenzuar sot», por limiti ditor zvogëlohet pak për çdo ditë që ka mbetur në muaj. Kur t'ju kthehen, shtoni një «Kthim» dhe ato hyjnë sërish në llogari."
+                    : "E lënë e pashënjuar, hua-ja mbetet vetëm shënim - asnjë llogari nuk preket. Shënjojeni nëse paratë i keni dhënë nga një llogari që e ndiqni këtu dhe nuk i keni regjistruar ende si shpenzim."}
+                </Ndihme>
+              </Col>
+            )}
+
+            {kerkese && lidh && aktive.length > 0 && (
+              <>
+                {!njeLlogari && (
+                  <Form.Group as={Col} md={6} controlId="debt-llogariaid">
+                    <Form.Label>
+                      Nga llogaria <span className="text-danger">*</span>
+                    </Form.Label>
+                    <Zgjedhesi
+                      id="debt-llogariaid"
+                      value={llogariaId}
+                      onChange={setLlogariaId}
+                      opsionet={opsionetLlogarive(aktive)}
+                      placeholder="Zgjidh llogarinë..."
+                      titulli="Nga llogaria"
+                    />
+                  </Form.Group>
+                )}
+                <Form.Group as={Col} md={njeLlogari ? 12 : 6} controlId="debt-kategoriahuas">
+                  <Form.Label>
+                    Kategoria e shpenzimit <span className="text-danger">*</span>
+                  </Form.Label>
+                  <ZgjedhesiKategorive
+                    id="debt-kategoriahuas"
+                    categories={categories}
+                    lloji="shpenzim"
+                    value={kategoriaHuas}
+                    onChange={setKategoriaHuas}
+                    required
+                  />
+                </Form.Group>
+              </>
+            )}
 
             <Form.Group as={Col} md={6} controlId="debt-datafillimit">
               <Form.Label>Data e Fillimit</Form.Label>

@@ -67,6 +67,10 @@ sa shpenzohet, sa mbetet dhe sa po kursesh.
   e rrit - me ecuri, afat dhe arkivim. Pagesa mbetet vetëm shënim, përveç kur e shënjoni
   <em>&laquo;Zbrite edhe nga llogaria&raquo;</em>: atëherë krijohet edhe një transaksion i vërtetë,
   sepse ato para dolën vërtet nga banka.
+  <br />**Hua e dhënë nga llogaria:** e njëjta shenjë ekziston edhe kur jepni para - te hua e re dhe
+  te «Shtesë» për dikë që e keni tashmë në listë (edhe në arkivë). Paratë dalin nga llogaria si
+  **shpenzim mujor**: nuk hyjnë te «Shpenzuar sot», por limiti ditor zvogëlohet për ditët e mbetura
+  të muajit; kur kthehen, «Kthim»-i i sjell sërish si hyrje.
   <br />**Këstet:** te një kartelë me këste çdo blerje («Shtesë») ka numrin e vet të kësteve, dhe nën
   borxh del kësti i këtij muaji - shuma e blerjeve që janë ende duke u paguar, secila veç e veç - sa
   është paguar prej tij dhe kur bie kësti i fundit. Te kreditë shkruhet një **kësti mujor** i vetëm,

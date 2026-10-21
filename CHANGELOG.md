@@ -9,6 +9,25 @@ e fundit kur rregullohet diçka, dhe e para vetëm kur ndryshon vetë forma e pr
 herë, te `2.0.0`, kur të dhënat mësuan të dalin nga shfletuesi. Datat janë ato të commit-it që e
 ngriti versionin.
 
+## [2.38.0] - 2026-10-21
+
+### Shtuar
+- **Hua e dhënë mund të zbritet edhe nga llogaria, pa e prishur ditën.** Deri tani një hua e dhënë
+  ishte vetëm shënim: paratë që i jepnit dikujt mbeteshin në bilanc, dhe limiti ditor vazhdonte të
+  ndante para që nuk i kishit më. Tani, kur shtoni një **Hua e dhënë**, kutia **«Zbrite edhe nga
+  llogaria»** (e shënjuar vetë) pyet nga cila llogari dolën paratë dhe me cilën kategori. Ato
+  regjistrohen si **shpenzim mujor**: «Shpenzuar sot» nuk ndryshon, por limiti ditor zvogëlohet pak
+  për çdo ditë që ka mbetur në muaj - 110 € të dhëna me 11 ditë të mbetura e ulin limitin 10 € në
+  ditë, jo 110 € vetëm sot. Ndryshimi i shumës, datës ose llogarisë te shënimi e ndjek edhe
+  transaksionin; heqja e shenjës e fshin atë.
+- **Kur i jepni sërish dikujt që e keni në listë, shtohet te shënimi i tij.** Te «Më Kanë Borxh»,
+  butoni **+** → **«Shtesë»** e rrit shumën që ju ka borxh dhe tani mund ta zbresë edhe nga llogaria,
+  njëlloj si më sipër. Butoni **+** shfaqet tani edhe te huatë e arkivuara (ato që ju janë kthyer
+  plotësisht), dhe një shtesë e nxjerr shënimin nga arkiva - nuk ka nevojë për një shënim të ri
+  «Gzimi Borxh» pranë «Gzimi».
+- Huatë e regjistruara më parë nuk preken: një shënim i vjetër hapet me kutinë të pashënjuar, që të
+  mos regjistrohet dy herë një hua që e keni shënuar tashmë me dorë si shpenzim.
+
 ## [2.37.1] - 2026-10-18
 
 ### Rregulluar

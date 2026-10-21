@@ -130,12 +130,13 @@ function Borxhet() {
   const onDelete = async (debt) => {
     // The real transactions some payments created are actual money that left the account, so they
     // stay in the ledger - only the note goes, exactly like deleting a savings goal.
-    const lidhura = (debt.pagesat || []).filter(
+    // A loan given may have booked its opening amount too (`transaksioniId` on the note itself).
+    const lidhura = [debt, ...(debt.pagesat || [])].filter(
       (p) => p.transaksioniId && transactions.some((tx) => tx.id === p.transaksioniId)
     ).length;
     const ok = await dialog.confirm(
       lidhura
-        ? `Ta fshij borxhin "${debt.emri}" me ${debt.pagesat.length} rreshta? ${lidhura} transaksione të vërteta mbeten në historik, sepse ato para kanë dalë vërtet nga llogaria.`
+        ? `Ta fshij borxhin "${debt.emri}" me ${(debt.pagesat || []).length} rreshta? ${lidhura} transaksione të vërteta mbeten në historik, sepse ato para kanë dalë vërtet nga llogaria.`
         : `Ta fshij borxhin "${debt.emri}"? Historiku i pagesave shkon bashkë me të.`,
       { title: "Fshi Borxhin" }
     );
@@ -219,7 +220,9 @@ function Borxhet() {
             </div>
           </div>
           <div className="fcp-tracked-actions">
-            {!d.arkivuar && (
+            {/* Shown on archived notes too: lending a friend money again goes onto the note already
+                there, and an archived (paid-back) one is exactly the case - a shtesë reopens it. */}
+            {(!d.arkivuar || kerkese) && (
               <button
                 type="button"
                 className="fcp-icon-action add"

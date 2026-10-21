@@ -18,6 +18,7 @@ import {
   dataEParaERegjistruar,
   convertedAmount, currencyFields, dailyLimit, debtMonthlyInterest, debtMonthlyRate, debtPace,
   debtCardLimit, debtDueDate, debtInstallments, debtNextPayment, debtPayoffOrder, debtPaymentsFromTransactions, debtProgress, debtRequiredPayment,
+  transaksioniIHuas,
   debtTotals, dueRecurring, effectiveBudgets, enteredAt, filterByRange, generateDueTransactions,
   muajiEfektiv,
   idIPerseritjes,
@@ -1340,6 +1341,36 @@ describe("dailyLimit", () => {
     // The 80 € is still gone: it comes off the pool, so every remaining day is a little tighter.
     expect(limit.disponueshme).toBe(920);
     expect(limit.limiti).toBeCloseTo(920 / 22);
+  });
+
+  /**
+   * 220 € lent to a friend on the 10th: gone from the wallet, but not a day's spending. The note
+   * books it as a monthly expense, so the allowance shrinks by 10 € a day instead of today blowing up.
+   */
+  it("spreads money lent out over the days left instead of charging it to today", () => {
+    const hua = transaksioniIHuas({
+      id: "tx_hua",
+      borxhi: { id: "debt_1", emri: "Hua Arditit", kreditori: "Arditi" },
+      vlera: "220",
+      data: "2026-08-10",
+      llogariaId: "a",
+      kategoriaId: "huate",
+      krijuar: "2026-08-10T09:00:00.000Z",
+    });
+    expect(hua).toMatchObject({
+      lloji: "shpenzim",
+      vlera: 220,
+      ritmi: "mujor",
+      borxhiId: "debt_1",
+      pershkrimi: "Hua e dhënë: Arditi",
+      perseritjaId: null,
+    });
+
+    const limit = dailyLimit({ ...baza, transactions: [hua] });
+    expect(limit.shpenzuarSot).toBe(0);
+    expect(limit.mujoreSot).toBe(220);
+    expect(limit.disponueshme).toBe(780);
+    expect(limit.limiti).toBeCloseTo(780 / 22);
   });
 
   it("counts it as daily where the expense says nothing", () => {
