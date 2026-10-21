@@ -341,7 +341,8 @@ export const UDHEZIMET = [
           "Kur i jepni dikujt para, shënjoni «Zbrite edhe nga llogaria» - te hua e re, ose te «Shtesë» kur i " +
           "jepni sërish dikujt që e keni tashmë në listë (edhe kur është në arkivë: shtesa e nxjerr prej saj). " +
           "Paratë dalin nga llogaria si shpenzim mujor: «Shpenzuar sot» nuk ndryshon, por limiti ditor " +
-          "zvogëlohet pak për çdo ditë që ka mbetur në muaj.",
+          "zvogëlohet pak për çdo ditë që ka mbetur në muaj. E njëjta gjë bëhet edhe nga «Transaksion i Ri», " +
+          "me kutinë «Hua / borxh me dikë»: shkruani emrin dhe, nëse personi është tashmë këtu, zgjidheni.",
       },
       {
         titulli: "Këstet",

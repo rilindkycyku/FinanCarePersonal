@@ -25,6 +25,15 @@ ngriti versionin.
   njëlloj si më sipër. Butoni **+** shfaqet tani edhe te huatë e arkivuara (ato që ju janë kthyer
   plotësisht), dhe një shtesë e nxjerr shënimin nga arkiva - nuk ka nevojë për një shënim të ri
   «Gzimi Borxh» pranë «Gzimi».
+- **Hua dhe borxhe drejt nga formulari i transaksionit, pa shkuar te Borxhet.** Te **Transaksion i Ri**
+  ka kutinë **«Hua / borxh me dikë»**. Te një shpenzim zgjidhni **«I dhashë hua»** ose **«Ia ktheva
+  borxhin»**, te një hyrje **«Më ktheu huanë»** ose **«Mora hua»**, dhe shkruani emrin e personit.
+  Nëse te Borxhet ka dikë me atë emër - edhe në arkivë, edhe kur e shkruani pa shkronja të mëdha ose
+  pa «ë» - formulari pyet **«A është i njëjti person?»** dhe me një prekje transaksioni shtohet te
+  shënimi i tij (hua e re si «Shtesë», kthimi si «Kthim»). Përndryshe, një hua e dhënë ose e marrë
+  krijon vetë një shënim të ri me atë emër. Një kthim pa asnjë hua me atë emër nuk krijon gjë - ka
+  shumë gjasa që emri të jetë shkruar gabim. «I dhashë hua» e shënon vetë shpenzimin si mujor, dhe
+  ndryshimi më vonë i shumës ose datës së transaksionit e ndjek edhe shënimin te Borxhet.
 - Huatë e regjistruara më parë nuk preken: një shënim i vjetër hapet me kutinë të pashënjuar, që të
   mos regjistrohet dy herë një hua që e keni shënuar tashmë me dorë si shpenzim.
 

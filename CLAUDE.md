@@ -31,7 +31,7 @@ npm run dev       # vite --host
 npm run build
 npm run preview
 npm run lint      # eslint . — must stay at 0 errors (4 pre-existing warnings)
-npm test          # vitest run — 35 files, 796 tests, all green
+npm test          # vitest run — 37 files, 858 tests, all green
 npm run test:watch
 npm run ikonat    # regenerates the icons and the two wordmark PNGs from Logo.svg (Playwright)
 ```
@@ -103,6 +103,7 @@ imports, so keep doing that unless you are converting deliberately.
 | `paralajmerimet.js` / `njoftimet.js` | Crossing-based notifications |
 | `abonimet.js` | Detects repeating payments already in the history |
 | `grupet.js` | Shared-expense groups: bill splitting in cents, pairwise balances, fewest transfers, the delta carried into `borxhet` |
+| `huat.js` | Loans from the transaction form: the four actions, name matching against existing notes (`sugjeroBorxhet`), the note line a linked transaction adds, keeping it in step on edit |
 | `udhetimet.js` | Trips: a tag with dates, currency and budget; the trip's figures, the form's auto-tagging (`aplikoUdhetimin`), tagging after the fact |
 | `vendndodhjet.js` | Transaction location pins: cleaning, clustering into places, renaming, the sync opt-out strip/keep |
 | `viti.js` | Year-vs-previous-year page |
@@ -285,7 +286,7 @@ version — and note that an upgrade blocked by another open tab is surfaced thr
 
 - Vitest, no DOM environment, no jsdom setup file. Tests sit next to the code as `*.test.js`.
 - Everything tested is pure: `finance`, `csv`, `sinkronizimi`, `kategorite`, `etiketat`, `format`,
-  `grupet`, `udhetimet`, `tabela`, the receipt split (`ndarja.test.js`), `vendndodhjet`, `ndryshimet`,
+  `grupet`, `huat`, `udhetimet`, `tabela`, the receipt split (`ndarja.test.js`), `vendndodhjet`, `ndryshimet`,
   `options`, `calc`, `periudhat`, `raportet`, `raporti`, `raportFigurat`, `raportGrafike`,
   `raportEmail`, `paralajmerimet`, `njoftimet`, `abonimet`, `viti`, `zerat`, `skema`, `supabase`,
   `transferQr`, `pajisja`, `instalimi`, `udhezimet`, plus the naming half of `exportPdf`

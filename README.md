@@ -70,7 +70,9 @@ sa shpenzohet, sa mbetet dhe sa po kursesh.
   <br />**Hua e dhënë nga llogaria:** e njëjta shenjë ekziston edhe kur jepni para - te hua e re dhe
   te «Shtesë» për dikë që e keni tashmë në listë (edhe në arkivë). Paratë dalin nga llogaria si
   **shpenzim mujor**: nuk hyjnë te «Shpenzuar sot», por limiti ditor zvogëlohet për ditët e mbetura
-  të muajit; kur kthehen, «Kthim»-i i sjell sërish si hyrje.
+  të muajit; kur kthehen, «Kthim»-i i sjell sërish si hyrje. E njëjta gjë bëhet edhe nga vetë
+  formulari i transaksionit (**«Hua / borxh me dikë»**): shkruhet emri i personit, dhe nëse ai
+  ekziston tashmë te Borxhet aplikacioni pyet a është i njëjti, që të mos krijohet dy herë.
   <br />**Këstet:** te një kartelë me këste çdo blerje («Shtesë») ka numrin e vet të kësteve, dhe nën
   borxh del kësti i këtij muaji - shuma e blerjeve që janë ende duke u paguar, secila veç e veç - sa
   është paguar prej tij dhe kur bie kësti i fundit. Te kreditë shkruhet një **kësti mujor** i vetëm,

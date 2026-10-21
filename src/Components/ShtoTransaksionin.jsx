@@ -23,6 +23,8 @@ import { paralajmerimetPasTransaksionit } from "../lib/paralajmerimet";
 import { emriIPlote, kategoriTeHapura } from "../lib/kategorite";
 import { pastroVendndodhjen } from "../lib/vendndodhjet";
 import { aplikoUdhetimin, udhetimiPerFormular } from "../lib/udhetimet";
+import { debtTypeMeta } from "../lib/options";
+import { VEPRIMET_E_BORXHIT, perditesoLidhjen, regjistroNeBorxh, sugjeroBorxhet, veprimiIBorxhit } from "../lib/huat";
 import "./ModalForms.css";
 
 const TYPE_BUTTONS = [
@@ -50,6 +52,17 @@ const blank = (lloji = "shpenzim") => ({
   vendndodhja: null,
 });
 
+/** The form's "hua / borxh me dikë" section, closed - see huat.js. */
+const LIDHJA_BOSH = { aktiv: false, veprimi: "", emri: "", borxhiId: "" };
+
+/** What a linked transaction is called when the user leaves the description empty. */
+const PERSHKRIMI_SIPAS_VEPRIMIT = {
+  jap: "Hua e dhënë",
+  kthej: "Pagesë borxhi",
+  kthim: "Kthim borxhi",
+  marr: "Hua e marrë",
+};
+
 /**
  * Add/edit one transaction. A `transfer` moves money between two of the user's own accounts, so
  * it takes a destination account instead of a category and is deliberately excluded from income
@@ -69,8 +82,8 @@ function ShtoTransaksionin({
   destinacioniFillestar,
   udhetimiFiksuar,
 }) {
-  const { accounts, categories, goals, budgets, transactions, planet, recurring, faturat, save, saveMany, saveProfile,
-    reload, profile, monedha, simboli, njeLlogari, llogariaKryesore, sipasPeriudhes, udhetimet } = useData();
+  const { accounts, categories, goals, budgets, transactions, planet, recurring, faturat, borxhet, save, saveMany, saveProfile,
+    reload, profile, monedha, simboli, money, njeLlogari, llogariaKryesore, sipasPeriudhes, udhetimet } = useData();
   const [tx, setTx] = useState(blank(llojiFillestar));
   // Invoice photos are staged here and only written once the transaction itself is saved, so a
   // cancelled form leaves nothing behind (see sinkronizoFaturat).
@@ -79,11 +92,15 @@ function ShtoTransaksionin({
   // The rest of a receipt split across categories: `{ id, kategoriaId, vlera }` per extra part. The
   // category at the top of the form keeps whatever is left (`ndajFaturen` in finance.js).
   const [pjeset, setPjeset] = useState([]);
+  // Money lent, borrowed or returned, booked onto the person's note on the Borxhet page as the
+  // transaction is saved - so nobody has to go there and nobody ends up with the same friend twice.
+  const [lidhja, setLidhja] = useState(LIDHJA_BOSH);
 
   useEffect(() => {
     if (!show) return;
     setError("");
     setPjeset([]);
+    setLidhja(LIDHJA_BOSH);
     setFaturaLista(initial ? faturat.filter((f) => f.transaksioniId === initial.id) : []);
     if (initial) {
       // In single-account mode the pickers are hidden, so an id pointing at an account that no
@@ -280,6 +297,35 @@ function ShtoTransaksionin({
    * since the same category holds both the weekly shop and the once-a-season stock-up. */
   const mujorTani = tx.ritmi === RITMI_MUJOR;
 
+  const veprimiBorxhit = isTransfer ? null : veprimiIBorxhit(tx.lloji, lidhja.veprimi);
+  // A note picked for one direction stops counting once the type or the action points the other way.
+  const borxhiIZgjedhur = borxhet.find(
+    (d) => d.id === lidhja.borxhiId && debtTypeMeta(d.lloji).drejtimi === veprimiBorxhit?.drejtimi
+  );
+  const sugjerimetEBorxhit = useMemo(
+    () => (lidhja.aktiv && veprimiBorxhit ? sugjeroBorxhet(borxhet, lidhja.emri, veprimiBorxhit.drejtimi).slice(0, 3) : []),
+    [lidhja.aktiv, lidhja.emri, veprimiBorxhit, borxhet]
+  );
+  // An edit of a transaction a note already counts: shown, and kept in step on save, not re-asked.
+  const borxhiILidhur = tx.borxhiId ? borxhet.find((d) => d.id === tx.borxhiId) : null;
+
+  /**
+   * Lending money is not a day's spending - the case that started this - so choosing it marks the
+   * expense monthly as well (the checkbox right above shows it and can undo it).
+   */
+  const zgjidhVeprimin = (value) => {
+    setLidhja((prev) => ({ ...prev, aktiv: true, veprimi: value }));
+    if (tx.lloji === "shpenzim" && veprimiIBorxhit("shpenzim", value)?.value === "jap") setField("ritmi", RITMI_MUJOR);
+  };
+
+  const zgjidhBorxhin = (d) => {
+    setLidhja((prev) => ({ ...prev, borxhiId: d.id }));
+    // Money coming back is income under the note's own category, when it has a fitting one.
+    if (!tx.kategoriaId && d.kategoriaId && categories.some((c) => c.id === d.kategoriaId && c.lloji === tx.lloji)) {
+      setField("kategoriaId", d.kategoriaId);
+    }
+  };
+
   /**
    * Enter on the amount walks to the account, then the category, instead of saving. Both are
    * things the form cannot be saved without, so Enter there was only ever bouncing off one of the
@@ -395,8 +441,15 @@ function ShtoTransaksionin({
       return setError("Llogaria e destinacionit duhet të jetë e ndryshme nga burimi.");
     }
     if (!isTransfer && !tx.kategoriaId) return setError("Zgjidhni kategorinë.");
+    const lidhjeERe = lidhja.aktiv && Boolean(veprimiBorxhit) && !tx.borxhiId;
+    if (lidhjeERe && pjeset.length > 0) {
+      return setError("Një faturë e ndarë në kategori nuk mund të lidhet me një borxh - ruajeni pa ndarje.");
+    }
 
     setError("");
+
+    const borxhiIdRi = lidhjeERe ? borxhiIZgjedhur?.id || makeId("debt") : null;
+    const emriIPersonit = borxhiIZgjedhur ? borxhiIZgjedhur.kreditori || borxhiIZgjedhur.emri : lidhja.emri.trim();
 
     const rekordi = {
       // Fixed before the write so the pictures can be attached to it right after.
@@ -407,7 +460,9 @@ function ShtoTransaksionin({
       llogariaId: tx.llogariaId,
       llogariaDestinacionId: isTransfer ? tx.llogariaDestinacionId : null,
       kategoriaId: isTransfer ? null : tx.kategoriaId,
-      pershkrimi: tx.pershkrimi.trim(),
+      pershkrimi:
+        tx.pershkrimi.trim() ||
+        (lidhjeERe && emriIPersonit ? `${PERSHKRIMI_SIPAS_VEPRIMIT[veprimiBorxhit.value]}: ${emriIPersonit}` : ""),
       shenim: tx.shenim.trim(),
       qellimiId: tx.qellimiId || null,
       // Cleaned rather than trusted: the field commits whatever was still half-typed when the form
@@ -416,7 +471,7 @@ function ShtoTransaksionin({
       perseritjaId: tx.perseritjaId || null,
       // Carried through explicitly: without it, editing a payment booked against a debt note from
       // the Transaksionet page silently unlinked the two and the note stopped counting it paid.
-      borxhiId: tx.borxhiId || null,
+      borxhiId: borxhiIdRi || tx.borxhiId || null,
       // Same for a planned purchase, which additionally reads its real price back off this record.
       planiId: tx.planiId || null,
       // Only ever set once: two transactions on the same date are ordered by when they were
@@ -439,8 +494,25 @@ function ShtoTransaksionin({
     // One receipt across several categories is saved as several ordinary rows - see `ndajFaturen`.
     const { rekordet, gabimi } = isTransfer ? { rekordet: [rekordi], gabimi: "" } : ndajFaturen(rekordi, pjeset, { makeId });
     if (gabimi) return setError(gabimi);
-    if (rekordet.length > 1) await saveMany(rekordet.map((r) => [STORES.transactions, r]));
-    else await save(STORES.transactions, rekordi);
+
+    // The person's note, written in the same batch as the money so neither exists without the other.
+    let shenimiBorxhit = null;
+    if (lidhjeERe) {
+      const lidhur = regjistroNeBorxh({
+        borxhet, rekordi, veprimi: veprimiBorxhit, borxhiId: borxhiIdRi, emri: emriIPersonit, makeId,
+      });
+      if (lidhur.gabimi) return setError(lidhur.gabimi);
+      shenimiBorxhit = lidhur.shenimi;
+    } else if (tx.borxhiId && initial?.id) {
+      shenimiBorxhit = perditesoLidhjen(borxhiILidhur, rekordi);
+    }
+
+    if (rekordet.length > 1 || shenimiBorxhit) {
+      await saveMany([
+        ...rekordet.map((r) => [STORES.transactions, r]),
+        ...(shenimiBorxhit ? [[STORES.borxhet, shenimiBorxhit]] : []),
+      ]);
+    } else await save(STORES.transactions, rekordi);
 
     // Only when *this* entry is what crossed the line: comparing the day before and after it keeps
     // the app from notifying again on every expense that follows an already-blown limit.
@@ -799,6 +871,88 @@ function ShtoTransaksionin({
                   karburant, sigurim, këpucë. Paraja del njësoj nga bilanci. Të njëjtën shenjë mund ta vini edhe te
                   lista e transaksioneve.
                 </Ndihme>
+              </Col>
+            )}
+
+            {!isTransfer && borxhiILidhur && initial?.id && (
+              <Col md={12}>
+                <div className="fcp-modal-hint">
+                  Lidhur me «{borxhiILidhur.emri}» te Borxhet - shuma dhe data përditësohen edhe atje.
+                </div>
+              </Col>
+            )}
+
+            {!isTransfer && !tx.borxhiId && (
+              <Col md={12}>
+                <Form.Check
+                  type="checkbox"
+                  id="tx-borxh"
+                  label="Hua / borxh me dikë"
+                  checked={lidhja.aktiv}
+                  onChange={(e) =>
+                    e.target.checked ? zgjidhVeprimin(lidhja.veprimi || VEPRIMET_E_BORXHIT[tx.lloji][0].value) : setLidhja((prev) => ({ ...prev, aktiv: false }))
+                  }
+                />
+                {lidhja.aktiv && veprimiBorxhit && (
+                  <div className="fcp-tx-borxh mt-2">
+                    <div className="fcp-type-toggle mb-2" style={{ gridTemplateColumns: "repeat(2, 1fr)" }}>
+                      {VEPRIMET_E_BORXHIT[tx.lloji].map((v) => (
+                        <button
+                          key={v.value}
+                          type="button"
+                          className={`fcp-type-btn ${tx.lloji}${veprimiBorxhit.value === v.value ? " active" : ""}`}
+                          onClick={() => zgjidhVeprimin(v.value)}
+                        >
+                          {v.label}
+                        </button>
+                      ))}
+                    </div>
+                    <Form.Control
+                      id="tx-borxh-emri"
+                      placeholder="Emri i personit, p.sh. Gzimi"
+                      value={borxhiIZgjedhur ? borxhiIZgjedhur.emri : lidhja.emri}
+                      readOnly={Boolean(borxhiIZgjedhur)}
+                      onChange={(e) => setLidhja((prev) => ({ ...prev, emri: e.target.value, borxhiId: "" }))}
+                    />
+                    {borxhiIZgjedhur ? (
+                      <div className="fcp-modal-hint">
+                        Shtohet te «{borxhiIZgjedhur.emri}» te Borxhet
+                        {borxhiIZgjedhur.arkivuar && veprimiBorxhit.rreshti === "shtese" ? " (del nga arkiva)" : ""}.
+                        <button
+                          type="button"
+                          className="btn btn-link btn-sm p-0 ms-1 align-baseline"
+                          onClick={() => setLidhja((prev) => ({ ...prev, borxhiId: "" }))}
+                        >
+                          Jo, person tjetër
+                        </button>
+                      </div>
+                    ) : sugjerimetEBorxhit.length > 0 ? (
+                      <>
+                        <div className="fcp-modal-hint">A është i njëjti person?</div>
+                        <div className="d-flex align-items-center flex-wrap gap-2 mt-1">
+                          {sugjerimetEBorxhit.map((d) => (
+                            <button key={d.id} type="button" className="fcp-shuma-shpejte" onClick={() => zgjidhBorxhin(d)}>
+                              {d.emri}
+                              {d.arkivuar ? " (arkivë)" : ""} · {veprimiBorxhit.drejtimi === "kerkese" ? "për t'u marrë" : "mbeten"}{" "}
+                              {money(d.mbetur)}
+                            </button>
+                          ))}
+                        </div>
+                        {veprimiBorxhit.llojiIRi && (
+                          <div className="fcp-modal-hint">Ose lëreni ashtu dhe krijohet si person i ri.</div>
+                        )}
+                      </>
+                    ) : (
+                      lidhja.emri.trim() && (
+                        <div className="fcp-modal-hint">
+                          {veprimiBorxhit.llojiIRi
+                            ? `«${lidhja.emri.trim()}» krijohet vetë te Borxhet.`
+                            : "Te Borxhet nuk ka askënd me këtë emër - kontrolloni emrin."}
+                        </div>
+                      )
+                    )}
+                  </div>
+                )}
               </Col>
             )}
 
