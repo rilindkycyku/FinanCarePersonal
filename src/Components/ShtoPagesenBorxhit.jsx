@@ -7,7 +7,7 @@ import Ndihme from "./Ndihme";
 import ZgjedhesiKategorive from "./ZgjedhesiKategorive";
 import { makeId, STORES } from "../lib/db";
 import { toNumber, todayISO, formatMoney } from "../lib/format";
-import { LLOJET_ME_KESTE_PER_BLERJE, debtInstallments, debtProgress, transaksioniIHuas } from "../lib/finance";
+import { LLOJET_ME_KESTE_PER_BLERJE, RITMI_MUJOR, debtInstallments, debtProgress, transaksioniIHuas } from "../lib/finance";
 import { debtTypeMeta } from "../lib/options";
 import { kategoriTeHapura } from "../lib/kategorite";
 import "./ModalForms.css";
@@ -321,6 +321,10 @@ function ShtoPagesenBorxhit({ show, onHide, borxhi, initial }) {
           qellimiId: null,
           perseritjaId: null,
           borxhiId: borxhi.id,
+          // A payment on a debt covers the month - a card instalment, a loan - so it is spread over
+          // the days left instead of reporting a blown day on the day it was paid. Money coming back
+          // is income and has no rhythm.
+          ritmi: txLloji === "shpenzim" ? RITMI_MUJOR : null,
           monedhaOrigjinale: null,
           vleraOrigjinale: null,
           kursi: null,

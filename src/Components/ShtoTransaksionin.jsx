@@ -20,7 +20,7 @@ import {
 import { njofto, njoftoListen } from "../lib/njoftimet";
 import { mesoRregullen, sugjeroKategorine } from "../lib/rregullat";
 import { paralajmerimetPasTransaksionit } from "../lib/paralajmerimet";
-import { emriIPlote, kategoriTeHapura } from "../lib/kategorite";
+import { emriIPlote, kategoriTeHapura, kategoriaMujore } from "../lib/kategorite";
 import { pastroVendndodhjen } from "../lib/vendndodhjet";
 import { aplikoUdhetimin, udhetimiPerFormular } from "../lib/udhetimet";
 import { debtTypeMeta } from "../lib/options";
@@ -48,6 +48,9 @@ const blank = (lloji = "shpenzim") => ({
   kursi: "",
   // Only ever set to "mujor"; daily is the default and is not worth storing.
   ritmi: null,
+  // Form-only, never saved - see `meRitminEKategorise`.
+  ritmiPrekur: false,
+  ritmiAuto: null,
   // `{ lat, lng, saktesia, emri }` once the user presses the location button - see vendndodhjet.js.
   vendndodhja: null,
 });
@@ -84,7 +87,32 @@ function ShtoTransaksionin({
 }) {
   const { accounts, categories, goals, budgets, transactions, planet, recurring, faturat, borxhet, save, saveMany, saveProfile,
     reload, profile, monedha, simboli, money, njeLlogari, llogariaKryesore, sipasPeriudhes, udhetimet } = useData();
-  const [tx, setTx] = useState(blank(llojiFillestar));
+  const [tx, vendosTx] = useState(blank(llojiFillestar));
+
+  /**
+   * Every change to the form goes through here, so a category marked «Shpenzimet e reja janë
+   * mujore» (`kategoriaMujore`) ticks the monthly box whichever way it was chosen - by hand, by the
+   * suggestion from the description, by a loan action or from a scanned coupon - without each of
+   * those paths having to remember it.
+   *
+   * Two form-only fields keep it from fighting the person: `ritmiPrekur` (the box was touched by
+   * hand, after which the category no longer has a say) and `ritmiAuto` (the category that ticked
+   * it, so moving to an ordinary category unticks only what a category ticked - not a box ticked by
+   * «I dhashë hua»). Neither is saved: the record is written field by field in `handleSave`.
+   */
+  const meRitminEKategorise = (prev, next) => {
+    if (next.kategoriaId === prev.kategoriaId && next.lloji === prev.lloji) return next;
+    if (next.ritmiPrekur) return next;
+    const kategoria = next.lloji === "shpenzim" ? kategoriaMujore(categories, next.kategoriaId) : null;
+    if (kategoria) {
+      return next.ritmi === RITMI_MUJOR && !next.ritmiAuto
+        ? next
+        : { ...next, ritmi: RITMI_MUJOR, ritmiAuto: kategoria.id };
+    }
+    return next.ritmiAuto ? { ...next, ritmi: null, ritmiAuto: null } : next;
+  };
+  const setTx = (update) =>
+    vendosTx((prev) => meRitminEKategorise(prev, typeof update === "function" ? update(prev) : update));
   // Invoice photos are staged here and only written once the transaction itself is saved, so a
   // cancelled form leaves nothing behind (see sinkronizoFaturat).
   const [faturaLista, setFaturaLista] = useState([]);
@@ -107,7 +135,7 @@ function ShtoTransaksionin({
       // longer exists could never be corrected by hand - it falls back to the main account.
       const exists = (id) => accounts.some((a) => a.id === id);
       const fixed = (id) => (njeLlogari && id && !exists(id) ? llogariaKryesore?.id || "" : id);
-      setTx({
+      vendosTx({
         ...blank(initial.lloji),
         ...initial,
         // A record billed in another currency is edited in that currency, not in the stored one.
@@ -126,7 +154,12 @@ function ShtoTransaksionin({
         // `jashteLimitit` is the name this shipped under for two releases.
         ritmi: initial.ritmi || (initial.jashteLimitit === true ? RITMI_MUJOR : null),
         vendndodhja: pastroVendndodhjen(initial.vendndodhja),
+        ritmiPrekur: false,
+        ritmiAuto: null,
       });
+      // An edit opens exactly as it was saved. Something new that merely arrives filled in - a
+      // scanned coupon, a copy - starts from its category like any other new expense.
+      if (!initial.id) vendosTx((prev) => meRitminEKategorise({ ...prev, kategoriaId: null }, prev));
       return;
     }
     // New transaction: preselect the goal, when contributing, and the account only where there is
@@ -311,12 +344,14 @@ function ShtoTransaksionin({
 
   /**
    * Lending money is not a day's spending - the case that started this - so choosing it marks the
-   * expense monthly as well (the checkbox right above shows it and can undo it).
+   * expense monthly as well (the checkbox right above shows it and can undo it). Paying back a debt
+   * is the same: the instalment covers the month, and charging it to the day it was paid showed a
+   * blown limit on every payday.
    */
   const zgjidhVeprimin = (value) => {
     setLidhja((prev) => ({ ...prev, aktiv: true, veprimi: value }));
     const veprimi = veprimiIBorxhit(tx.lloji, value);
-    if (veprimi?.value === "jap") setField("ritmi", RITMI_MUJOR);
+    if (veprimi?.value === "jap" || veprimi?.value === "kthej") setField("ritmi", RITMI_MUJOR);
     // «Hua e Dhënë», «Hua e Marrë» and the two return categories - so the category is not one more
     // thing to look for after the action already said what this is.
     const kategoria = kategoriaPerVeprimin(veprimi, tx.kategoriaId, categories);
@@ -869,12 +904,24 @@ function ShtoTransaksionin({
                   id="tx-ritmi"
                   label="Shpenzim mujor"
                   checked={mujorTani}
-                  onChange={(e) => setField("ritmi", e.target.checked ? RITMI_MUJOR : null)}
+                  onChange={(e) =>
+                    setTx((prev) => ({
+                      ...prev,
+                      ritmi: e.target.checked ? RITMI_MUJOR : null,
+                      ritmiPrekur: true,
+                      ritmiAuto: null,
+                    }))
+                  }
                 />
+                {mujorTani && tx.ritmiAuto && (
+                  <div className="fcp-modal-hint">
+                    Shënuar vetë: «{emriIPlote(categories, tx.ritmiAuto)}» i ka shpenzimet mujore.
+                  </div>
+                )}
                 <Ndihme>
                   Ndahet mbi ditët e mbetura të muajit, jo mbi ditën e sotme - për blerjet që mbajnë gjatë:
                   karburant, sigurim, këpucë. Paraja del njësoj nga bilanci. Të njëjtën shenjë mund ta vini edhe te
-                  lista e transaksioneve.
+                  lista e transaksioneve, dhe te Kategoritë një kategori mund ta ketë të shënuar vetë.
                 </Ndihme>
               </Col>
             )}

@@ -4,6 +4,7 @@ import { TrendingUp, TrendingDown } from "lucide-react";
 import { useData } from "../Context/DataContext";
 import { makeId, STORES } from "../lib/db";
 import { mundTeKeteNjePrind, nenkategorite, prinderitEMundshem, prindiPerRuajtje } from "../lib/kategorite";
+import Ndihme from "./Ndihme";
 import { ColorPicker, IconPicker } from "./Pickers";
 import Zgjedhesi from "./Zgjedhesi";
 import { opsionetEEmertuara } from "../lib/opsionet";
@@ -16,6 +17,8 @@ const blank = (lloji = "shpenzim", prindi = "") => ({
   ngjyra: "#10b981",
   ikona: "MoreHorizontal",
   arkivuar: false,
+  // "mujor" or null: whether a new expense in this category starts out monthly (`kategoriaMujore`).
+  ritmiParazgjedhur: null,
 });
 
 /** Add/edit one category. A category belongs to exactly one direction (income or expense), which
@@ -44,6 +47,12 @@ function ShtoKategorine({ show, onHide, initial, llojiFillestar = "shpenzim", pr
   const femijet = useMemo(() => nenkategorite(categories, category.id), [categories, category.id]);
   const mundEmbi = mundTeKeteNjePrind(categories, category);
   const prinderit = useMemo(() => prinderitEMundshem(categories, category), [categories, category]);
+  /** A parent marked monthly covers this one too, so its own box shows ticked and cannot be undone
+   * here - the place to change it is the parent. */
+  const prindiMujor = useMemo(() => {
+    const prindi = categories.find((c) => c.id === category.prindi && c.lloji === category.lloji);
+    return prindi?.ritmiParazgjedhur === "mujor" && prindi.id !== category.id ? prindi : null;
+  }, [categories, category.prindi, category.lloji, category.id]);
 
   /** Switching direction re-files the category at the top level: its old parent belongs to the
    * other side and would be dropped on save anyway. */
@@ -84,6 +93,9 @@ function ShtoKategorine({ show, onHide, initial, llojiFillestar = "shpenzim", pr
       // Written out with the rest of the record: renaming an archived category from here must not
       // quietly put it back into every picker.
       arkivuar: Boolean(category.arkivuar),
+      // Only meaningful for spending; a category switched to income drops it rather than carrying an
+      // invisible choice that would come back if it were switched again.
+      ritmiParazgjedhur: category.lloji === "shpenzim" && category.ritmiParazgjedhur === "mujor" ? "mujor" : null,
     });
 
     onHide();
@@ -152,6 +164,24 @@ function ShtoKategorine({ show, onHide, initial, llojiFillestar = "shpenzim", pr
                   : `Kjo kategori ka vetë ${femijet.length} nënkategori, prandaj mbetet kategori kryesore.`}
               </div>
             </Form.Group>
+
+            {category.lloji === "shpenzim" && (
+              <Col md={12}>
+                <Form.Check
+                  type="checkbox"
+                  id="category-ritmi"
+                  label="Shpenzimet e reja janë mujore"
+                  checked={category.ritmiParazgjedhur === "mujor" || prindiMujor}
+                  disabled={prindiMujor}
+                  onChange={(e) => setField("ritmiParazgjedhur", e.target.checked ? "mujor" : null)}
+                />
+                <Ndihme>
+                  {prindiMujor
+                    ? `E trashëguar nga «${prindiMujor.emri}» - shpenzimet këtu fillojnë si mujore.`
+                    : "Për blerjet që mbajnë gjatë - karburant, rroba, këpucë. Një shpenzim i ri në këtë kategori e ka të shënuar vetë kutinë «Shpenzim mujor», pra ndahet mbi ditët e mbetura të muajit dhe nuk e prish limitin e sotëm. Te çdo shpenzim mund ta hiqni sërish; shpenzimet e regjistruara më parë nuk ndryshojnë. Nënkategoritë e ndjekin."}
+                </Ndihme>
+              </Col>
+            )}
 
             <Col md={12}>
               <ColorPicker value={category.ngjyra} onChange={(c) => setField("ngjyra", c)} />

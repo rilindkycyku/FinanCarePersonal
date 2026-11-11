@@ -211,9 +211,12 @@ export function reconciliation({
             borxhiId: null,
             planiId: null,
             krijuar: new Date().toISOString(),
-            // Never monthly: an adjustment is not a purchase being spread over the month, and
-            // charging it to the day it was noticed is the only honest date it has.
-            ritmi: null,
+            // Monthly when money is missing. It used to be charged to the day it was noticed, on
+            // the grounds that it is not a purchase - but it is the sum of small purchases nobody
+            // wrote down over the past weeks, and booking all of them on today turned the day's
+            // allowance red over money spent long before. Spread over the days left it still leaves
+            // the balance at once. Income has no allowance to protect, so it stays unmarked.
+            ritmi: lloji === "shpenzim" ? RITMI_MUJOR : null,
           },
   };
 }

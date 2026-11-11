@@ -162,6 +162,7 @@ function Kategorite() {
           <div className="fcp-cat-name">{c.emri}</div>
           <div className="fcp-cat-sub">
             {arkivuar && <span className="fcp-cat-flamur">Arkivuar</span>}
+            {c.lloji === "shpenzim" && c.ritmiParazgjedhur === "mujor" && <span className="fcp-cat-flamur">Mujor</span>}
             {c.numri === 0 ? "E papërdorur" : `${c.numri} × · ${money(c.vlera)}`}
           </div>
           {!nen && c.femijet?.length > 0 && (

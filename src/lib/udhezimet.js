@@ -204,8 +204,10 @@ export const UDHEZIMET = [
           "Te kolona «Veprime» çdo shpenzim ka një buton që e kthen nga ditor në mujor dhe anasjelltas - " +
           "dielli do të thotë ditor, kalendari mujor - dhe rreshti e shfaq shenjën «Mujor» pranë llojit. " +
           "E njëjta kutizë ndodhet edhe brenda formularit të transaksionit. Zgjedhja i takon vetë " +
-          "shpenzimit, jo kategorisë, sepse e njëjta kategori mban edhe pazarin e javës edhe furnizimin e " +
-          "madh një herë në sezon.",
+          "shpenzimit, sepse e njëjta kategori mban edhe pazarin e javës edhe furnizimin e madh një herë në " +
+          "sezon - por te Kategoritë një kategori si «Karburant» ose «Veshje» mund të shënohet «Shpenzimet e " +
+          "reja janë mujore», dhe atëherë kutia vjen e shënuar vetë. Pagesat e borxheve dhe barazimet kur " +
+          "mungojnë para regjistrohen gjithashtu si mujore.",
       },
       {
         titulli: "Filtroni dhe kërkoni",
@@ -283,7 +285,8 @@ export const UDHEZIMET = [
           "Butoni me peshoren te kartela pyet vetëm një gjë: sa ka vërtet ajo llogari. Shkruani shifrën që " +
           "shihni te banka ose paratë që numëroni në dorë, dhe diferenca ndaj asaj që tregon aplikacioni " +
           "shënohet si transaksion nën kategorinë «Barazim i Bilancit» - jo si shpenzim i vërtetë, sepse nuk " +
-          "dihet çka ishte. Kështu muaji i ri nis nga një shifër që përputhet, në vend që gabimi të bartet " +
+          "dihet çka ishte - dhe, kur mungojnë para, si shpenzim mujor, që të mos e prishë limitin e sotëm. " +
+          "Kështu muaji i ri nis nga një shifër që përputhet, në vend që gabimi të bartet " +
           "muaj pas muaji. Bilanci nuk shkruhet kurrë drejtpërdrejt: rreshti i barazimit është i dukshëm, i " +
           "datuar dhe fshihet si çdo tjetër.",
       },
@@ -492,6 +495,15 @@ export const UDHEZIMET = [
           "rikarikimi elektrik; riparimet deri te hidrauliku e bojaxhiu - por asgjë nuk ju detyron ta " +
           "përdorni atë imtësi: kategoria kryesore mbetet e zgjedhshme si «... (në përgjithësi)» mbi " +
           "fëmijët e vet, dhe ato që nuk ju hyjnë në punë fshihen ose riemërtohen lirisht.",
+      },
+      {
+        titulli: "Kategori me shpenzime mujore",
+        teksti:
+          "Karburanti, rrobat ose këpucët zgjasin javë, jo një ditë. Te formulari i një kategorie shpenzimi " +
+          "shënjoni «Shpenzimet e reja janë mujore»: çdo shpenzim i ri aty vjen me kutinë «Shpenzim mujor» të " +
+          "shënuar, pra ndahet mbi ditët e mbetura të muajit në vend që ta prishë limitin e sotëm. Shenja e " +
+          "kategorisë kryesore vlen edhe për nënkategoritë. Është vetëm pikënisje: te një shpenzim i veçantë " +
+          "mund ta hiqni, dhe shpenzimet e regjistruara më parë nuk ndryshojnë.",
       },
       {
         titulli: "Arkivimi",

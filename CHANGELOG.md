@@ -9,6 +9,39 @@ e fundit kur rregullohet diçka, dhe e para vetëm kur ndryshon vetë forma e pr
 herë, te `2.0.0`, kur të dhënat mësuan të dalin nga shfletuesi. Datat janë ato të commit-it që e
 ngriti versionin.
 
+## [2.39.0] - 2026-11-11
+
+### Shtuar
+- **Një kategori mund t'i ketë shpenzimet mujore vetë.** Karburanti, rrobat ose këpucët zgjasin javë,
+  por duhej mbajtur mend t'u vihej shenja «Shpenzim mujor» çdo herë - dhe kur harrohej, limiti ditor
+  dilte «u tejkalua» për një depo nafte. Tani te **Kategoritë**, në formularin e një kategorie
+  shpenzimi, kutia **«Shpenzimet e reja janë mujore»** e bën këtë një herë e mirë: çdo shpenzim i ri
+  aty vjen me kutinë të shënuar (formulari shkruan «Shënuar vetë» dhe nga cila kategori), pra ndahet
+  mbi ditët e mbetura të muajit në vend që ta prishë ditën e sotme. Shenja te kategoria kryesore vlen
+  edhe për nënkategoritë - «Karburant» mbulon edhe «Karburant › Naftë» - dhe kategoria merr shenjën
+  «Mujor» te lista. Mbetet vetëm pikënisje: te një blerje e veçantë mund ta hiqni, një kuti e prekur
+  me dorë nuk ndërrohet më kur ndërroni kategorinë, dhe shpenzimet e regjistruara më parë nuk
+  ndryshojnë.
+
+### Ndryshuar
+- **Pagesat e borxheve regjistrohen si shpenzim mujor.** Kësti i kartelës ose i kredisë mbulon tërë
+  muajin, por ngarkohej te dita kur paguhej dhe e nxinte limitin e asaj dite. Tani pagesa nga
+  **Borxhet** («Pagesë borxhi») dhe «Ia ktheva borxhin» te **Transaksion i Ri** vijnë si mujore:
+  paraja del njësoj nga bilanci, por ndahet mbi ditët e mbetura. Te formulari kutia mund të hiqet.
+- **Barazimi i bilancit, kur mungojnë para, është shpenzim mujor.** Diferenca është shuma e blerjeve
+  të vogla që nuk u shënuan gjatë javëve të kaluara, jo shpenzim i sotëm, kështu që nuk e prish më
+  limitin e ditës kur barazoni. Barazimi kur ka më shumë para mbetet hyrje si më parë.
+- Pagesat dhe barazimet e regjistruara më parë nuk ndryshojnë - te lista e transaksioneve, butoni me
+  diell/kalendar i kthen në mujore një nga një.
+
+### Rregulluar
+- **Kamera për kuponin fiskal dhe për «Prano me kamerë» hapet sërish.** Faqja i dërgonte
+  shfletuesit një rregull sigurie që ia ndalonte vetes kamerën, prandaj «Hap kamerën» përgjigjej
+  menjëherë «Kamera nuk u lejua» - edhe kur leja te telefoni ishte dhënë, dhe njësoj në aplikacionin e
+  instaluar si në shfletues. Rregulli tani e lejon kamerën vetëm për vetë FinanCare-n; mikrofoni
+  mbetet i ndaluar. Nëse e keni refuzuar ndonjëherë lejen, telefoni pyet sërish ose duhet lejuar te
+  cilësimet e faqes.
+
 ## [2.38.0] - 2026-10-21
 
 ### Shtuar

@@ -16,7 +16,7 @@ import {
   filterByItem, PA_KATEGORI, reassignAccount,
   reconciliation,
   dataEParaERegjistruar,
-  convertedAmount, currencyFields, dailyLimit, debtMonthlyInterest, debtMonthlyRate, debtPace,
+  convertedAmount, currencyFields, dailyLimit, eshteMujore, debtMonthlyInterest, debtMonthlyRate, debtPace,
   debtCardLimit, debtDueDate, debtInstallments, debtNextPayment, debtPayoffOrder, debtPaymentsFromTransactions, debtProgress, debtRequiredPayment,
   transaksioniIHuas,
   debtTotals, dueRecurring, effectiveBudgets, enteredAt, filterByRange, generateDueTransactions,
@@ -213,6 +213,16 @@ describe("reconciliation", () => {
     expect(r.transaksioni.kategoriaId).toBe("cat_default_barazim_shp");
     expect(r.transaksioni.llogariaId).toBe("a");
     expect(r.transaksioni.data).toBe("2026-08-24");
+  });
+
+  // Money that went out unrecorded over past weeks - not today's spending.
+  it("books the missing money as monthly, so it does not blow today's allowance", () => {
+    const r = barazo(900);
+    expect(eshteMujore(r.transaksioni)).toBe(true);
+    const d = dailyLimit({ accounts: [llogaria], transactions: [...transactions, r.transaksioni], today: "2026-08-24" });
+    expect(d.shpenzuarSot).toBe(0);
+    expect(d.mujoreSot).toBe(50);
+    expect(barazo(1000).transaksioni.ritmi).toBeNull();
   });
 
   it("books income when the account holds more", () => {

@@ -286,3 +286,29 @@ export function kategoriteQeMungojne(parazgjedhurat, ekzistuese, hequra = []) {
     (c) => !kaId.has(c.id) && !teHequra.has(c.id) && (!c.prindi || kaId.has(c.prindi))
   );
 }
+
+/**
+ * The category that makes a new expense start out as **monthly** - this one, or the parent it is
+ * filed under - or null when the expense starts out daily.
+ *
+ * Only a starting point for the transaction form's checkbox, never an answer `dailyLimit` reads.
+ * The rhythm stays a property of the purchase (`eshteMujore` in finance.js asks the transaction and
+ * nothing else), because the same category holds both the weekly shop and the once-a-season
+ * stock-up. It used to be the category's answer outright, and that was taken out for exactly that
+ * reason. What came back is the half that was missed: for «Karburant» or «Veshje» almost every
+ * purchase lasts for weeks, and ticking the same box by hand every time is the kind of chore that
+ * stops getting done - after which the day's figure reads «u tejkalua» over a tank of fuel again.
+ *
+ * A parent counts for its subcategories, so marking «Transport» covers «Transport › Servis & Gomat»
+ * too. The field is `ritmiParazgjedhur` rather than the `ritmi` the old flag was stored under, so a
+ * category marked back then does not quietly come back to life with a different meaning.
+ */
+export function kategoriaMujore(categories, id) {
+  if (!id) return null;
+  const byId = indeksi(categories);
+  const kategoria = byId.get(id);
+  if (!kategoria || kategoria.lloji !== "shpenzim") return null;
+  if (kategoria.ritmiParazgjedhur === "mujor") return kategoria;
+  const prindi = prindiVlefshem(byId, kategoria);
+  return prindi?.ritmiParazgjedhur === "mujor" ? prindi : null;
+}

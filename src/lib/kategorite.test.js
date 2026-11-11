@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  emriIPlote, eshteArkivuar, familja, kategoriTeHapura, kategoriteQeMungojne, kerkoKategorite, mundTeKeteNjePrind, nenkategorite, pemaKategorive, prinderitEMundshem, prindiI, prindiPerRuajtje, rrenjaE,
+  emriIPlote, eshteArkivuar, familja, kategoriaMujore, kategoriTeHapura, kategoriteQeMungojne, kerkoKategorite, mundTeKeteNjePrind, nenkategorite, pemaKategorive, prinderitEMundshem, prindiI, prindiPerRuajtje, rrenjaE,
 } from "./kategorite";
 
 const kategori = (id, emri, extra = {}) => ({ id, emri, lloji: "shpenzim", ...extra });
@@ -236,5 +236,26 @@ describe("kategori të arkivuara", () => {
     expect(emriIPlote(rritet, "b", "?")).toBe("?");
     rritet.push(kategori("b", "B", { prindi: "a" }));
     expect(emriIPlote(rritet, "b")).toBe("A › B");
+  });
+
+  it("says which category starts a new expense as monthly - its own mark or its parent's", () => {
+    const meShenje = [
+      kategori("transport", "Transport", { ritmiParazgjedhur: "mujor" }),
+      kategori("servis", "Servis", { prindi: "transport" }),
+      kategori("veshje", "Veshje", { ritmiParazgjedhur: "mujor" }),
+      kategori("ushqim", "Ushqim & Pije"),
+      kategori("market", "Market", { prindi: "ushqim" }),
+      // The flag the category carried before it moved to the transaction: not read.
+      kategori("karburant", "Karburant", { ritmi: "mujor", jashteLimitit: true }),
+      // Income has no daily allowance to protect.
+      kategori("rroga", "Rroga", { lloji: "hyrje", ritmiParazgjedhur: "mujor" }),
+    ];
+    expect(kategoriaMujore(meShenje, "veshje")?.id).toBe("veshje");
+    expect(kategoriaMujore(meShenje, "servis")?.id).toBe("transport");
+    expect(kategoriaMujore(meShenje, "market")).toBe(null);
+    expect(kategoriaMujore(meShenje, "karburant")).toBe(null);
+    expect(kategoriaMujore(meShenje, "rroga")).toBe(null);
+    expect(kategoriaMujore(meShenje, "")).toBe(null);
+    expect(kategoriaMujore(meShenje, "nuk-ekziston")).toBe(null);
   });
 });
