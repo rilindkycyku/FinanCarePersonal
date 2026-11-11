@@ -94,6 +94,8 @@ function Kategorite() {
   const shpenzimet = withUsage("shpenzim");
   const hyrjet = withUsage("hyrje");
   const dukeKerkuar = kerko.trim().length > 0;
+  const shpenzimetGjetur = filtroPemen(shpenzimet, kerko);
+  const hyrjetGjetur = filtroPemen(hyrjet, kerko);
   const nenkategoriGjithsej = dukshme.filter((c) => c.prindi).length;
 
   const openNew = (lloji, prindi = "") => {
@@ -235,7 +237,7 @@ function Kategorite() {
 
   const renderGrid = (list) =>
     list.length === 0 ? (
-      <Empty>{dukeKerkuar ? `Asnjë kategori nuk përputhet me «${kerko.trim()}».` : "Nuk ka kategori për këtë lloj."}</Empty>
+      <Empty>Nuk ka kategori për këtë lloj.</Empty>
     ) : (
       <div className="fcp-cat-grid">
         {list.map((c) => (
@@ -341,21 +343,31 @@ function Kategorite() {
             )}
           </InputGroup>
 
-          <section className="mb-4">
-            <h2 className="fcp-section-title">
-              <TrendingDown size={20} className="text-primary" />
-              Shpenzimet
-            </h2>
-            {renderGrid(filtroPemen(shpenzimet, kerko))}
-          </section>
+          {/* While searching, a direction with no match is left out instead of saying so under its
+              own heading - "nothing matches" twice, once for each side, reads like a broken page. */}
+          {dukeKerkuar && shpenzimetGjetur.length === 0 && hyrjetGjetur.length === 0 && (
+            <Empty>Asnjë kategori nuk përputhet me «{kerko.trim()}».</Empty>
+          )}
 
-          <section className="mb-4">
-            <h2 className="fcp-section-title">
-              <TrendingUp size={20} className="text-primary" />
-              Hyrjet
-            </h2>
-            {renderGrid(filtroPemen(hyrjet, kerko))}
-          </section>
+          {(!dukeKerkuar || shpenzimetGjetur.length > 0) && (
+            <section className="mb-4">
+              <h2 className="fcp-section-title">
+                <TrendingDown size={20} className="text-primary" />
+                Shpenzimet
+              </h2>
+              {renderGrid(shpenzimetGjetur)}
+            </section>
+          )}
+
+          {(!dukeKerkuar || hyrjetGjetur.length > 0) && (
+            <section className="mb-4">
+              <h2 className="fcp-section-title">
+                <TrendingUp size={20} className="text-primary" />
+                Hyrjet
+              </h2>
+              {renderGrid(hyrjetGjetur)}
+            </section>
+          )}
         </Container>
 
         {rows.length > 0 && <Tabela data={rows} tableName="Kategoritë" filterField="Lloji" mosShfaqID />}

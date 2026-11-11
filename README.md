@@ -73,6 +73,11 @@ sa shpenzohet, sa mbetet dhe sa po kursesh.
   të muajit; kur kthehen, «Kthim»-i i sjell sërish si hyrje. E njëjta gjë bëhet edhe nga vetë
   formulari i transaksionit (**«Hua / borxh me dikë»**): shkruhet emri i personit, dhe nëse ai
   ekziston tashmë te Borxhet aplikacioni pyet a është i njëjti, që të mos krijohet dy herë.
+  <br />**Ditor apo mujor:** çdo shpenzim mund të jetë *mujor* - del nga bilanci, por ndahet mbi ditët e
+  mbetura në vend që ta prishë limitin e sotëm. Pagesat e borxheve dhe barazimet kur mungojnë para vijnë
+  vetë si mujore, dhe një kategori (p.sh. Karburant, Veshje) mund të shënohet **«Shpenzimet e reja janë
+  mujore»**, që kutia të vijë e shënuar te çdo shpenzim i ri në të - edhe nga importi CSV, grupet dhe
+  faturat e ndara. Te Transaksionet disa rreshta të zgjedhur bëhen mujore ose ditore njëherësh.
   <br />**Këstet:** te një kartelë me këste çdo blerje («Shtesë») ka numrin e vet të kësteve, dhe nën
   borxh del kësti i këtij muaji - shuma e blerjeve që janë ende duke u paguar, secila veç e veç - sa
   është paguar prej tij dhe kur bie kësti i fundit. Te kreditë shkruhet një **kësti mujor** i vetëm,
@@ -317,7 +322,9 @@ sa shpenzohet, sa mbetet dhe sa po kursesh.
   Muaji, tremujori dhe viti e mbajnë të bashkëngjitur edhe pasqyrën e plotë PDF; javori vjen i
   shkurtër me qëllim - shtatë ditët, shpenzimi më i madh dhe pagesat që vijnë brenda javës tjetër.
   Secili raport e ka çelësin e vet të bashkëngjitjes, pra pasqyra i shtohet edhe javorit ose i hiqet
-  muajit, sipas asaj që doni të gjeni në kuti postare.
+  muajit, sipas asaj që doni të gjeni në kuti postare. Një raport që nuk arrin të dërgohet provohet
+  sërish (pas 6 orësh, e pas pesë provash një herë në ditë), dhe **Paneli** e tregon me arsyen dhe me
+  butonin «Provo sërish».
   <br />**Nëse një raport vonon**, kjo është arsyeja dhe ajo është me qëllim: nuk ka orar që i nis
   vetë, sepse nuk ka server - një shfletues i mbyllur nuk ekzekuton asgjë - prandaj *hera e parë që
   hapet aplikacioni* është vetë orari. Kur një periudhë ka mbyllur dhe emaili s'ka dalë, kartela e

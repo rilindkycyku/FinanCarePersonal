@@ -236,10 +236,13 @@ export const DEFAULT_CATEGORIES = [
   { id: "cat_default_fatura", emri: "Fatura & Shërbime", lloji: "shpenzim", ngjyra: "#06b6d4", ikona: "Zap" },
   { id: "cat_default_telefon", emri: "Telefon & Internet", lloji: "shpenzim", ngjyra: "#0ea5e9", ikona: "Smartphone" },
   { id: "cat_default_transport", emri: "Transport", lloji: "shpenzim", ngjyra: "#3b82f6", ikona: "Car" },
-  { id: "cat_default_karburant", emri: "Karburant", lloji: "shpenzim", ngjyra: "#eab308", ikona: "Fuel" },
+  // Karburant and Veshje start new expenses as monthly (`kategoriaMujore`): a tank or a coat lasts
+  // weeks, not a day. Only a fresh install gets this - a ledger that already holds these rows keeps
+  // its own, since seeds only fill in what is missing and always lose to what the cloud holds.
+  { id: "cat_default_karburant", emri: "Karburant", lloji: "shpenzim", ngjyra: "#eab308", ikona: "Fuel", ritmiParazgjedhur: "mujor" },
   { id: "cat_default_shendetesi", emri: "Shëndetësi", lloji: "shpenzim", ngjyra: "#f43f5e", ikona: "HeartPulse" },
   { id: "cat_default_argetim", emri: "Argëtim", lloji: "shpenzim", ngjyra: "#ec4899", ikona: "Film" },
-  { id: "cat_default_veshje", emri: "Veshje", lloji: "shpenzim", ngjyra: "#a855f7", ikona: "Shirt" },
+  { id: "cat_default_veshje", emri: "Veshje", lloji: "shpenzim", ngjyra: "#a855f7", ikona: "Shirt", ritmiParazgjedhur: "mujor" },
   { id: "cat_default_edukim", emri: "Edukim", lloji: "shpenzim", ngjyra: "#14b8a6", ikona: "GraduationCap" },
   { id: "cat_default_udhetime", emri: "Udhëtime", lloji: "shpenzim", ngjyra: "#22c55e", ikona: "Plane" },
   { id: "cat_default_sport", emri: "Sport & Fitnes", lloji: "shpenzim", ngjyra: "#10b981", ikona: "Dumbbell" },

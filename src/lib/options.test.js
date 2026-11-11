@@ -105,4 +105,9 @@ describe("KATEGORIA_SIPAS_LLOJIT_TE_BORXHIT", () => {
       expect(kategoria.lloji, t.value).toBe(t.drejtimi === "kerkese" ? "hyrje" : "shpenzim");
     });
   });
+
+  it("starts fuel and clothing as monthly, and nothing else among the defaults", () => {
+    const mujore = DEFAULT_CATEGORIES.filter((c) => c.ritmiParazgjedhur === "mujor").map((c) => c.id);
+    expect(mujore.sort()).toEqual(["cat_default_karburant", "cat_default_veshje"]);
+  });
 });

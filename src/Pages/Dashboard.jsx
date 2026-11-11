@@ -15,6 +15,7 @@ import Footer from "../Components/Footer";
 import ButoniUdhezimit from "../Components/ButoniUdhezimit";
 import ShtoTransaksionin from "../Components/ShtoTransaksionin";
 import RegjistroKuponin from "../Components/RegjistroKuponin";
+import RaportiNukUDergua from "../Components/RaportiNukUDergua";
 import ButonPasqyra from "../Components/ButonPasqyra";
 import ShpenzimiDitor from "../Components/ShpenzimiDitor";
 import UdhetimiNeVazhdim from "../Components/UdhetimiNeVazhdim";
@@ -193,6 +194,8 @@ function Dashboard() {
               </Link>
             </Alert>
           )}
+
+          <RaportiNukUDergua />
 
           {/* The backup reminder used to sit here, above the figures. It is now pinned to the two
               pages where it can be acted on - Sinkronizimi and Eksporto / Importo - because on the

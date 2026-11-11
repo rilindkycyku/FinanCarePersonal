@@ -24,13 +24,22 @@ ngriti versionin.
   ndryshojnë - përveç atyre të sotme: kur e shënoni kategorinë, aplikacioni pyet a t'i bëjë mujore edhe
   shpenzimet e sotme në të, që limiti i sotëm të rregullohet menjëherë. Shenja vlen edhe për pjesët e
   një fature të ndarë në disa kategori (nafta dhe buka në një faturë bëhen njëra mujore, tjetra ditore)
-  dhe për shpenzimet që i paguani te **Grupet**.
+  dhe për shpenzimet që i paguani te **Grupet** ose që i sillni me **Importo nga CSV**. Në një
+  instalim të ri, «Karburant» dhe «Veshje» vijnë të shënuara që në fillim; kategoritë tuaja ekzistuese
+  nuk preken.
+- **Disa transaksione bëhen mujore njëherësh.** Te **Transaksionet**, pasi zgjidhni rreshtat (kutitë
+  majtas), butoni **«Bëji mujore»** i kthen të gjitha shpenzimet e zgjedhura - p.sh. pagesat e vjetra
+  të borxhit dhe barazimet - me një prekje; kur të zgjedhurat janë tashmë mujore, butoni bëhet «Bëji
+  ditore». Kutitë e zgjedhjes shfaqen tani edhe me një llogari të vetme.
+- **Paneli tregon kur një raport me email nuk u dërgua**, me arsyen dhe butonin **«Provo sërish»**.
+  Më parë kjo shkruhej vetëm te Cilësimet, ku nuk e shikon njeri çdo ditë.
 - **Një prekje kur limiti ditor kuqet nga një blerje e vetme.** Kartela «Sa Mund të Shpenzoj Sot» vetëm
   e përshkruante zgjidhjen; tani ka butonat **«Bëje mujor»** (vetëm atë blerje) dhe **«Gjithmonë mujor:
   Karburant»** (e shënon kategorinë kryesore dhe e bën mujore edhe këtë blerje).
 - **Kategoritë: kërkim dhe familje të palosura.** Me mbi 200 kategori, në telefon duhej rrëshqitur
   gjatë për një emër. Tani faqja ka fushën **«Kërko kategorinë»** (pa marrë parasysh ë/ç dhe shkronjat e
-  mëdha), dhe nënkategoritë rrinë të palosura nën rreshtin «N nënkategori» derisa ta prekni.
+  mëdha), dhe nënkategoritë rrinë të palosura nën rreshtin «N nënkategori» derisa ta prekni. Gjatë
+  kërkimit shfaqet vetëm drejtimi (shpenzim/hyrje) ku ka përputhje.
 - **Shuma e çdo dite te Transaksionet në telefon.** Pranë «Sot», «Dje», «E hënë, 9 nëntor» del sa u
   shpenzua atë ditë (hyrjet dhe transferet nuk numërohen).
 

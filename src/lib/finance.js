@@ -482,6 +482,21 @@ export function eshteMujore(tx) {
 }
 
 /**
+ * The ticked rows of the transactions list, changed to monthly (`mujor = true`) or back to daily.
+ *
+ * Returns only the records that actually change - expenses not already in that rhythm - so the
+ * save is as small as the change and the confirmation can say how many it touched. Income and
+ * transfers have no daily allowance to protect and are never in it. `jashteLimitit` is cleared on
+ * the way, as the single-row button does, so a record carrying the old name stops disagreeing.
+ */
+export function ndryshoRitminEShume(transactions = [], ids = [], mujor = true) {
+  const zgjedhur = new Set(ids);
+  return transactions
+    .filter((tx) => zgjedhur.has(tx.id) && tx.lloji === "shpenzim" && eshteMujore(tx) !== mujor)
+    .map((tx) => ({ ...tx, ritmi: mujor ? RITMI_MUJOR : null, jashteLimitit: null }));
+}
+
+/**
  * Today's daily expenses in a category and everything filed under it - what marking that category
  * «Shpenzimet e reja janë mujore» offers to turn monthly as well.
  *

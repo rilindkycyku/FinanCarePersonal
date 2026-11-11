@@ -21,7 +21,7 @@ import Zgjedhesi from "../Components/Zgjedhesi";
 import { opsionetLlogarive } from "../lib/opsionet";
 import { useDialog } from "../Context/DialogContext";
 import { STORES } from "../lib/db";
-import { RITMI_MUJOR, cashflow, eshteMujore, reassignAccount, sortByDateDesc } from "../lib/finance";
+import { RITMI_MUJOR, cashflow, eshteMujore, ndryshoRitminEShume, reassignAccount, sortByDateDesc } from "../lib/finance";
 import { etiketatE, kaEtiketen, ngjyraEtiketes, perdorimiEtiketave } from "../lib/etiketat";
 import { emriIPlote, familjaSet } from "../lib/kategorite";
 import { lidhjaHartes, vendndodhjaE } from "../lib/vendndodhjet";
@@ -109,9 +109,8 @@ function Transaksionet() {
   const flows = useMemo(() => cashflow(teFiltruara), [teFiltruara]);
 
   const llogariteAktive = useMemo(() => accounts.filter((a) => !a.arkivuar), [accounts]);
-  // Picking rows to move only means something when there is somewhere to move them to: with one
-  // account for everything, or with only one account left, the column would be a checkbox that
-  // does nothing.
+  // Moving rows only means something when there is somewhere to move them to. The checkboxes stay
+  // either way: a ticked set can also be made monthly or daily at once.
   const mundZhvendoset = !njeLlogari && llogariteAktive.length > 1;
 
   // A selection names rows, and rows come and go - one gets deleted, a filter narrows the list.
@@ -267,6 +266,30 @@ function Transaksionet() {
       // Written out so a record marked under the old name stops disagreeing with the new one.
       jashteLimitit: null,
     });
+  };
+
+  /**
+   * Every ticked expense made monthly - or back to daily when all of them already are.
+   *
+   * The single-row sun/calendar button is right for one tank of fuel. It is not right for the
+   * debt payments and balance corrections recorded before those became monthly by themselves: a
+   * history of them is opened and fixed one row at a time, which is the same as not fixing it.
+   */
+  const shpenzimetEZgjedhura = useMemo(() => {
+    const ids = new Set(zgjedhjet);
+    return transactions.filter((tx) => ids.has(tx.id) && tx.lloji === "shpenzim");
+  }, [transactions, zgjedhjet]);
+  const kthejNeDitore = shpenzimetEZgjedhura.length > 0 && shpenzimetEZgjedhura.every(eshteMujore);
+  const ndryshoRitminEZgjedhjeve = async () => {
+    const ndryshimet = ndryshoRitminEShume(transactions, zgjedhjet, !kthejNeDitore);
+    if (ndryshimet.length === 0) {
+      await dialog.alert("Asnjë nga të zgjedhurat nuk është shpenzim - hyrjet dhe transferet nuk kanë ritëm ditor.", {
+        title: "Asgjë për të ndryshuar",
+      });
+      return;
+    }
+    await saveMany(ndryshimet.map((tx) => [STORES.transactions, tx]));
+    setZgjedhjet([]);
   };
 
   /**
@@ -524,23 +547,31 @@ function Transaksionet() {
               return tx && eshteMujore(tx) ? <span className="fcp-pill fcp-pill-mujor">Mujor</span> : null;
             },
           }}
-          kaZgjedhje={mundZhvendoset}
+          kaZgjedhje
           zgjedhjet={zgjedhjet}
           funksionZgjedhjes={setZgjedhjet}
           veprimetEZgjedhura={
             <div className="d-flex align-items-center gap-2 flex-wrap">
-              <Zgjedhesi
-                value={llogariaSynim}
-                onChange={setLlogariaSynim}
-                opsionet={opsionetLlogarive(llogariteAktive)}
-                placeholder="Zgjidh llogarinë"
-                titulli="Zhvendos te llogaria"
-                size="sm"
-                className="fcp-zgj-i-ngushte"
-              />
-              <Button size="sm" variant="primary" disabled={!llogariaSynim} onClick={zhvendosZgjedhjet}>
-                <ArrowRightLeft size={14} className="me-1" /> Zhvendos
+              <Button size="sm" variant="outline-light" onClick={ndryshoRitminEZgjedhjeve}>
+                <CalendarDays size={14} className="me-1" /> {kthejNeDitore ? "Bëji ditore" : "Bëji mujore"}
               </Button>
+              {/* Moving rows only means something when there is another account to move them to. */}
+              {mundZhvendoset && (
+                <>
+                  <Zgjedhesi
+                    value={llogariaSynim}
+                    onChange={setLlogariaSynim}
+                    opsionet={opsionetLlogarive(llogariteAktive)}
+                    placeholder="Zgjidh llogarinë"
+                    titulli="Zhvendos te llogaria"
+                    size="sm"
+                    className="fcp-zgj-i-ngushte"
+                  />
+                  <Button size="sm" variant="primary" disabled={!llogariaSynim} onClick={zhvendosZgjedhjet}>
+                    <ArrowRightLeft size={14} className="me-1" /> Zhvendos
+                  </Button>
+                </>
+              )}
             </div>
           }
         />

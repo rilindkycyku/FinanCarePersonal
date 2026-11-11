@@ -18,6 +18,8 @@ import { makeId, STORES } from "../lib/db";
 import { guessMapping, markDuplicates, parseDelimited, rowsToTransactions } from "../lib/csv";
 import { mesoRregullen, sugjeroKategorine } from "../lib/rregullat";
 import { formatDate } from "../lib/format";
+import { kategoriaMujore } from "../lib/kategorite";
+import { RITMI_MUJOR } from "../lib/finance";
 import "./Styles/PremiumTheme.css";
 import "./Styles/DizajniPergjithshem.css";
 import "./Styles/Dashboard.css";
@@ -185,6 +187,10 @@ function ImportoCsv() {
           borxhiId: null,
           planiId: null,
           krijuar: koha,
+          // A bank statement's fuel is the same tank the form would have booked as monthly, so a
+          // category marked «Shpenzimet e reja janë mujore» decides here too. It only changes a
+          // figure for rows dated today, but the "Mujor" mark on the older ones stays true.
+          ritmi: r.lloji === "shpenzim" && kategoriaMujore(categories, kategoriaId) ? RITMI_MUJOR : null,
           monedhaOrigjinale: null,
           vleraOrigjinale: null,
           kursi: null,

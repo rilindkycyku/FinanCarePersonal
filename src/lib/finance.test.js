@@ -16,7 +16,7 @@ import {
   filterByItem, PA_KATEGORI, reassignAccount,
   reconciliation,
   dataEParaERegjistruar,
-  convertedAmount, currencyFields, dailyLimit, ditoretESotmeTeKategorise, eshteMujore, debtMonthlyInterest, debtMonthlyRate, debtPace,
+  convertedAmount, currencyFields, dailyLimit, ditoretESotmeTeKategorise, eshteMujore, ndryshoRitminEShume, debtMonthlyInterest, debtMonthlyRate, debtPace,
   debtCardLimit, debtDueDate, debtInstallments, debtNextPayment, debtPayoffOrder, debtPaymentsFromTransactions, debtProgress, debtRequiredPayment,
   transaksioniIHuas,
   debtTotals, dueRecurring, effectiveBudgets, enteredAt, filterByRange, generateDueTransactions,
@@ -2139,5 +2139,26 @@ describe("ditoretESotmeTeKategorise", () => {
     expect(ditoretESotmeTeKategorise(kat, lista, "karb", sot).map((t) => t.id)).toEqual(["1", "2"]);
     expect(ditoretESotmeTeKategorise(kat, lista, "nafte", sot).map((t) => t.id)).toEqual(["1"]);
     expect(ditoretESotmeTeKategorise(kat, lista, "", sot)).toEqual([]);
+  });
+});
+
+describe("ndryshoRitminEShume", () => {
+  const lista = [
+    tx("1"),
+    tx("2", { ritmi: "mujor" }),
+    tx("3", { jashteLimitit: true }),
+    tx("4", { lloji: "hyrje" }),
+    tx("5", { lloji: "transfer" }),
+    tx("6"),
+  ];
+  it("turns the ticked daily expenses monthly, and only those", () => {
+    const r = ndryshoRitminEShume(lista, ["1", "2", "4", "5"], true);
+    expect(r.map((t) => t.id)).toEqual(["1"]);
+    expect(r[0].ritmi).toBe("mujor");
+  });
+  it("turns monthly ones back to daily, the old flag included", () => {
+    const r = ndryshoRitminEShume(lista, ["1", "2", "3"], false);
+    expect(r.map((t) => [t.id, t.ritmi, t.jashteLimitit])).toEqual([["2", null, null], ["3", null, null]]);
+    expect(r.every((t) => !eshteMujore(t))).toBe(true);
   });
 });
