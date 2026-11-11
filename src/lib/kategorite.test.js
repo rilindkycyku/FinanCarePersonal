@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  emriIPlote, eshteArkivuar, familja, kategoriaMujore, kategoriTeHapura, kategoriteQeMungojne, kerkoKategorite, mundTeKeteNjePrind, nenkategorite, pemaKategorive, prinderitEMundshem, prindiI, prindiPerRuajtje, rrenjaE,
+  emriIPlote, eshteArkivuar, familja, filtroPemen, kategoriaMujore, kategoriTeHapura, kategoriteQeMungojne, kerkoKategorite, mundTeKeteNjePrind, nenkategorite, pemaKategorive, prinderitEMundshem, prindiI, prindiPerRuajtje, rrenjaE,
 } from "./kategorite";
 
 const kategori = (id, emri, extra = {}) => ({ id, emri, lloji: "shpenzim", ...extra });
@@ -257,5 +257,18 @@ describe("kategori të arkivuara", () => {
     expect(kategoriaMujore(meShenje, "rroga")).toBe(null);
     expect(kategoriaMujore(meShenje, "")).toBe(null);
     expect(kategoriaMujore(meShenje, "nuk-ekziston")).toBe(null);
+  });
+
+  it("narrows the tree to a search, keeping a matching parent's family whole", () => {
+    const pema = [
+      { id: "k", emri: "Karburant", femijet: [{ id: "n", emri: "Naftë" }, { id: "b", emri: "Benzinë" }] },
+      { id: "u", emri: "Ushqim & Pije", femijet: [{ id: "m", emri: "Market" }, { id: "f", emri: "Furra" }] },
+      { id: "v", emri: "Veshje", femijet: [] },
+    ];
+    expect(filtroPemen(pema, "karb").map((c) => [c.id, c.femijet.length])).toEqual([["k", 2]]);
+    expect(filtroPemen(pema, "nafte").map((c) => [c.id, c.femijet.map((f) => f.id)])).toEqual([["k", ["n"]]]);
+    expect(filtroPemen(pema, "MARK")[0].femijet.map((f) => f.id)).toEqual(["m"]);
+    expect(filtroPemen(pema, "  ")).toBe(pema);
+    expect(filtroPemen(pema, "zzz")).toEqual([]);
   });
 });

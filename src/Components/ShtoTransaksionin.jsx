@@ -532,8 +532,19 @@ function ShtoTransaksionin({
     };
 
     // One receipt across several categories is saved as several ordinary rows - see `ndajFaturen`.
-    const { rekordet, gabimi } = isTransfer ? { rekordet: [rekordi], gabimi: "" } : ndajFaturen(rekordi, pjeset, { makeId });
-    if (gabimi) return setError(gabimi);
+    const ndarja = isTransfer ? { rekordet: [rekordi], gabimi: "" } : ndajFaturen(rekordi, pjeset, { makeId });
+    if (ndarja.gabimi) return setError(ndarja.gabimi);
+    /**
+     * The other parts of a split receipt are copies of the top row, rhythm included - which is wrong
+     * when the rhythm came from the top row's category: fuel and bread on one receipt are one
+     * monthly and one daily expense. Unless the box was ticked or cleared by hand (then it is the
+     * person's answer for the whole receipt), each part starts from its own category.
+     */
+    const rekordet = ndarja.rekordet.map((r, i) => {
+      if (i === 0 || tx.ritmiPrekur || tx.lloji !== "shpenzim") return r;
+      const mujore = kategoriaMujore(categories, r.kategoriaId) || (!tx.ritmiAuto && r.ritmi === RITMI_MUJOR);
+      return { ...r, ritmi: mujore ? RITMI_MUJOR : null };
+    });
 
     // The person's note, written in the same batch as the money so neither exists without the other.
     let shenimiBorxhit = null;

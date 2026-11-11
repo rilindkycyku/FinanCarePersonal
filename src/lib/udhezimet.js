@@ -503,7 +503,15 @@ export const UDHEZIMET = [
           "shënjoni «Shpenzimet e reja janë mujore»: çdo shpenzim i ri aty vjen me kutinë «Shpenzim mujor» të " +
           "shënuar, pra ndahet mbi ditët e mbetura të muajit në vend që ta prishë limitin e sotëm. Shenja e " +
           "kategorisë kryesore vlen edhe për nënkategoritë. Është vetëm pikënisje: te një shpenzim i veçantë " +
-          "mund ta hiqni, dhe shpenzimet e regjistruara më parë nuk ndryshojnë.",
+          "mund ta hiqni, dhe shpenzimet e regjistruara më parë nuk ndryshojnë - aplikacioni pyet vetëm për ato " +
+          "të sotme.",
+      },
+      {
+        titulli: "Kërkoni dhe palosni",
+        teksti:
+          "Fusha «Kërko kategorinë» gjen një emër pa marrë parasysh ë, ç ose shkronjat e mëdha, dhe tregon " +
+          "familjen ku bën pjesë. Pa kërkim, nënkategoritë rrinë të palosura: prekni rreshtin «N nënkategori» " +
+          "për t'i hapur.",
       },
       {
         titulli: "Arkivimi",

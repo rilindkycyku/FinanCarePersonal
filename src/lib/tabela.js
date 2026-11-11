@@ -119,3 +119,22 @@ export function emriIDites(iso, sot) {
   const teksti = `${emriDites.charAt(0).toUpperCase()}${emriDites.slice(1)}, ${+dita} ${MONTHS_LONG[+muaji - 1]}`;
   return String(sot).slice(0, 4) === viti ? teksti : `${teksti} ${viti}`;
 }
+
+/**
+ * What a day's rows spent: the sum of the negative amounts in `kolona`, as a negative number, or 0
+ * when nothing went out. Read from the cells' plain text (`plainAmount`, "-37.04"), never from the
+ * drawn markup, which is grouped for the eye and would not parse.
+ *
+ * Spending only, not the net: a payday heading reading "+1 362,96" would hide the day's coffees
+ * behind the salary, and a transfer between two of your own accounts is not spending at all (its
+ * cell carries no sign).
+ */
+export function shpenzimiIDites(rreshtat, kolona) {
+  if (!kolona) return 0;
+  let centet = 0;
+  for (const r of rreshtat || []) {
+    const n = Number(cellText(r?.[kolona]).trim());
+    if (Number.isFinite(n) && n < 0) centet += Math.round(n * 100);
+  }
+  return centet / 100;
+}

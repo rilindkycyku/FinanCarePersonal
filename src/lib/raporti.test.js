@@ -54,8 +54,9 @@ describe("provoSerish", () => {
     expect(provoSerish({ ...iFundit, kur: "2026-08-01T08:00:00Z" }, tani)).toBe(true);
   });
 
-  it("gives up after five attempts rather than mailing the same error for ever", () => {
-    expect(provoSerish({ gjendja: "deshtoi", prova: 5, kur: "2026-07-01T08:00:00Z" }, tani)).toBe(false);
+  it("after five attempts slows down to once a day instead of giving up", () => {
+    expect(provoSerish({ gjendja: "deshtoi", prova: 5, kur: "2026-08-02T00:00:00Z" }, tani)).toBe(false);
+    expect(provoSerish({ gjendja: "deshtoi", prova: 5, kur: "2026-08-01T08:00:00Z" }, tani)).toBe(true);
   });
 });
 

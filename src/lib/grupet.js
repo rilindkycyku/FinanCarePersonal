@@ -382,7 +382,7 @@ export function planiIKalimitNeBorxhe(grupi, borxhet = [], { makeId, sot, emriGr
  * none to book (someone else paid, or the user chose not to). Keeps the id of the one it replaces,
  * so editing a bill edits its transaction rather than adding a second one.
  */
-export function transaksioniIShpenzimit(grupi, shp, { llogariaId, kategoriaId, ekzistues = null, krijuar } = {}) {
+export function transaksioniIShpenzimit(grupi, shp, { llogariaId, kategoriaId, ekzistues = null, krijuar, ritmi = null } = {}) {
   if (shp?.paguesi !== UNE || !llogariaId) return null;
   return {
     ...(ekzistues || {}),
@@ -398,6 +398,9 @@ export function transaksioniIShpenzimit(grupi, shp, { llogariaId, kategoriaId, e
     etiketat: ekzistues?.etiketat || [],
     grupiId: grupi.id,
     krijuar: ekzistues?.krijuar || krijuar,
+    // A new row takes the rhythm its category starts expenses with (`kategoriaMujore`), the way the
+    // transaction form does; an existing one keeps whatever it was given, by hand or otherwise.
+    ...(ekzistues ? {} : { ritmi: ritmi || null }),
   };
 }
 

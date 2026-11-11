@@ -262,6 +262,21 @@ describe("transaksioniIShpenzimit", () => {
     });
     expect(tx).toMatchObject({ id: "tx_9", etiketat: ["pushime"], krijuar: "2026-01-01T00:00:00.000Z", shenim: "s" });
   });
+
+  it("një shpenzim i ri merr ritmin e kategorisë, një ekzistues mban të vetin", () => {
+    const iRi = transaksioniIShpenzimit(g, { ...shp("Nafta", UNE, 60, [UNE, "a"]), transaksioniId: "tx_2" }, {
+      llogariaId: "acc_1",
+      ritmi: "mujor",
+    });
+    expect(iRi.ritmi).toBe("mujor");
+    const ekzistues = { id: "tx_3", ritmi: null };
+    const vjeter = transaksioniIShpenzimit(g, { ...shp("Nafta", UNE, 60, [UNE]), transaksioniId: "tx_3" }, {
+      llogariaId: "acc_1",
+      ekzistues,
+      ritmi: "mujor",
+    });
+    expect(vjeter.ritmi).toBeNull();
+  });
 });
 
 describe("anetariEshteNePerdorim", () => {

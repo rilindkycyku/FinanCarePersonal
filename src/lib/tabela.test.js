@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { eshteBosh, eshteKolonaParash, emriIDites, grupetSipasDates, planiIKartes, rreshtiNeKarte } from "./tabela";
+import { eshteBosh, eshteKolonaParash, emriIDites, grupetSipasDates, planiIKartes, rreshtiNeKarte, shpenzimiIDites } from "./tabela";
 import { markup } from "./format";
 
 const TX_HEADERS = ["ID", "Data", "Lloji", "Kategoria", "Llogaria", "Përshkrimi", "Etiketat", "Vendi", "Fatura", "Vlera (€)"];
@@ -150,5 +150,21 @@ describe("emriIDites", () => {
 
   it("survives a missing date", () => {
     expect(emriIDites("", sot)).toBe("Pa datë");
+  });
+});
+
+describe("shpenzimiIDites", () => {
+  it("adds up only what went out, from the plain text of the cells", () => {
+    const rreshtat = [
+      { V: markup("<b>-37,04</b>", "-37.04") },
+      { V: "-2.60" },
+      { V: "1.33" },
+      { V: "50.00" },
+      { V: "-0.10" },
+      { V: "-0.20" },
+    ];
+    expect(shpenzimiIDites(rreshtat, "V")).toBe(-39.94);
+    expect(shpenzimiIDites([{ V: "12.00" }], "V")).toBe(0);
+    expect(shpenzimiIDites(rreshtat, null)).toBe(0);
   });
 });

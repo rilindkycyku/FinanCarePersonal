@@ -59,16 +59,6 @@ function saMePare(vlera) {
  * lists devices while the export buttons are the ones being read.
  */
 /**
- * The address to hand Supabase as the Site URL, read from the browser rather than written down.
- *
- * The step used to say "the address of this application" and leave the reader to find it - which on
- * a phone means leaving the page. The app is served from a few places (the deployed site, a phone
- * on the local network during development, the installed PWA), and the one that matters is
- * whichever one is being read right now, so this is the origin of this very page.
- */
-const adresaEFaqes = typeof window === "undefined" ? "" : window.location.origin;
-
-/**
  * Lexon parametrat e konfigurimit nga linku (query ose hash) nëse dikush hap një link të gjeneruar.
  * Mbështet:
  *  - ?url=...&key=... (ose sb_url / sb_key)
@@ -98,7 +88,9 @@ function lexoParametratKonfigurimit() {
       const decoded = JSON.parse(atob(setupEncoded));
       if (decoded?.url) url = decoded.url;
       if (decoded?.anonKey || decoded?.key) anonKey = decoded.anonKey || decoded.key;
-    } catch {}
+    } catch {
+      /* a mangled link is the same as no link: the fields stay empty for typing */
+    }
   }
 
   return { url: url ? url.trim() : null, anonKey: anonKey ? anonKey.trim() : null };
@@ -120,7 +112,7 @@ function PanelaSinkronizimit() {
       password: "",
     };
   });
-  const [konfiguruarNgaLinku, setKonfiguruarNgaLinku] = useState(() => {
+  const [konfiguruarNgaLinku] = useState(() => {
     const ngaLinku = lexoParametratKonfigurimit();
     return Boolean(ngaLinku.url && ngaLinku.anonKey);
   });
@@ -130,7 +122,9 @@ function PanelaSinkronizimit() {
       try {
         const pastruar = window.location.pathname + window.location.hash.split("?")[0];
         window.history.replaceState({}, document.title, pastruar);
-      } catch {}
+      } catch {
+        /* the key stays in the address bar, which is untidy but harmless */
+      }
     }
   }, [konfiguruarNgaLinku]);
   const [pune, setPune] = useState(null);
@@ -168,7 +162,6 @@ function PanelaSinkronizimit() {
   // a device connected before this release carries `null` and has long since decided by using it.
   const duhetVendim = lidhur && konfigurimi.lidhjaVerifikuar === false;
   const [lidhjaHapur, setLidhjaHapur] = useState(false);
-  const [adresaKopjuar, setAdresaKopjuar] = useState(false);
 
   /**
    * `?konfiguro=1` opens the setup dialog straight away - the home screen sends people here with
@@ -184,18 +177,6 @@ function PanelaSinkronizimit() {
   }, [searchParams, setSearchParams]);
 
   const setField = (name, value) => setForm((prev) => ({ ...prev, [name]: value }));
-
-  /** Copying beats retyping a domain into a field on another device; when the clipboard is refused
-   * (an insecure context), the address is right there to be selected by hand. */
-  const kopjoAdresen = async () => {
-    try {
-      await navigator.clipboard.writeText(adresaEFaqes);
-      setAdresaKopjuar(true);
-      setTimeout(() => setAdresaKopjuar(false), 2500);
-    } catch {
-      setAdresaKopjuar(false);
-    }
-  };
 
   /**
    * Every result of a button on this page, said in a dialog rather than in a banner at the top.

@@ -482,6 +482,31 @@ export function eshteMujore(tx) {
 }
 
 /**
+ * Today's daily expenses in a category and everything filed under it - what marking that category
+ * «Shpenzimet e reja janë mujore» offers to turn monthly as well.
+ *
+ * Only today's, on purpose. The mark is for new expenses and leaves history alone, but the person
+ * marks «Karburant» at the moment today's tank has just turned the day red, and an answer that fixes
+ * the next tank and not this one would be no answer. Days already past are not offered: their
+ * rhythm no longer changes any figure (`dailyLimit` only reads today's), so rewriting them would be
+ * churn for nothing. Instalments and planned purchases are left out for the reason `dailyLimit`
+ * leaves them out - they never counted against the day.
+ */
+export function ditoretESotmeTeKategorise(categories, transactions, kategoriaId, sot) {
+  if (!kategoriaId) return [];
+  const familja = familjaSet(categories, kategoriaId);
+  return (transactions || []).filter(
+    (tx) =>
+      tx.lloji === "shpenzim" &&
+      tx.data === sot &&
+      familja.has(tx.kategoriaId) &&
+      !tx.perseritjaId &&
+      !tx.planiId &&
+      !eshteMujore(tx)
+  );
+}
+
+/**
  * Today's spending allowance - the figure that answers "sa mund të shpenzoj sot".
  *
  * The money left to live on is what you actually hold and can spend (savings and investment

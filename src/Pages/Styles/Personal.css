@@ -1633,6 +1633,33 @@ body.light-mode .fcp-bllokuar-kuti {
   margin-top: 0.45rem;
 }
 
+.fcp-daily-note-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+}
+
+/* Small pill buttons for a one-tap fix inside a note - big enough for a thumb, quiet enough not to
+   compete with the card's own figure. */
+.fcp-chip-btn {
+  border: 1px solid var(--sp-border);
+  background: var(--sp-surface-2);
+  color: var(--sp-text);
+  border-radius: 999px;
+  padding: 0.4rem 0.8rem;
+  min-height: 34px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.fcp-chip-btn:hover,
+.fcp-chip-btn:focus-visible {
+  border-color: var(--sp-emerald);
+  color: var(--sp-emerald);
+}
+
 .fcp-daily-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -2639,3 +2666,27 @@ body.light-mode .card.profile-card.fcp-zona-rrezik:hover {
   .fcp-chips:not(.hapur) .fcp-chip-teprice { display: none; }
 }
 .fcp-chip-me-shume { border-style: dashed; color: var(--sp-text-muted); }
+
+/* Kategoritë: the search above the lists, and the "N nënkategori" line that folds a family. */
+.fcp-cat-kerko {
+  margin: 0 0 1rem;
+}
+.fcp-cat-palos {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  border: 0;
+  background: none;
+  padding: 0.15rem 0;
+  text-align: left;
+  cursor: pointer;
+}
+.fcp-cat-palos:disabled {
+  cursor: default;
+}
+.fcp-cat-palos svg {
+  transition: transform 0.15s ease;
+}
+.fcp-cat-palos.hapur svg {
+  transform: rotate(180deg);
+}

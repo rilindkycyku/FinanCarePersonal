@@ -62,6 +62,13 @@ const KOHA_E_NGECUR = 15 * 60 * 1000;
 /** How long a failure is left alone before the next opening tries again, and how many times. */
 const PRITJA_PAS_DESHTIMIT = 6 * 60 * 60 * 1000;
 const PROVAT_MAX = 5;
+/**
+ * After `PROVAT_MAX` failures the period is still tried, once a day. It used to stop for good,
+ * which turned one bad afternoon (Resend down, an expired session, a key being rotated) into a
+ * weekly report that only went out when somebody noticed the line in Cilësimet and pressed send -
+ * days late. A period is only looked at until the next one closes, so this cannot go on for ever.
+ */
+const PRITJA_PAS_PROVAVE = 24 * 60 * 60 * 1000;
 
 /** The month a report would be about, if one is owed today: always the one that has just ended. */
 export function muajiIRaportit(sot = new Date()) {
@@ -170,7 +177,8 @@ export function provoSerish(shenja, tani = Date.now()) {
   // Another device is mid-send: leave it alone unless it has clearly died with the tab that
   // started it.
   if (shenja.gjendja === "duke u derguar") return tani - kur > KOHA_E_NGECUR;
-  return (shenja.prova || 0) < PROVAT_MAX && tani - kur > PRITJA_PAS_DESHTIMIT;
+  const pritja = (shenja.prova || 0) < PROVAT_MAX ? PRITJA_PAS_DESHTIMIT : PRITJA_PAS_PROVAVE;
+  return tani - kur > pritja;
 }
 
 /**

@@ -7,6 +7,7 @@ import {
   LLOJET_E_NDARJES, UNE, anetaretMeMua, gabimiIShpenzimit, pjesetEShpenzimit, transaksioniIShpenzimit,
 } from "../lib/grupet";
 import { opsionetEThjeshta, opsionetLlogarive } from "../lib/opsionet";
+import { kategoriaMujore } from "../lib/kategorite";
 import VleraInput from "./VleraInput";
 import Zgjedhesi from "./Zgjedhesi";
 import ZgjedhesiKategorive from "./ZgjedhesiKategorive";
@@ -108,6 +109,7 @@ function ShtoShpenzimGrupi({ show, onHide, grupi, initial }) {
           kategoriaId,
           ekzistues,
           krijuar: new Date().toISOString(),
+          ritmi: kategoriaMujore(categories, kategoriaId) ? "mujor" : null,
         })
       : null;
     const billFinal = { ...bill, transaksioniId: tx?.id || null };

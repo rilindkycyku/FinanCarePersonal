@@ -3,8 +3,9 @@ import { Link } from "react-router-dom";
 import { Gauge } from "lucide-react";
 import { Panel, ProgressBar, Empty } from "./Ui";
 import { useData } from "../Context/DataContext";
-import { dailyLimit, eshteMujore } from "../lib/finance";
-import { emriIPlote } from "../lib/kategorite";
+import { RITMI_MUJOR, dailyLimit, eshteMujore } from "../lib/finance";
+import { STORES } from "../lib/db";
+import { emriIPlote, kategoriaMujore, rrenjaE } from "../lib/kategorite";
 import { monthLabel, todayISO } from "../lib/format";
 import "../Pages/Styles/Personal.css";
 
@@ -17,7 +18,8 @@ import "../Pages/Styles/Personal.css";
  * All the maths is `dailyLimit()` in finance.js; this only renders it.
  */
 function ShpenzimiDitor({ action = "Planifiko", actionTo = "/planifikuara" }) {
-  const { accounts, transactions, planet, recurring, categories, profile, money, signedMoney, sipasPeriudhes } = useData();
+  const { accounts, transactions, planet, recurring, categories, profile, money, signedMoney, sipasPeriudhes, save, saveMany } =
+    useData();
   const sot = todayISO();
 
   const d = useMemo(
@@ -70,6 +72,24 @@ function ShpenzimiDitor({ action = "Planifiko", actionTo = "/planifikuara" }) {
     // really was spent.
     return meIMadhi && Number(meIMadhi.vlera) >= d.limiti ? meIMadhi : null;
   }, [d.tejkaluar, d.caktuar, d.limiti, transactions, sot]);
+
+  /**
+   * The two fixes the note used to only describe, one tap each - the card turns red at exactly the
+   * moment somebody wants to say "that was the tank, not today". The second marks the top-level
+   * category (`Karburant`, not `Karburant › Naftë`), so every kind of fuel follows, and turns this
+   * purchase monthly with it. Offered only while the category is not already marked.
+   */
+  const kategoriaRrenje = useMemo(() => {
+    if (!shkaktari?.kategoriaId || kategoriaMujore(categories, shkaktari.kategoriaId)) return null;
+    const rrenja = rrenjaE(categories, shkaktari.kategoriaId);
+    return categories.find((c) => c.id === rrenja && c.lloji === "shpenzim") || null;
+  }, [shkaktari, categories]);
+  const bejeMujor = () => save(STORES.transactions, { ...shkaktari, ritmi: RITMI_MUJOR });
+  const bejeKategorineMujore = () =>
+    saveMany([
+      [STORES.categories, { ...kategoriaRrenje, ritmiParazgjedhur: "mujor" }],
+      [STORES.transactions, { ...shkaktari, ritmi: RITMI_MUJOR }],
+    ]);
 
   const rreshtat = [
     ["Bilanci i shpenzueshëm", d.bilanci, "neutral"],
@@ -133,8 +153,18 @@ function ShpenzimiDitor({ action = "Planifiko", actionTo = "/planifikuara" }) {
             <div className="fcp-daily-note">
               Vetëm {emriIPlote(categories, shkaktari.kategoriaId, "ky shpenzim")} (
               {money(Number(shkaktari.vlera))}) e kaloi limitin. Nëse është diçka që mban gjatë -
-              karburant, sigurim, pajisje - shënojeni si <Link to="/transaksionet">shpenzim
-              mujor</Link> dhe ndahet mbi ditët që mbeten, në vend që t&apos;i ngarkohet kësaj dite.
+              karburant, sigurim, pajisje - bëjeni shpenzim mujor dhe ndahet mbi ditët që mbeten, në vend që
+              t&apos;i ngarkohet kësaj dite.
+              <div className="fcp-daily-note-actions">
+                <button type="button" className="fcp-chip-btn" onClick={bejeMujor}>
+                  Bëje mujor
+                </button>
+                {kategoriaRrenje && (
+                  <button type="button" className="fcp-chip-btn" onClick={bejeKategorineMujore}>
+                    Gjithmonë mujor: {kategoriaRrenje.emri}
+                  </button>
+                )}
+              </div>
             </div>
           )}
         </div>

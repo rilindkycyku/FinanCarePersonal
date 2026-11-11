@@ -16,7 +16,7 @@ import {
   filterByItem, PA_KATEGORI, reassignAccount,
   reconciliation,
   dataEParaERegjistruar,
-  convertedAmount, currencyFields, dailyLimit, eshteMujore, debtMonthlyInterest, debtMonthlyRate, debtPace,
+  convertedAmount, currencyFields, dailyLimit, ditoretESotmeTeKategorise, eshteMujore, debtMonthlyInterest, debtMonthlyRate, debtPace,
   debtCardLimit, debtDueDate, debtInstallments, debtNextPayment, debtPayoffOrder, debtPaymentsFromTransactions, debtProgress, debtRequiredPayment,
   transaksioniIHuas,
   debtTotals, dueRecurring, effectiveBudgets, enteredAt, filterByRange, generateDueTransactions,
@@ -2116,5 +2116,28 @@ describe("debtNextPayment", () => {
   it("has nothing to say about a note that is paid off or has neither a plan nor a day", () => {
     expect(debtNextPayment({ id: "k", lloji: "karte", vleraTotale: 0, limiti: 1000, ditaPageses: 15, pagesat: [] }, "2026-10-05")).toBeNull();
     expect(debtNextPayment({ id: "b", lloji: "borxh", vleraTotale: 200, pagesat: [] }, "2026-10-05")).toBeNull();
+  });
+});
+
+describe("ditoretESotmeTeKategorise", () => {
+  const kat = [
+    { id: "karb", emri: "Karburant", lloji: "shpenzim" },
+    { id: "nafte", emri: "Naftë", lloji: "shpenzim", prindi: "karb" },
+    { id: "kafe", emri: "Kafe", lloji: "shpenzim" },
+  ];
+  const sot = "2026-11-11";
+  it("finds today's daily expenses in the family, nothing else", () => {
+    const lista = [
+      tx("1", { data: sot, kategoriaId: "nafte" }),
+      tx("2", { data: sot, kategoriaId: "karb" }),
+      tx("3", { data: sot, kategoriaId: "nafte", ritmi: "mujor" }),
+      tx("4", { data: "2026-11-10", kategoriaId: "nafte" }),
+      tx("5", { data: sot, kategoriaId: "kafe" }),
+      tx("6", { data: sot, kategoriaId: "karb", perseritjaId: "rec_1" }),
+      tx("7", { data: sot, kategoriaId: "karb", lloji: "hyrje" }),
+    ];
+    expect(ditoretESotmeTeKategorise(kat, lista, "karb", sot).map((t) => t.id)).toEqual(["1", "2"]);
+    expect(ditoretESotmeTeKategorise(kat, lista, "nafte", sot).map((t) => t.id)).toEqual(["1"]);
+    expect(ditoretESotmeTeKategorise(kat, lista, "", sot)).toEqual([]);
   });
 });

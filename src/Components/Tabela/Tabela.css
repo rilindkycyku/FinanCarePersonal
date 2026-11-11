@@ -228,7 +228,9 @@
 .premium-kartat-dita {
   font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
   color: var(--sp-text-muted); margin: 0.2rem 0.2rem 0.3rem;
+  display: flex; justify-content: space-between; align-items: baseline; gap: 0.5rem;
 }
+.premium-kartat-dita-shuma { padding-right: 1.95rem; letter-spacing: 0; font-variant-numeric: tabular-nums; text-transform: none; }
 .premium-kartat-te-gjitha {
   display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; font-weight: 600;
   color: var(--sp-text-muted); padding: 0 0.2rem;

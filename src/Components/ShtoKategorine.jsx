@@ -2,6 +2,9 @@ import { useEffect, useMemo, useState } from "react";
 import { Modal, Button, Form, Row, Col, Alert } from "react-bootstrap";
 import { TrendingUp, TrendingDown } from "lucide-react";
 import { useData } from "../Context/DataContext";
+import { useDialog } from "../Context/DialogContext";
+import { RITMI_MUJOR, ditoretESotmeTeKategorise } from "../lib/finance";
+import { todayISO } from "../lib/format";
 import { makeId, STORES } from "../lib/db";
 import { mundTeKeteNjePrind, nenkategorite, prinderitEMundshem, prindiPerRuajtje } from "../lib/kategorite";
 import Ndihme from "./Ndihme";
@@ -26,7 +29,8 @@ const blank = (lloji = "shpenzim", prindi = "") => ({
  * category of the same direction, which is what turns "Ushqim & Pije" into a heading with
  * "Market", "Furra" and "Pije & Ujë" under it. */
 function ShtoKategorine({ show, onHide, initial, llojiFillestar = "shpenzim", prindiFillestar = "" }) {
-  const { categories, save } = useData();
+  const { categories, transactions, save, saveMany, money } = useData();
+  const dialog = useDialog();
   const [category, setCategory] = useState(blank(llojiFillestar, prindiFillestar));
   const [error, setError] = useState("");
 
@@ -83,8 +87,13 @@ function ShtoKategorine({ show, onHide, initial, llojiFillestar = "shpenzim", pr
 
     setError("");
 
+    const id = category.id || makeId("cat");
+    const behetMujore =
+      category.lloji === "shpenzim" &&
+      category.ritmiParazgjedhur === "mujor" &&
+      initial?.ritmiParazgjedhur !== "mujor";
     await save(STORES.categories, {
-      id: category.id || makeId("cat"),
+      id,
       emri,
       lloji: category.lloji,
       prindi,
@@ -98,7 +107,20 @@ function ShtoKategorine({ show, onHide, initial, llojiFillestar = "shpenzim", pr
       ritmiParazgjedhur: category.lloji === "shpenzim" && category.ritmiParazgjedhur === "mujor" ? "mujor" : null,
     });
 
+    // Marked at the moment today's tank has just turned the day red: offer to fix that one too.
+    // Asked after the category is saved, so cancelling only leaves today as it was.
+    const sotme = behetMujore ? ditoretESotmeTeKategorise(categories, transactions, id, todayISO()) : [];
     onHide();
+    if (sotme.length) {
+      const shuma = sotme.reduce((sum, tx) => sum + Number(tx.vlera || 0), 0);
+      const ok = await dialog.confirm(
+        sotme.length === 1
+          ? `Sot keni një shpenzim në «${emri}» (${money(shuma)}). Ta bëj edhe atë mujor, që të mos e prishë limitin e sotëm?`
+          : `Sot keni ${sotme.length} shpenzime në «${emri}» (${money(shuma)}). T'i bëj edhe ato mujore, që të mos e prishin limitin e sotëm?`,
+        { title: "Edhe shpenzimet e sotme?", confirmLabel: "Po, bëji mujore", cancelLabel: "Jo", variant: "info" }
+      );
+      if (ok) await saveMany(sotme.map((tx) => [STORES.transactions, { ...tx, ritmi: RITMI_MUJOR }]));
+    }
   };
 
   return (

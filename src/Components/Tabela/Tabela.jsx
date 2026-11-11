@@ -8,8 +8,8 @@ import { format, parseISO } from "date-fns";
 import EksportoTeDhenat from "./EksportoTeDhenat";
 import SortIcon from "./SortIcon";
 import useSortableData from "../../Context/useSortableData";
-import { cellText, isMarkup } from "../../lib/format";
-import { emriIDites, grupetSipasDates, planiIKartes, rreshtiNeKarte } from "../../lib/tabela";
+import { cellText, formatAmount, isMarkup } from "../../lib/format";
+import { emriIDites, grupetSipasDates, shpenzimiIDites, planiIKartes, rreshtiNeKarte } from "../../lib/tabela";
 import { JAVOR, MUJOR, TREMUJOR, VJETOR, celesiPeriudhes, kufijtePeriudhes, periudhaParaardhese } from "../../lib/periudhat";
 import "./Tabela.css";
 import Zgjedhesi from "../Zgjedhesi";
@@ -753,7 +753,14 @@ function ListaEKartave({
       )}
       {grupet.map((g, i) => (
         <section className="premium-kartat-grupi" key={`${g.data}-${i}`}>
-          {plani.grupoSipasDates && <h3 className="premium-kartat-dita">{emriIDites(g.data, sot)}</h3>}
+          {plani.grupoSipasDates && (
+            <h3 className="premium-kartat-dita">
+              <span>{emriIDites(g.data, sot)}</span>
+              {kartela?.totaliDites && shpenzimiIDites(g.rreshtat, plani.vlera) < 0 && (
+                <span className="premium-kartat-dita-shuma">{formatAmount(shpenzimiIDites(g.rreshtat, plani.vlera))}</span>
+              )}
+            </h3>
+          )}
           <div className="premium-kartat-kuti">
             {g.rreshtat.map((item) => (
               <Karta

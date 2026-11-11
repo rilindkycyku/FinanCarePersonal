@@ -312,3 +312,19 @@ export function kategoriaMujore(categories, id) {
   const prindi = prindiVlefshem(byId, kategoria);
   return prindi?.ritmiParazgjedhur === "mujor" ? prindi : null;
 }
+
+/**
+ * A category tree (`pemaKategorive` shape: parents with `femijet`) narrowed to what a search matches,
+ * for the Kategoritë page. A parent that matches keeps all its children - "Karburant" should show the
+ * whole family - while a parent that does not stays only as the heading of the children that do,
+ * since a lone "Naftë" with nothing above it would not say where it lives. Accents and case are
+ * ignored, as in every other search box here.
+ */
+export function filtroPemen(pema, teksti) {
+  const q = paTheks(String(teksti || "").trim());
+  if (!q) return pema || [];
+  const perputhet = (c) => paTheks(String(c?.emri || "")).includes(q);
+  return (pema || [])
+    .map((c) => (perputhet(c) ? c : { ...c, femijet: (c.femijet || []).filter(perputhet) }))
+    .filter((c) => perputhet(c) || c.femijet.length > 0);
+}

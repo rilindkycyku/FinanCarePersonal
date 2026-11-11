@@ -25,7 +25,7 @@ import { RITMI_MUJOR, cashflow, eshteMujore, reassignAccount, sortByDateDesc } f
 import { etiketatE, kaEtiketen, ngjyraEtiketes, perdorimiEtiketave } from "../lib/etiketat";
 import { emriIPlote, familjaSet } from "../lib/kategorite";
 import { lidhjaHartes, vendndodhjaE } from "../lib/vendndodhjet";
-import { escapeHtml, formatMoney, formatPercent, markup, plainAmount, todayISO, toNumber } from "../lib/format";
+import { escapeHtml, formatAmount, formatMoney, formatPercent, markup, plainAmount, todayISO, toNumber } from "../lib/format";
 import { TRANSACTION_TYPE_LABELS } from "../lib/options";
 import "./Styles/PremiumTheme.css";
 import "./Styles/DizajniPergjithshem.css";
@@ -220,7 +220,12 @@ function Transaksionet() {
         Fatura: numriFaturave[tx.id]
           ? markup(`<span class="fcp-fatura-nb">${numriFaturave[tx.id]}</span>`, String(numriFaturave[tx.id]))
           : "-",
-        [`Vlera (${simboli})`]: markup(`<span class="${klasa}">${vlera}</span>`, vlera),
+        // Drawn grouped like every other amount on screen ("1 234,56"); the plain text stays
+        // ungrouped because it is what the Excel export writes and what the column sorts by.
+        [`Vlera (${simboli})`]: markup(
+          `<span class="${klasa}">${formatAmount(shenja === 0 ? tx.vlera : shenja * tx.vlera)}</span>`,
+          vlera
+        ),
       };
     });
   }, [teFiltruara, accounts, categories, goals, numriFaturave, simboli, njeLlogari]);
@@ -510,6 +515,8 @@ function Transaksionet() {
             vlera: `Vlera (${simboli})`,
             nentitulli: ["Kategoria", "Llogaria", "Etiketat"],
             grupoSipasDates: true,
+            // What each day cost, beside its heading - the question a day-by-day list is scrolled for.
+            totaliDites: true,
             // The row's "Mujor" pill lives in the type column, which a card leaves for its details;
             // it explains a figure on the dashboard, so on a card too it has to show unopened.
             shenjat: (rreshti) => {

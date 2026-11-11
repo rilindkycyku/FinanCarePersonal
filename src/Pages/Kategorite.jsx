@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
-import { Container, Row, Button, Form } from "react-bootstrap";
+import { Container, Row, Button, Form, InputGroup } from "react-bootstrap";
 import { Tags, Plus, Edit3, Trash2, TrendingUp, TrendingDown, CornerDownRight, Archive,
-  ArchiveRestore } from "lucide-react";
+  ArchiveRestore, ChevronDown, Search, X } from "lucide-react";
 import NavBar from "../Components/NavBar";
 import Footer from "../Components/Footer";
 import PageTitle from "../Components/PageTitle";
@@ -14,7 +14,7 @@ import { useData } from "../Context/DataContext";
 import { useDialog } from "../Context/DialogContext";
 import { STORES } from "../lib/db";
 import { plainAmount } from "../lib/format";
-import { emriIPlote, kategoriTeHapura, nenkategorite, pemaKategorive } from "../lib/kategorite";
+import { emriIPlote, filtroPemen, kategoriTeHapura, nenkategorite, pemaKategorive } from "../lib/kategorite";
 import { getIcon } from "../lib/icons";
 import "./Styles/PremiumTheme.css";
 import "./Styles/DizajniPergjithshem.css";
@@ -31,6 +31,21 @@ function Kategorite() {
   // Archived categories are off the page by default - the reason to archive one is to stop looking
   // at it - and the switch below the heading brings them back when there is a reason to.
   const [meArkivat, setMeArkivat] = useState(false);
+  /**
+   * The default list is 30-odd parents and 200 subcategories, which on a phone was a long scroll of
+   * "E papërdorur" to find one name. So the families start folded - the parent's line already says
+   * how many it holds and what they add up to - and a search box finds a name directly; while it
+   * has text, every matching family is shown open.
+   */
+  const [kerko, setKerko] = useState("");
+  const [hapura, setHapura] = useState(() => new Set());
+  const kthejFamiljen = (id) =>
+    setHapura((prev) => {
+      const tjeter = new Set(prev);
+      if (tjeter.has(id)) tjeter.delete(id);
+      else tjeter.add(id);
+      return tjeter;
+    });
 
   // All-time totals per category, so the list shows which categories actually get used.
   const perdorimi = useMemo(() => {
@@ -68,6 +83,8 @@ function Kategorite() {
           ...c,
           ...vetjake,
           femijet,
+          // Counted before a search narrows `femijet`, so "4 nënkategori" stays true while one shows.
+          numriFemijeve: femijet.length,
           totali: femijet.reduce((sum, f) => sum + f.vlera, vetjake.vlera),
           numriTotal: femijet.reduce((sum, f) => sum + f.numri, vetjake.numri),
         };
@@ -76,6 +93,7 @@ function Kategorite() {
 
   const shpenzimet = withUsage("shpenzim");
   const hyrjet = withUsage("hyrje");
+  const dukeKerkuar = kerko.trim().length > 0;
   const nenkategoriGjithsej = dukshme.filter((c) => c.prindi).length;
 
   const openNew = (lloji, prindi = "") => {
@@ -152,6 +170,7 @@ function Kategorite() {
 
   const renderCard = (c, { nen = false, prindiArkivuar = false } = {}) => {
     const Icon = getIcon(c.ikona);
+    const hapur = dukeKerkuar || hapura.has(c.id);
     const arkivuar = Boolean(c.arkivuar) || prindiArkivuar;
     return (
       <div className={`fcp-cat-card${nen ? " nen" : ""}${arkivuar ? " arkivuar" : ""}`} key={c.id}>
@@ -166,10 +185,17 @@ function Kategorite() {
             {c.numri === 0 ? "E papërdorur" : `${c.numri} × · ${money(c.vlera)}`}
           </div>
           {!nen && c.femijet?.length > 0 && (
-            <div className="fcp-cat-sub">
-              {c.femijet.length} nënkategori
+            <button
+              type="button"
+              className={`fcp-cat-sub fcp-cat-palos${hapur ? " hapur" : ""}`}
+              onClick={() => kthejFamiljen(c.id)}
+              disabled={dukeKerkuar}
+              aria-expanded={hapur}
+            >
+              {c.numriFemijeve ?? c.femijet.length} nënkategori
               {c.totali > 0 && ` · gjithsej ${money(c.totali)}`}
-            </div>
+              {!dukeKerkuar && <ChevronDown size={13} aria-hidden="true" />}
+            </button>
           )}
         </div>
         <div className="fcp-cat-actions">
@@ -209,13 +235,13 @@ function Kategorite() {
 
   const renderGrid = (list) =>
     list.length === 0 ? (
-      <Empty>Nuk ka kategori për këtë lloj.</Empty>
+      <Empty>{dukeKerkuar ? `Asnjë kategori nuk përputhet me «${kerko.trim()}».` : "Nuk ka kategori për këtë lloj."}</Empty>
     ) : (
       <div className="fcp-cat-grid">
         {list.map((c) => (
           <div className="fcp-cat-familje" key={c.id}>
             {renderCard(c)}
-            {c.femijet.length > 0 && (
+            {c.femijet.length > 0 && (dukeKerkuar || hapura.has(c.id)) && (
               <div className="fcp-cat-nen">
                 {c.femijet.map((f) => renderCard(f, { nen: true, prindiArkivuar: Boolean(c.arkivuar) }))}
               </div>
@@ -297,12 +323,30 @@ function Kategorite() {
             </div>
           )}
 
+          {/* The same field as the guide's search (Udhezuesi), so the two look alike. */}
+          <InputGroup className="fcp-udh-kerkimi fcp-cat-kerko">
+            <InputGroup.Text>
+              <Search size={14} />
+            </InputGroup.Text>
+            <Form.Control
+              value={kerko}
+              onChange={(e) => setKerko(e.target.value)}
+              placeholder="Kërko kategorinë..."
+              aria-label="Kërko kategorinë"
+            />
+            {kerko && (
+              <button type="button" className="fcp-udh-pastro" onClick={() => setKerko("")} aria-label="Pastro kërkimin">
+                <X size={14} />
+              </button>
+            )}
+          </InputGroup>
+
           <section className="mb-4">
             <h2 className="fcp-section-title">
               <TrendingDown size={20} className="text-primary" />
               Shpenzimet
             </h2>
-            {renderGrid(shpenzimet)}
+            {renderGrid(filtroPemen(shpenzimet, kerko))}
           </section>
 
           <section className="mb-4">
@@ -310,7 +354,7 @@ function Kategorite() {
               <TrendingUp size={20} className="text-primary" />
               Hyrjet
             </h2>
-            {renderGrid(hyrjet)}
+            {renderGrid(filtroPemen(hyrjet, kerko))}
           </section>
         </Container>
 

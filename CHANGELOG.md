@@ -21,7 +21,18 @@ ngriti versionin.
   edhe për nënkategoritë - «Karburant» mbulon edhe «Karburant › Naftë» - dhe kategoria merr shenjën
   «Mujor» te lista. Mbetet vetëm pikënisje: te një blerje e veçantë mund ta hiqni, një kuti e prekur
   me dorë nuk ndërrohet më kur ndërroni kategorinë, dhe shpenzimet e regjistruara më parë nuk
-  ndryshojnë.
+  ndryshojnë - përveç atyre të sotme: kur e shënoni kategorinë, aplikacioni pyet a t'i bëjë mujore edhe
+  shpenzimet e sotme në të, që limiti i sotëm të rregullohet menjëherë. Shenja vlen edhe për pjesët e
+  një fature të ndarë në disa kategori (nafta dhe buka në një faturë bëhen njëra mujore, tjetra ditore)
+  dhe për shpenzimet që i paguani te **Grupet**.
+- **Një prekje kur limiti ditor kuqet nga një blerje e vetme.** Kartela «Sa Mund të Shpenzoj Sot» vetëm
+  e përshkruante zgjidhjen; tani ka butonat **«Bëje mujor»** (vetëm atë blerje) dhe **«Gjithmonë mujor:
+  Karburant»** (e shënon kategorinë kryesore dhe e bën mujore edhe këtë blerje).
+- **Kategoritë: kërkim dhe familje të palosura.** Me mbi 200 kategori, në telefon duhej rrëshqitur
+  gjatë për një emër. Tani faqja ka fushën **«Kërko kategorinë»** (pa marrë parasysh ë/ç dhe shkronjat e
+  mëdha), dhe nënkategoritë rrinë të palosura nën rreshtin «N nënkategori» derisa ta prekni.
+- **Shuma e çdo dite te Transaksionet në telefon.** Pranë «Sot», «Dje», «E hënë, 9 nëntor» del sa u
+  shpenzua atë ditë (hyrjet dhe transferet nuk numërohen).
 
 ### Ndryshuar
 - **Pagesat e borxheve regjistrohen si shpenzim mujor.** Kësti i kartelës ose i kredisë mbulon tërë
@@ -33,6 +44,12 @@ ngriti versionin.
   limitin e ditës kur barazoni. Barazimi kur ka më shumë para mbetet hyrje si më parë.
 - Pagesat dhe barazimet e regjistruara më parë nuk ndryshojnë - te lista e transaksioneve, butoni me
   diell/kalendar i kthen në mujore një nga një.
+- **Shumat te Transaksionet shkruhen si kudo tjetër** - «-37,04», jo «-37.04». Eksporti në Excel mbetet
+  me numra të thjeshtë, që kolona të mblidhet.
+- **Raportet me email nuk ndalen më pas pesë dështimeve.** Kur dërgimi dështonte (Resend, sesioni i
+  skaduar, interneti), aplikacioni provonte sërish pas 6 orësh, por pas provës së pestë hiqte dorë fare -
+  dhe raporti i javës dilte vetëm kur dikush e dërgonte me dorë, ditë më vonë. Tani pas pesë provave
+  vazhdon të provojë një herë në ditë, deri sa të mbyllet periudha tjetër.
 
 ### Rregulluar
 - **Kamera për kuponin fiskal dhe për «Prano me kamerë» hapet sërish.** Faqja i dërgonte
